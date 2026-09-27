@@ -8322,5 +8322,695 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "体操服が入らないくらい小さい巾着袋を大きめに買い替えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "今の巾着袋・体操着袋・上履き袋が小さくて体操服や上履きが入らない",
+    "ideal_answer": "大きめサイズ・たっぷり入る容量の巾着袋・体操着袋・上履き袋",
+    "reason": "「小さすぎて入らない」は商品名では「大きめ」「たっぷり入る」。 展開規則 roomy-drawstring-gym-bag（モール検索語「大きめ 体操着袋」）。",
+    "category": "roomy-drawstring-gym-bag",
+    "search_terms": {
+      "ja": [
+        "大きめ 体操着袋",
+        "大きめ 上履き袋",
+        "たっぷり入る 巾着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "上履きが入らないので大きめの上履き袋が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "今の巾着袋・体操着袋・上履き袋が小さくて体操服や上履きが入らない",
+    "ideal_answer": "大きめサイズ・たっぷり入る容量の巾着袋・体操着袋・上履き袋",
+    "reason": "「小さすぎて入らない」は商品名では「大きめ」「たっぷり入る」。 展開規則 roomy-drawstring-gym-bag（モール検索語「大きめ 体操着袋」）。",
+    "category": "roomy-drawstring-gym-bag",
+    "search_terms": {
+      "ja": [
+        "大きめ 体操着袋",
+        "大きめ 上履き袋",
+        "たっぷり入る 巾着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "たっぷり入る大きめの体操着袋を探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "今の巾着袋・体操着袋・上履き袋が小さくて体操服や上履きが入らない",
+    "ideal_answer": "大きめサイズ・たっぷり入る容量の巾着袋・体操着袋・上履き袋",
+    "reason": "「小さすぎて入らない」は商品名では「大きめ」「たっぷり入る」。 展開規則 roomy-drawstring-gym-bag（モール検索語「大きめ 体操着袋」）。",
+    "category": "roomy-drawstring-gym-bag",
+    "search_terms": {
+      "ja": [
+        "大きめ 体操着袋",
+        "大きめ 上履き袋",
+        "たっぷり入る 巾着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "電気毛布は丸洗いできないと思っていたけど洗えるタイプが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗えないと諦めていた電気毛布・電気敷き毛布を丸洗いしたい",
+    "ideal_answer": "丸洗い(洗濯機可)対応の電気毛布・電気敷き毛布・電気ブランケット",
+    "reason": "「洗えない/丸洗いしたい」は商品名では「丸洗い」「洗濯機で洗える」。 展開規則 washable-electric-blanket（モール検索語「丸洗い 電気毛布」）。",
+    "category": "washable-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "丸洗い 電気毛布",
+        "丸洗いできる 電気敷き毛布",
+        "洗濯機で洗える 電気ブランケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯機で洗えない電気敷き毛布は困るので洗えるものを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗えないと諦めていた電気毛布・電気敷き毛布を丸洗いしたい",
+    "ideal_answer": "丸洗い(洗濯機可)対応の電気毛布・電気敷き毛布・電気ブランケット",
+    "reason": "「洗えない/丸洗いしたい」は商品名では「丸洗い」「洗濯機で洗える」。 展開規則 washable-electric-blanket（モール検索語「丸洗い 電気毛布」）。",
+    "category": "washable-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "丸洗い 電気毛布",
+        "丸洗いできる 電気敷き毛布",
+        "洗濯機で洗える 電気ブランケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいても水洗いできる電気ブランケットがいい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗えないと諦めていた電気毛布・電気敷き毛布を丸洗いしたい",
+    "ideal_answer": "丸洗い(洗濯機可)対応の電気毛布・電気敷き毛布・電気ブランケット",
+    "reason": "「洗えない/丸洗いしたい」は商品名では「丸洗い」「洗濯機で洗える」。 展開規則 washable-electric-blanket（モール検索語「丸洗い 電気毛布」）。",
+    "category": "washable-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "丸洗い 電気毛布",
+        "丸洗いできる 電気敷き毛布",
+        "洗濯機で洗える 電気ブランケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬が食べるときに食器台がズレて食べこぼしが気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットが食事中に食器台がズレたり動いたりしてしまう",
+    "ideal_answer": "滑り止め付きのペット用食器台・フードボウルスタンド・フードスタンド",
+    "reason": "「食器がズレる/滑る」は商品名では「滑り止め」。効果は断定しない。 展開規則 nonslip-pet-food-stand（モール検索語「滑り止め ペット用食器台」）。",
+    "category": "nonslip-pet-food-stand",
+    "search_terms": {
+      "ja": [
+        "滑り止め ペット用食器台",
+        "犬 食器台 ズレない",
+        "猫 フードボウルスタンド 滑り止め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫が食べる時に食器台が動いてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットが食事中に食器台がズレたり動いたりしてしまう",
+    "ideal_answer": "滑り止め付きのペット用食器台・フードボウルスタンド・フードスタンド",
+    "reason": "「食器がズレる/滑る」は商品名では「滑り止め」。効果は断定しない。 展開規則 nonslip-pet-food-stand（モール検索語「滑り止め ペット用食器台」）。",
+    "category": "nonslip-pet-food-stand",
+    "search_terms": {
+      "ja": [
+        "滑り止め ペット用食器台",
+        "犬 食器台 ズレない",
+        "猫 フードボウルスタンド 滑り止め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ペットの食器台がすぐズレるので滑り止めのフードボウルスタンドが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットが食事中に食器台がズレたり動いたりしてしまう",
+    "ideal_answer": "滑り止め付きのペット用食器台・フードボウルスタンド・フードスタンド",
+    "reason": "「食器がズレる/滑る」は商品名では「滑り止め」。効果は断定しない。 展開規則 nonslip-pet-food-stand（モール検索語「滑り止め ペット用食器台」）。",
+    "category": "nonslip-pet-food-stand",
+    "search_terms": {
+      "ja": [
+        "滑り止め ペット用食器台",
+        "犬 食器台 ズレない",
+        "猫 フードボウルスタンド 滑り止め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "靴の中が臭うので消臭できる中敷きを入れたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴の中が臭うのでニオイを抑えたい",
+    "ideal_answer": "消臭(防臭)機能付きのインソール・中敷き",
+    "reason": "「靴が臭う/ニオイが気になる」は商品名では「消臭」「防臭」。効果は断定しない。 展開規則 deodorizing-insole（モール検索語「消臭 インソール」）。",
+    "category": "deodorizing-insole",
+    "search_terms": {
+      "ja": [
+        "消臭 インソール",
+        "消臭タイプ 中敷き",
+        "防臭 インソール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ニオイが気になる靴に入れるインソールを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴の中が臭うのでニオイを抑えたい",
+    "ideal_answer": "消臭(防臭)機能付きのインソール・中敷き",
+    "reason": "「靴が臭う/ニオイが気になる」は商品名では「消臭」「防臭」。効果は断定しない。 展開規則 deodorizing-insole（モール検索語「消臭 インソール」）。",
+    "category": "deodorizing-insole",
+    "search_terms": {
+      "ja": [
+        "消臭 インソール",
+        "消臭タイプ 中敷き",
+        "防臭 インソール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "靴が臭いので消臭インソールに変えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴の中が臭うのでニオイを抑えたい",
+    "ideal_answer": "消臭(防臭)機能付きのインソール・中敷き",
+    "reason": "「靴が臭う/ニオイが気になる」は商品名では「消臭」「防臭」。効果は断定しない。 展開規則 deodorizing-insole（モール検索語「消臭 インソール」）。",
+    "category": "deodorizing-insole",
+    "search_terms": {
+      "ja": [
+        "消臭 インソール",
+        "消臭タイプ 中敷き",
+        "防臭 インソール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "目が疲れてしんどいので蒸気で温めるアイマスクを使いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "目の疲れ・かすみがつらいので温感タイプのアイマスクで休ませたい",
+    "ideal_answer": "蒸気(スチーム)で温めるホットアイマスク",
+    "reason": "「目が疲れる/しんどい」は商品名では「蒸気」「ホットアイマスク」。効果は断定しない。 展開規則 hot-steam-eye-mask（モール検索語「蒸気 ホットアイマスク」）。",
+    "category": "hot-steam-eye-mask",
+    "search_terms": {
+      "ja": [
+        "蒸気 ホットアイマスク",
+        "スチーム ホットアイマスク",
+        "温める アイマスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "かすむ目に効きそうなホットアイマスクを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "目の疲れ・かすみがつらいので温感タイプのアイマスクで休ませたい",
+    "ideal_answer": "蒸気(スチーム)で温めるホットアイマスク",
+    "reason": "「目が疲れる/しんどい」は商品名では「蒸気」「ホットアイマスク」。効果は断定しない。 展開規則 hot-steam-eye-mask（モール検索語「蒸気 ホットアイマスク」）。",
+    "category": "hot-steam-eye-mask",
+    "search_terms": {
+      "ja": [
+        "蒸気 ホットアイマスク",
+        "スチーム ホットアイマスク",
+        "温める アイマスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "眼精疲労がひどいので温感タイプのアイマスクがいい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "目の疲れ・かすみがつらいので温感タイプのアイマスクで休ませたい",
+    "ideal_answer": "蒸気(スチーム)で温めるホットアイマスク",
+    "reason": "「目が疲れる/しんどい」は商品名では「蒸気」「ホットアイマスク」。効果は断定しない。 展開規則 hot-steam-eye-mask（モール検索語「蒸気 ホットアイマスク」）。",
+    "category": "hot-steam-eye-mask",
+    "search_terms": {
+      "ja": [
+        "蒸気 ホットアイマスク",
+        "スチーム ホットアイマスク",
+        "温める アイマスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "使用済み油を捨てるのが面倒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "調理で使った油の後始末(廃棄)に困っている",
+    "ideal_answer": "油を固めて捨てられる油処理剤・凝固剤",
+    "reason": "「油を捨てるのが面倒/処理に困る」は商品名では「油処理剤」「凝固剤」。 展開規則 oil-disposal-pack（モール検索語「油処理剤」）。",
+    "category": "oil-disposal-pack",
+    "search_terms": {
+      "ja": [
+        "油処理剤",
+        "油凝固剤",
+        "天ぷら油処理パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "揚げ物油の処理に困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "調理で使った油の後始末(廃棄)に困っている",
+    "ideal_answer": "油を固めて捨てられる油処理剤・凝固剤",
+    "reason": "「油を捨てるのが面倒/処理に困る」は商品名では「油処理剤」「凝固剤」。 展開規則 oil-disposal-pack（モール検索語「油処理剤」）。",
+    "category": "oil-disposal-pack",
+    "search_terms": {
+      "ja": [
+        "油処理剤",
+        "油凝固剤",
+        "天ぷら油処理パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "天ぷら油を固めて捨てたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "調理で使った油の後始末(廃棄)に困っている",
+    "ideal_answer": "油を固めて捨てられる油処理剤・凝固剤",
+    "reason": "「油を捨てるのが面倒/処理に困る」は商品名では「油処理剤」「凝固剤」。 展開規則 oil-disposal-pack（モール検索語「油処理剤」）。",
+    "category": "oil-disposal-pack",
+    "search_terms": {
+      "ja": [
+        "油処理剤",
+        "油凝固剤",
+        "天ぷら油処理パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "腰が痛くならない抱っこ紐が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "抱っこによる腰(・肩)の負担を減らしたい",
+    "ideal_answer": "ヒップシート(腰で支えるタイプ)の抱っこ紐・ベビーキャリア",
+    "reason": "「腰が痛い/負担」は商品名では「ヒップシート」「腰に優しい」。 展開規則 hip-seat-carrier（モール検索語「腰に優しい 抱っこ紐 ヒップシート」）。",
+    "category": "hip-seat-carrier",
+    "search_terms": {
+      "ja": [
+        "腰に優しい 抱っこ紐 ヒップシート",
+        "ヒップシート 腰負担軽減",
+        "腰が痛くならない 抱っこひも"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "長時間抱っこしても腰が辛くない抱っこひもを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "抱っこによる腰(・肩)の負担を減らしたい",
+    "ideal_answer": "ヒップシート(腰で支えるタイプ)の抱っこ紐・ベビーキャリア",
+    "reason": "「腰が痛い/負担」は商品名では「ヒップシート」「腰に優しい」。 展開規則 hip-seat-carrier（モール検索語「腰に優しい 抱っこ紐 ヒップシート」）。",
+    "category": "hip-seat-carrier",
+    "search_terms": {
+      "ja": [
+        "腰に優しい 抱っこ紐 ヒップシート",
+        "ヒップシート 腰負担軽減",
+        "腰が痛くならない 抱っこひも"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肩と腰の負担が少ないベビーキャリアがほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "抱っこによる腰(・肩)の負担を減らしたい",
+    "ideal_answer": "ヒップシート(腰で支えるタイプ)の抱っこ紐・ベビーキャリア",
+    "reason": "「腰が痛い/負担」は商品名では「ヒップシート」「腰に優しい」。 展開規則 hip-seat-carrier（モール検索語「腰に優しい 抱っこ紐 ヒップシート」）。",
+    "category": "hip-seat-carrier",
+    "search_terms": {
+      "ja": [
+        "腰に優しい 抱っこ紐 ヒップシート",
+        "ヒップシート 腰負担軽減",
+        "腰が痛くならない 抱っこひも"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "窓のサッシの溝の汚れが取れない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "窓のサッシ・レールの溝の汚れが取れず掃除に困っている",
+    "ideal_answer": "サッシ・溝専用のすきまブラシ",
+    "reason": "「サッシの溝の汚れが取れない」は商品名では「すきまブラシ」。 展開規則 sash-groove-cleaning-brush（モール検索語「すきまブラシ サッシ」）。",
+    "category": "sash-groove-cleaning-brush",
+    "search_terms": {
+      "ja": [
+        "すきまブラシ サッシ",
+        "サッシ 溝掃除ブラシ",
+        "隙間ブラシ 窓レール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "サッシのレールにホコリが溜まって掃除が大変",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "窓のサッシ・レールの溝の汚れが取れず掃除に困っている",
+    "ideal_answer": "サッシ・溝専用のすきまブラシ",
+    "reason": "「サッシの溝の汚れが取れない」は商品名では「すきまブラシ」。 展開規則 sash-groove-cleaning-brush（モール検索語「すきまブラシ サッシ」）。",
+    "category": "sash-groove-cleaning-brush",
+    "search_terms": {
+      "ja": [
+        "すきまブラシ サッシ",
+        "サッシ 溝掃除ブラシ",
+        "隙間ブラシ 窓レール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "窓の溝掃除がいつも面倒で困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "窓のサッシ・レールの溝の汚れが取れず掃除に困っている",
+    "ideal_answer": "サッシ・溝専用のすきまブラシ",
+    "reason": "「サッシの溝の汚れが取れない」は商品名では「すきまブラシ」。 展開規則 sash-groove-cleaning-brush（モール検索語「すきまブラシ サッシ」）。",
+    "category": "sash-groove-cleaning-brush",
+    "search_terms": {
+      "ja": [
+        "すきまブラシ サッシ",
+        "サッシ 溝掃除ブラシ",
+        "隙間ブラシ 窓レール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "香りが強すぎない制汗剤が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香りが強すぎない・控えめな制汗剤を使いたい",
+    "ideal_answer": "香り控えめ・微香タイプの制汗剤・デオドラント",
+    "reason": "「香りが強すぎない/ふんわり香る」は商品名では「香り控えめ」「微香」。 展開規則 mild-scent-antiperspirant（モール検索語「香り控えめ 制汗剤」）。",
+    "category": "mild-scent-antiperspirant",
+    "search_terms": {
+      "ja": [
+        "香り控えめ 制汗剤",
+        "ふんわり香る デオドラント",
+        "香り控えめ デオドラント"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ふんわり香る程度のデオドラントを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香りが強すぎない・控えめな制汗剤を使いたい",
+    "ideal_answer": "香り控えめ・微香タイプの制汗剤・デオドラント",
+    "reason": "「香りが強すぎない/ふんわり香る」は商品名では「香り控えめ」「微香」。 展開規則 mild-scent-antiperspirant（モール検索語「香り控えめ 制汗剤」）。",
+    "category": "mild-scent-antiperspirant",
+    "search_terms": {
+      "ja": [
+        "香り控えめ 制汗剤",
+        "ふんわり香る デオドラント",
+        "香り控えめ デオドラント"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "香りがきつくない制汗剤に変えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香りが強すぎない・控えめな制汗剤を使いたい",
+    "ideal_answer": "香り控えめ・微香タイプの制汗剤・デオドラント",
+    "reason": "「香りが強すぎない/ふんわり香る」は商品名では「香り控えめ」「微香」。 展開規則 mild-scent-antiperspirant（モール検索語「香り控えめ 制汗剤」）。",
+    "category": "mild-scent-antiperspirant",
+    "search_terms": {
+      "ja": [
+        "香り控えめ 制汗剤",
+        "ふんわり香る デオドラント",
+        "香り控えめ デオドラント"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "玄関に靴が入りきらないので大容量のシューズラックが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "玄関の靴が収まりきらず大容量の靴収納が欲しい",
+    "ideal_answer": "大容量タイプのシューズラック・下駄箱",
+    "reason": "「靴が入りきらない/玄関がいっぱい」は商品名では「大容量 シューズラック」。 展開規則 high-capacity-shoe-rack（モール検索語「大容量 シューズラック」）。",
+    "category": "high-capacity-shoe-rack",
+    "search_terms": {
+      "ja": [
+        "大容量 シューズラック",
+        "大容量 下駄箱",
+        "大量収納 靴箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "靴が溢れて玄関がごちゃごちゃしている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "玄関の靴が収まりきらず大容量の靴収納が欲しい",
+    "ideal_answer": "大容量タイプのシューズラック・下駄箱",
+    "reason": "「靴が入りきらない/玄関がいっぱい」は商品名では「大容量 シューズラック」。 展開規則 high-capacity-shoe-rack（モール検索語「大容量 シューズラック」）。",
+    "category": "high-capacity-shoe-rack",
+    "search_terms": {
+      "ja": [
+        "大容量 シューズラック",
+        "大容量 下駄箱",
+        "大量収納 靴箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "家族の靴がたくさん入る下駄箱を探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "玄関の靴が収まりきらず大容量の靴収納が欲しい",
+    "ideal_answer": "大容量タイプのシューズラック・下駄箱",
+    "reason": "「靴が入りきらない/玄関がいっぱい」は商品名では「大容量 シューズラック」。 展開規則 high-capacity-shoe-rack（モール検索語「大容量 シューズラック」）。",
+    "category": "high-capacity-shoe-rack",
+    "search_terms": {
+      "ja": [
+        "大容量 シューズラック",
+        "大容量 下駄箱",
+        "大量収納 靴箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
