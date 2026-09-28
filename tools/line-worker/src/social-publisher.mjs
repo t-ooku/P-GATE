@@ -521,8 +521,9 @@ async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl, kind = 'video
   const image = kind === 'image';
   const runwayMatch = image ? null : /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/.exec(safeUrl.pathname);
   // 2026-09-17: カルーセル画像（/social/carousel/<set>/<n>.jpg）も同じ静的アセット経路で読む
+  // 2026-09-28: 料金版ごとのフォルダ（/social/carousel/<version>/<set>/<n>.jpg）も許可。X だけ FAILED になっていた
   const staticAsset = image
-    ? /^\/social\/(?:carousel\/[a-z0-9-]{1,60}\/)?[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.(?:jpg|jpeg|png)$/.test(safeUrl.pathname)
+    ? /^\/social\/(?:carousel\/[a-z0-9-]{1,60}\/(?:[a-z0-9-]{1,60}\/)?)?[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.(?:jpg|jpeg|png)$/.test(safeUrl.pathname)
     : /^\/social\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.mp4$/.test(safeUrl.pathname);
   let bytes;
   const contentType = image ? (/\.png$/.test(safeUrl.pathname) ? 'image/png' : 'image/jpeg') : 'video/mp4';

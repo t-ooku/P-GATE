@@ -170,6 +170,13 @@ test('X はカルーセル画像を最大 4 枚 tweet_image としてアップ�
   assert.equal(mediaId, 'img-1');
   assert.equal(inits[0].media_category, 'tweet_image');
   assert.equal(inits[0].media_type, 'image/jpeg');
+  // 料金版フォルダ（1段深い）のカルーセルも読める（2026-09-28 X だけ X_MEDIA_SOURCE_UNSUPPORTED になった）
+  assert.equal(await socialPublisherTest.uploadXVideo(
+    'https://hoshilu.app/social/carousel/seller1980-30d-autorenew-20260927/seller-shop-entrance/1.jpg', 'x-token',
+    { ASSETS: { async fetch() { return new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': 'image/jpeg' } }); } } },
+    async (url) => String(url).endsWith('/initialize') ? Response.json({ data: { id: 'img-2' } })
+      : String(url).endsWith('/append') ? new Response(null, { status: 204 }) : Response.json({ data: {} }), 'image'), 'img-2');
+  await assert.rejects(() => socialPublisherTest.uploadXVideo('https://hoshilu.app/social/carousel/a/b/c/1.jpg', 'x', { ASSETS: { fetch: async () => new Response('') } }, async () => Response.json({}), 'image'), /X_MEDIA_SOURCE_UNSUPPORTED/u);
   // 動画以外の拡張子は静的画像として扱い、外部ホストは拒否する
   await assert.rejects(() => socialPublisherTest.uploadXVideo('https://evil.example/1.jpg', 'x', {}, async () => Response.json({}), 'image'), /X_MEDIA_URL_INVALID/u);
   const publisher = readFileSync(new URL('../src/social-publisher.mjs', import.meta.url), 'utf8');
