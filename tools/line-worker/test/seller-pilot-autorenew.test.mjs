@@ -119,6 +119,12 @@ test('current contract pins amount, terms, product, Price and environment indepe
  assert.equal(f.calls.find(c=>c.path==='/v1/subscriptions').body.get('items[0][price]'),'price_test');
  const d=f.read();d.autorenew.contract.amount=4980;f.write(d);await assert.rejects(()=>reconcileAutoRenew(f.env,f.row.pilot_id,{now:start}),/SNAPSHOT_MISMATCH/);
 });
+test('unspecified tax behavior is accepted only because tax is forced off (charge stays exactly 1,980)',async()=>{
+ const f=fixture();f.published();f.price.tax_behavior='unspecified';
+ assert.equal((await reconcileAutoRenew(f.env,f.row.pilot_id,{now:start})).error,null);
+ const body=f.calls.find(c=>c.path==='/v1/subscriptions').body;
+ assert.equal(body.get('automatic_tax[enabled]'),'false');
+});
 test('wrong price, product, tax, currency, interval, environment or quantity cannot be accepted',async()=>{
  for(const changes of [{unit_amount:4980},{currency:'usd'},{tax_behavior:'exclusive'},{livemode:true},{product:'prod_other'},{active:false},{recurring:{interval:'year',interval_count:1}},{recurring:{interval:'month',interval_count:2}}]){
   const f=fixture();f.published();Object.assign(f.price,changes);

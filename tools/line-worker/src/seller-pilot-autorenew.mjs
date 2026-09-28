@@ -72,9 +72,13 @@ export async function verifyAutoRenewCard(env,row,doc) {
   if(pm.livemode!==(stripeMode(env)==='live')||pm.type!=='card'||pm.id!==idOf(setup.payment_method))throw new Error('CARD_IDENTITY_MISMATCH');
   return {...doc.autorenew,payment_method_id:pm.id,card_verified_at:new Date().toISOString()};
 }
+// 税込1,980円の判定。Stripe 本番のダッシュボードでは既存 Price の tax_behavior を後から入れられない（Shell も読み取り専用）。
+// 'unspecified' は、自動税計算オフ・税率なし（checkSubscription で強制）なら請求額が unit_amount ちょうど＝税込と同じになるので同等に扱う。
+// 'exclusive'（税を上乗せ）は常に不可。
+function taxOK(price,c){return price?.tax_behavior===c.tax_behavior||(c.tax_behavior==='inclusive'&&price?.tax_behavior==='unspecified');}
 function validPrice(price,env,doc,{creating=false}={}) {
   const c=contract(doc,env);
-  return price?.id===c.price_id&&(!creating||price.active===true)&&price.livemode===(c.mode==='live')&&price.currency===c.currency&&price.unit_amount===c.amount&&price.tax_behavior===c.tax_behavior&&price.recurring?.interval===c.interval&&price.recurring.interval_count===c.interval_count&&(!c.product_id||idOf(price.product)===c.product_id);
+  return price?.id===c.price_id&&(!creating||price.active===true)&&price.livemode===(c.mode==='live')&&price.currency===c.currency&&price.unit_amount===c.amount&&taxOK(price,c)&&price.recurring?.interval===c.interval&&price.recurring.interval_count===c.interval_count&&(!c.product_id||idOf(price.product)===c.product_id);
 }
 export async function verifyNewAutoRenewPrice(env,doc) {
   requireAccess(env,doc,{creating:true});
