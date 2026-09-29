@@ -9012,5 +9012,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫の給水器がすぐ倒れて水がこぼれる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペット用の給水器が倒れたり水がこぼれたりして困っている",
+    "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+    "reason": "「給水器が倒れる/こぼれる」は商品名では「安定型」「転倒防止」「こぼれにくい」。 展開規則 no-tip-pet-water-fountain（モール検索語「こぼれにくい 給水器」）。",
+    "category": "no-tip-pet-water-fountain",
+    "search_terms": {
+      "ja": [
+        "こぼれにくい 給水器",
+        "安定型 ウォーターファウンテン",
+        "転倒防止 給水ボウル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬用のウォーターファウンテンが安定しなくてこぼれやすい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペット用の給水器が倒れたり水がこぼれたりして困っている",
+    "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+    "reason": "「給水器が倒れる/こぼれる」は商品名では「安定型」「転倒防止」「こぼれにくい」。 展開規則 no-tip-pet-water-fountain（モール検索語「こぼれにくい 給水器」）。",
+    "category": "no-tip-pet-water-fountain",
+    "search_terms": {
+      "ja": [
+        "こぼれにくい 給水器",
+        "安定型 ウォーターファウンテン",
+        "転倒防止 給水ボウル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ペットの給水ボウルがひっくり返って水がこぼれてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペット用の給水器が倒れたり水がこぼれたりして困っている",
+    "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+    "reason": "「給水器が倒れる/こぼれる」は商品名では「安定型」「転倒防止」「こぼれにくい」。 展開規則 no-tip-pet-water-fountain（モール検索語「こぼれにくい 給水器」）。",
+    "category": "no-tip-pet-water-fountain",
+    "search_terms": {
+      "ja": [
+        "こぼれにくい 給水器",
+        "安定型 ウォーターファウンテン",
+        "転倒防止 給水ボウル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "雨の日にランドセルが濡れるのが心配",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日にランドセル・通学リュックが濡れるのを防ぎたい",
+    "ideal_answer": "撥水・透明タイプのランドセルカバー",
+    "reason": "「ランドセルが雨で濡れる/心配」は商品名では「ランドセルカバー」「撥水」。 展開規則 rain-cover-school-backpack（モール検索語「ランドセルカバー 撥水」）。",
+    "category": "rain-cover-school-backpack",
+    "search_terms": {
+      "ja": [
+        "ランドセルカバー 撥水",
+        "撥水 ランドセルカバー",
+        "透明 ランドセルカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "通学リュックが雨で濡れてしまうので防げるものが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日にランドセル・通学リュックが濡れるのを防ぎたい",
+    "ideal_answer": "撥水・透明タイプのランドセルカバー",
+    "reason": "「ランドセルが雨で濡れる/心配」は商品名では「ランドセルカバー」「撥水」。 展開規則 rain-cover-school-backpack（モール検索語「ランドセルカバー 撥水」）。",
+    "category": "rain-cover-school-backpack",
+    "search_terms": {
+      "ja": [
+        "ランドセルカバー 撥水",
+        "撥水 ランドセルカバー",
+        "透明 ランドセルカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ランドセルが雨に濡れちゃうのをなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日にランドセル・通学リュックが濡れるのを防ぎたい",
+    "ideal_answer": "撥水・透明タイプのランドセルカバー",
+    "reason": "「ランドセルが雨で濡れる/心配」は商品名では「ランドセルカバー」「撥水」。 展開規則 rain-cover-school-backpack（モール検索語「ランドセルカバー 撥水」）。",
+    "category": "rain-cover-school-backpack",
+    "search_terms": {
+      "ja": [
+        "ランドセルカバー 撥水",
+        "撥水 ランドセルカバー",
+        "透明 ランドセルカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "電気カーペットの電気代が気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電気カーペット・ホットカーペットの電気代が気になる",
+    "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+    "reason": "「電気代が気になる/かかる」は商品名では「節電」。 展開規則 energy-saving-electric-carpet（モール検索語「節電 電気カーペット」）。",
+    "category": "energy-saving-electric-carpet",
+    "search_terms": {
+      "ja": [
+        "節電 電気カーペット",
+        "節電タイプ ホットカーペット",
+        "電気代 抑える 電気カーペット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ホットカーペットは電気代がかかりそうで心配",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電気カーペット・ホットカーペットの電気代が気になる",
+    "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+    "reason": "「電気代が気になる/かかる」は商品名では「節電」。 展開規則 energy-saving-electric-carpet（モール検索語「節電 電気カーペット」）。",
+    "category": "energy-saving-electric-carpet",
+    "search_terms": {
+      "ja": [
+        "節電 電気カーペット",
+        "節電タイプ ホットカーペット",
+        "電気代 抑える 電気カーペット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "電気代を抑えられるホットカーペットを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電気カーペット・ホットカーペットの電気代が気になる",
+    "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+    "reason": "「電気代が気になる/かかる」は商品名では「節電」。 展開規則 energy-saving-electric-carpet（モール検索語「節電 電気カーペット」）。",
+    "category": "energy-saving-electric-carpet",
+    "search_terms": {
+      "ja": [
+        "節電 電気カーペット",
+        "節電タイプ ホットカーペット",
+        "電気代 抑える 電気カーペット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいてもすぐ乾くインナーが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "下着・インナー・肌着がなかなか乾かない/すぐ乾くものが欲しい",
+    "ideal_answer": "速乾タイプのインナー・下着・肌着",
+    "reason": "「なかなか乾かない/すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-underwear（モール検索語「速乾 インナー」）。",
+    "category": "quick-dry-underwear",
+    "search_terms": {
+      "ja": [
+        "速乾 インナー",
+        "速乾 下着",
+        "速乾 肌着"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯してもなかなか乾かない下着に困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "下着・インナー・肌着がなかなか乾かない/すぐ乾くものが欲しい",
+    "ideal_answer": "速乾タイプのインナー・下着・肌着",
+    "reason": "「なかなか乾かない/すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-underwear（モール検索語「速乾 インナー」）。",
+    "category": "quick-dry-underwear",
+    "search_terms": {
+      "ja": [
+        "速乾 インナー",
+        "速乾 下着",
+        "速乾 肌着"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肌着が乾くのに時間がかかるので速乾タイプに変えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "下着・インナー・肌着がなかなか乾かない/すぐ乾くものが欲しい",
+    "ideal_answer": "速乾タイプのインナー・下着・肌着",
+    "reason": "「なかなか乾かない/すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-underwear（モール検索語「速乾 インナー」）。",
+    "category": "quick-dry-underwear",
+    "search_terms": {
+      "ja": [
+        "速乾 インナー",
+        "速乾 下着",
+        "速乾 肌着"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫背が気になるので姿勢ベルトを使いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫背・姿勢の崩れ・反り腰が気になるので矯正したい",
+    "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+    "reason": "「猫背が気になる/姿勢が悪い」は商品名では「姿勢矯正ベルト」「姿勢サポーター」。効果は断定しない。 展開規則 posture-correction-back-brace（モール検索語「姿勢矯正ベルト」）。",
+    "category": "posture-correction-back-brace",
+    "search_terms": {
+      "ja": [
+        "姿勢矯正ベルト",
+        "猫背矯正ベルト",
+        "姿勢サポーター 猫背"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "姿勢が悪いのを直したくて姿勢サポーターを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫背・姿勢の崩れ・反り腰が気になるので矯正したい",
+    "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+    "reason": "「猫背が気になる/姿勢が悪い」は商品名では「姿勢矯正ベルト」「姿勢サポーター」。効果は断定しない。 展開規則 posture-correction-back-brace（モール検索語「姿勢矯正ベルト」）。",
+    "category": "posture-correction-back-brace",
+    "search_terms": {
+      "ja": [
+        "姿勢矯正ベルト",
+        "猫背矯正ベルト",
+        "姿勢サポーター 猫背"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "反り腰が気になるので矯正ベルトを試したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫背・姿勢の崩れ・反り腰が気になるので矯正したい",
+    "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+    "reason": "「猫背が気になる/姿勢が悪い」は商品名では「姿勢矯正ベルト」「姿勢サポーター」。効果は断定しない。 展開規則 posture-correction-back-brace（モール検索語「姿勢矯正ベルト」）。",
+    "category": "posture-correction-back-brace",
+    "search_terms": {
+      "ja": [
+        "姿勢矯正ベルト",
+        "猫背矯正ベルト",
+        "姿勢サポーター 猫背"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]

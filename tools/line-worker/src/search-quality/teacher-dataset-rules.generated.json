@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T00:09:46.449Z",
+  "generated_at": "2026-09-29T02:28:25.885Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -40,7 +40,7 @@
     "2026-09-27-claude-batch-037.json",
     "2026-09-28-claude-batch-038.json"
   ],
-  "entry_count": 2018,
+  "entry_count": 2033,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -24282,6 +24282,321 @@
           "大容量 シューズラック",
           "大容量 下駄箱",
           "大量収納 靴箱"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0e0ab5fc1d8545e8709de759adef87ea75a6739d3330ed994a49c0767b09e8e5",
+      "query_text": "猫の給水器がすぐ倒れて水がこぼれる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-tip-pet-water-fountain",
+      "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+      "search_terms": {
+        "ja": [
+          "こぼれにくい 給水器",
+          "安定型 ウォーターファウンテン",
+          "転倒防止 給水ボウル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "695bcc5d201c4fa4c7df34079dd433a125a34f8382512bd773a4ac8999360f9b",
+      "query_text": "犬用のウォーターファウンテンが安定しなくてこぼれやすい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-tip-pet-water-fountain",
+      "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+      "search_terms": {
+        "ja": [
+          "こぼれにくい 給水器",
+          "安定型 ウォーターファウンテン",
+          "転倒防止 給水ボウル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1d95a0078f038121531dbc7d8f8fd56ccfd14c8d683d8ddc9b3c22d5e21dee73",
+      "query_text": "ペットの給水ボウルがひっくり返って水がこぼれてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-tip-pet-water-fountain",
+      "ideal_answer": "倒れにくい・こぼれにくい安定型のペット用給水器・ウォーターファウンテン",
+      "search_terms": {
+        "ja": [
+          "こぼれにくい 給水器",
+          "安定型 ウォーターファウンテン",
+          "転倒防止 給水ボウル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "91533bac39d1864dd78f8214dbc71aeeaf1f5088290070e3c9c01e387825fa3e",
+      "query_text": "雨の日にランドセルが濡れるのが心配",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rain-cover-school-backpack",
+      "ideal_answer": "撥水・透明タイプのランドセルカバー",
+      "search_terms": {
+        "ja": [
+          "ランドセルカバー 撥水",
+          "撥水 ランドセルカバー",
+          "透明 ランドセルカバー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "453a382c8d136c6bca82d6ed563ec51d4197775d85c9dc11d7919a906b0977a9",
+      "query_text": "通学リュックが雨で濡れてしまうので防げるものが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rain-cover-school-backpack",
+      "ideal_answer": "撥水・透明タイプのランドセルカバー",
+      "search_terms": {
+        "ja": [
+          "ランドセルカバー 撥水",
+          "撥水 ランドセルカバー",
+          "透明 ランドセルカバー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bbf4a9d7b6983bbccf18f08a8d59d0bc9edc1ccc9b93d349565b729f31cc076d",
+      "query_text": "ランドセルが雨に濡れちゃうのをなんとかしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rain-cover-school-backpack",
+      "ideal_answer": "撥水・透明タイプのランドセルカバー",
+      "search_terms": {
+        "ja": [
+          "ランドセルカバー 撥水",
+          "撥水 ランドセルカバー",
+          "透明 ランドセルカバー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "29d0cc9c3f8e30091b5aac96f78556eb729a8037354d1847d1eb74a062b9da6b",
+      "query_text": "電気カーペットの電気代が気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-electric-carpet",
+      "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+      "search_terms": {
+        "ja": [
+          "節電 電気カーペット",
+          "節電タイプ ホットカーペット",
+          "電気代 抑える 電気カーペット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "19896048d4be2dc631a5ee552defa3585853c1cee0473262cbb81bb26b487c7a",
+      "query_text": "ホットカーペットは電気代がかかりそうで心配",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-electric-carpet",
+      "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+      "search_terms": {
+        "ja": [
+          "節電 電気カーペット",
+          "節電タイプ ホットカーペット",
+          "電気代 抑える 電気カーペット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "22f6e2da1b1e6f0d993e985d52944b5da45f0ee8332abead6fb56d18d4792fb9",
+      "query_text": "電気代を抑えられるホットカーペットを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-electric-carpet",
+      "ideal_answer": "節電タイプ・電気代を抑えられる電気カーペット・ホットカーペット",
+      "search_terms": {
+        "ja": [
+          "節電 電気カーペット",
+          "節電タイプ ホットカーペット",
+          "電気代 抑える 電気カーペット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2d6e607409b2c94a51e21196ac9b8163136db4f92864a1bf86871f92085973c2",
+      "query_text": "汗をかいてもすぐ乾くインナーが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-underwear",
+      "ideal_answer": "速乾タイプのインナー・下着・肌着",
+      "search_terms": {
+        "ja": [
+          "速乾 インナー",
+          "速乾 下着",
+          "速乾 肌着"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0f6aaca50759efcfc23fb9780c02ffea220119010c13e5cbd56cb0adb167a3d0",
+      "query_text": "洗濯してもなかなか乾かない下着に困っている",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-underwear",
+      "ideal_answer": "速乾タイプのインナー・下着・肌着",
+      "search_terms": {
+        "ja": [
+          "速乾 インナー",
+          "速乾 下着",
+          "速乾 肌着"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "42db61e5926aecb68bb3ef941b82555b5d70829032de27d859fcd5f36d10ef7c",
+      "query_text": "肌着が乾くのに時間がかかるので速乾タイプに変えたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-underwear",
+      "ideal_answer": "速乾タイプのインナー・下着・肌着",
+      "search_terms": {
+        "ja": [
+          "速乾 インナー",
+          "速乾 下着",
+          "速乾 肌着"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4b36c0ea63dcd582b8acc054ee09b45c5075607021c61dc1108b6a3b03ef4f89",
+      "query_text": "猫背が気になるので姿勢ベルトを使いたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "posture-correction-back-brace",
+      "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+      "search_terms": {
+        "ja": [
+          "姿勢矯正ベルト",
+          "猫背矯正ベルト",
+          "姿勢サポーター 猫背"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "05a4c7d1841d0e4251de3afe6bffb21afe035df7459dab697ee3bc5110670542",
+      "query_text": "姿勢が悪いのを直したくて姿勢サポーターを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "posture-correction-back-brace",
+      "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+      "search_terms": {
+        "ja": [
+          "姿勢矯正ベルト",
+          "猫背矯正ベルト",
+          "姿勢サポーター 猫背"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f28c1fbf68fb80b030447b57c430e4060bf95c9e308c304d7ea4b6abcc087768",
+      "query_text": "反り腰が気になるので矯正ベルトを試したい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "posture-correction-back-brace",
+      "ideal_answer": "猫背・姿勢矯正用の姿勢ベルト・姿勢サポーター・矯正ベルト",
+      "search_terms": {
+        "ja": [
+          "姿勢矯正ベルト",
+          "猫背矯正ベルト",
+          "姿勢サポーター 猫背"
         ],
         "en": [],
         "ko": [],
