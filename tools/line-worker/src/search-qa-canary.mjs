@@ -69,7 +69,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-27 展開規則 washable-electric-blanket の代表クエリ(機能語「洗えない/丸洗いしたい」→ 売り手の語「丸洗い」)。
   { id: 'washable_electric_blanket', query: '丸洗いできる電気毛布が欲しい', expect: /電気毛布|電気敷き毛布|電気ブランケット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u },
   // 2026-09-29 展開規則 energy-saving-electric-carpet の代表クエリ(機能語「電気代が気になる」→ 売り手の語「節電」)。
-  { id: 'energy_saving_electric_carpet', query: '電気カーペットの電気代が気になる', expect: /電気カーペット|ホットカーペット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u }
+  { id: 'energy_saving_electric_carpet', query: '電気カーペットの電気代が気になる', expect: /電気カーペット|ホットカーペット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u },
+  // 2026-09-30 展開規則 dull-knife-sharpener の代表クエリ(機能語「切れ味が悪い/研げない」→ 売り手の語「電動 包丁研ぎ器」)。
+  { id: 'dull_knife_sharpener', query: '包丁の切れ味が悪くて困っている', expect: /研ぎ器|シャープナー|包丁研ぎ/iu, reject: /まな板|ふきんのみ|替刃のみ|砥石(?!付)|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
