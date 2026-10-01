@@ -45,8 +45,24 @@ test('省エネこたつ: 本命が「こたつ毛布」なら FAIL、本体な�
   }
 });
 
+// 2026-10-02: dull_knife_sharpener の reject `砥石(?!付)` が、研ぎ器本体に砥石が同梱されている
+// ことを示すだけの「砥石」にも反応し、正しい本命を誤ってFAILさせていた(2026-09-30・10-01の
+// 2日連続FAIL)。`砥石のみ/単体`限定に修正し、本体は通す・砥石単体商品は引き続き落とす。
+test('包丁研ぎ器: 砥石を同梱する本体は通す、砥石単体は落とす', () => {
+  const fixture = SEARCH_QA_CANARY_QUERIES.find((item) => item.id === 'dull_knife_sharpener');
+  for (const [title, pass] of [
+    ['送料無料 包丁研ぎ器 砥石 シャープナー 包丁磨き 包丁とぎ 研磨 小型 調理器具 キッチン雑貨 レッド ブラック グリーン 2段階 セラミック', true],
+    ['電動 包丁研ぎ器 ロールシャープナー 砥石付き 4段階', true],
+    ['包丁研ぎ用 砥石のみ 中砥 #1000 両面', false],
+    ['包丁研ぎ 砥石単体 替え用', false]
+  ]) {
+    const verdict = evaluateSearchQaResult(fixture, { ok: true, result: { candidates: [{ product_name: title }], marketplace_search_links: links(ALL) } }, 10);
+    assert.equal(verdict.pass, pass, `${title} → ${verdict.code}`);
+  }
+});
+
 test('固定クエリは指示書 §54 の9件+2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
-  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 22);
+  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 23);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'pet_shedding_brush' && f.query === '猫の抜け毛がごっそり取れるブラシ'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'auto_off_humidifier' && f.query === 'つけっぱなしでも安心な加湿器'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'easy_clean_baby_bottle' && f.query === '奥まで洗いやすい哺乳瓶'));
