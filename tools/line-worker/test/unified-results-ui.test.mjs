@@ -88,6 +88,13 @@ test('ソースは小さいバッジだけ（大きく分離しない §8）', (
   assert.match(css(), /\.unified-badge\{[^}]*font-size:9\.5px/u);
 });
 
+test('HOSHILU の商品は販売先のモール名で表記する（楽天市場／Yahoo!ショッピング）', () => {
+  const source = ui();
+  assert.match(source, /RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング'/u);
+  assert.match(source, /item\.source === 'HOSHILU' && MALL_LABEL\[item\.marketplace\]/u);
+  assert.match(source, /item\.shop_name !== badge/u);
+});
+
 test('ホシっとくは app.js の保存先をそのまま使う（別の保存を作らない）', () => {
   const source = ui();
   assert.match(source, /window\.HoshiluKeep/u);
@@ -116,7 +123,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=10/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=12/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=13/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);

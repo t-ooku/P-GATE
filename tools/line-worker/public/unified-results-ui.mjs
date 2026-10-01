@@ -33,6 +33,13 @@ const COPY = {
   sort: { recommended: 'おすすめ順', cheap: '安い順' }
 };
 const PAGE = 12;
+// 2026-10-01 大隆さん指示「ホシルの商品提示も、楽天市場やYahoo!ショッピングと表記して」。
+// HOSHILU が API で確認した商品は、バッジを「HOSHILU」ではなく販売先のモール名にする。モール名は文字だけ（ロゴは使わない）。
+const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング', AMAZON_JP: 'Amazon' };
+function badgeText(item) {
+  if (item.source === 'HOSHILU' && MALL_LABEL[item.marketplace]) return MALL_LABEL[item.marketplace];
+  return COPY.badge[item.source] || COPY.badge.WEB;
+}
 
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -119,9 +126,9 @@ function card(item) {
   // h3 にしておく。口コミ（experience-layer.mjs）は商品名を h3 から読む。
   body.append(el('h3', 'unified-card-name', item.product_name || ''));
   const meta = el('div', 'unified-card-meta');
-  meta.append(el('span', `unified-badge unified-badge-${String(item.source || '').toLowerCase()}`,
-    COPY.badge[item.source] || COPY.badge.WEB));
-  if (item.shop_name) meta.append(el('span', 'unified-card-shop', item.shop_name));
+  const badge = badgeText(item);
+  meta.append(el('span', `unified-badge unified-badge-${String(item.source || '').toLowerCase()}`, badge));
+  if (item.shop_name && item.shop_name !== badge) meta.append(el('span', 'unified-card-shop', item.shop_name));
   // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して」。
   // 一覧・カテゴリページも出すが、商品のふりはさせない。ここでそう断る。
   if (item.listing) meta.append(el('span', 'unified-badge unified-badge-listing', COPY.listing));
