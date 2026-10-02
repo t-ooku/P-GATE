@@ -82,6 +82,14 @@
   2. 販売 ON のとき週次ジョブは、プロファイルの `pilot_id` に紐づく同じプランの Light/Standard 契約がトライアル中か支払済みの店だけ（QA・パイロット店は除く）
 - Stripe 本番 Price（2026-10-03 02:30 JST 作成）: Light `price_1UMAIIJnMwqhkDQ5OCKXY6wj`（prod_VMu6URGZSooXT3）、Standard `price_1UMAIJJnMwqhkDQ50T35KRN1`（prod_VMu6mYJN6wymnd）。OK③ のとき `SELLER_PROMO_{LIGHT,STANDARD}_LIVE_{PRICE,PRODUCT}_ID` に入れる
 
+## 本番の初回無人実行（2026-10-03 04:00 JST、QA 店舗 qa-shop-1）
+
+- cron が 04:00:48 JST に起動し、04:01:07 に DONE（attempt 1、約 19 秒）。週 `2026-W40`
+- 記事（本文 1,675 字）・SNS 2 本・商品ページの直し案がすべて 1 回目で QA_PASSED（作り直しなし）
+- 原価の実測: gemini-3.6-flash 3 回、入力 2,911・出力 2,266 トークン、**1.61 円**（1 店・1 週）。月 4 週で約 6.4 円／店
+- job の error 欄 `IMAGE_SKIPPED_NO_R2` は「Worker に R2 の binding が無い」の意味（画像は手動ワークフローで作る方針どおり。R2 バケット自体は作成済み）
+- 次: QA 店舗を月曜 06:00 に戻す（Cowork 指示書 §1。runbook の 1 行）
+
 ## 原価の実測
 
 計測不能（実 API を一度も呼んでいない）。参考: テストの仮トークン（入力 1,000・出力 2,000）での見積もりは 1 回 1.24 円、週 3 回の呼び出しで 3.72 円。単価は deep-canary と同じ Gemini Flash 系（入力 0.75／出力 3.75 USD/100 万）を既定にしている。実額は OK① 後の QA 店舗 1 週分で出す。
