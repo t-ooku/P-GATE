@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { publishSocialPost } from '../src/social-publisher.mjs';
 import { renderSeoPage } from '../src/seo-pages.mjs';
-import { AUTO_RENEW_OFFER, AUTO_RENEW_COPY } from '../public/seller-trial-policy.mjs';
+import { AUTO_RENEW_OFFER, AUTO_RENEW_COPY, TRIAL_SOCIAL_COPY, socialTrialCaption } from '../public/seller-trial-policy.mjs';
 const active = { SELLER_MANUAL_PILOT_ENABLED:'true', SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER, SELLER_PILOT_AUTORENEW_ENABLED:'true', SELLER_PILOT_PAYMENTS_ENABLED:'true',SELLER_PILOT_PAYMENT_MODE:'live',SELLER_PILOT_1980_LIVE_PRICE_ID:'price_fixture',SELLER_PILOT_1980_LIVE_PRODUCT_ID:'prod_fixture' };
 test('old saved seller copy and old media never reach a provider, even with an active offer', async()=>{
   for(const post of [
@@ -45,4 +45,16 @@ test('reusable acquisition kit uses current offer and its recruitment drafts pas
   const drafts=kit.split(/^## /mu).filter(section=>/^(募集投稿|料金を聞かれた場合|紹介用メッセージ)/u.test(section));
   assert.equal(drafts.length,4);
   for(const caption of drafts)assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'seller-acquisition-kit',caption},{}));
+});
+
+// 2026-10-02 大隆さん承認: 受付開始後は「（体験開始は準備中）」を投稿から外す。送信前の行とこれからの行だけ。
+test('after recruitment is verified the pending notice is stripped from seller captions, never before',()=>{
+  const pending='お店の入口を。 新規Sellerは商品公開から30日間無料。(体験開始は準備中)開始前にカード登録必須。';
+  assert.equal(socialTrialCaption(pending,active),'お店の入口を。 新規Sellerは商品公開から30日間無料。開始前にカード登録必須。');
+  assert.equal(socialTrialCaption(pending,{}),pending,'受付前は外さない');
+  assert.equal(socialTrialCaption('月額1,980円。体験開始は準備中で、掲載見本を相談できます。',active),'月額1,980円。掲載見本を相談できます。');
+  assert.doesNotMatch(TRIAL_SOCIAL_COPY,/準備中/);assert.match(TRIAL_SOCIAL_COPY,/30日間無料。開始前にカード登録必須/);
+  // 受付前に「準備中」を外した投稿は、これまでどおり guard が止める
+  assert.throws(()=>assertSellerMarketingCurrent({content_id:'seller-x',caption:TRIAL_SOCIAL_COPY},{}),/TRIAL_NOT_ACTIVE/);
+  assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'seller-x',caption:TRIAL_SOCIAL_COPY},active));
 });

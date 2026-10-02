@@ -59,3 +59,13 @@ export function recruitmentVerified(env = {}) {
 }
 
 export const TRIAL_SOCIAL_PENDING_COPY = '新規Sellerは商品公開から30日間無料。（体験開始は準備中）開始前にカード登録必須。期限までに解約しなければ31日目から月額1,980円（税込）で毎月自動更新。自店の掲載見本を相談する。';
+// 2026-10-02 大隆さん承認: 受付開始後は、投入済み・投入前の投稿から「準備中」の断りを外す。
+// 送信済みの履歴は書き換えない（publish 直前の未送信行と、これから作る行だけ）。
+export const TRIAL_SOCIAL_COPY = TRIAL_SOCIAL_PENDING_COPY.replace('（体験開始は準備中）', '');
+const PENDING_NOTICE = /[（(]体験開始は準備中[）)]|体験開始は準備中で、/gu;
+export function stripPendingNotice(text = '') {
+  return String(text).replace(PENDING_NOTICE, '').replace(/。[ 　]*。/gu, '。');
+}
+export function socialTrialCaption(caption, env = {}) {
+  return recruitmentVerified(env) ? stripPendingNotice(caption) : String(caption || '');
+}

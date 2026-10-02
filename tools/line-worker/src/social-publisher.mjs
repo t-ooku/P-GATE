@@ -1,4 +1,5 @@
 import { assertSellerMarketingCurrent } from './seller-marketing-guard.mjs';
+import { socialTrialCaption } from '../public/seller-trial-policy.mjs';
 import {
   getInstagramPublishCredentials, instagramOAuthReadiness
 } from './instagram-oauth.mjs';
@@ -895,7 +896,8 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
 
 export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
   assertSellerMarketingCurrent(post, env);
-  const normalized = normalizeSocialPost(post);
+  // 受付開始後に出る投稿からは「（体験開始は準備中）」を外す（投入済みの行も、送る直前に）。2026-10-02 大隆さん承認。
+  const normalized = normalizeSocialPost({ ...post, caption: socialTrialCaption(post.caption, env) });
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
   await assertDailyAiActressPolicy(normalized, env);
   if (normalized.platform === 'INSTAGRAM') {
@@ -1052,6 +1054,13 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
       const claim = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='PUBLISHING',updated_at=?2
         WHERE post_id=?1 AND status='APPROVED'`).bind(row.post_id, now.toISOString()).run();
       if (Number(claim?.meta?.changes || 0) !== 1) continue;
+      // 送る本文と行の本文を一致させておく（送信前の行だけ。送信済みの履歴は触らない）。
+      const liveCaption = socialTrialCaption(row.caption, env);
+      if (liveCaption !== String(row.caption || '')) {
+        await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET caption=?2,updated_at=?3
+          WHERE post_id=?1 AND status='PUBLISHING'`).bind(row.post_id, liveCaption, now.toISOString()).run();
+        row.caption = liveCaption;
+      }
       const externalId = await publishSocialPost(row, env, fetchImpl, {
         onJobCreated: async (jobId) => {
           await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET platform_job_id=?2,updated_at=?3

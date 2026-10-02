@@ -1,4 +1,4 @@
-import { TRIAL_SOCIAL_PENDING_COPY } from '../public/seller-trial-policy.mjs';
+import { TRIAL_SOCIAL_PENDING_COPY, socialTrialCaption } from '../public/seller-trial-policy.mjs';
 import {
   normalizeSocialPost,
   runDueSocialPosts,
@@ -957,7 +957,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         xPublishingSafety.ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true'
       )));
   const statements = [];
-  for (const post of posts) {
+  for (const planned of posts) {
+    // 受付開始後は Seller 投稿から「（体験開始は準備中）」を外して投入する（2026-10-02）。
+    const post = { ...planned, caption: socialTrialCaption(planned.caption, env) };
     // A finished video may be shared to Instagram and X in the same slot, but it
     // must not silently become a new APPROVED post on a later date. The only
     // recurring exception is the exact seven-asset DAILY_AI_ACTRESS_22 series:
