@@ -7,12 +7,13 @@
 import {
   dbAll, dbFirst, dbRun, hydrateProfile, jstMonthRange, jstParts, nowIso, pilotSellerKeys, promoAudit, promoEnabled,
   promoId, promoMonthKey, promoPlansEnabled, promoText, promoWeekKey, readPromoProfile, refreshHoshiluDemandQuestions,
-  activePromoProducts, PROMO_DELIVERY_PLANS
+  activePromoProducts, PROMO_DELIVERY_PLANS, parseJsonColumn
 } from './seller-promo-store.mjs';
 import { generatePromoPackage, promoAiConfigured } from './seller-promo-generate.mjs';
 import { autoApproveDeliverable } from './seller-promo-publish.mjs';
 import { runMonthlyReportCycle } from './seller-promo-report.mjs';
-import { ensurePromoPricesOnce } from './seller-promo-billing.mjs';
+import { ensurePromoPricesOnce, PROMO_OFFER_PLANS } from './seller-promo-billing.mjs';
+import { pilotEntitlement } from './seller-listing-pilot.mjs';
 
 export const MAX_ATTEMPTS = 3;
 const STALE_RUNNING_MS = 30 * 60 * 1000;
@@ -31,6 +32,22 @@ export function promoProfileEligible(profile, env = {}) {
   if (!profile || profile.status !== 'ACTIVE') return false;
   if (!promoPlansEnabled(env)) return profile.qa === true || pilotSellerKeys(env).has(profile.seller_key);
   return PROMO_DELIVERY_PLANS.includes(profile.plan);
+}
+
+// 販売 ON のときは、プロファイルの plan だけでなく、紐づく掲載契約（profile.pilot_id）が
+// 同じプランの Light/Standard で、トライアル中か支払済み（pilotEntitlement.active）であることを確かめる。
+// QA 店舗・パイロット店（SELLER_PROMO_PILOT_SELLER_KEYS）は契約なしで動かす（検証用）。
+export async function promoContractActive(env, profile, now = new Date()) {
+  if (!profile?.pilot_id) return false;
+  const row = await dbFirst(env.PRODUCT_DB, 'SELECT document_json FROM seller_listing_pilots WHERE pilot_id=?1', profile.pilot_id);
+  if (!row) return false;
+  const doc = parseJsonColumn(row.document_json, {});
+  return PROMO_OFFER_PLANS[doc.offer_version] === profile.plan && pilotEntitlement(doc, now).active === true;
+}
+export async function promoProfileRunnable(env, profile, now = new Date()) {
+  if (!promoProfileEligible(profile, env)) return false;
+  if (!promoPlansEnabled(env) || profile.qa === true || pilotSellerKeys(env).has(profile.seller_key)) return true;
+  return promoContractActive(env, profile, now).catch(() => false);
 }
 
 export function promoDue(profile, now = new Date()) {
@@ -219,7 +236,7 @@ export async function runSellerPromoCycle(env, scheduledAt = new Date(), { fetch
     const profiles = (await dbAll(db, `SELECT * FROM seller_promo_profiles WHERE status='ACTIVE' ORDER BY seller_key LIMIT 500`)).map(hydrateProfile);
     let created = 0;
     for (const profile of profiles) {
-      if (!promoProfileEligible(profile, env) || !promoDue(profile, scheduledAt)) continue;
+      if (!promoDue(profile, scheduledAt) || !await promoProfileRunnable(env, profile, scheduledAt)) continue;
       const job = await ensurePromoJob(db, profile.seller_key, weekKey, scheduledAt);
       if (job?.status === 'PENDING' && Number(job.attempt) === 0) created += 1;
     }
@@ -231,7 +248,7 @@ export async function runSellerPromoCycle(env, scheduledAt = new Date(), { fetch
     const results = [];
     for (const job of runnable) {
       const profile = await readPromoProfile(db, job.seller_key);
-      if (!promoProfileEligible(profile, env)) continue;
+      if (!await promoProfileRunnable(env, profile, scheduledAt)) continue;
       results.push({ job_id: job.id, ...(await runPromoJob(env, job, { fetchImpl, now: scheduledAt })) });
     }
     const reports = await runMonthlyReportCycle(env, scheduledAt).catch(() => ({ error: 'REPORT_CYCLE_FAILED' }));

@@ -106,3 +106,42 @@ test('公開済みの Light 契約は、販売を止めた後もサブスク作�
   const draft = { ...doc, starts_at: undefined, status: 'DRAFT' };
   db.prepare('UPDATE seller_listing_pilots SET document_json=?').run(JSON.stringify(draft));
 });
+
+test('販売 ON: 週次ジョブは有効な Light 契約（同じプラン・トライアル中か支払済み）がある店だけ。QA 店舗は契約なしで動く', async () => {
+  const { promoProfileRunnable } = await import('../src/seller-promo-scheduler.mjs');
+  const { db, adapter } = promoDb();
+  db.exec(readFileSync(new URL('../migrations/0089_seller_listing_pilot.sql', import.meta.url), 'utf8'));
+  const now = new Date('2026-10-10T00:00:00Z');
+  const doc = (over = {}) => JSON.stringify({ status: 'PUBLISHED', offer_version: PROMO_LIGHT_OFFER, starts_at: '2026-10-05T00:00:00Z', ends_at: '2026-11-04T00:00:00Z', ...over });
+  db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?,?,?,?,?,?)').run('SPL_ok', 'SBI_1', 'o', 1, doc(), 'x', 'x');
+  db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?,?,?,?,?,?)').run('SPL_ended', 'SBI_2', 'o', 1, doc({ starts_at: '2026-08-01T00:00:00Z', ends_at: '2026-08-31T00:00:00Z' }), 'x', 'x');
+  const env = promoEnv(adapter, { SELLER_PROMO_PLANS_ENABLED: 'true' });
+  const profile = (over) => ({ seller_key: 'ext-1', status: 'ACTIVE', plan: 'LIGHT', qa: false, pilot_id: 'SPL_ok', ...over });
+  assert.equal(await promoProfileRunnable(env, profile(), now), true);
+  assert.equal(await promoProfileRunnable(env, profile({ pilot_id: '' }), now), false);
+  assert.equal(await promoProfileRunnable(env, profile({ pilot_id: 'SPL_ended' }), now), false);
+  assert.equal(await promoProfileRunnable(env, profile({ plan: 'STANDARD' }), now), false);
+  assert.equal(await promoProfileRunnable(env, profile({ pilot_id: '', qa: true }), now), true);
+  // 販売 OFF の間は従来どおり QA・パイロット店だけ
+  assert.equal(await promoProfileRunnable(promoEnv(adapter), profile(), now), false);
+});
+
+test('契約者の一覧 API は Light 契約に、その契約の規約・文面・受付可否を返す（販売 OFF なら新規受付は false）', async () => {
+  const { handleSellerListingPilotRoutes } = await import('../src/seller-listing-pilot.mjs');
+  const db = new DatabaseSync(':memory:');
+  for (const name of ['0058_seller_business_inquiries', '0089_seller_listing_pilot']) db.exec(readFileSync(new URL(`../migrations/${name}.sql`, import.meta.url), 'utf8'));
+  db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?,?,?,?,?,?)').run('SPL_l', 'SBI_1', 'owner', 1, JSON.stringify({ status: 'DRAFT', offer_version: PROMO_LIGHT_OFFER, products: [] }), 'x', 'x');
+  const adapter = { prepare(sql) { let v = []; const st = db.prepare(sql); return { bind(...a) { v = a; return this; }, async all() { return { results: st.all(...v) }; }, async run() { const r = st.run(...v); return { meta: { changes: Number(r.changes) } }; } }; },
+    async batch(stmts) { const out = []; for (const s of stmts) out.push(await s.run()); return out; } };
+  const deps = { authorize: async () => false, member: async () => ({ id: 'owner' }) };
+  const list = async (env) => (await (await handleSellerListingPilotRoutes(new Request('https://hoshilu.app/api/seller-pilot'), { PRODUCT_DB: adapter, SELLER_MANUAL_PILOT_ENABLED: 'true', ...env }, deps)).json()).items[0];
+  const off = await list({});
+  assert.equal(off.offer_policy.terms, PROMO_AUTO_RENEW_POLICIES[PROMO_LIGHT_OFFER].terms);
+  assert.equal(off.offer_policy.monthly_jpy, 9800);
+  assert.equal(off.offer_policy.new_enrollment, false);
+  assert.equal(off.autorenew_enabled, false);
+  assert.equal((await list({ SELLER_PROMO_PLANS_ENABLED: 'true' })).offer_policy.new_enrollment, true);
+  const client = readFileSync(new URL('../public/seller-pilot.js', import.meta.url), 'utf8');
+  assert.match(client, /item\.offer_policy\?\.terms/);
+  assert.doesNotMatch(client.normalize('NFKC'), /9,?800|19,?800/);
+});
