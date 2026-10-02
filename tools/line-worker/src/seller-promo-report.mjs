@@ -20,7 +20,7 @@ export async function buildMonthlyReport(env, profile, monthKey, now = new Date(
   const db = env.PRODUCT_DB;
   const { from, to } = jstMonthRange(monthKey);
   const published = await dbAll(db, `SELECT type,published_target,published_url,published_at,created_at,approved_at FROM seller_promo_deliverables
-    WHERE seller_key=?1 AND status IN ('PUBLISHED','DELIVERED','CONFIRMING') AND published_at>=?2 AND published_at<?3 ORDER BY published_at`, profile.seller_key, from, to);
+    WHERE seller_key=?1 AND type<>'REPORT' AND status IN ('PUBLISHED','DELIVERED','CONFIRMING') AND published_at>=?2 AND published_at<?3 ORDER BY published_at`, profile.seller_key, from, to);
   const approved = published.filter((row) => row.approved_at && row.created_at);
   const approvalDays = approved.length
     ? Math.round(approved.reduce((sum, row) => sum + (Date.parse(row.approved_at) - Date.parse(row.created_at)) / 86400000, 0) / approved.length * 10) / 10

@@ -162,15 +162,13 @@ export async function runPromoJob(env, job, { fetchImpl = fetch, now = new Date(
     await promoAudit(db, { seller_key: job.seller_key, actor: 'SYSTEM', action: 'JOB_SKIPPED_BUDGET', target_type: 'JOB', target_id: job.id, detail: budget }, now);
     return { status: 'SKIPPED', error: budget.over };
   }
-  if (!promoAiConfigured(env)) {
-    await dbRun(db, `UPDATE seller_promo_jobs SET status='FAILED',error='SELLER_PROMO_AI_NOT_CONFIGURED',finished_at=?1 WHERE id=?2`, nowIso(now), job.id);
-    return { status: 'FAILED', error: 'SELLER_PROMO_AI_NOT_CONFIGURED' };
-  }
   const claim = await dbRun(db, `UPDATE seller_promo_jobs SET status='RUNNING',attempt=attempt+1,started_at=?1,error=''
     WHERE id=?2 AND status=?3 AND attempt=?4 AND attempt<?5`, nowIso(now), job.id, job.status, Number(job.attempt || 0), MAX_ATTEMPTS);
   if (Number(claim?.meta?.changes || 0) !== 1) return { status: 'NOT_CLAIMED' };
   const attempt = Number(job.attempt || 0) + 1;
   try {
+    // AI の鍵が無いときも 1 回の失敗として数える（3 回で止めて管理者へ知らせる。毎サイクル拾い直さない）。
+    if (!promoAiConfigured(env)) throw new Error('SELLER_PROMO_AI_NOT_CONFIGURED');
     const products = await activePromoProducts(db, job.seller_key);
     await refreshHoshiluDemandQuestions(env, job.seller_key, products, now).catch(() => null);
     const pkg = await generatePromoPackage(env, { profile, job, fetchImpl, now });

@@ -31,3 +31,4 @@ jobs:
           q "SELECT seller_key,week_key,type,version,status,json_extract(qa,'$.reasons') AS reasons,json_extract(qa,'$.chars') AS chars FROM seller_promo_deliverables ORDER BY created_at DESC LIMIT 30"
           q "SELECT seller_key,provider,model,COUNT(*) AS calls,SUM(input_tokens) AS input_tokens,SUM(output_tokens) AS output_tokens,ROUND(SUM(cost_jpy_est),2) AS cost_jpy FROM seller_promo_usage GROUP BY seller_key,provider,model"
           q "SELECT actor,action,COUNT(*) AS n FROM seller_promo_audit GROUP BY actor,action ORDER BY n DESC"
+          q "SELECT action,detail,created_at FROM seller_promo_audit WHERE seller_key='_system' ORDER BY created_at DESC LIMIT 5"
