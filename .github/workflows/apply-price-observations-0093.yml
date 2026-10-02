@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: cloudflare-d1-migrations
@@ -50,5 +51,17 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS rows FROM price_observations;" | tee price-observations-check.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS rows, MIN(observed_date) AS since FROM price_observations;" | tee price-observations-check.json
           grep -q '"rows"' price-observations-check.json
+      # 結果を Issue #545（[PATCH] 価格推移の記録）に書く。サンドボックスから Actions の実行結果を読めないため。
+      - name: Report to issue 545
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          status="${{ job.status }}"
+          check="$(tr -d '\n' < price-observations-check.json 2>/dev/null | tail -c 400 || echo 'no check output')"
+          body="migration 0093 workflow: **${status}** (run ${{ github.run_id }}, head ${GITHUB_SHA::7})\n\ncheck: \`${check}\`"
+          gh api repos/${{ github.repository }}/issues/545/comments -f body="$(printf '%b' "$body")"
