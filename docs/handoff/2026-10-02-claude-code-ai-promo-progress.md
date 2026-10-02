@@ -2,17 +2,18 @@
 
 最終更新: 2026-10-02（セッション 2）
 
-## 状態
+## 状態（2026-10-03 01:45 JST、OK① 実施後）
 
 | 項目 | 値 |
 |---|---|
-| 作業ブランチ | `claude/hoshilu-seller-promo-impl-5opkil`（`origin/feature/ui-search-v2` の `953baf23` から分岐） |
-| 本番への反映 | **未反映**。deploy は `feature/ui-search-v2` への push だけで走るため、このブランチの push では本番は変わらない |
-| migration | `0090_seller_promo_profiles.sql`・`0091_seller_promo_jobs.sql`・`0092_seller_promo_ops.sql` を追加。**本番は未適用**（ローカル SQLite で適用・全テストで確認済み） |
-| vars（追加・すべて OFF） | `SELLER_PROMO_ENABLED=false`、`SELLER_PROMO_PLANS_ENABLED=false`、`SELLER_PROMO_STRIPE_PRICES_APPROVED=false`、`SELLER_PROMO_PILOT_SELLER_KEYS=""`、`SELLER_PROMO_MAX_JOBS_PER_CYCLE=5`、`SELLER_PROMO_MONTHLY_TOKEN_CAP_PER_SELLER=2000000`、`SELLER_PROMO_MONTHLY_COST_CAP_JPY=20000`、`SELLER_PROMO_JPY_PER_USD=150`、`SELLER_PROMO_WP_HOST_ALLOWLIST=""` |
-| テスト | `npm test` 全件 pass（開始時 2,895 件・追加 33 件）。`wrangler deploy --dry-run` OK。セッション 1 の push（3423c626）の CI は success |
-| 本番 health | 2026-10-02 `https://hoshilu.app/health` `ok:true`（release 1.22.1）。このブランチの変更は含まない |
-| Codex との重複 | 直近 7 日、本書の対象ファイルへの Codex の変更なし |
+| 本番 | PR #537（コード・フラグ OFF）→ #539（`SELLER_PROMO_ENABLED=true`）を `feature/ui-search-v2` にマージ・deploy success。HEAD `e366cff0` |
+| migration | **0090〜0092 本番適用済み**（apply-d1-migrations.yml、未適用リストが 3 本ちょうどであることを確認してから適用） |
+| R2・鍵 | `hoshilu-seller-promo-assets` 作成済み。`SELLER_PROMO_KEK` 作成済み（値はどこにも出していない。作り直さない） |
+| QA 店舗 | `qa-shop-1`（架空・qa=1・LIGHT・商品 3・疑問 3・通知メールなし）を投入。初回の無人実行を見るため **土曜 04:00 JST** に設定（確認後に月曜 06:00 へ戻す） |
+| vars | `SELLER_PROMO_ENABLED=true`。`SELLER_PROMO_PLANS_ENABLED=false`・`SELLER_PROMO_STRIPE_PRICES_APPROVED=false`・`SELLER_PROMO_LP_PREVIEW_PUBLIC=false` のまま |
+| 本番確認 | `/health` ok、`/api/seller-promo/deliverables` 401（未ログイン。フラグ OFF 時は 404 だった）、`/for-sellers-preview` 404（未公開のまま）、管理 API 401（認証必須）、`/seller-promo.js` 200 |
+| 手動ワークフロー | `seller-promo-infra.yml`・`seller-promo-status.yml`・`build-seller-promo-images.yml` は main にも置いた（PR #538。workflow_dispatch は既定ブランチに定義が要るため）。起動時は ref=feature/ui-search-v2 |
+| テスト | `npm test` 2,927 件 pass・root の release_config も pass |
 
 開始時の注意: このコンテナでは `npm ci` 前だと `encoding-japanese` が無く 46 件落ちる。`npm ci --prefix tools/line-worker` 後は全件 pass（自分の変更でない回帰は無し）。
 
@@ -23,7 +24,7 @@
 | 店プロファイル（禁止カテゴリ拒否） | ○ | ○ | – | – | – |
 | 商品取り込み（CSV・products[]） | ○ | ○ | – | – | – |
 | 疑問の取り込み（STORE_PASTE/SUGGEST/FORM/FEEDBACK_API 集計・HOSHILU_DEMAND 自動） | ○ | ○ | – | – | – |
-| 週次ジョブ（cron・手動起動・冪等・attempt≤3・kill switch・予算） | ○ | ○ | – | – | – |
+| 週次ジョブ（cron・手動起動・冪等・attempt≤3・kill switch・予算） | ○ | ○ | ○（フラグ ON・テーブル作成済み） | 土 04:00 JST に初回予定 | – |
 | 生成（Gemini 主・OpenAI 予備、JSON、作り直し最大 2 回） | ○ | ○（応答はモック） | – | – | – |
 | 検査（数値照合・禁止表現・同型・文字数・URL 除去・SNS 文字数） | ○ | ○ | – | – | – |
 | 承認画面（/seller「今週のサポート」・差し戻し理由・自動公開トグル） | ○ | ○（API・HTML 出し分け） | – | – | – |
@@ -37,7 +38,7 @@
 | 商品 CSV の見出し対応表の AI 提案（取り込まず人が確認） | ○ | ○ | – | – | – |
 | 料金 LP 下書き `/for-sellers-preview`（OK② 前は管理者だけ・有料欄は販売 ON のみ） | ○ | ○ | – | – | – |
 | 1,980円「掲載のみ」文言差分（**未反映**・パッチで保存） | ○ | ○（当てた状態で全テスト pass） | – | – | – |
-| プラン引数付き Checkout（seller-pilot-payment） | ✕ | – | – | – | – |
+| Light／Standard の申込・自動課金（既存の 30 日無料・カード登録・自動更新・解約に別の契約種類として追加。販売 OFF では申込不可） | ○ | ○（既存の決済テスト 43 件は無変更で pass） | – | – | – |
 
 ## 変更ファイル
 
@@ -51,6 +52,16 @@
 - ローカルは http のため公開 URL は空（https のリンクだけ保存する方針どおり）。cloudflared の一時トンネル経由の確認は、本番 Worker が動く OK① 後に行う。
 - 画像: `scripts/build-seller-promo-images.py` で正方形 1080×1080・縦 1080×1350・横 1080×566 を描画し目視確認。横長で見出しが帯からはみ出すのを機械検査が検出→帯の高さに合わせて文字を縮める修正済み。
 - OK② の文言: 公開中の LP・規約・SNS 文面・SEO 記事に「1,980円に HP・記事・SNS 原稿・画像が含まれる」という記述は**見つからなかった**（含むと書いていたのは統合指示書 v1 §4・§19-2 だけ）。そこで差分は「含みません」を明記する追加（LP の料金カード・FAQ・JSON-LD）と統合指示書 §4 の書き換え。`docs/handoff/2026-10-02-ok2-seller-1980-listing-only.patch`（`git apply` で当たることを確認、当てた状態で全テスト pass、まだ当てていない）。
+
+## Phase 3 の決済（2026-10-03、大隆さん「今から作る（販売OFFのまま）」）
+
+- 現在の 1,980円の申込は `seller-pilot-payment.mjs`（旧 4,980円の任意申込）ではなく `seller-pilot-autorenew.mjs`（30 日無料・カード登録・自動更新）なので、こちらに載せた。
+- Light／Standard は新しい契約の種類（offer）`external-seller-promo-{light,standard}-30d-autorenew-v1`。金額・規約・文面は offer ごとに固定し、申込時にスナップショットを保存（既存と同じ）。
+- 定義は `src/seller-promo-billing.mjs`（サーバーのみ）。公開ファイル `public/seller-trial-policy.mjs` には入れていない（販売 OFF の間に 9,800／19,800 を公開アセットへ出さないため。テストで固定）。
+- `src/seller-offer-registry.mjs` が 1,980円の公開ポリシーに Light／Standard を足すだけ。`seller-listing-pilot.mjs`・`seller-pilot-autorenew.mjs` はここから同じ名前の関数を読む。
+- 申込: 管理 API の CREATE に `"plan":"LIGHT"|"STANDARD"`。`SELLER_PROMO_PLANS_ENABLED=false` の間は `PROMO_PLANS_NOT_ENABLED`。
+- Price: OK② 後に ensure-prices で作り、`SELLER_PROMO_{LIGHT,STANDARD}_{TEST,LIVE}_{PRICE,PRODUCT}_ID` を vars に入れる（未設定の間は申込できない）。
+- 販売 ON（OK③）のときに要る別作業: `seller-marketing-guard.mjs` が Seller 文面の 9,800 を止める設定の更新、契約者画面での申込ボタン。
 
 ## 原価の実測
 

@@ -54,3 +54,27 @@ export async function ensurePromoPrices(env) {
   }
   return { mode: stripeMode(env), prices: out };
 }
+
+// ---- Light／Standard を「契約の種類（offer）」として既存の自動更新の仕組みに載せる（Phase 3） ----------------
+// 1,980円（AUTO_RENEW_OFFER）と同じく「初回公開から 30 日無料・カード登録・自動更新・解約」。条件は増やさない。
+// 金額・規約は offer ごとに固定（後から変えるときは新しい offer を作る）。公開ファイル（public/seller-trial-policy.mjs）には
+// 置かない: 販売 OFF の間に 9,800／19,800 を公開アセットへ出さないため。
+export const PROMO_LIGHT_OFFER = 'external-seller-promo-light-30d-autorenew-v1';
+export const PROMO_STANDARD_OFFER = 'external-seller-promo-standard-30d-autorenew-v1';
+const promoCopy = (name, amount) => `HOSHILU Seller AI販促担当 ${name}。初回公開から30日間無料。無料利用の開始前にカード登録が必要です。無料期間の終了期限までに解約しない場合、31日目から月額${amount.toLocaleString('en-US')}円（税込）で自動課金され、以後毎月自動更新されます。解約は掲載管理画面から行えます。売上や順位は約束しません。`;
+export const PROMO_AUTO_RENEW_POLICIES = Object.freeze({
+  [PROMO_LIGHT_OFFER]: Object.freeze({ offer: PROMO_LIGHT_OFFER, terms: 'seller-promo-light-30d-autorenew-20261003-v1', amount: PROMO_PAID_PLANS.LIGHT.unit_amount,
+    currency: 'jpy', interval: 'month', interval_count: 1, tax_behavior: 'inclusive', trial_days: 30, copy: promoCopy('Light', PROMO_PAID_PLANS.LIGHT.unit_amount) }),
+  [PROMO_STANDARD_OFFER]: Object.freeze({ offer: PROMO_STANDARD_OFFER, terms: 'seller-promo-standard-30d-autorenew-20261003-v1', amount: PROMO_PAID_PLANS.STANDARD.unit_amount,
+    currency: 'jpy', interval: 'month', interval_count: 1, tax_behavior: 'inclusive', trial_days: 30, copy: promoCopy('Standard', PROMO_PAID_PLANS.STANDARD.unit_amount) })
+});
+export const PROMO_OFFER_PLANS = Object.freeze({ [PROMO_LIGHT_OFFER]: 'LIGHT', [PROMO_STANDARD_OFFER]: 'STANDARD' });
+export const PROMO_PLAN_OFFERS = Object.freeze({ LIGHT: PROMO_LIGHT_OFFER, STANDARD: PROMO_STANDARD_OFFER });
+export const isPromoOffer = (offer) => Object.hasOwn(PROMO_AUTO_RENEW_POLICIES, String(offer || ''));
+// Price ID は ensure-prices の結果を vars に入れる（SELLER_PROMO_LIGHT_TEST_PRICE_ID など。テスト・本番は別のキー）。
+export function promoPriceConfiguration(env, mode, offer) {
+  const plan = PROMO_OFFER_PLANS[offer];
+  if (!plan || !['test', 'live'].includes(mode)) return {};
+  const prefix = `SELLER_PROMO_${plan}_${mode.toUpperCase()}`;
+  return { price_id: env[`${prefix}_PRICE_ID`], product_id: env[`${prefix}_PRODUCT_ID`], mode };
+}

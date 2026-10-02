@@ -1,13 +1,14 @@
 # Claude Code → Cowork 引継ぎ: AI販促担当 Phase 1
 
-## 1. 状態
+## 1. 状態（2026-10-03 OK① 実施後）
 
-- HEAD: ブランチ `claude/hoshilu-seller-promo-impl-5opkil`（本番未反映。`feature/ui-search-v2` に入ると deploy される）
-- deploy/health: 本番 `ok:true`（このブランチは未反映）
-- 適用済み migration: なし（`0090`〜`0092` は OK① 後に適用）
-- vars・フラグ: `SELLER_PROMO_ENABLED=false`、`SELLER_PROMO_PLANS_ENABLED=false`、`SELLER_PROMO_STRIPE_PRICES_APPROVED=false`
-
-**下の runbook は OK① の後（migration 適用・`SELLER_PROMO_ENABLED=true`）から使えます。** それまでは管理 API が `MIGRATION_PENDING`（503）、手動起動が `SELLER_PROMO_DISABLED`（503）を返します。
+- 本番: `feature/ui-search-v2` HEAD `e366cff0`、deploy success、`/health` ok
+- 適用済み migration: 0090〜0092
+- vars: `SELLER_PROMO_ENABLED=true`（販売・Price 作成・LP 公開は OFF のまま）
+- R2 `hoshilu-seller-promo-assets`・`SELLER_PROMO_KEK` 作成済み
+- QA 店舗 `qa-shop-1`（架空）: 初回確認のため土曜 04:00 JST に設定中。**確認後、次の 1 行で月曜 06:00 に戻してください**:
+  `POST /api/admin/seller-promo/profiles {"seller_key":"qa-shop-1","display_name":"QA雑貨店（検証用）","plan":"LIGHT","qa":true,"categories":["生活雑貨"],"weekday":1,"hour_jst":6}`
+- 実際の契約者画面で見る QA 店舗を作るときは、その店で /seller にログインし `GET /api/seller-promo/deliverables` が返す `seller_key` を使って登録する（未登録の店には本人の seller_key だけを返す）
 
 ## 2. できること／できないこと
 
