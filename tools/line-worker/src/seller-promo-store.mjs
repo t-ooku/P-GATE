@@ -288,6 +288,25 @@ export function normalizeProductItems(items) {
   }).filter((item) => item.name);
 }
 
+// SP-API で同期済みの出品（sp_api_listings、店本人の認可で取得したもの）から転記する。
+// ASIN は AI に渡さない（生成させない約束のため。attrs にも入れない）。価格は JPY のときだけ。
+export async function productsFromSpApi(db, tenant) {
+  if (!/^[a-z0-9_-]{1,32}$/u.test(String(tenant || ''))) throw new Error('TENANT_INVALID');
+  const rows = await dbAll(db, `SELECT seller_sku,product_name,product_type,condition_type,image_url,price,currency,product_url
+    FROM sp_api_listings WHERE tenant=?1 AND missing_from_amazon=0 AND product_name<>'' ORDER BY seller_sku LIMIT ?2`, tenant, MAX_PRODUCTS_PER_IMPORT);
+  if (!rows.length) throw new Error('SP_API_LISTINGS_EMPTY');
+  return rows.map((row) => {
+    const attrs = {};
+    if (row.product_type) attrs['商品タイプ'] = promoText(row.product_type, 80);
+    if (row.condition_type) attrs['状態'] = promoText(row.condition_type, 40);
+    const price = String(row.currency || 'JPY').toUpperCase() === 'JPY' && Number.isFinite(Number(row.price)) && row.price !== null ? Math.round(Number(row.price)) : null;
+    return {
+      external_id: promoText(row.seller_sku, 120), name: promoText(row.product_name, 255), price_jpy: price,
+      url: httpsUrl(row.product_url), image_url: httpsUrl(row.image_url), attrs
+    };
+  });
+}
+
 export async function importPromoProducts(db, sellerKey, source, items, now = new Date()) {
   if (!PRODUCT_SOURCES.includes(source)) throw new Error('SOURCE_INVALID');
   const at = nowIso(now);

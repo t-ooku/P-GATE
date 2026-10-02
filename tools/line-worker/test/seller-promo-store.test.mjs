@@ -85,3 +85,21 @@ test('接続秘密は AES-GCM。別の店・別の鍵では復号できない', 
   await assert.rejects(encryptPromoSecret({}, 'x', 'y'), /KEK_NOT_CONFIGURED/);
   assert.equal(TEST_KEK.length, 64);
 });
+
+test('SP-API の同期済み出品から転記する（ASIN は渡さない・JPY 以外の価格は空・消えた出品は除く）', async () => {
+  const { productsFromSpApi } = await import('../src/seller-promo-store.mjs');
+  const { db, adapter } = promoDb([...(await import('./helpers/seller-promo-fixture.mjs')).PROMO_MIGRATIONS, '0010_sp_api_listing_sync']);
+  const insert = db.prepare(`INSERT INTO sp_api_listings(tenant,seller_sku,marketplace_id,store_name,merchant_id,asin,product_name,product_type,condition_type,image_url,price,currency,product_url,sync_id,observed_at,missing_from_amazon)
+    VALUES('itg',?,'A1VC38T7YXB528','s','m',?,?,?,'new_new','https://m.media-amazon.com/x.jpg',?,?,?, 's1','2026-10-01',?)`);
+  insert.run('SKU-1', 'B0AAAAAAAA', 'キャンプ用ランタン', 'LANTERN', 3480, 'JPY', 'https://www.amazon.co.jp/dp/B0AAAAAAAA', 0);
+  insert.run('SKU-2', 'B0BBBBBBBB', '輸入品', 'BAG', 20, 'USD', 'http://insecure.example', 0);
+  insert.run('SKU-3', 'B0CCCCCCCC', '販売終了', 'BAG', 100, 'JPY', '', 1);
+  const items = await productsFromSpApi(adapter, 'itg');
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { external_id: 'SKU-1', name: 'キャンプ用ランタン', price_jpy: 3480, url: 'https://www.amazon.co.jp/dp/B0AAAAAAAA', image_url: 'https://m.media-amazon.com/x.jpg', attrs: { 商品タイプ: 'LANTERN', 状態: 'new_new' } });
+  assert.equal(items[1].price_jpy, null);
+  assert.equal(items[1].url, '');
+  assert.doesNotMatch(JSON.stringify(items.map((i) => i.attrs)), /B0[A-Z]{8}/);
+  await assert.rejects(productsFromSpApi(adapter, 'other'), /SP_API_LISTINGS_EMPTY/);
+  await assert.rejects(productsFromSpApi(adapter, 'BAD TENANT'), /TENANT_INVALID/);
+});

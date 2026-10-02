@@ -39,6 +39,9 @@ test('外部 URL は除き（店の商品 URL は残す）、ASIN を作った�
   assert.match(result.payload.lead, /item\.rakuten/);
   const asin = checkPromoDeliverable('IMPROVEMENT', { ...improvementPayload('spp_1', 'spq_1'), before: 'B0ABCDEFGH の説明' }, ctx);
   assert.ok(asin.qa.reasons.some((r) => r.code === 'IDENTIFIER_GENERATED'));
+  const amazon = [{ ...products[0], url: 'https://www.amazon.co.jp/dp/B0AAAAAAAA' }];
+  const linked = checkPromoDeliverable('IMPROVEMENT', { ...improvementPayload('spp_1', 'spq_1'), after_md: '詳しくは https://www.amazon.co.jp/dp/B0AAAAAAAA をご覧ください' }, { ...ctx, products: amazon });
+  assert.equal(linked.qa.reasons.some((r) => r.code === 'IDENTIFIER_GENERATED'), false);
 });
 
 test('文字数・SNS 文字数・画像文字数・知らない商品 ID を落とす', () => {

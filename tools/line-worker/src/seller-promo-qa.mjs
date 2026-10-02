@@ -169,7 +169,8 @@ export function checkPromoDeliverable(type, rawPayload, ctx = {}) {
     }
   }
   if (badNumbers.size) reasons.push({ code: 'NUMBER_NOT_IN_PRODUCT_DATA', detail: [...badNumbers].slice(0, 10).join(',') });
-  if (/\bB0[A-Z0-9]{8}\b/u.test(normalize(joined))) reasons.push({ code: 'IDENTIFIER_GENERATED', detail: 'ASIN' });
+  // 店の商品 URL（Amazon の /dp/<ASIN>/ など）は検査済みなので、URL を除いた本文だけで ASIN を探す。
+  if (/\bB0[A-Z0-9]{8}\b/u.test(normalize(joined).replace(URL_PATTERN, ''))) reasons.push({ code: 'IDENTIFIER_GENERATED', detail: 'ASIN' });
   // 2. 禁止表現（共通リスト＋店の NG 語）
   const normalizedText = normalize(joined);
   const hits = [...PROMO_FORBIDDEN_PHRASES, ...(ctx.ngWords || [])].filter((phrase) => phrase && normalizedText.includes(normalize(phrase)));
