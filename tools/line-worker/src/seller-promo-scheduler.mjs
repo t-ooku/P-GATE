@@ -251,7 +251,7 @@ export async function runSellerPromoCycle(env, scheduledAt = new Date(), { fetch
       if (!await promoProfileRunnable(env, profile, scheduledAt)) continue;
       results.push({ job_id: job.id, ...(await runPromoJob(env, job, { fetchImpl, now: scheduledAt })) });
     }
-    const reports = await runMonthlyReportCycle(env, scheduledAt).catch(() => ({ error: 'REPORT_CYCLE_FAILED' }));
+    const reports = await runMonthlyReportCycle(env, scheduledAt, promoProfileRunnable).catch(() => ({ error: 'REPORT_CYCLE_FAILED' }));
     return { week_key: weekKey, created, ran: results.length, results, reports, prices };
   } catch (error) {
     if (/no such table/iu.test(String(error?.message))) return { skipped: 'MIGRATION_PENDING' };

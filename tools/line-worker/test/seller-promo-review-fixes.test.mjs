@@ -145,3 +145,16 @@ test('契約者の一覧 API は Light 契約に、その契約の規約・文�
   assert.match(client, /item\.offer_policy\?\.terms/);
   assert.doesNotMatch(client.normalize('NFKC'), /9,?800|19,?800/);
 });
+
+test('販売 ON: 月次レポートも有効な契約がある店（と QA 店舗）だけに作る', async () => {
+  const { runMonthlyReportCycle } = await import('../src/seller-promo-report.mjs');
+  const { promoProfileRunnable } = await import('../src/seller-promo-scheduler.mjs');
+  const { db, adapter } = promoDb();
+  db.exec(readFileSync(new URL('../migrations/0089_seller_listing_pilot.sql', import.meta.url), 'utf8'));
+  const env = promoEnv(adapter, { SELLER_PROMO_PLANS_ENABLED: 'true' });
+  await upsertPromoProfile(adapter, { seller_key: 'no-contract', categories: ['文具'], plan: 'LIGHT' });
+  await upsertPromoProfile(adapter, { seller_key: 'qa-shop-1', categories: ['文具'], plan: 'LIGHT', qa: true });
+  const out = await runMonthlyReportCycle(env, new Date('2026-10-31T21:05:00Z'), promoProfileRunnable);
+  assert.equal(out.created, 1);
+  assert.deepEqual(db.prepare("SELECT seller_key FROM seller_promo_deliverables WHERE type='REPORT'").all().map((r) => r.seller_key), ['qa-shop-1']);
+});
