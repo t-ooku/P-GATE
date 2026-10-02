@@ -1,0 +1,54 @@
+name: Apply price observations migration 0093
+
+# 2026-10-02 大隆さん承認「1.ok」（指示書「今ほしい人が買うためのサービス」§4④・§5）:
+# 価格推移の追記型テーブル price_observations を本番 D1 に作る。
+# apply-patch（GITHUB_TOKEN の push）は他の workflow を起動しないので、このファイル自体の外部 push で起動する。
+# この1ファイルだけを migrations_dir にして適用し、他の未適用 migration には触れない。
+# 2回目以降は d1_migrations に記録済みのため何も起きない（冪等）。
+
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths:
+      - '.github/workflows/apply-price-observations-0093.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-d1-migrations
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply 0093 only
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          test -f migrations/0093_price_observations.sql
+          mkdir -p .migration-price-observations-0093
+          cp migrations/0093_price_observations.sql .migration-price-observations-0093/
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const config = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+          config.d1_databases = config.d1_databases.map(db => ({ ...db, migrations_dir: '.migration-price-observations-0093' }));
+          fs.writeFileSync('wrangler-price-observations-0093.jsonc', JSON.stringify(config));
+          JS
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote --config wrangler-price-observations-0093.jsonc
+      - name: Verify the table exists
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS rows FROM price_observations;" | tee price-observations-check.json
+          grep -q '"rows"' price-observations-check.json
