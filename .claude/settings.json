@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push origin:*)",
+      "Bash(git push -u origin:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(npm test:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(npx wrangler:*)",
+      "Bash(npx --yes wrangler@4.121.0:*)",
+      "Bash(wrangler:*)",
+      "Bash(php:*)",
+      "Bash(curl https://hoshilu.app/*)",
+      "Bash(curl -s https://hoshilu.app/*)",
+      "Bash(curl http://localhost:*)",
+      "Bash(curl -s http://localhost:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(wrangler delete:*)",
+      "Bash(npx wrangler delete:*)"
+    ]
+  }
+}

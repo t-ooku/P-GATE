@@ -47,6 +47,14 @@ const safeDate = (value) => {
     : '記録なし';
 };
 
+// 2026-10-03 AI販促担当: 中身は /seller-promo.js が /api/seller-promo/deliverables から描く（料金は載せない）。
+const PROMO_SECTION = `<section class="auth-card" id="promo"><p class="eyebrow">WEEKLY SUPPORT</p><h2>今週のサポート</h2>
+  <p class="section-intro">毎週の記事・SNS原稿・商品ページの直し案です。内容を確認して「承認」か「差し戻し」を選んでください。承認したものだけが公開・納品されます。</p>
+  <div id="sellerPromoStatus" class="operation-status" role="status" aria-live="polite"></div>
+  <label class="data-note"><input type="checkbox" id="sellerPromoAuto"> 検査に通ったものは自動で公開してよい（いつでも戻せます）</label>
+  <div id="sellerPromoList"><p class="metric-help">読み込んでいます…</p></div>
+  <p class="data-note">売上や順位は約束しません。作ったもの・公開したもの・数字は毎月そのまま報告します。</p></section>`;
+
 export async function sellerPageResponse(
   env = {},
   seller = { account: 'Seller', tenants: ['itg'], plan: 'LITE' },
@@ -385,6 +393,8 @@ export async function sellerPageResponse(
   const referralSessions = Number(referralStats?.sessions_30d || 0);
   const priorityClicks = Number(referralStats?.priority_clicks_30d || 0);
 
+  // 2026-10-03 AI販促担当「今週のサポート」タブ。SELLER_PROMO_ENABLED=true のときだけ出す。
+  const promoEnabled = String(env.SELLER_PROMO_ENABLED || '').toLowerCase() === 'true';
   const html = `<!doctype html><html lang="ja"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#7357ff"><meta name="robots" content="noindex,nofollow">
@@ -400,7 +410,8 @@ export async function sellerPageResponse(
   <nav class="seller-actions" aria-label="管理メニュー">
   <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#forecast">需要予報</a><a class="primary-button" href="#free-period">無料期間</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
-  <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a></nav></section>
+  <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a>${promoEnabled ? '<a class="primary-button" href="#promo">今週のサポート</a>' : ''}</nav></section>
+  ${promoEnabled ? PROMO_SECTION : ''}
 
   <!-- 2026-09-21 指示書 ⑭: 商品一覧より先に「今あなたが応えられる需要」を出す。
        3つの需要（探し中・値下がり待ち・いつものホシル）は /api/seller/shop/demand の実データだけを使う。
@@ -637,7 +648,7 @@ export async function sellerPageResponse(
     <article class="seller-panel"><span>HOSHILU Seller</span><strong>新規 月額1,980円（税込）</strong><span>無料期間はアカウントに保存された契約条件・終了日時をご確認ください。<strong>追加料金はありません。</strong>SHOP掲載・横断検索・商品クリック・需要への商品登録・需要への再通知まで、すべて月額に含まれます。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
   <p class="data-note">2026-09-21 に Demand Match Click（1有効クリック50円）を廃止しました。料金は月額だけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
-  </main><script type="module" src="/seller.js?v=1980-1"></script></body></html>`;
+  </main><script type="module" src="/seller.js?v=1980-1"></script>${promoEnabled ? '<script type="module" src="/seller-promo.js?v=1"></script>' : ''}</body></html>`;
 
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=UTF-8',

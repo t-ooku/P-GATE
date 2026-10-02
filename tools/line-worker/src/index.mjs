@@ -3643,6 +3643,9 @@ export default {
     if (sellerCandidateResponse) return sellerCandidateResponse;
     const sellerPilotResponse = await handleSellerListingPilotRoutes(request, env);
     if (sellerPilotResponse) return sellerPilotResponse;
+    // 2026-10-03 指示書 ai-promo-20261003-v2: HOSHILU Seller「AI販促担当」。契約者側は SELLER_PROMO_ENABLED=false の間 404。
+    const sellerPromoResponse = await handleSellerPromoRoutes(request, env);
+    if (sellerPromoResponse) return sellerPromoResponse;
     const sellerBusinessInquiryResponse = await handleSellerBusinessInquiryRoutes(request, env);
     if (sellerBusinessInquiryResponse) return sellerBusinessInquiryResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
@@ -3894,6 +3897,8 @@ export default {
         // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
         // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
         runSellerOutreachCycle(env, scheduledAt),
+        // 2026-10-03 AI販促担当: 店ごとの曜日・時刻（既定 月曜 06:00 JST）に週次ジョブ。SELLER_PROMO_ENABLED=false なら何もしない。
+        runSellerPromoCycle(env, scheduledAt),
         // 「これですか？」確認カードのキャッシュ（7日）を掃除する。
         purgeExpiredIdentifyCache(env, scheduledAt),
         // 「これですか？」の所要時間ログは14日で消す。
@@ -3907,3 +3912,5 @@ export default {
   }
 };
 import { runAutoRenewReconciliation } from './seller-pilot-autorenew.mjs';
+import { handleSellerPromoRoutes } from './seller-promo-routes.mjs';
+import { runSellerPromoCycle } from './seller-promo-scheduler.mjs';
