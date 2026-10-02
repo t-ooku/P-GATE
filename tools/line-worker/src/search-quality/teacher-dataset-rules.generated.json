@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-02T00:20:45.644Z",
+  "generated_at": "2026-10-02T21:21:44.041Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -40,9 +40,10 @@
     "2026-09-27-claude-batch-037.json",
     "2026-09-28-claude-batch-038.json",
     "2026-09-29-claude-batch-039.json",
-    "2026-10-01-claude-batch-040.json"
+    "2026-10-01-claude-batch-040.json",
+    "2026-10-02-claude-batch-041.json"
   ],
-  "entry_count": 2133,
+  "entry_count": 2183,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -46126,6 +46127,1002 @@
       "excluded_conditions": [],
       "confidence": 0.3,
       "source_file": "2026-10-01-claude-batch-040.json"
+    },
+    {
+      "content_hash": "dfdc63b1a67ee9a110d9b2db4391bce0a2051715d82c4e6c198c27bb47192046",
+      "query_text": "スマホを充電しながら使えるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "power-banks",
+      "ideal_answer": "充電しながらスマホを操作できるモバイルバッテリー(ケーブル直結タイプやワイヤレス充電対応タイプなど)。",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー",
+          "充電しながら使える バッテリー"
+        ],
+        "en": [
+          "power bank pass-through charging"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "6f9bb78b4c1c2b0de1b8c3313feee018c9687169abb96619c23f8d2465fd7c26",
+      "query_text": "電車で音楽聴くときに使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earbuds",
+      "ideal_answer": "電車内でも周囲に音漏れしにくい完全ワイヤレスイヤホンやノイズキャンセリングヘッドホン。",
+      "search_terms": {
+        "ja": [
+          "イヤホン 音漏れしにくい",
+          "ノイズキャンセリング イヤホン"
+        ],
+        "en": [
+          "noise cancelling earbuds"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "ee71ca9b4c02df43015d12a09be2e9b498822019e5a66b7977764173c559a6e0",
+      "query_text": "旅行先で写真撮るのに便利なやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "カメラ本体をお探しですか、それともスマホに付けるレンズや三脚・自撮り棒のような撮影アクセサリーをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "bfac083e7c3124cc0a705b3de25c16861cddb0f6d30ab4b65e90b05040fc7d78",
+      "query_text": "飲み物を冷たいままキープするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insulated-tumblers",
+      "ideal_answer": "保冷効果の高いステンレス製タンブラーや水筒。",
+      "search_terms": {
+        "ja": [
+          "保冷 タンブラー",
+          "水筒 保冷"
+        ],
+        "en": [
+          "insulated tumbler"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "5b835f3bc64a7d95f07ef9e7e554bc841179b49f2a15dd1c98754c0cdad9217d",
+      "query_text": "冬に手を温めるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hand-warmers",
+      "ideal_answer": "使い捨てカイロや充電式のハンドウォーマー。",
+      "search_terms": {
+        "ja": [
+          "カイロ",
+          "ハンドウォーマー 充電式"
+        ],
+        "en": [
+          "hand warmer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "0566b0fabd3a4a1e0db37762bff08d9a57fc8144f37f2c53c4e3e89a09eb501c",
+      "query_text": "お風呂の床を掃除するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cleaning-brushes",
+      "ideal_answer": "浴室の床用の柄付きバスブラシやこすり洗い用スポンジ。",
+      "search_terms": {
+        "ja": [
+          "バスブラシ",
+          "風呂 床 ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "10ae96477a7aafe5a9057578dddb63433315f60f37f2a07f99b5321e4a1d4d7a",
+      "query_text": "買い物したものを運ぶやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "持ち運びやすいエコバッグをお探しですか、それとも荷物を転がして運べるショッピングカートをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "a1e3a76fce90ead7eef376aefa85eb1b5b3902490079637edbfe736e7aba905c",
+      "query_text": "デスク周りの配線をすっきりさせるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cable-organizers",
+      "ideal_answer": "机下に取り付けるケーブルトレーや、配線をまとめるケーブルオーガナイザー。",
+      "search_terms": {
+        "ja": [
+          "ケーブルトレー デスク",
+          "配線 整理 グッズ"
+        ],
+        "en": [
+          "cable organizer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "5f7b086db2dd0e1dcf245e27a5fe3528dbba75765e3f50fb58378a971d6045b4",
+      "query_text": "書類を挟んで止めるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "office-clips",
+      "ideal_answer": "紙を留めるダブルクリップやステープラー、クリアファイル用のクリップ。",
+      "search_terms": {
+        "ja": [
+          "ダブルクリップ",
+          "書類 挟む クリップ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "734a21d41be8be1c2953fe5b80b6853c0a92bb207358871fc3aaa909df1233c4",
+      "query_text": "何も置いてない部屋に飾るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "room-decor",
+      "ideal_answer": "壁に掛けるアートパネルやガーランド、観葉植物、間接照明といったインテリア雑貨。",
+      "search_terms": {
+        "ja": [
+          "インテリア 雑貨",
+          "壁掛け アート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "bf6a46853e497310f72ab702fb3bca792d49f71c4299331813cc056449157bf6",
+      "query_text": "荷物の重さを測るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "luggage-scales",
+      "ideal_answer": "持ち手に引っ掛けて使うスーツケース用のデジタル重量計。",
+      "search_terms": {
+        "ja": [
+          "スーツケース 重さ 測る",
+          "手荷物 重量計"
+        ],
+        "en": [
+          "luggage scale"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "9af42bed014545f5575d9711bed55736af84a5c2044c016add2a732181b82b53",
+      "query_text": "お弁当箱をくるんで持っていくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bento-wraps",
+      "ideal_answer": "弁当箱を包んで持ち運べる布製のランチクロスやランチバッグ。",
+      "search_terms": {
+        "ja": [
+          "ランチクロス",
+          "お弁当 包む 布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "8b8657a88e8f92cdb3fe9f190e3bef1f6bc9b74b208fdf22fea27145f900c1fb",
+      "query_text": "洗濯物を部屋干しで吊るすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drying-racks",
+      "ideal_answer": "室内で使える伸縮式の物干しラックや突っ張り式ハンガーポール。",
+      "search_terms": {
+        "ja": [
+          "室内物干し",
+          "部屋干し ラック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "05debd25d6d97bcbe892dacd63cf56bd5325a543862083e7206242d1bce7e16e",
+      "query_text": "厚紙を切るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "craft-cutters",
+      "ideal_answer": "厚紙や段ボールを切れる工作用カッターナイフやクラフトはさみ。",
+      "search_terms": {
+        "ja": [
+          "段ボールカッター",
+          "厚紙 切る はさみ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "88e6a3e9cb68409a1216cc3bf864fe22c2b46448b99943ca5a6643eb858d3e0a",
+      "query_text": "窓に貼る目隠しになるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "window-film",
+      "ideal_answer": "外から見えにくくする窓ガラス用の目隠しフィルムやシート。",
+      "search_terms": {
+        "ja": [
+          "窓 目隠しシート",
+          "ガラスフィルム 目隠し"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "fb4b4f6990988b0a385d6dee19e7c97d8eb6e03832fe4fb6970fee182fb89dfc",
+      "query_text": "歯みがき嫌がらない歯ブラシ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-toothbrush",
+      "ideal_answer": "持ち手が握りやすく、ヘッドが小さい子供向け歯ブラシ(キャラクターデザインや音が鳴るタイプなど)。",
+      "search_terms": {
+        "ja": [
+          "子供 歯ブラシ",
+          "キッズ歯ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "bfe9cc2d370b7e91e8a8f4c24a35baa8b16a21e0fb2c1f758cb4c14aff8f69a4",
+      "query_text": "すべり台みたいなやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "室内で使う子供用のすべり台遊具をお探しですか、それともお風呂で使う滑り台タイプのおもちゃをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "48c226e5765c7ff11cd067cbef438113355236e7d27a52476a15a7bb12b9cd64",
+      "query_text": "お着替えしやすい服",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-clothing",
+      "ideal_answer": "前開きやマジックテープ留めなど、子供が自分で着脱しやすい工夫のある子供服。",
+      "search_terms": {
+        "ja": [
+          "着脱しやすい 子供服",
+          "キッズ 前開き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "45cce7c12d8ef28a2f365f7fb8566214386adee296b351c77efee7467b1a1d29",
+      "query_text": "夜光る星みたいなシール",
+      "locale": "ja",
+      "persona": "child",
+      "category": "glow-stickers",
+      "ideal_answer": "暗闇で光る蓄光タイプの星型ウォールステッカー。",
+      "search_terms": {
+        "ja": [
+          "蓄光 星 シール",
+          "夜光る ステッカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "1f2939ba92df66b91961a3e8ef17c60736c1768b95d248755f61d9c7a19284c8",
+      "query_text": "こぼれないコップ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-cups",
+      "ideal_answer": "蓋付きで倒れてもこぼれにくい子供用のストローマグやコップ。",
+      "search_terms": {
+        "ja": [
+          "ストローマグ こぼれない",
+          "子供 コップ 蓋付き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "5c49f1031a0b738f4eee2acf497c297f565561f86a312b24e50a32add6851411",
+      "query_text": "キラキラ光る靴",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-shoes",
+      "ideal_answer": "歩くとライトが点灯する光る子供用スニーカー。",
+      "search_terms": {
+        "ja": [
+          "光る 子供 靴",
+          "led スニーカー キッズ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "4f17f1d234a497a6a70e4cec99735d31d61c8b49ab75ed8e65f0423a70616565",
+      "query_text": "文字が大きく見えるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "お手元で使う老眼鏡や拡大鏡(ルーペ)をお探しですか、それともスマホやテレビの文字を大きく表示する設定方法をお知りになりたいですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "b6891b91b4acac57f29832bf082f9fa6ed13f07946f1f01e6758686be98196b7",
+      "query_text": "膝に優しいクッション",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cushions",
+      "ideal_answer": "正座用や椅子の座面に敷く、膝・腰への負担を和らげる低反発クッション。",
+      "search_terms": {
+        "ja": [
+          "膝 クッション",
+          "低反発 座布団"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "e3375d5cc06d444d43e3aa9e4faed6fe91586e49bf066da2241091ce8b407558",
+      "query_text": "滑りにくい靴下",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "socks",
+      "ideal_answer": "足裏に滑り止め加工が施された靴下。",
+      "search_terms": {
+        "ja": [
+          "滑り止め 靴下",
+          "すべらない くつ下"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "93bdd12b6739f9b30287e436be53bade1318192afa5e5009a1acc34fa3750123",
+      "query_text": "呼び出し音がもっと響くようにする電話",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "amplified-phones",
+      "ideal_answer": "着信音・通話音量を大きく設定できるシニア向けの電話機。",
+      "search_terms": {
+        "ja": [
+          "音量 大きい 電話機",
+          "シニア 電話機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "099db670bc3ab66266e318acfb7ddb8168ae3a9c61f634242555506c86f91f27",
+      "query_text": "歩くときに支えになるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "walking-aids",
+      "ideal_answer": "歩行を支える杖や、荷物も載せられるシルバーカー(歩行補助車)。",
+      "search_terms": {
+        "ja": [
+          "杖",
+          "シルバーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "31db1b1f564e7cb554badedabe6c88df18f5d31440d9068828208e0efa07253f",
+      "query_text": "飲み忘れを防ぐためのケース",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pill-organizers",
+      "ideal_answer": "曜日・時間帯ごとに薬を仕分けて管理できるピルケース(お薬カレンダー)。",
+      "search_terms": {
+        "ja": [
+          "お薬カレンダー",
+          "ピルケース 曜日"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "be98f9c1d6cf0493f869973e5580847748bb59175356640eea59e38346ef6efc",
+      "query_text": "손난로 같은거",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "hand-warmers",
+      "ideal_answer": "일회용 손난로(핫팩) 또는 충전식 손난로.",
+      "search_terms": {
+        "ja": [
+          "カイロ"
+        ],
+        "en": [],
+        "ko": [
+          "손난로",
+          "핫팩"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "593357c97ffde3e6325faa1a6fcd7eae23e550ea5f4aa89f333c119a28578c6f",
+      "query_text": "비 오는 날 신는 신발",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "rain-shoes",
+      "ideal_answer": "방수 기능이 있는 레인부츠나 레인슈즈.",
+      "search_terms": {
+        "ja": [
+          "レインシューズ"
+        ],
+        "en": [],
+        "ko": [
+          "레인부츠",
+          "방수 신발"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "5bab37b644219ba37185d5d254da921f45b491cb71298866d773ec66dd8c362f",
+      "query_text": "머리 말리는 거",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "전기로 말리는 헤어드라이어를 찾으시나요, 아니면 머리카락 수분을 흡수하는 극세사 타올을 찾으시나요?",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "401f3d8361e654f81bb518598630a9b4aa8ae16fd736f877b121362f920ba919",
+      "query_text": "可以挂在脖子上的风扇",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "neck-fans",
+      "ideal_answer": "可以挂在脖子上使用的便携挂脖风扇。",
+      "search_terms": {
+        "ja": [
+          "ネックファン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "挂脖风扇",
+          "便携风扇"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "803d71a9ba7eab0c9eadba1f271ffde176e454b94f411c89218d354e4b9da969",
+      "query_text": "装饰房间用的那种",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "room-decor",
+      "ideal_answer": "墙面装饰画、彩旗挂饰或绿植等房间装饰杂货。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "房间装饰",
+          "墙面装饰画"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "b432bae3a06770e865a6000cc5e2d6d4715a02c4c1fdb5f70589fdc2372d7368",
+      "query_text": "适合送长辈的小礼物",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "gifts-general",
+      "ideal_answer": "按摩用品、保温杯或食品礼盒等适合送给长辈的日常礼物。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "送长辈 礼物",
+          "老人 礼物"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "861f2077682c0a98b5a792dcd9ced47d6c0bc762851c76511a4ec7eefa4fc2e5",
+      "query_text": "a bag that keeps my drinks cold on a picnic",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "coolers",
+      "ideal_answer": "An insulated cooler bag that keeps drinks and food cold outdoors, sized for a picnic.",
+      "search_terms": {
+        "ja": [
+          "クーラーバッグ"
+        ],
+        "en": [
+          "cooler bag",
+          "picnic cooler bag"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "ae14981c9b771b59b94dc93d15cfd35b1c5dfb5095ba2c34043194f04cf8d662",
+      "query_text": "the thing you clip on a stroller",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "Are you looking for a stroller hook to hang bags, a clip-on fan or sunshade, or a toy attachment for the stroller bar?",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "932d40db0cf853561127e0a63307014a2dfeac8a731c6a04dc4c9bc2899af28a",
+      "query_text": "cute phone strap like in Japan",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "phone-straps",
+      "ideal_answer": "A decorative phone strap with charms, in the Japanese style often seen with character goods.",
+      "search_terms": {
+        "ja": [
+          "スマホストラップ"
+        ],
+        "en": [
+          "phone strap charm"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "dafe3b8b3cc487d36303d20bff3d5dc8bee534fe345da7ea5199e6b6e3457879",
+      "query_text": "カフェ風の mug",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "mugs",
+      "ideal_answer": "カフェのようなシンプルでおしゃれなデザインのマグカップ。",
+      "search_terms": {
+        "ja": [
+          "カフェ風 マグカップ"
+        ],
+        "en": [
+          "cafe style mug"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "8fb8623cdb507e8c646f1684f69dab675a88f9dfbbd808a4ad9604c0126581bb",
+      "query_text": "韓国っぽい phone case",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "phone-cases",
+      "ideal_answer": "パステルカラーやくすみカラー、キャラクターイラストなど韓国風デザインのスマホケース。",
+      "search_terms": {
+        "ja": [
+          "韓国っぽい スマホケース"
+        ],
+        "en": [
+          "korean style phone case"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "fdb6859be2ac0f265d73276d7aca063bc0acb1e4d68bb4e146f275a04ea35fc6",
+      "query_text": "日本っぽい keychain",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "keychains",
+      "ideal_answer": "和柄や寺社・桜など日本らしいモチーフのキーホルダー。",
+      "search_terms": {
+        "ja": [
+          "和柄 キーホルダー"
+        ],
+        "en": [
+          "japanese style keychain"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "82d7978a19e27f20f5134eec3ae18dd4325a7c902340d92878bbe6a596ce9fb0",
+      "query_text": "오사카 お土産 おすすめ",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "食べ物系のお土産(お菓子など)をお探しですか、それとも雑貨・コスメ系のお土産をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "ea459a7953160107c018bd9ca772cf3d9176557543fab7d95d2d9c3239149fe6",
+      "query_text": "地雷系っぽいバッグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bags",
+      "ideal_answer": "リボンやレースをあしらった、地雷系ファッションに合うデザインのバッグ。",
+      "search_terms": {
+        "ja": [
+          "地雷系 バッグ",
+          "量産型 バッグ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "83de1e7ca6395e534f495563728f6a714e142251e4c75f655d0510b778e77cde",
+      "query_text": "量産型オタ活グッズ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fan-goods",
+      "ideal_answer": "缶バッジやアクリルスタンドなど、量産型オタ活スタイルで使われる推し活グッズ。",
+      "search_terms": {
+        "ja": [
+          "量産型 グッズ",
+          "オタ活 缶バッジ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "d691cc725a7ad072f3948d87f92d405decf783f89098ad205d3f86ef57c4ba9c",
+      "query_text": "推しの缶バッジつけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bag-charms",
+      "ideal_answer": "缶バッジを複数付けられるバッグチャームやぬいぐるみ用の缶バッジホルダー。",
+      "search_terms": {
+        "ja": [
+          "缶バッジ ホルダー",
+          "痛バッグ パーツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "1a40f2494e1a70ebfde60238c5bdbcb30fa116d9b9df5f7e1ae4e6a7722f589c",
+      "query_text": "韓国コスメ風パッケージの保湿クリーム",
+      "locale": "ja",
+      "persona": "general",
+      "category": "skincare",
+      "ideal_answer": "パステルカラーやハングルロゴなど、韓国コスメ風パッケージデザインの保湿クリーム。効果の感じ方には個人差があります。",
+      "search_terms": {
+        "ja": [
+          "韓国コスメ 保湿クリーム"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "e146de2596139464484976a6456b38906012f50c6bfc6b6979e2c3a084e79235",
+      "query_text": "スマホショルダーに合う紐",
+      "locale": "ja",
+      "persona": "general",
+      "category": "phone-straps",
+      "ideal_answer": "スマホショルダーケースに付け替えられる交換用のストラップ紐。",
+      "search_terms": {
+        "ja": [
+          "スマホショルダー 紐",
+          "スマホストラップ 交換"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "60897cd0a2327ea104c0739cfd6906445142fe6543fdfca0c91f162c5799ee0a",
+      "query_text": "肩こりに効くグッズ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "効果には個人差があるため具体的な効能はお約束できませんが、肩こり対策として使われることが多い温感シートやマッサージ器具などをご案内しますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "3471a26ba0bccb84d432770c0b64591d65c8894d584fd07169b0133ef8242b4f",
+      "query_text": "花粉症に良いやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "花粉症のつらさを和らげる市販グッズ(マスクや空気清浄機など)をご案内しますが、症状が重い場合は医師や薬剤師にご相談ください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "69c1736f52065707084493c01c5501702fcfd37c32ebf788a9eac77b35f89253",
+      "query_text": "お皿を乾かすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dish-racks",
+      "ideal_answer": "洗った食器を置いて乾かす水切りラックやディッシュスタンド。",
+      "search_terms": {
+        "ja": [
+          "水切りラック",
+          "食器 乾かす"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "53397a8965a288d56439a0c55ec0478fe5920dc419efbf531e8f132740b6435f",
+      "query_text": "財布に入れるカードを整理するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "card-holders",
+      "ideal_answer": "ポイントカードやクレジットカードを仕分けて収納できるカードケースやカードオーガナイザー。",
+      "search_terms": {
+        "ja": [
+          "カードケース 整理",
+          "財布 カード 収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-10-02-claude-batch-041.json"
+    },
+    {
+      "content_hash": "638464511de03f8e7ae3e4c4497fac82ca4f8a2d64c56342f2a2bf1c700d3061",
+      "query_text": "虫除けになるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insect-repellent-goods",
+      "ideal_answer": "虫除け効果をうたうスプレーやパッチ、ブレスレットなどの総称カテゴリで、効果の体感には個人差があります。",
+      "search_terms": {
+        "ja": [
+          "虫除けスプレー",
+          "虫除け パッチ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-10-02-claude-batch-041.json"
     }
   ]
 }
