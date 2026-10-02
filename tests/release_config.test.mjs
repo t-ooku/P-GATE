@@ -70,6 +70,8 @@ test('release version has one source of truth', () => {
 // 2026-09-17 に build-social-carousels.yml を追加した（SNS 方針 v3）。build-social-reel.yml と同じ型で、
 // カルーセル画像の生成スクリプト/内容 JSON が feature/ui-search-v2 へ入った時だけ Pillow で JPEG を
 // 再生成して同じブランチへコミットし、検証後にデプロイする。
+// 2026-10-02 apply-price-observations-0093.yml: 価格推移 migration 0093 を本番に適用する（自身の push で 1 回だけ動く・冪等）。
+// 追加時にこの一覧の更新が漏れて CI（deploy）が止まっていたため登録（2026-10-03）。
 const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'publish-runway-reel.yml', 'generate-runway-persona.yml',
   // 2026-10-02 AI販促担当（指示書 ai-promo-20261003-v2）: R2・KEK・QA店舗の作成、読み取り専用の状態確認、画像の手動生成。いずれも workflow_dispatch のみ。
   'seller-promo-infra.yml', 'seller-promo-status.yml', 'build-seller-promo-images.yml'];
@@ -81,7 +83,7 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   // して同じブランチへコミットする。追加時にこの許可リストの更新が漏れていて、
   // 以降 npm test が落ちていた(2026-09-03に検知)。
   assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
-    ['apply-patch.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
+    ['apply-patch.yml', 'apply-price-observations-0093.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);

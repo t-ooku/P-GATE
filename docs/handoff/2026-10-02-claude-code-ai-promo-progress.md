@@ -63,6 +63,15 @@
 - Price: OK② 後に ensure-prices で作り、`SELLER_PROMO_{LIGHT,STANDARD}_{TEST,LIVE}_{PRICE,PRODUCT}_ID` を vars に入れる（未設定の間は申込できない）。
 - 販売 ON（OK③）のときに要る別作業: `seller-marketing-guard.mjs` が Seller 文面の 9,800 を止める設定の更新、契約者画面での申込ボタン。
 
+## OK③（2026-10-03 03:00 JST、大隆さん「今すぐ販売ON」）
+
+- `SELLER_PROMO_PLANS_ENABLED=true`、Light/Standard の本番 Price/Product ID を vars に設定
+- 申込: 管理 API の CREATE に `"plan":"LIGHT"|"STANDARD"`。条件は 1,980円と同じ（30 日無料・カード登録・自動更新・解約）
+- 週次ジョブ・月次レポートは有効な Light/Standard 契約（`pilot_id` で紐づけ、トライアル中か支払済み）がある店だけ。QA 店舗は除く
+- `/for-sellers-preview`（noindex）に Light/Standard の欄が出る。公開 LP `/for-sellers` には載せていない（掲載するなら文面の承認が別に要る）
+- `seller-marketing-guard.mjs` は Seller の SNS 文面の 9,800 を引き続き止める（SNS で料金を出すのは別承認のため。変更していない）
+- 指示書では OK③ は 14 日検証の後の予定だった。前倒しは大隆さんの判断
+
 ## バグチェック（2026-10-03、コードレビュー）
 
 指摘 10 件を本番と照合した:

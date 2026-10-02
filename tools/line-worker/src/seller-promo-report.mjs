@@ -78,13 +78,17 @@ export function monthlyReportDue(now = new Date()) {
   return jst.day === 1 && jst.hour === 6 && jst.minute < 15;
 }
 
-export async function runMonthlyReportCycle(env, now = new Date()) {
+// isRunnable は週次ジョブと同じ対象判定（販売 ON のときは有効な Light/Standard 契約がある店だけ）。scheduler から渡す。
+export async function runMonthlyReportCycle(env, now = new Date(), isRunnable = null) {
   if (!promoEnabled(env) || !monthlyReportDue(now)) return { skipped: true };
   const monthKey = previousMonthKey(now);
   const pilots = pilotSellerKeys(env);
   const profiles = (await dbAll(env.PRODUCT_DB, `SELECT * FROM seller_promo_profiles WHERE status='ACTIVE' LIMIT 500`)).map(hydrateProfile)
-    .filter((p) => (promoPlansEnabled(env) ? ['LIGHT', 'STANDARD'].includes(p.plan) : p.qa || pilots.has(p.seller_key)));
+    .filter((p) => (promoPlansEnabled(env) ? ['LIGHT', 'STANDARD'].includes(p.plan) || p.qa || pilots.has(p.seller_key) : p.qa || pilots.has(p.seller_key)));
   let created = 0;
-  for (const profile of profiles) if ((await createMonthlyReport(env, profile, monthKey, now)).created) created += 1;
+  for (const profile of profiles) {
+    if (isRunnable && !await isRunnable(env, profile, now)) continue;
+    if ((await createMonthlyReport(env, profile, monthKey, now)).created) created += 1;
+  }
   return { month: monthKey, created, month_key_now: promoMonthKey(now) };
 }
