@@ -23,7 +23,7 @@ import { readSellerSession } from './seller-auth.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
   addPromoQuestions, dbAll, promoAudit, hydrateProfile, importPromoProducts, isPromoWeekKey, jstMonthRange, normalizeProductItems,
-  normalizeQuestionItems, parseJsonColumn, productsFromCsv, promoEnabled, promoPlansEnabled, promoText, readPromoProfile, upsertPromoProfile, validSellerKey
+  normalizeQuestionItems, parseJsonColumn, productsFromCsv, productsFromSpApi, promoEnabled, promoPlansEnabled, promoText, readPromoProfile, upsertPromoProfile, validSellerKey
 } from './seller-promo-store.mjs';
 import { runPromoManually } from './seller-promo-scheduler.mjs';
 import { approveDeliverable, publishDeliverable, rakutenGoldZip, rejectDeliverable, saveWordPressConnection, setAutoPublish } from './seller-promo-publish.mjs';
@@ -41,7 +41,7 @@ const CLIENT_ERRORS = new Set([
   'QUESTION_SOURCE_INVALID', 'FEEDBACK_AGGREGATE_ONLY', 'HOSHILU_DEMAND_IS_SERVER_ONLY', 'QUESTION_TEXT_REQUIRED', 'PROFILE_NOT_FOUND',
   'WEEK_KEY_INVALID', 'ONLY_QA_PASSED_CAN_BE_APPROVED', 'REJECT_REASON_REQUIRED', 'DELIVERABLE_NOT_REJECTABLE', 'ARTICLE_ONLY', 'APPROVAL_REQUIRED',
   'WP_URL_INVALID', 'WP_HTTPS_REQUIRED', 'WP_IP_LITERAL_FORBIDDEN', 'WP_PRIVATE_HOST_FORBIDDEN', 'WP_HOST_NOT_ALLOWLISTED', 'WP_CREDENTIALS_INVALID',
-  'MONTH_INVALID', 'CONFIRM_REQUIRED', 'STRIPE_PRICES_NOT_APPROVED', 'SELLER_PROMO_NO_PRODUCTS'
+  'MONTH_INVALID', 'CONFIRM_REQUIRED', 'TENANT_INVALID', 'SP_API_LISTINGS_EMPTY', 'STRIPE_PRICES_NOT_APPROVED', 'SELLER_PROMO_NO_PRODUCTS'
 ]);
 
 function errorResponse(error) {
@@ -103,7 +103,9 @@ async function handleAdmin(request, env, url, deps) {
       const source = String(input.source || (input.csv ? 'CSV' : 'URL')).toUpperCase();
       let items;
       try {
-        items = source === 'CSV' ? productsFromCsv(input.csv, input.mapping) : normalizeProductItems(input.products);
+        items = source === 'CSV' ? productsFromCsv(input.csv, input.mapping)
+          : source === 'SP_API' ? await productsFromSpApi(db, String(input.tenant || '').toLowerCase())
+          : normalizeProductItems(input.products);
       } catch (error) {
         // 見出しが楽天/Amazon の列名に無いとき（§12）: AI に対応表の案を作らせ、取り込まずに返す。人が確かめて mapping を付けて再送する。
         if (error?.message !== 'CSV_MAPPING_REQUIRED' || input.ai_mapping === false || !promoAiConfigured(env)) throw error;

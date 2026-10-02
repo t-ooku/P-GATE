@@ -51,6 +51,7 @@ curl -X POST https://hoshilu.app/api/admin/seller-promo/products/import $H -H 'c
 - 画像: `商品画像パス1`／`商品画像URL`／`image_url`（https のみ）
 - それ以外の列は `attrs`（最大 30 列）。AI が使ってよい数字は、商品名・価格・attrs にある数字だけ。
 - 商品名の列が見つからないと、AI が対応表の案を作って `409 CSV_MAPPING_PROPOSED` と `proposal` を返す（**まだ取り込まない**）。案を確かめ、正しければ `"mapping": <proposal>` を足して同じリクエストを再送。AI を使わないときは `"ai_mapping":false`（`CSV_MAPPING_REQUIRED` と見出しが返る）。
+- SP-API（店本人の認可で同期済みの Amazon 出品から）: `{"seller_key":..,"source":"SP_API","tenant":"<SP-API のテナント名>"}`。ASIN は AI に渡さない。JPY 以外の価格は空。
 - CSV 以外: `{"seller_key":..,"source":"URL","products":[{"external_id","name","price_jpy","url","image_url","attrs":{}}]}`
 
 ### 疑問
