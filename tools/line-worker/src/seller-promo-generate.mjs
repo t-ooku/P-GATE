@@ -6,7 +6,7 @@
 // - 1 回の呼び出しごとに seller_promo_usage へ原価を記録する（為替は SELLER_PROMO_JPY_PER_USD、既定 150）。
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 import { checkPromoDeliverable, ARTICLE_MIN_CHARS, ARTICLE_MAX_CHARS } from './seller-promo-qa.mjs';
-import { dbAll, dbRun, nowIso, promoId, promoText, recentPromoQuestions, activePromoProducts, parseJsonColumn } from './seller-promo-store.mjs';
+import { dbAll, dbRun, nowIso, promoId, promoText, recentPromoQuestions, activePromoProducts, parseJsonColumn, parseCsv } from './seller-promo-store.mjs';
 
 const PROVIDER_TIMEOUT_MS = 60000;
 const MAX_REGENERATIONS = 2;
@@ -278,4 +278,25 @@ export async function generatePromoPackage(env, { profile, job, fetchImpl = fetc
     focus_product_ids: ctx.focus.map((p) => p.id),
     question_ids: ctx.questions.map((q) => q.id)
   };
+}
+
+// 商品 CSV の見出し対応表の案（§12）。AI の答えは見出しに実在する名前だけ残す。取り込みには使わず、人の確認に回す。
+export const CSV_MAPPING_FIELDS = Object.freeze(['external_id', 'name', 'price_jpy', 'url', 'image_url']);
+export async function proposeCsvMapping(env, sellerKey, csvText, { fetchImpl = fetch } = {}) {
+  const rows = parseCsv(csvText).slice(0, 4);
+  const headers = (rows[0] || []).map((h) => promoText(h, 60)).slice(0, 60);
+  const prompt = [
+    'EC ショップの商品 CSV の見出しと先頭の数行です。各項目に当たる見出しを 1 つ選んでください。当たる見出しが無ければ空文字。',
+    '項目: external_id（商品番号・SKU）, name（商品名）, price_jpy（販売価格・円）, url（商品ページURL）, image_url（商品画像URL）',
+    `見出し: ${JSON.stringify(headers)}`,
+    `先頭の行: ${JSON.stringify(rows.slice(1).map((r) => r.slice(0, 60).map((v) => promoText(v, 80))))}`,
+    'JSON だけを返す: {"external_id":"","name":"","price_jpy":"","url":"","image_url":""}'
+  ].join('\n');
+  const result = await callPromoModel(env, prompt, { fetchImpl, sellerKey, jobId: 'csv-mapping' });
+  const proposal = {};
+  for (const field of CSV_MAPPING_FIELDS) {
+    const value = String(result.json?.[field] || '');
+    proposal[field] = headers.includes(value) ? value : '';
+  }
+  return proposal;
 }

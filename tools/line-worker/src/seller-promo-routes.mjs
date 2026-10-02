@@ -22,13 +22,14 @@ import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readSellerSession } from './seller-auth.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
-  addPromoQuestions, dbAll, hydrateProfile, importPromoProducts, isPromoWeekKey, jstMonthRange, normalizeProductItems,
-  normalizeQuestionItems, parseJsonColumn, productsFromCsv, promoEnabled, promoText, readPromoProfile, upsertPromoProfile, validSellerKey
+  addPromoQuestions, dbAll, promoAudit, hydrateProfile, importPromoProducts, isPromoWeekKey, jstMonthRange, normalizeProductItems,
+  normalizeQuestionItems, parseJsonColumn, productsFromCsv, promoEnabled, promoPlansEnabled, promoText, readPromoProfile, upsertPromoProfile, validSellerKey
 } from './seller-promo-store.mjs';
 import { runPromoManually } from './seller-promo-scheduler.mjs';
 import { approveDeliverable, publishDeliverable, rakutenGoldZip, rejectDeliverable, saveWordPressConnection, setAutoPublish } from './seller-promo-publish.mjs';
 import { createMonthlyReport } from './seller-promo-report.mjs';
 import { ensurePricesAllowed, ensurePromoPrices } from './seller-promo-billing.mjs';
+import { promoAiConfigured, proposeCsvMapping } from './seller-promo-generate.mjs';
 
 const json = (body, status = 200) => Response.json(body, {
   status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-robots-tag': 'noindex', 'referrer-policy': 'no-referrer' }
@@ -100,7 +101,17 @@ async function handleAdmin(request, env, url, deps) {
       if (!validSellerKey(input.seller_key)) throw new Error('SELLER_KEY_INVALID');
       if (!await readPromoProfile(db, input.seller_key)) throw new Error('PROFILE_NOT_FOUND');
       const source = String(input.source || (input.csv ? 'CSV' : 'URL')).toUpperCase();
-      const items = source === 'CSV' ? productsFromCsv(input.csv, input.mapping) : normalizeProductItems(input.products);
+      let items;
+      try {
+        items = source === 'CSV' ? productsFromCsv(input.csv, input.mapping) : normalizeProductItems(input.products);
+      } catch (error) {
+        // 見出しが楽天/Amazon の列名に無いとき（§12）: AI に対応表の案を作らせ、取り込まずに返す。人が確かめて mapping を付けて再送する。
+        if (error?.message !== 'CSV_MAPPING_REQUIRED' || input.ai_mapping === false || !promoAiConfigured(env)) throw error;
+        const proposal = await proposeCsvMapping(env, input.seller_key, input.csv, { fetchImpl: deps.fetchImpl || fetch });
+        await promoAudit(db, { seller_key: input.seller_key, actor: 'SYSTEM', action: 'CSV_MAPPING_PROPOSED', target_type: 'PRODUCTS', detail: { proposal, headers: error.headers } }, now);
+        return json({ ok: false, error: 'CSV_MAPPING_PROPOSED', headers: error.headers, proposal,
+          next: 'proposal を確認し、正しければ "mapping": proposal を付けて同じリクエストを再送してください（まだ取り込んでいません）' }, 409);
+      }
       const result = await importPromoProducts(db, input.seller_key, source, items, now);
       return json({ ok: true, received: items.length, ...result });
     }
@@ -222,8 +233,30 @@ async function handleSeller(request, env, url, deps) {
   }
 }
 
+// 料金 LP の下書き（public/for-sellers-preview.html）。静的ファイルを直接見せず、ここで出し分ける。
+// - 公開は SELLER_PROMO_LP_PREVIEW_PUBLIC=true（OK② の後）か、管理者のセッションだけ。それ以外は 404。
+// - 有料プラン（Light／Standard）の欄は SELLER_PROMO_PLANS_ENABLED=true のときだけ差し込む。
+export const PAID_PLANS_PLACEHOLDER = '<!--SELLER_PROMO_PAID_PLANS-->';
+export const PAID_PLANS_SECTION = `<section class="pricing" id="promo-plans"><div class="pricing-head"><p class="eyebrow">AI PROMOTION</p><h2>AI販促担当</h2></div>
+    <article class="price-card"><p class="price-label">Light</p><p>Light 9,800円: 毎週、記事1本・SNS原稿2本と画像・商品ページの直し案が届きます。公開はお店が行います。</p></article>
+    <article class="price-card"><p class="price-label">Standard</p><p>Standard 19,800円: Light に加えて、お店のHP（WordPress）への公開、楽天GOLD 用のHTML、任意の声フォーム、需要への再案内。</p></article>
+  </section>`;
+async function handlePreviewPage(request, env, deps) {
+  const allowed = String(env.SELLER_PROMO_LP_PREVIEW_PUBLIC || '') === 'true' || Boolean(await (deps.authorize || authorizeAdminRequest)(request, env));
+  if (!allowed || !env.ASSETS) return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+  const asset = await env.ASSETS.fetch(new Request(new URL('/for-sellers-preview.html', request.url), { method: 'GET' }));
+  if (!asset.ok) return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+  const html = (await asset.text()).replace(PAID_PLANS_PLACEHOLDER, promoPlansEnabled(env) ? PAID_PLANS_SECTION : '');
+  return new Response(request.method === 'HEAD' ? null : html, { headers: {
+    'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'x-content-type-options': 'nosniff'
+  } });
+}
+
 export async function handleSellerPromoRoutes(request, env, deps = {}) {
   const url = new URL(request.url);
+  if (['GET', 'HEAD'].includes(request.method) && ['/for-sellers-preview', '/for-sellers-preview.html', '/for-sellers-preview/'].includes(url.pathname)) {
+    return handlePreviewPage(request, env, deps);
+  }
   if (url.pathname.startsWith('/api/admin/seller-promo/')) return handleAdmin(request, env, url, deps);
   if (url.pathname.startsWith('/api/seller-promo/')) return handleSeller(request, env, url, deps);
   return null;

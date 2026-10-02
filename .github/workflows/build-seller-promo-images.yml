@@ -1,0 +1,67 @@
+name: Build seller promo images (Pillow, manual)
+
+# 2026-10-02 HOSHILU Seller「AI販促担当」の SNS 画像（指示書 ai-promo-20261003-v2 §6-2）。
+# build-social-carousels.yml と同じ ubuntu + Pillow + Noto CJK。AI 画像生成・課金は発生しない。
+# 画像は公開リポジトリに置かず、R2 バケット hoshilu-seller-promo-assets へ入れる（作成は seller-promo-infra.yml）。
+# 今は手動起動のみ（briefs に JSON を渡す）。Worker からの自動起動は、GitHub への起動用トークンを
+# Worker に持たせるかどうかの判断待ち（docs/handoff の「判断待ち」参照）。
+# 文字の見切れは描画時に機械検査し、1 枚でも見切れたらアップロードしない。Cloud Vision の文字崩れ検査は未接続。
+
+on:
+  workflow_dispatch:
+    inputs:
+      briefs:
+        description: 'JSON: {"briefs":[{"key":"<seller_key>/<week_key>/<deliverable_id>-1","headline":"","sub":"","image_url":"https://...","color":"#1f6f5c"}]}'
+        required: true
+      upload:
+        description: 'Type UPLOAD to put the images into R2 (otherwise build + artifact only)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Noto CJK font and Pillow
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk python3-pil
+          test -f /usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
+      - name: Build images
+        working-directory: tools/line-worker
+        env:
+          BRIEFS: ${{ github.event.inputs.briefs }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$BRIEFS" > /tmp/briefs.json
+          python3 -c "import json; json.load(open('/tmp/briefs.json'))"
+          python3 scripts/build-seller-promo-images.py /tmp/briefs.json /tmp/promo-images /usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
+          cat /tmp/promo-images/manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seller-promo-images
+          path: /tmp/promo-images
+          retention-days: 7
+      - name: Upload to R2
+        if: ${{ github.event.inputs.upload == 'UPLOAD' }}
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 r2 bucket info hoshilu-seller-promo-assets > /dev/null
+          for f in /tmp/promo-images/*.jpg; do
+            name=$(basename "$f")
+            key="images/${name//__//}"
+            npx --yes wrangler@4.121.0 r2 object put "hoshilu-seller-promo-assets/$key" --file "$f" --content-type image/jpeg --remote
+          done

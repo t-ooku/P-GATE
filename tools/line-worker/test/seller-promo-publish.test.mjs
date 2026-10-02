@@ -58,7 +58,7 @@ test('WordPress: 公開→GET で確認→PUBLISHED と URL。確認できなけ
   assert.equal(published.published_url, 'https://shop.example.jp/entrance-storage-guide/');
   assert.equal(published.external_id, '321');
   const post = wp.calls.find((c) => c.method === 'POST');
-  assert.equal(post.url, 'https://shop.example.jp/wp-json/wp/v2/posts');
+  assert.equal(post.url, 'https://shop.example.jp/?rest_route=/wp/v2/posts');
   assert.equal(post.redirect, 'manual');
   assert.equal(post.body.status, 'publish');
   assert.deepEqual(post.body.categories, [7]);
@@ -72,7 +72,7 @@ test('WordPress: 公開→GET で確認→PUBLISHED と URL。確認できなけ
   assert.equal(confirming.status, 'CONFIRMING');
   // 再公開は自分の external_id の投稿の更新になる
   await publishDeliverable(second.env, second.ids.ARTICLE, { actor: 'ADMIN' });
-  assert.equal(wp2.calls.filter((c) => c.method === 'POST').at(-1).url, 'https://shop.example.jp/wp-json/wp/v2/posts/321');
+  assert.equal(wp2.calls.filter((c) => c.method === 'POST').at(-1).url, 'https://shop.example.jp/?rest_route=/wp/v2/posts/321');
 });
 
 test('SSRF: https のみ・IP 直指定／localhost／内部名を拒否・trycloudflare は許可リストのときだけ・リダイレクトは追わない', async () => {

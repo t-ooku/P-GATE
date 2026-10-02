@@ -78,6 +78,12 @@ export function safeWordPressBase(value, env = {}) {
   return `${url.origin}${url.pathname.replace(/\/+$/u, '')}`;
 }
 
+// /wp-json/ はパーマリンク設定が「基本」のサイトでは 301 になり、リダイレクトを追わない方針と衝突する。
+// ?rest_route= はどの設定の WordPress でも同じ応答を返す（2026-10-02 ローカル WordPress で確認）。
+export function wpRestUrl(base, route) {
+  return `${base}/?rest_route=${encodeURIComponent(route).replace(/%2F/gu, '/')}`;
+}
+
 async function wpFetch(env, url, init) {
   const fetchImpl = env.SELLER_PROMO_FETCH || fetch;
   const response = await fetchImpl(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(WP_TIMEOUT_MS) });
@@ -121,7 +127,7 @@ export async function publishToWordPress(env, deliverable, products, now = new D
     ...(conn.scope.category_ids?.length ? { categories: conn.scope.category_ids } : {})
   };
   // 更新は自分の external_id の投稿だけ。無ければ新規作成。
-  const target = /^\d{1,12}$/u.test(String(deliverable.external_id || '')) ? `${conn.base}/wp-json/wp/v2/posts/${deliverable.external_id}` : `${conn.base}/wp-json/wp/v2/posts`;
+  const target = wpRestUrl(conn.base, /^\d{1,12}$/u.test(String(deliverable.external_id || '')) ? `/wp/v2/posts/${deliverable.external_id}` : '/wp/v2/posts');
   const response = await wpFetch(env, target, { method: 'POST', headers: { authorization: conn.auth, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const created = await response.json().catch(() => ({}));
   if (!response.ok || !Number.isSafeInteger(Number(created?.id))) {
@@ -133,7 +139,7 @@ export async function publishToWordPress(env, deliverable, products, now = new D
   let status = 'CONFIRMING';
   let link = '';
   try {
-    const check = await wpFetch(env, `${conn.base}/wp-json/wp/v2/posts/${externalId}`, { method: 'GET', headers: { authorization: conn.auth } });
+    const check = await wpFetch(env, wpRestUrl(conn.base, `/wp/v2/posts/${externalId}`), { method: 'GET', headers: { authorization: conn.auth } });
     const confirmed = await check.json().catch(() => ({}));
     if (check.ok && confirmed?.status === 'publish' && String(confirmed?.id) === externalId) {
       status = 'PUBLISHED';

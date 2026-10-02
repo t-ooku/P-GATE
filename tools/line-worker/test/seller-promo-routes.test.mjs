@@ -139,3 +139,44 @@ test('月次レポート: 前月分を 1 回だけ作り、取れない数字は
   assert.ok(first.report.proposals.every((p) => !/[0-9０-９]/u.test(p)));
   assert.equal((await createMonthlyReport(env, profile, '2026-09', now)).created, false);
 });
+
+test('料金 LP の下書き: OK② 前は管理者だけ。有料プランは販売 ON のときだけ差し込み、1,980円は「掲載のみ」', async () => {
+  const { readFileSync } = await import('node:fs');
+  const file = readFileSync(new URL('../public/for-sellers-preview.html', import.meta.url), 'utf8');
+  assert.match(file, /noindex/);
+  assert.match(file, /記事・SNS原稿・画像の制作は含みません/);
+  assert.doesNotMatch(file.normalize('NFKC'), /9,?800|19,?800/);
+  const ASSETS = { fetch: async () => new Response(file, { headers: { 'content-type': 'text/html' } }) };
+  const page = (env, deps = {}) => handleSellerPromoRoutes(new Request(`${ORIGIN}/for-sellers-preview`), { ASSETS, ...env }, deps);
+  assert.equal((await page({}, { authorize: async () => null })).status, 404);
+  const asAdmin = await page({}, admin);
+  assert.equal(asAdmin.status, 200);
+  assert.equal(asAdmin.headers.get('x-robots-tag'), 'noindex, nofollow');
+  const draft = await asAdmin.text();
+  assert.doesNotMatch(draft.normalize('NFKC'), /9,?800|19,?800|SELLER_PROMO_PAID_PLANS/);
+  const publicOff = await (await page({ SELLER_PROMO_LP_PREVIEW_PUBLIC: 'true' }, { authorize: async () => null })).text();
+  assert.doesNotMatch(publicOff.normalize('NFKC'), /9,?800|19,?800/);
+  const plansOn = await (await page({ SELLER_PROMO_LP_PREVIEW_PUBLIC: 'true', SELLER_PROMO_PLANS_ENABLED: 'true' }, { authorize: async () => null })).text();
+  assert.match(plansOn, /Light 9,800円/);
+  assert.match(plansOn, /Standard 19,800円/);
+});
+
+test('見出しが分からない CSV は AI が対応表の案を出すだけで取り込まず、人が確認して mapping 付きで再送する', async () => {
+  const { db, adapter } = promoDb();
+  const env = promoEnv(adapter);
+  await call(env, '/api/admin/seller-promo/profiles', { method: 'POST', deps: admin, body: { seller_key: 'qa-shop-1', categories: ['文具'], qa: true } });
+  const csv = '品目コード,品目,値段（円）\nA1,ノート,300\n';
+  const ai = async () => Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ external_id: '品目コード', name: '品目', price_jpy: '値段（円）', url: '存在しない列', image_url: '' }) }] } }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 10 } });
+  const proposed = await call(env, '/api/admin/seller-promo/products/import', { method: 'POST', deps: { ...admin, fetchImpl: ai }, body: { seller_key: 'qa-shop-1', csv } });
+  assert.equal(proposed.status, 409);
+  const body = await proposed.json();
+  assert.deepEqual(body.proposal, { external_id: '品目コード', name: '品目', price_jpy: '値段（円）', url: '', image_url: '' });
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM seller_promo_products').get().n, 0);
+  assert.ok(db.prepare("SELECT 1 FROM seller_promo_audit WHERE action='CSV_MAPPING_PROPOSED'").get());
+  const imported = await (await call(env, '/api/admin/seller-promo/products/import', { method: 'POST', deps: admin, body: { seller_key: 'qa-shop-1', csv, mapping: body.proposal } })).json();
+  assert.equal(imported.imported, 1);
+  assert.deepEqual({ ...db.prepare('SELECT external_id,name,price_jpy FROM seller_promo_products').get() }, { external_id: 'A1', name: 'ノート', price_jpy: 300 });
+  // AI を使わない指定・AI 未設定なら従来どおり見出しを返す
+  const plain = await call({ ...env, GEMINI_API_KEY: '' }, '/api/admin/seller-promo/products/import', { method: 'POST', deps: admin, body: { seller_key: 'qa-shop-1', csv } });
+  assert.equal((await plain.json()).error, 'CSV_MAPPING_REQUIRED');
+});

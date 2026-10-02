@@ -1,6 +1,6 @@
 # AI販促担当 進捗（Claude Code）— 指示書 ai-promo-20261003-v2
 
-最終更新: 2026-10-02（セッション 1）
+最終更新: 2026-10-02（セッション 2）
 
 ## 状態
 
@@ -10,7 +10,7 @@
 | 本番への反映 | **未反映**。deploy は `feature/ui-search-v2` への push だけで走るため、このブランチの push では本番は変わらない |
 | migration | `0090_seller_promo_profiles.sql`・`0091_seller_promo_jobs.sql`・`0092_seller_promo_ops.sql` を追加。**本番は未適用**（ローカル SQLite で適用・全テストで確認済み） |
 | vars（追加・すべて OFF） | `SELLER_PROMO_ENABLED=false`、`SELLER_PROMO_PLANS_ENABLED=false`、`SELLER_PROMO_STRIPE_PRICES_APPROVED=false`、`SELLER_PROMO_PILOT_SELLER_KEYS=""`、`SELLER_PROMO_MAX_JOBS_PER_CYCLE=5`、`SELLER_PROMO_MONTHLY_TOKEN_CAP_PER_SELLER=2000000`、`SELLER_PROMO_MONTHLY_COST_CAP_JPY=20000`、`SELLER_PROMO_JPY_PER_USD=150`、`SELLER_PROMO_WP_HOST_ALLOWLIST=""` |
-| テスト | `npm test` 2,925 件すべて pass（開始時 2,895 件・追加 30 件）。`wrangler deploy --dry-run` OK |
+| テスト | `npm test` 全件 pass（開始時 2,895 件・追加 33 件）。`wrangler deploy --dry-run` OK。セッション 1 の push（3423c626）の CI は success |
 | 本番 health | 2026-10-02 `https://hoshilu.app/health` `ok:true`（release 1.22.1）。このブランチの変更は含まない |
 | Codex との重複 | 直近 7 日、本書の対象ファイルへの Codex の変更なし |
 
@@ -28,20 +28,29 @@
 | 検査（数値照合・禁止表現・同型・文字数・URL 除去・SNS 文字数） | ○ | ○ | – | – | – |
 | 承認画面（/seller「今週のサポート」・差し戻し理由・自動公開トグル） | ○ | ○（API・HTML 出し分け） | – | – | – |
 | 原価記録（seller_promo_usage） | ○ | ○ | – | – | – |
-| WordPress 公開（確認→PUBLISHED/CONFIRMING・SSRF・AES-GCM） | ○ | ○（fetch モック） | – | – | – |
+| WordPress 公開（確認→PUBLISHED/CONFIRMING・SSRF・AES-GCM） | ○ | ○（fetch モック＋**ローカル WordPress 6 系で実公開を確認**） | – | – | – |
 | 楽天GOLD ZIP | ○ | ○ | – | – | – |
 | 通知メール（今週の分・3 回失敗の管理者通知） | ○ | ○（Resend モック） | – | – | – |
 | 月次レポート（計測不能の明示） | ○ | ○ | – | – | – |
 | Stripe Light/Standard Price の冪等作成 API | ○ | ○（Stripe モック） | – | – | – |
-| 画像（R2・Pillow ワークフロー・Vision 検査） | ✕（IMAGE は `SKIPPED_NO_R2`） | – | – | – | – |
+| 画像（Pillow テンプレ 3 種・見切れ検査・手動ワークフロー） | ○（Worker からの自動起動・Vision 検査は未） | ○（ローカルで描画確認） | – | – | – |
+| 商品 CSV の見出し対応表の AI 提案（取り込まず人が確認） | ○ | ○ | – | – | – |
+| 料金 LP 下書き `/for-sellers-preview`（OK② 前は管理者だけ・有料欄は販売 ON のみ） | ○ | ○ | – | – | – |
+| 1,980円「掲載のみ」文言差分（**未反映**・パッチで保存） | ○ | ○（当てた状態で全テスト pass） | – | – | – |
 | プラン引数付き Checkout（seller-pilot-payment） | ✕ | – | – | – | – |
-| 1,980円「掲載のみ」文言差分・LP 下書き | ✕ | – | – | – | – |
-| ローカル WordPress での統合確認 | ✕ | – | – | – | – |
 
 ## 変更ファイル
 
 新規: `src/seller-promo-{store,crypto,qa,generate,scheduler,publish,report,routes,billing}.mjs`、`public/seller-promo.js`、`migrations/0090〜0092`、`test/seller-promo-{store,qa,scheduler,publish,routes}.test.mjs`、`test/helpers/seller-promo-fixture.mjs`、`.claude/settings.json`。
 既存の最小変更: `src/index.mjs`（ルート 1 つ・`*/15` の cron に 1 行）、`src/seller-page.mjs`（フラグ ON のときだけタブとスクリプト）、`wrangler.jsonc`（vars のみ。R2 binding はバケット作成前なので未追加）。
+
+## セッション 2 の確認結果
+
+- **ローカル WordPress（PHP 8.3 内蔵サーバー＋SQLite 連携プラグイン、Docker なし）に実公開**: 承認→`POST` で公開→`GET` で `status=publish` を確認→`PUBLISHED`。カテゴリ指定が反映され、同じ slug の投稿は 1 件だけ。手順は `tools/line-worker/test/seller-promo-wp-integration.manual.mjs`（npm test では走らない）。
+- その過程で不具合を 1 件見つけて直した: パーマリンク設定が「基本」の WordPress は `/wp-json/…` に 301 を返し、リダイレクトを追わない方針のため公開に失敗していた。どの設定でも同じ応答を返す `/?rest_route=…` に変更。
+- ローカルは http のため公開 URL は空（https のリンクだけ保存する方針どおり）。cloudflared の一時トンネル経由の確認は、本番 Worker が動く OK① 後に行う。
+- 画像: `scripts/build-seller-promo-images.py` で正方形 1080×1080・縦 1080×1350・横 1080×566 を描画し目視確認。横長で見出しが帯からはみ出すのを機械検査が検出→帯の高さに合わせて文字を縮める修正済み。
+- OK② の文言: 公開中の LP・規約・SNS 文面・SEO 記事に「1,980円に HP・記事・SNS 原稿・画像が含まれる」という記述は**見つからなかった**（含むと書いていたのは統合指示書 v1 §4・§19-2 だけ）。そこで差分は「含みません」を明記する追加（LP の料金カード・FAQ・JSON-LD）と統合指示書 §4 の書き換え。`docs/handoff/2026-10-02-ok2-seller-1980-listing-only.patch`（`git apply` で当たることを確認、当てた状態で全テスト pass、まだ当てていない）。
 
 ## 原価の実測
 
@@ -60,9 +69,11 @@
 6. `src/seller-marketing-guard.mjs` は Seller 文面に `9,800` があると止める。OK③（販売 ON）のときはこのガードの更新が要る（Codex 担当ファイルの可能性あり）。
 7. 自動公開（AUTO）は店本人の API でだけ切り替わる。管理者のプロファイル更新では MANUAL/AUTO を変えない。
 
+8. 画像の自動起動: Worker から `build-seller-promo-images.yml` を起動するには GitHub の起動用トークンを Worker Secret に持たせる必要がある（新しい資格情報）。既定: 持たせず、Cowork が手動起動（briefs は管理 API の SNS 納品物の `image_brief` から作る）。Cloud Vision の文字崩れ検査は Actions 側に Google の鍵が無いため未接続。
+9. KEK と R2 は `.github/workflows/seller-promo-infra.yml`（手動・`confirm=APPLY`・既にあれば何もしない・KEK は作り直さない）で作る。OK① の後に起動する。
+
 ## 次
 
-1. 画像ワークフロー `.github/workflows/build-seller-promo-images.yml`（R2 作成後）。
-2. ローカル WordPress（PHP 内蔵サーバー＋SQLite 連携）で公開→確認の統合確認。
-3. Phase 3: `seller-pilot-payment.mjs` のプラン引数、`public/for-sellers-preview.html`（noindex）、1,980円「掲載のみ」文言差分（反映は OK② 後）。
-4. OK① の後: migration 適用 → KEK → `SELLER_PROMO_ENABLED=true` → QA 店舗で手動起動 → 原価の実測。
+1. Phase 3: `seller-pilot-payment.mjs` のプラン引数（本番の決済経路なので、Light/Standard を足しても 1,980円の既存経路が 1 文字も変わらないことをテストで固定してから）。
+2. OK① の後: migration 適用（apply-d1-migrations.yml）→ seller-promo-infra.yml → `SELLER_PROMO_ENABLED=true` → QA 店舗で手動起動 → 原価の実測 → cloudflared 経由で WordPress 公開を本番 Worker から確認。
+3. OK② の後: パッチ適用、`SELLER_PROMO_LP_PREVIEW_PUBLIC=true`、`SELLER_PROMO_STRIPE_PRICES_APPROVED=true` → ensure-prices をテストモードで実行。

@@ -19,7 +19,7 @@
 | 契約者画面での承認・差し戻し・自動公開 | ○ | – | – | – |
 | WordPress 公開／楽天GOLD ZIP／原稿納品 | ○ | – | – | – |
 | 月次レポート | ○ | – | – | – |
-| 画像 | ✕（R2 作成後） | – | – | – |
+| 画像 | 手動のみ（下の「画像」） | – | – | – |
 
 ## 3. 運用手順（runbook）
 
@@ -49,7 +49,7 @@ curl -X POST https://hoshilu.app/api/admin/seller-promo/products/import $H -H 'c
 - URL: `商品ページURL`／`商品URL`／`url`（https のみ）
 - 画像: `商品画像パス1`／`商品画像URL`／`image_url`（https のみ）
 - それ以外の列は `attrs`（最大 30 列）。AI が使ってよい数字は、商品名・価格・attrs にある数字だけ。
-- 商品名の列が見つからないと `CSV_MAPPING_REQUIRED` と `headers` が返る。`"mapping":{"name":"品目","price_jpy":"値段"}` を足して再送。
+- 商品名の列が見つからないと、AI が対応表の案を作って `409 CSV_MAPPING_PROPOSED` と `proposal` を返す（**まだ取り込まない**）。案を確かめ、正しければ `"mapping": <proposal>` を足して同じリクエストを再送。AI を使わないときは `"ai_mapping":false`（`CSV_MAPPING_REQUIRED` と見出しが返る）。
 - CSV 以外: `{"seller_key":..,"source":"URL","products":[{"external_id","name","price_jpy","url","image_url","attrs":{}}]}`
 
 ### 疑問
@@ -81,6 +81,9 @@ SELECT type,version,status,json_extract(qa,'$.reasons') AS reasons FROM seller_p
 - 店: /seller →「今週のサポート」で 承認／差し戻し（事実が違う・言い回し・商品が違う・その他）。楽天GOLD の店は承認後に ZIP をダウンロード。
 - 管理者代行: `POST /api/admin/seller-promo/deliverables/<id>/approve`｜`reject {"reason":"WORDING","note":"…"}`｜`publish`（公開失敗・確認中の再試行）。
 - WordPress 接続（店の許諾後）: `POST /api/admin/seller-promo/connections {"seller_key","site_url":"https://…","username","app_password":"<アプリケーションパスワード>","scope":{"category_ids":[7]}}`。パスワードは暗号化して保存し、どの応答にも出ない。
+
+### 画像（R2 作成後・手動）
+GitHub Actions →「Build seller promo images (Pillow, manual)」→ `briefs` に SNS 納品物の `image_brief` から作った JSON（`key` は `<seller_key>/<week_key>/<納品物id>-1`、`image_url` は店が許諾した https の商品画像）→ まず `upload` 空で実行し成果物の画像を目で確認 → 良ければ `upload=UPLOAD` で再実行。文字が見切れると失敗する。
 
 ### 失敗時の切り分け
 | 症状 | 見る所 | 対処 |
