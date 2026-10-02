@@ -15,6 +15,10 @@ on:
         description: 'Type APPLY to create the R2 bucket and the SELLER_PROMO_KEK secret on production (only if missing)'
         required: true
         default: ''
+      seed_qa_shop:
+        description: 'Type SEED to insert the fictional QA shop (tools/line-worker/ops/seller-promo/qa-shop-seed.sql, idempotent)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -63,7 +67,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.121.0 secret list --name project-gate-line-bridge > secrets.json
+          npx --yes wrangler@4.121.0 secret list --name project-gate-line-bridge --format json > secrets.json
           if grep -Fq '"SELLER_PROMO_KEK"' secrets.json; then
             echo "SELLER_PROMO_KEK already set; not rotating."
           else
@@ -71,3 +75,13 @@ jobs:
             echo "SELLER_PROMO_KEK created."
           fi
           rm -f secrets.json
+      - name: Seed fictional QA shop (optional)
+        if: ${{ github.event.inputs.seed_qa_shop == 'SEED' }}
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute hoshilu-products --remote --yes --file ops/seller-promo/qa-shop-seed.sql
+          npx --yes wrangler@4.121.0 d1 execute hoshilu-products --remote --command "SELECT seller_key,plan,qa,weekday,hour_jst,(SELECT COUNT(*) FROM seller_promo_products WHERE seller_key='qa-shop-1') AS products FROM seller_promo_profiles WHERE seller_key='qa-shop-1'"

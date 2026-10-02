@@ -1,0 +1,33 @@
+name: Seller promo status (read-only, manual)
+
+# 2026-10-03 AI販促担当: 本番 D1 の状態を読むだけ（書き込みなし）。ジョブ・納品物の状態・検査理由・原価を出す。
+# 本文（記事・SNS 原稿）や店の連絡先は出さない。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read seller promo state
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          q() { npx --yes wrangler@4.121.0 d1 execute hoshilu-products --remote --command "$1"; }
+          q "SELECT seller_key,plan,qa,status,weekday,hour_jst,approval_mode,publish_target FROM seller_promo_profiles ORDER BY seller_key"
+          q "SELECT seller_key,week_key,status,attempt,error,started_at,finished_at FROM seller_promo_jobs ORDER BY created_at DESC LIMIT 20"
+          q "SELECT seller_key,week_key,type,version,status,json_extract(qa,'$.reasons') AS reasons,json_extract(qa,'$.chars') AS chars FROM seller_promo_deliverables ORDER BY created_at DESC LIMIT 30"
+          q "SELECT seller_key,provider,model,COUNT(*) AS calls,SUM(input_tokens) AS input_tokens,SUM(output_tokens) AS output_tokens,ROUND(SUM(cost_jpy_est),2) AS cost_jpy FROM seller_promo_usage GROUP BY seller_key,provider,model"
+          q "SELECT actor,action,COUNT(*) AS n FROM seller_promo_audit GROUP BY actor,action ORDER BY n DESC"

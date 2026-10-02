@@ -198,7 +198,8 @@ async function handleSeller(request, env, url, deps) {
   try {
     const profile = await readPromoProfile(db, sellerKey);
     if (request.method === 'GET' && url.pathname === '/api/seller-promo/deliverables') {
-      if (!profile) return json({ ok: true, enrolled: false, deliverables: [] });
+      // 未登録の店には自分の seller_key だけ返す（管理者が同じ値で登録するため。本人のセッションにしか返さない）。
+      if (!profile) return json({ ok: true, enrolled: false, seller_key: sellerKey, deliverables: [] });
       const rows = await dbAll(db, `SELECT * FROM seller_promo_deliverables WHERE seller_key=?1 AND status<>'QA_FAILED' ORDER BY created_at DESC LIMIT 40`, sellerKey);
       return json({
         ok: true, enrolled: true,
