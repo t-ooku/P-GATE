@@ -70,8 +70,15 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'washable_electric_blanket', query: '丸洗いできる電気毛布が欲しい', expect: /電気毛布|電気敷き毛布|電気ブランケット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u },
   // 2026-09-29 展開規則 energy-saving-electric-carpet の代表クエリ(機能語「電気代が気になる」→ 売り手の語「節電」)。
   { id: 'energy_saving_electric_carpet', query: '電気カーペットの電気代が気になる', expect: /電気カーペット|ホットカーペット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u },
-  // 2026-09-30 展開規則 dull-knife-sharpener の代表クエリ(機能語「切れ味が悪い/研げない」→ 売り手の語「電動 包丁研ぎ器」)。
-  { id: 'dull_knife_sharpener', query: '包丁の切れ味が悪くて困っている', expect: /研ぎ器|シャープナー|包丁研ぎ/iu, reject: /まな板|ふきんのみ|替刃のみ|砥石(?!付)|交換用/u }
+  // 2026-09-30 展開規則 dull-knife-sharpener の代表クエリ(機能語「切れ味が悪い/研げない」→ 売り手の語「包丁研ぎ器」)。
+  // 2026-10-02 修正: reject の `砥石(?!付)` が、本命商品「包丁研ぎ器 砥石 シャープナー…」のように
+  // 研ぎ器本体が砥石を内蔵・同梱していることを示す「砥石」という語にも反応し、正しい本命を
+  // 誤ってFAILさせていた(2026-09-30・10-01の2日連続でFAIL、本命は本体として正しい商品)。
+  // 他の reject 条件(ふきんのみ・替刃のみ)と同じ「のみ/単体」限定の書き方に揃え、
+  // 砥石単体(研ぎ器を伴わない)商品だけを reject するよう修正。
+  { id: 'dull_knife_sharpener', query: '包丁の切れ味が悪くて困っている', expect: /研ぎ器|シャープナー|包丁研ぎ/iu, reject: /まな板|ふきんのみ|替刃のみ|砥石(?:のみ|単体)(?!付)|交換用/u },
+  // 2026-10-02 展開規則 pink-slime-bathroom-cleaner の代表クエリ(機能語「ピンクのぬめりが取れない」→ 売り手の語「浴室用洗剤」)。
+  { id: 'pink_slime_bathroom_cleaner', query: '浴室の壁や床にピンクのぬめりがすぐ出て取れない', expect: /浴室用洗剤|お風呂用洗剤|ぬめり取り/iu, reject: /スポンジのみ|ブラシのみ|タオルのみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
