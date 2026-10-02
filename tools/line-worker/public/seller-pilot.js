@@ -8,14 +8,16 @@ async function post(path,input){
   const data=await r.json();if(!r.ok)throw new Error(data.error||'保存できませんでした');return data;
 }
 function offerText(item){
-  if(isAutoRenewOffer(item.offer_version))return item.autorenew?.accepted_copy||autoRenewPolicy(item.offer_version).copy;
+  // サーバーが返す契約ごとの条件（item.offer_policy）を優先。AI販促担当の Light/Standard は公開ファイルに無い。
+  if(item.offer_policy||isAutoRenewOffer(item.offer_version))return item.autorenew?.accepted_copy||item.offer_policy?.copy||autoRenewPolicy(item.offer_version).copy;
   if(item.offer_version===PILOT_OFFER)return LEGACY_30D_COPY;
   if(item.offer_version===LEGACY_PILOT_OFFER)return 'この店舗には合意済みの暦3か月条件を適用します。保存済みの開始・終了日時は変更しません。本人の有料申込みなしに課金しません。';
   return '以前の案内条件を確認中です。条件が確認されるまで公開できません。';
 }
 
 function autoRenewPanel(item,data){
-  if(!isAutoRenewOffer(item.offer_version))return '';
+  if(!item.offer_policy&&!isAutoRenewOffer(item.offer_version))return '';
+  const enrollmentEnabled=item.autorenew_enabled??data.autorenew_enabled;
   const a=item.autorenew||{},cancelled=a.cancel_at_period_end||a.canceled;
   let html='<section><h3>カード登録・自動更新</h3><p><a href="/terms#seller-subscription" target="_blank" rel="noopener">利用条件を確認する</a>。商品の非公開だけでは解約になりません。</p>';
   html+=`<p>無料終了・初回課金開始: ${esc(item.ends_at?jstDateTime(item.ends_at):'初回の商品公開から30日後（公開後に日時を表示）')}</p>`;
@@ -26,7 +28,7 @@ function autoRenewPanel(item,data){
   if(cancelled)html+='<p>自動更新は停止済みです。無料期間または支払済み期間の終了まで利用できます。</p>';
   else if(a.cancel_requested_at)html+='<p role="alert">解約依頼を受け付けました。決済側の停止確認中です。「契約状態を確認する」で結果をご確認ください。</p>';
   if(!admin&&!a.cancel_requested_at){
-    if(item.offer_version===AUTO_RENEW_OFFER&&!a.card_verified_at&&!item.starts_at)html+=`<p>カード登録時の利用料金は0円です。登録だけでは無料期間は始まりません。</p><label><input type="checkbox" data-auto-consent="${esc(item.pilot_id)}">${esc(offerText(item))} この条件に同意します。</label>${button(item,'AUTO_CONSENT','条件に同意してカードを登録',data.autorenew_enabled?'':'disabled')}${data.autorenew_enabled?'':'<p>カード登録の受付準備中です。</p>'}`;
+    if((item.offer_version===AUTO_RENEW_OFFER||item.offer_policy?.new_enrollment)&&!a.card_verified_at&&!item.starts_at)html+=`<p>カード登録時の利用料金は0円です。登録だけでは無料期間は始まりません。</p><label><input type="checkbox" data-auto-consent="${esc(item.pilot_id)}">${esc(offerText(item))} この条件に同意します。</label>${button(item,'AUTO_CONSENT','条件に同意してカードを登録',enrollmentEnabled?'':'disabled')}${enrollmentEnabled?'':'<p>カード登録の受付準備中です。</p>'}`;
     if(a.setup_session_id&&!a.card_verified_at)html+=button(item,'AUTO_VERIFY_CARD','カード登録の完了を確認する');
     if(a.card_verified_at&&item.status==='DRAFT')html+=`<p>カード登録済みです。</p><label><input type="checkbox" data-consent="${esc(item.pilot_id)}">商品・事業者情報を確認しました。公開から30日後の自動課金条件に同意済みであり、公開を承認します。</label>${button(item,'APPROVE','掲載を承認',data.offer_enabled?'':'disabled')}`;
     if(a.consented_at)html+=button(item,'AUTO_CANCEL','解約して自動更新を停止する');
@@ -61,7 +63,7 @@ async function load(){
       const item=data.items.find(x=>x.pilot_id===b.dataset.id);
       if(b.dataset.action==='AUTO_CONSENT') {
         if(root.querySelector(`[data-auto-consent="${b.dataset.id}"]`)?.checked!==true)throw new Error('無料期間・月額料金・自動更新・解約方法を確認してください。');
-        const saved=await post(`${base}/${b.dataset.id}`,{action:'AUTO_CONSENT',revision:Number(b.dataset.revision),autorenew_consent:true,autorenew_terms:autoRenewPolicy(item.offer_version).terms});
+        const saved=await post(`${base}/${b.dataset.id}`,{action:'AUTO_CONSENT',revision:Number(b.dataset.revision),autorenew_consent:true,autorenew_terms:item.offer_policy?.terms||autoRenewPolicy(item.offer_version).terms});
         const setup=await post(`${base}/${b.dataset.id}`,{action:'AUTO_SETUP',revision:saved.revision});
         if(!/^https:\/\/checkout\.stripe\.com\//u.test(setup.checkout_url||''))throw new Error('カード登録URLを確認できませんでした');
         location.assign(setup.checkout_url);return;

@@ -25,6 +25,13 @@ export function pilotEntitlement(doc, now=new Date()) {
   const active=doc.status==='PUBLISHED' && knownOffer(doc.offer_version) && ((started<=now.getTime() && now.getTime()<ends)||paid);
   return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':automatic&&doc.autorenew?.subscription_id?'TRIAL_SUBSCRIPTION':'NO_PAID_CONTRACT',automatic_charge:automatic&&Boolean(doc.autorenew?.subscription_id)&&!doc.autorenew.cancel_requested_at,monthly_jpy:contractMonthlyJpy(doc),currency:'JPY'};
 }
+// 2026-10-03: 契約者画面に、その契約自身の規約・文面・受付可否を返す（AI販促担当 Light/Standard は公開ファイルに無いため）。
+// 契約者本人と管理者の一覧 API だけが返す。料金はその契約の文面に含まれる金額だけ。
+function offerView(env,doc) {
+  const policy=autoRenewPolicy(doc.offer_version);
+  if(!policy)return {};
+  return {offer_policy:{terms:policy.terms,copy:policy.copy,monthly_jpy:policy.amount,new_enrollment:creatableOffer(env,doc.offer_version)},autorenew_enabled:autoRenewReady(env,doc.offer_version)};
+}
 export function publicPilotOffer(env) {
   // Recruitment wording is enabled only after staged production verification.
   const enabled=recruitmentVerified(env);
@@ -135,7 +142,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const savePath=path.match(/^\/api\/seller-pilot\/(SPL_[a-zA-Z0-9-]+)\/save$/u);
   const member=!adminPath&&!publicId?await (deps.member||readMemberSession)(request,env):null;
   if(!publicId&&!admin&&!member) return json({ok:false,error:'AUTH_REQUIRED',login:'/login.html'},401);
-  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>新規料金：月額1,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=1980-1"></script>`);
+  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>新規料金：月額1,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=promo-1"></script>`);
   const db=env.PRODUCT_DB;if(!db) return json({ok:false,error:'STORE_UNAVAILABLE'},503);
   const select=async(id)=> (await db.prepare('SELECT * FROM seller_listing_pilots WHERE pilot_id=?1').bind(id).all()).results?.[0];
   const offerEnabled=knownOffer(env.SELLER_PILOT_OFFER_VERSION);
@@ -162,7 +169,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     }
     if(request.method==='GET') {
       const result=admin?await db.prepare('SELECT * FROM seller_listing_pilots ORDER BY created_at DESC LIMIT 50').all():await db.prepare('SELECT * FROM seller_listing_pilots WHERE owner_member_id=?1 ORDER BY created_at DESC LIMIT 50').bind(member.id).all();
-      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),payments_enabled:pilotPaymentsReady(env),autorenew_enabled:autoRenewReady(env),paid_terms_version:PAID_TERMS,offer_enabled:offerEnabled,offer_version:env.SELLER_PILOT_OFFER_VERSION,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,followup_tasks:followupTasks(doc),entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc)};}))});
+      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),payments_enabled:pilotPaymentsReady(env),autorenew_enabled:autoRenewReady(env),paid_terms_version:PAID_TERMS,offer_enabled:offerEnabled,offer_version:env.SELLER_PILOT_OFFER_VERSION,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,followup_tasks:followupTasks(doc),entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc),...offerView(env,doc)};}))});
     }
     if(request.method!=='POST') return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
     const parsed=await readBoundedJson(request,40_000);

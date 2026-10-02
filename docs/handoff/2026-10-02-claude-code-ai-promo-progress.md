@@ -68,9 +68,10 @@
 指摘 10 件を本番と照合した:
 - 直した（7）: 月次レポートが前月のレポート行を公開本数に数える／商品取り込みが 1 件ずつ書くため 500 件で D1 のクエリ上限に当たる（→ batch 化）／今回の CSV に無い商品が active のまま（→ active=0、行は残す）／AI の鍵が無いと試行回数が増えず毎サイクル拾い直す（→ 3 回で止めて通知）／残した商品 URL の数字が数値照合で落ちる／販売を止めると公開済み Light/Standard のサブスク作成まで止まる／照合クエリのプレースホルダ数が offer 数と手で揃えてあった（→ json_each）
 - 誤り（1）: `/for-sellers-preview` が常に 404 → 本番で 200・noindex を確認済み
-- **販売 ON（OK③）の前に必ず直すもの（2）**:
-  1. 契約者のパイロット画面（`public/seller-pilot.js`）が Light/Standard を知らない。同意・カード登録・解約ボタンが出ない（公開ファイルに料金を置かない方針のため、サーバーの一覧 API から規約・文面を返す形にする）
-  2. 週次ジョブの対象がプロファイルの plan だけで決まる。Light/Standard の契約（トライアル中・支払済み・解約）と結び付けて判定する
+- 販売 ON（OK③）の前に直すもの 2 件 → **2026-10-03 対応済み**:
+  1. 契約者の一覧 API が契約ごとの規約・文面・受付可否（`offer_policy`）を返し、`public/seller-pilot.js` はそれを使う（料金は公開ファイルに置かないまま）
+  2. 販売 ON のとき週次ジョブは、プロファイルの `pilot_id` に紐づく同じプランの Light/Standard 契約がトライアル中か支払済みの店だけ（QA・パイロット店は除く）
+- Stripe 本番 Price（2026-10-03 02:30 JST 作成）: Light `price_1UMAIIJnMwqhkDQ5OCKXY6wj`（prod_VMu6URGZSooXT3）、Standard `price_1UMAIJJnMwqhkDQ50T35KRN1`（prod_VMu6mYJN6wymnd）。OK③ のとき `SELLER_PROMO_{LIGHT,STANDARD}_LIVE_{PRICE,PRODUCT}_ID` に入れる
 
 ## 原価の実測
 
