@@ -4,9 +4,12 @@ import { readMemberSession } from './member-auth.mjs';
 import { resolveMemberIdentityAlias } from './member-notification-delivery.mjs';
 import { paidRequest, pilotPaymentsReady, pilotCheckout, verifiedPilotPayment, cancelPilotSubscription, PAID_TERMS } from './seller-pilot-payment.mjs';
 import { autoRenewReady, autoRenewConsent, setupAutoRenewCard, verifyAutoRenewCard, verifyNewAutoRenewPrice, reconcileAutoRenew } from './seller-pilot-autorenew.mjs';
-import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS, isAutoRenewOffer, autoRenewPolicy, contractMonthlyJpy } from '../public/seller-trial-policy.mjs';
+import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS } from '../public/seller-trial-policy.mjs';
+// 2026-10-03: offer の判定はサーバー側 registry（1,980円は公開ポリシーのまま、AI販促担当 Light/Standard を足す）。
+import { isAutoRenewOffer, autoRenewPolicy, contractMonthlyJpy, knownOffer, trialEnd, creatableOffer } from './seller-offer-registry.mjs';
+import { PROMO_PLAN_OFFERS } from './seller-promo-billing.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
-import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
+import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
 const json = (body, status = 200) => Response.json(body, {status,headers:{'cache-control':'no-store','x-robots-tag':'noindex','referrer-policy':'no-referrer'}});
 const text = (value, max=200) => String(value || '').trim().slice(0,max);
@@ -169,6 +172,13 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
       const doc=normalizePilotDraft(input);
       if(env.SELLER_PILOT_OFFER_VERSION!==AUTO_RENEW_OFFER&&!input.legacy_promise_ref) return json({ok:false,error:'NEW_OFFER_NOT_ENABLED'},400);
       doc.offer_version=env.SELLER_PILOT_OFFER_VERSION;
+      // AI販促担当 Light/Standard（販売 ON のときだけ）。指定が無ければ従来どおり 1,980円の offer。
+      if(input.plan!==undefined&&input.plan!=='LISTING') {
+        const promoOffer=PROMO_PLAN_OFFERS[String(input.plan)];
+        if(!promoOffer||input.legacy_promise_ref) return json({ok:false,error:'PLAN_INVALID'},400);
+        if(!creatableOffer(env,promoOffer)) return json({ok:false,error:'PROMO_PLANS_NOT_ENABLED'},400);
+        doc.offer_version=promoOffer;
+      }
       if(input.legacy_promise_ref) {
         doc.offer_version=LEGACY_PILOT_OFFER;doc.legacy_promise_ref=text(input.legacy_promise_ref,500);
       }
@@ -198,7 +208,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     }
     let next,checkoutUrl;
     if(!admin&&input.action==='AUTO_CONSENT') {
-      if(!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
+      if(!autoRenewReady(env,doc.offer_version))throw new Error('AUTORENEW_NOT_ENABLED');
       next=autoRenewConsent(doc,input,new Date(),env);
     } else if(!admin&&input.action==='AUTO_SETUP') {
       const session=await setupAutoRenewCard(env,row,doc);
@@ -228,7 +238,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
       delete next.terms_accepted_at;delete next.owner_confirmed_at;
     } else {
       if(isAutoRenewOffer(doc.offer_version)&&input.action==='PUBLISH') {
-        if(!doc.starts_at&&!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
+        if(!doc.starts_at&&!autoRenewReady(env,doc.offer_version))throw new Error('AUTORENEW_NOT_ENABLED');
         // Recheck the registered card through Stripe before the first publication.
         if(!doc.starts_at){await verifyNewAutoRenewPrice(env,doc);await verifyAutoRenewCard(env,row,doc);}
       }
