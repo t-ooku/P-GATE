@@ -23,6 +23,7 @@
 //   公式ランキングの過去順位と現在順位の差だけを根拠にする。テーブルが
 //   未適用・履歴不足なら棚ごと出さない (架空の急上昇を作らない)。
 
+import { recordPriceObservations } from './price-observations.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
 
 // 2026-09-20 大隆さん指示「ホシルバズ バージョンアップ」: ジャンルを増やし、同時に出すランキングも増やす。
@@ -151,6 +152,8 @@ async function buildShelf(env, category, fetcher) {
   if (!result.cache_hit && Array.isArray(result.candidates) && result.candidates.length) {
     const rankingType = /口コミ件数順/u.test(String(result.ranking_type || '')) ? 'REVIEW_COUNT' : 'REALTIME';
     await writeRankingCache(env, 'RAKUTEN_JP', category.id, rankingType, result.candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
+    // 2026-10-02 価格推移: 棚を温めるたびに、その日の価格を1行ずつ残す（BUZZ→商品詳細の「過去価格」の元データ）。
+    await recordPriceObservations(env, result.candidates, { source: 'rakuten_ranking_api' }).catch(() => {});
   }
   let allItems = (result.candidates || [])
     .map(sanitizeShelfItem)

@@ -1,6 +1,7 @@
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
+import { recordPriceObservations } from './price-observations.mjs';
 import { nextDeliveryAt } from './mywatch-policy.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
@@ -263,6 +264,8 @@ export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),
     :await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
   await recordProviderDiagnostics(env,providerResult.diagnostics,now);
   const candidates=providerResult.candidates;
+  // 2026-10-02 価格推移: 巡回で API から取れた価格も記録する（キャッシュ由来は取得日がずれるので記録しない）。
+  if(!cached)await recordPriceObservations(env,candidates,{source:'target_price_scan',now:new Date(now)}).catch(()=>{});
   const best=pricedOffers(wish,candidates)[0]||null;
   const providerState={providerCount:providerResult.provider_count,
     providerSuccessCount:providerResult.provider_success_count,

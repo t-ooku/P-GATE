@@ -1,4 +1,5 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
+import { recordPriceObservations } from './price-observations.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { runIndexNowSubmission } from './indexnow.mjs';
@@ -3202,6 +3203,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       ctx.waitUntil(aiDiscoveryPromise);
     }
     const sessionHash = await hashUser(input.session_id);
+    // 2026-10-02 価格推移: API で確認できた価格を1日1行で記録（検索本文・会員IDは入れない）。失敗しても検索は止めない。
+    ctx.waitUntil(recordPriceObservations(env, result?.candidates, { source: 'search' }).catch(() => {}));
     let decorated = await decoratePwaResult(
       result,
       request,
