@@ -3,7 +3,7 @@
 // - Stripe の Light／Standard の Price は lookup_key で冪等に作る（tax_behavior=inclusive・JPY・月次）。
 //   作成は OK② の後だけ: SELLER_PROMO_STRIPE_PRICES_APPROVED=true と、呼び出し時の confirm='CREATE_PRICES' の両方が要る。
 import { stripeMode, stripeRequest } from './stripe-client.mjs';
-import { promoPlansEnabled } from './seller-promo-store.mjs';
+import { dbFirst, promoAudit, promoPlansEnabled } from './seller-promo-store.mjs';
 
 export const PROMO_PAID_PLANS = Object.freeze({
   LIGHT: Object.freeze({ plan: 'LIGHT', unit_amount: 9800, lookup_key: 'hoshilu_seller_promo_light_monthly_v1', product_name: 'HOSHILU Seller AI販促担当 Light' }),
@@ -77,4 +77,24 @@ export function promoPriceConfiguration(env, mode, offer) {
   if (!plan || !['test', 'live'].includes(mode)) return {};
   const prefix = `SELLER_PROMO_${plan}_${mode.toUpperCase()}`;
   return { price_id: env[`${prefix}_PRICE_ID`], product_id: env[`${prefix}_PRODUCT_ID`], mode };
+}
+
+// OK② の後、cron から 1 回だけ Price を用意する（管理 API を人が叩かなくてよいように）。
+// lookup_key で冪等なので何度呼んでも 1 組だけ。結果（Price/Product ID）は監査ログに残し、vars へ写す。
+// 金額が違う Price が既にあれば作らずに止まる（PRICE_MISMATCH_*）。
+export const STRIPE_PRICES_AUDIT_KEY = '_system';
+export async function ensurePromoPricesOnce(env, now = new Date()) {
+  if (String(env.SELLER_PROMO_STRIPE_PRICES_APPROVED || '') !== 'true' || !['live', 'test'].includes(stripeMode(env)) || !env.PRODUCT_DB) return { skipped: true };
+  const action = `STRIPE_PRICES_ENSURED_${stripeMode(env).toUpperCase()}`;
+  const done = await dbFirst(env.PRODUCT_DB, 'SELECT id FROM seller_promo_audit WHERE seller_key=?1 AND action=?2 LIMIT 1', STRIPE_PRICES_AUDIT_KEY, action);
+  if (done) return { skipped: true, already: true };
+  try {
+    const result = await ensurePromoPrices(env);
+    await promoAudit(env.PRODUCT_DB, { seller_key: STRIPE_PRICES_AUDIT_KEY, actor: 'SYSTEM', action, target_type: 'STRIPE_PRICE', detail: result }, now);
+    return result;
+  } catch (error) {
+    const code = /^[A-Z0-9_]{3,80}$/u.test(String(error?.message)) ? error.message : 'STRIPE_PRICES_FAILED';
+    await promoAudit(env.PRODUCT_DB, { seller_key: STRIPE_PRICES_AUDIT_KEY, actor: 'SYSTEM', action: 'STRIPE_PRICES_FAILED', target_type: 'STRIPE_PRICE', detail: { code } }, now).catch(() => {});
+    return { error: code };
+  }
 }

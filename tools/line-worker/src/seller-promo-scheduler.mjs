@@ -12,6 +12,7 @@ import {
 import { generatePromoPackage, promoAiConfigured } from './seller-promo-generate.mjs';
 import { autoApproveDeliverable } from './seller-promo-publish.mjs';
 import { runMonthlyReportCycle } from './seller-promo-report.mjs';
+import { ensurePromoPricesOnce } from './seller-promo-billing.mjs';
 
 export const MAX_ATTEMPTS = 3;
 const STALE_RUNNING_MS = 30 * 60 * 1000;
@@ -213,6 +214,8 @@ export async function runSellerPromoCycle(env, scheduledAt = new Date(), { fetch
   if (!promoEnabled(env) || !env.PRODUCT_DB) return { skipped: 'DISABLED' };
   try {
     const db = env.PRODUCT_DB;
+    // OK② 後の 1 回だけ（承認フラグ＋監査ログで冪等）。失敗しても週次ジョブは止めない。
+    const prices = await ensurePromoPricesOnce(env, scheduledAt).catch(() => ({ error: 'STRIPE_PRICES_FAILED' }));
     const weekKey = promoWeekKey(scheduledAt);
     const limits = promoLimits(env);
     const profiles = (await dbAll(db, `SELECT * FROM seller_promo_profiles WHERE status='ACTIVE' ORDER BY seller_key LIMIT 500`)).map(hydrateProfile);
@@ -234,7 +237,7 @@ export async function runSellerPromoCycle(env, scheduledAt = new Date(), { fetch
       results.push({ job_id: job.id, ...(await runPromoJob(env, job, { fetchImpl, now: scheduledAt })) });
     }
     const reports = await runMonthlyReportCycle(env, scheduledAt).catch(() => ({ error: 'REPORT_CYCLE_FAILED' }));
-    return { week_key: weekKey, created, ran: results.length, results, reports };
+    return { week_key: weekKey, created, ran: results.length, results, reports, prices };
   } catch (error) {
     if (/no such table/iu.test(String(error?.message))) return { skipped: 'MIGRATION_PENDING' };
     console.error('SELLER_PROMO_CYCLE_FAILED', { code: promoText(error?.message, 80) });

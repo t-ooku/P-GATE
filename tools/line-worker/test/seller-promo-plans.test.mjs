@@ -107,3 +107,32 @@ test('申込（CREATE）の plan: 販売 OFF は PROMO_PLANS_NOT_ENABLED、ON �
   body.plan = 'GOLD';
   assert.equal((await (await call({ SELLER_PROMO_PLANS_ENABLED: 'true' })).json()).error, 'PLAN_INVALID');
 });
+
+test('OK② 後の Price 用意は cron から 1 回だけ。結果は監査ログに残り、承認フラグが無ければ何もしない', async () => {
+  const { ensurePromoPricesOnce } = await import('../src/seller-promo-billing.mjs');
+  const { promoDb } = await import('./helpers/seller-promo-fixture.mjs');
+  const { db, adapter } = promoDb();
+  const created = new Map();
+  let posts = 0;
+  const env = { PRODUCT_DB: adapter, STRIPE_SECRET_KEY: 'sk_live_' + 'y'.repeat(32), STRIPE_FETCH: async (url, init) => {
+    const u = new URL(url); const form = new URLSearchParams(init.body || '');
+    if (init.method === 'GET') { const k = u.searchParams.get('lookup_keys[0]'); return Response.json({ data: created.has(k) ? [created.get(k)] : [] }); }
+    posts += 1;
+    if (u.pathname === '/v1/products') return Response.json({ id: `prod_${form.get('metadata[plan]')}` });
+    const price = { id: `price_${form.get('metadata[plan]')}`, active: true, currency: 'jpy', unit_amount: Number(form.get('unit_amount')), tax_behavior: 'inclusive',
+      lookup_key: form.get('lookup_key'), livemode: true, recurring: { interval: 'month', interval_count: 1 } };
+    created.set(price.lookup_key, price); return Response.json(price);
+  } };
+  assert.deepEqual(await ensurePromoPricesOnce(env), { skipped: true });
+  assert.equal(posts, 0);
+  const approved = { ...env, SELLER_PROMO_STRIPE_PRICES_APPROVED: 'true' };
+  const first = await ensurePromoPricesOnce(approved);
+  assert.equal(first.mode, 'live');
+  assert.equal(first.prices.LIGHT.price_id, 'price_LIGHT');
+  assert.equal(posts, 4);
+  assert.deepEqual(await ensurePromoPricesOnce(approved), { skipped: true, already: true });
+  assert.equal(posts, 4);
+  const audit = JSON.parse(db.prepare("SELECT detail FROM seller_promo_audit WHERE action='STRIPE_PRICES_ENSURED_LIVE'").get().detail);
+  assert.equal(audit.prices.STANDARD.price_id, 'price_STANDARD');
+  assert.doesNotMatch(JSON.stringify(audit), /sk_live/);
+});
