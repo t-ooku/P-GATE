@@ -10,6 +10,12 @@
   `POST /api/admin/seller-promo/profiles {"seller_key":"qa-shop-1","display_name":"QA雑貨店（検証用）","plan":"LIGHT","qa":true,"categories":["生活雑貨"],"weekday":1,"hour_jst":6}`
 - 実際の契約者画面で見る QA 店舗を作るときは、その店で /seller にログインし `GET /api/seller-promo/deliverables` が返す `seller_key` を使って登録する（未登録の店には本人の seller_key だけを返す）
 
+### 販売 ON 後の案内（2026-10-03）
+- Light 9,800円／Standard 19,800円（税込・月額）は販売中。ただし公開 LP `/for-sellers` には載せていない（大隆さん判断: 外部店の初回公開を見てから）
+- 案内には下書きページ `https://hoshilu.app/for-sellers-preview`（noindex・リンクなし）を個別に送る
+- 申込は管理 API の掲載パイロット CREATE に `"plan":"LIGHT"` か `"STANDARD"`。その店の AI販促プロファイルを同じ plan・`pilot_id` で登録すると、契約がトライアル中か支払済みの間だけ週次ジョブが動く
+- SNS で料金を出すのは別承認（`seller-marketing-guard` が止める）
+
 ## 2. できること／できないこと
 
 | | 実装済み | 本番確認済み | 無人実行済み | 外部店利用済み |
