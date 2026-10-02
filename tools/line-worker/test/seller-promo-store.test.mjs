@@ -61,8 +61,8 @@ test('商品の取り込みは同じ内容なら更新せず、監査を残す�
   const { db, adapter } = promoDb();
   await upsertPromoProfile(adapter, { seller_key: 'shop-1', categories: ['文具'] });
   const item = { external_id: 'p1', name: 'ペン', price_jpy: 300, url: '', image_url: '', attrs: {} };
-  assert.deepEqual(await importPromoProducts(adapter, 'shop-1', 'CSV', [item]), { imported: 1, unchanged: 0 });
-  assert.deepEqual(await importPromoProducts(adapter, 'shop-1', 'CSV', [item]), { imported: 0, unchanged: 1 });
+  assert.deepEqual(await importPromoProducts(adapter, 'shop-1', 'CSV', [item]), { imported: 1, unchanged: 0, deactivated: 0 });
+  assert.deepEqual(await importPromoProducts(adapter, 'shop-1', 'CSV', [item]), { imported: 0, unchanged: 1, deactivated: 0 });
   await importPromoProducts(adapter, 'shop-1', 'CSV', [{ ...item, price_jpy: 350 }]);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM seller_promo_products').get().n, 1);
   assert.equal(db.prepare('SELECT price_jpy FROM seller_promo_products').get().price_jpy, 350);

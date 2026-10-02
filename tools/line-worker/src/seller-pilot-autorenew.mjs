@@ -3,6 +3,7 @@ import {stripeRequest,stripeMode} from './stripe-client.mjs';
 import {AUTO_RENEW_OFFER,LEGACY_AUTO_RENEW_OFFER} from '../public/seller-trial-policy.mjs';
 // 2026-10-03: offer の一覧はサーバー側の registry から（1,980円は公開ポリシーのまま、AI販促担当 Light/Standard を足す）。
 import {autoRenewPolicy,isAutoRenewOffer,offerPriceConfiguration,creatableOffer,autoRenewOffersForReconciliation} from './seller-offer-registry.mjs';
+import {isPromoOffer} from './seller-promo-billing.mjs';
 const idOf = value => typeof value === 'string' ? value : value?.id;
 const isId = (value,prefix) => new RegExp(`^${prefix}_[A-Za-z0-9_]+$`,'u').test(value||'');
 const metadata = (row,doc) => ({purpose:'SELLER_PILOT_AUTORENEW',pilot_id:row.pilot_id,terms:doc.autorenew?.terms,consented_at:doc.autorenew?.consented_at});
@@ -18,17 +19,19 @@ function contract(doc,env) {
   if(doc.offer_version!==LEGACY_AUTO_RENEW_OFFER)throw new Error('CONTRACT_SNAPSHOT_REQUIRED');
   return {...policy,price_id:env.SELLER_PILOT_PRICE_ID,mode:stripeMode(env)};
 }
-export function autoRenewReady(env,offer=AUTO_RENEW_OFFER) {
+export function autoRenewReady(env,offer=AUTO_RENEW_OFFER,{existing=false}={}) {
   const configuration=offerPriceConfiguration(env,stripeMode(env),offer);
-  return env.SELLER_PILOT_AUTORENEW_ENABLED==='true' && env.SELLER_PILOT_PAYMENTS_ENABLED==='true' && creatableOffer(env,offer) &&
+  return env.SELLER_PILOT_AUTORENEW_ENABLED==='true' && env.SELLER_PILOT_PAYMENTS_ENABLED==='true' && (existing||creatableOffer(env,offer)) &&
     ['test','live'].includes(stripeMode(env)) && env.SELLER_PILOT_PAYMENT_MODE===stripeMode(env) && isId(configuration.price_id,'price') && isId(configuration.product_id,'prod');
 }
 function requireAccess(env,doc,{creating=false}={}) {
   if(!isAutoRenewOffer(doc.offer_version)||!doc.autorenew?.consented_at||doc.autorenew.terms!==autoRenewPolicy(doc.offer_version).terms)throw new Error('AUTORENEW_CONSENT_REQUIRED');
   // New-contract switches do not disable cancellation or reconciliation of existing contracts.
   contract(doc,env);
-  if(creating&&!creatableOffer(env,doc.offer_version))throw new Error('SUPERSEDED_OFFER_REVIEW_REQUIRED');
-  if(creating&&!autoRenewReady(env,doc.offer_version))throw new Error('AUTORENEW_NOT_ENABLED');
+  // AI販促担当の契約は、公開済み（starts_at あり）なら販売を止めた後でもサブスク作成を続ける（既存契約を止めない）。
+  const existingPromo=isPromoOffer(doc.offer_version)&&Boolean(doc.starts_at);
+  if(creating&&!existingPromo&&!creatableOffer(env,doc.offer_version))throw new Error('SUPERSEDED_OFFER_REVIEW_REQUIRED');
+  if(creating&&!autoRenewReady(env,doc.offer_version,{existing:existingPromo}))throw new Error('AUTORENEW_NOT_ENABLED');
   if(!['test','live'].includes(stripeMode(env))||env.SELLER_PILOT_PAYMENT_MODE!==stripeMode(env))throw new Error('PAYMENT_MODE_MISMATCH');
   if(doc.test&&stripeMode(env)!=='test')throw new Error('QA_LIVE_PAYMENT_FORBIDDEN');
   if(!doc.test&&stripeMode(env)!=='live')throw new Error('EXTERNAL_TEST_PAYMENT_FORBIDDEN');
@@ -179,7 +182,7 @@ export async function reconcileAutoRenew(env,id,{cancel=false,revision,now=new D
 export async function runAutoRenewReconciliation(env) {
   if(!env.PRODUCT_DB||!['test','live'].includes(stripeMode(env)))return;
   let rows;
-  try {rows=(await env.PRODUCT_DB.prepare("SELECT pilot_id FROM seller_listing_pilots WHERE json_extract(document_json,'$.offer_version') IN (?1,?2,?3,?4) AND json_extract(document_json,'$.autorenew.consented_at') IS NOT NULL AND (json_extract(document_json,'$.starts_at') IS NOT NULL OR json_extract(document_json,'$.autorenew.cancel_requested_at') IS NOT NULL) AND coalesce(json_extract(document_json,'$.autorenew.canceled'),0)=0 ORDER BY updated_at LIMIT 5").bind(AUTO_RENEW_OFFER,LEGACY_AUTO_RENEW_OFFER,...autoRenewOffersForReconciliation()).all()).results||[];}catch(error){if(/no such table/iu.test(error.message))return;throw error;}
+  try {rows=(await env.PRODUCT_DB.prepare("SELECT pilot_id FROM seller_listing_pilots WHERE json_extract(document_json,'$.offer_version') IN (SELECT value FROM json_each(?1)) AND json_extract(document_json,'$.autorenew.consented_at') IS NOT NULL AND (json_extract(document_json,'$.starts_at') IS NOT NULL OR json_extract(document_json,'$.autorenew.cancel_requested_at') IS NOT NULL) AND coalesce(json_extract(document_json,'$.autorenew.canceled'),0)=0 ORDER BY updated_at LIMIT 5").bind(JSON.stringify([AUTO_RENEW_OFFER,LEGACY_AUTO_RENEW_OFFER,...autoRenewOffersForReconciliation()])).all()).results||[];}catch(error){if(/no such table/iu.test(error.message))return;throw error;}
   for(const row of rows) {try {await reconcileAutoRenew(env,row.pilot_id);}catch{ /* durable state stays pending; no raw provider details in logs */ }}
 }
 export async function processAutoRenewStripeEvent(env,event) {

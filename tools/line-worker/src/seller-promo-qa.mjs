@@ -160,7 +160,8 @@ export function checkPromoDeliverable(type, rawPayload, ctx = {}) {
   // 1. 数値照合
   const allowed = allowedNumbersFromProducts(products);
   const badNumbers = new Set();
-  for (const text of strings) {
+  // 残した店の商品 URL（商品番号などの数字を含む）は数値照合の対象にしない。
+  for (const text of strings.map((value) => value.replace(URL_PATTERN, ''))) {
     for (const { value, after } of extractNumbers(text)) {
       const number = String(Number(value));
       if (allowed.has(number)) continue;

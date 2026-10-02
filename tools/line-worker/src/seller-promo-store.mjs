@@ -307,27 +307,38 @@ export async function productsFromSpApi(db, tenant) {
   });
 }
 
-export async function importPromoProducts(db, sellerKey, source, items, now = new Date()) {
+// D1 は 1 回の呼び出しで使えるクエリ数に上限があるため、既存行は 1 回で読み、書き込みはまとめて batch にする。
+// replace=true（CSV・SP_API の既定）のときは、今回の取り込みに無い同じ取り込み元の商品を active=0 にする
+// （販売終了の商品を重点商品に選ばないため。行は消さない）。
+const IMPORT_BATCH = 50;
+export async function importPromoProducts(db, sellerKey, source, items, now = new Date(), { replace = source !== 'URL' } = {}) {
   if (!PRODUCT_SOURCES.includes(source)) throw new Error('SOURCE_INVALID');
   const at = nowIso(now);
-  let imported = 0;
+  const unique = [...new Map(items.map((item) => [item.external_id, item])).values()];
+  const existing = new Map((await dbAll(db, 'SELECT id,external_id,hash,active FROM seller_promo_products WHERE seller_key=?1 AND source=?2', sellerKey, source))
+    .map((row) => [row.external_id, row]));
+  const writes = [];
   let unchanged = 0;
-  for (const item of items) {
+  for (const item of unique) {
     const hash = await sha256Hex(JSON.stringify([item.name, item.price_jpy, item.url, item.image_url, item.attrs]));
-    const existing = await dbFirst(db, 'SELECT id,hash FROM seller_promo_products WHERE seller_key=?1 AND source=?2 AND external_id=?3',
-      sellerKey, source, item.external_id);
-    if (existing?.hash === hash) { unchanged += 1; continue; }
-    await dbRun(db, `INSERT INTO seller_promo_products(id,seller_key,source,external_id,name,price_jpy,url,image_url,attrs,hash,imported_at,active)
+    const row = existing.get(item.external_id);
+    if (row?.hash === hash && Number(row.active) === 1) { unchanged += 1; continue; }
+    writes.push(db.prepare(`INSERT INTO seller_promo_products(id,seller_key,source,external_id,name,price_jpy,url,image_url,attrs,hash,imported_at,active)
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,1)
       ON CONFLICT(seller_key,source,external_id) DO UPDATE SET name=excluded.name,price_jpy=excluded.price_jpy,url=excluded.url,
-        image_url=excluded.image_url,attrs=excluded.attrs,hash=excluded.hash,imported_at=excluded.imported_at,active=1`,
-    existing?.id || promoId('spp'), sellerKey, source, item.external_id, item.name, item.price_jpy, item.url, item.image_url,
-    JSON.stringify(item.attrs), hash, at);
-    imported += 1;
+        image_url=excluded.image_url,attrs=excluded.attrs,hash=excluded.hash,imported_at=excluded.imported_at,active=1`)
+      .bind(row?.id || promoId('spp'), sellerKey, source, item.external_id, item.name, item.price_jpy, item.url, item.image_url, JSON.stringify(item.attrs), hash, at));
+  }
+  for (let i = 0; i < writes.length; i += IMPORT_BATCH) await db.batch(writes.slice(i, i + IMPORT_BATCH));
+  let deactivated = 0;
+  if (replace) {
+    const result = await dbRun(db, `UPDATE seller_promo_products SET active=0 WHERE seller_key=?1 AND source=?2 AND active=1
+      AND external_id NOT IN (SELECT value FROM json_each(?3))`, sellerKey, source, JSON.stringify(unique.map((item) => item.external_id)));
+    deactivated = Number(result?.meta?.changes || 0);
   }
   await promoAudit(db, { seller_key: sellerKey, actor: 'ADMIN', action: 'PRODUCTS_IMPORT', target_type: 'PRODUCTS',
-    detail: { source, imported, unchanged } }, now);
-  return { imported, unchanged };
+    detail: { source, imported: writes.length, unchanged, deactivated } }, now);
+  return { imported: writes.length, unchanged, deactivated };
 }
 
 export function hydrateProduct(row) {
