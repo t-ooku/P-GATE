@@ -343,3 +343,6 @@ button,.primary,.secondary,.ghost-button,.auth-button,
 @media(min-width:761px){
   .hoshilu-primary>.hero{padding-left:clamp(20px,5vw,42px);padding-right:clamp(20px,5vw,42px)}
 }
+
+/* 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」1つ。補助導線（AI相談・ランキング・ショップ）は文字リンクに落とす。 */
+#knowledgeForm .search-secondary-actions .search-secondary-button{background:transparent !important;color:#5140ba !important;border:0 !important;padding:4px 2px !important;min-height:0 !important;font-size:12px !important;font-weight:800 !important;text-decoration:underline;text-underline-offset:3px}

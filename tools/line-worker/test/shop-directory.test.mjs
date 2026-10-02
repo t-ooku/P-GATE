@@ -33,7 +33,8 @@ test('トップに「ショップから探す」ボタンと一覧欄があり�
   assert.match(html, /id="shopDirectory"/);
   assert.match(html, /shop-directory\.mjs\?v=3/);
   assert.match(html, /shop-directory\.css\?v=3/);
-  assert.ok(html.indexOf('id="shopDirectory"') < html.indexOf('id="buzzHome"'));
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は検索結果の直下へ。ショップ一覧はショップタブ。
+  assert.ok(html.indexOf('id="buzzHome"') < html.indexOf('id="shopDirectory"'));
   const client = readFileSync(new URL('../public/shop-directory.mjs', import.meta.url), 'utf8');
   assert.match(client, /\/api\/shops/);
   assert.match(client, /Amazonのショップページを見る/);

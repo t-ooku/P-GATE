@@ -36,9 +36,10 @@ test('折りたたみ式のMARKETPLACE COVERAGE(heroMarketplaceCoverage)は検�
   assert.notEqual(widgetStart, -1);
   assert.notEqual(searchStart, -1);
   assert.ok(heroEnd < searchStart, 'search form directly follows the hero');
-  assert.ok(searchStart < resultsStart && resultsStart < widgetStart, 'widget comes right after search and results');
-  assert.ok(widgetStart < genreStart && genreStart < buzzStart && buzzStart < saleStart && saleStart < popularStart && popularStart < insightStart,
-    'order: coverage → genres → BUZZ → SALE RADAR → popular → INSIGHT');
+  assert.ok(searchStart < resultsStart && resultsStart < widgetStart, 'widget comes after search and results');
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は結果の直下へ上げ、モール一覧はその後ろ。
+  assert.ok(resultsStart < buzzStart && buzzStart < widgetStart && widgetStart < genreStart && genreStart < saleStart && saleStart < popularStart && popularStart < insightStart,
+    'order: results → BUZZ → coverage → genres → SALE RADAR → popular → INSIGHT');
   // 既存の#marketplaceCoverageと同じ13モール内訳(integrated 3 / direct 10)。
   for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'ロフト', 'ハンズ', 'マツキヨココカラ', '@cosme', 'ABC-MART', 'BUYMA', 'SNKRDUNK']) {
     const widgetSection = html.slice(widgetStart, html.indexOf('</details>', widgetStart));
@@ -103,21 +104,22 @@ test('第一画面は「欲しい値段を、先に決めておく。」と補�
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
-  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">欲しい値段を、<\/span><span class="hero-title-line hero-title-accent">先に決めておく。<\/span><\/h1>/);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 「欲しいもの、今いくら？」
+  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">欲しいもの、<\/span><span class="hero-title-line hero-title-accent">今いくら？<\/span><\/h1>/);
   // 2026-09-16 大隆さん指示: 補足コピーは行ごと・文ごとに span にして、スマホでも文の途中で折り返さない
-  assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">値下がりしたら、HOSHILUが知らせます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">探し続けるのはもう終わり。<\/span><span class="hero-sub-sentence">ホシっといて。<\/span><\/span><\/p>/);
+  assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">スクショでも、一言でも。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">商品を見つけて。<\/span><span class="hero-sub-sentence">今と過去の値段を比べて、買う。<\/span><\/span><\/p>/);
   assert.match(app, /renderHeroSub\(elements\.heroSub,t\.heroSub\)/);
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
     assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /html:lang\(ja\) \.hero-sub-sentence\{white-space:nowrap\}/);
   }
   // 2026-09-17 大隆さん決定: 主 CTA の文言は「AIで探す」（「ホシっとく」から変更）。直下に「見つからなければ、そのまま探し続けます。」
-  assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す<\/button>/);
+  assert.match(html, /<button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">探す<\/span>/);
   // 2026-09-22 大隆さん指示で、検索ボタン下の2行（探し続けます／この価格になったら教えて）は削除した。
   assert.ok(!html.includes('id="hoshittokuHint"'), '検索ボタン下の補足は出さない');
-  assert.match(app, /identifySubmit:'AIで探す'/);
+  assert.match(app, /identifySubmit:'AIに相談して探す',directSubmit:'探す'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
-  assert.ok(app.includes(String.raw`hero:'欲しい値段を、|先に決めておく。'`));
-  assert.ok(app.includes(String.raw`heroSub:'値下がりしたら、HOSHILUが知らせます。\n探し続けるのはもう終わり。ホシっといて。'`));
+  assert.ok(app.includes(String.raw`hero:'欲しいもの、|今いくら？'`));
+  assert.ok(app.includes(String.raw`heroSub:'スクショでも、一言でも。\n商品を見つけて。今と過去の値段を比べて、買う。'`));
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
   // 入力欄の文言は app.js の setLanguage が起動時に上書きする（HTML 側の初期値は据え置き）。
   assert.match(app, /placeholder:'何が欲しい？'/);

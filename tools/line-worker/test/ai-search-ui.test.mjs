@@ -25,7 +25,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v410/);
+  assert.match(worker, /hoshilu-shell-v411/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
@@ -277,7 +277,9 @@ test('検索方法はスライド式2モードで、AI確認は3回目のNO後�
   const css=await readFile(new URL('../public/sticky-nav.css',import.meta.url),'utf8');
   // 2026-09-05 大隆さん指示: 上部のスライド式切替は撤去し、検索欄の下に「AIに商品を聞く」「すぐ検索」を常設。
   assert.doesNotMatch(html,/id="goSearch"|id="goWish"|id="searchModeSwitch"|id="searchModeIdentify"|id="searchModeDirect"/);
-  assert.match(html,/<button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す<\/button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索<\/span>/);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」1つ。AI相談・ランキング・ショップは補助導線。
+  assert.match(html,/<div class="search-mode-actions search-mode-single"><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">探す<\/span>/);
+  assert.match(html,/<button id="askAiButton" class="ask-ai-button search-secondary-button" type="button">AIに相談して探す<\/button>/);
   assert.match(app,/elements\.askAiButton\?\.addEventListener\('click',\(\)=>\{requestedSearchMode='identify';/);
   assert.ok(css.length>0);
   assert.match(app,/HoshiluIdentifySearch\?\.open/);assert.match(script,/mode, session_id/);assert.match(script,/mode = 'REFINE'/);

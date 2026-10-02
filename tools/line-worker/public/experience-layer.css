@@ -162,3 +162,10 @@
 .official-social-link.sellers strong{font-size:15px}
 .official-social-link.sellers small{font-size:11px;color:#f5c542;font-weight:700}
 .official-social-link.sellers:hover,.official-social-link.sellers:focus-visible{filter:brightness(1.12)}
+
+/* 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」1つ。ほかの探し方は小さな文字ボタンで下に並べる。 */
+#knowledgeForm .search-mode-actions.search-mode-single{grid-template-columns:1fr}
+#knowledgeForm .search-mode-actions.search-mode-single .direct-search-button{min-height:58px;font-size:17px;background:linear-gradient(105deg,var(--pink),var(--violet),var(--cyan));justify-content:center;gap:8px}
+#knowledgeForm .search-secondary-actions{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:10px 0 2px}
+#knowledgeForm .search-secondary-button{border:0;padding:4px 2px;background:transparent;color:#5140ba;font-size:12px;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#knowledgeForm .search-secondary-button.hidden{display:none}

@@ -5,12 +5,13 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const module = readFileSync(new URL('../public/genre-explorer.mjs', import.meta.url), 'utf8');
 
-test('トップは §52 の並び: 検索 → 結果 → 主要モール → ジャンル探索 → BUZZ → セール → 人気 → INSIGHT → NEWS', () => {
-  const order = ['id="hoshiluSearch"', 'id="resultsSection"', 'id="heroMarketplaceCoverage"', 'id="genreExplorer"', 'id="buzzHome"', 'class="sale-center"', 'id="popularGenres"', 'id="insight"', 'id="announcements"'];
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は検索結果の直下（主要モール・ジャンルより前）。
+test('トップの並び: 検索 → 結果 → BUZZ → 主要モール → ジャンル探索 → セール → 人気 → INSIGHT → NEWS', () => {
+  const order = ['id="hoshiluSearch"', 'id="resultsSection"', 'id="buzzHome"', 'id="heroMarketplaceCoverage"', 'id="genreExplorer"', 'class="sale-center"', 'id="popularGenres"', 'id="insight"', 'id="announcements"'];
   const positions = order.map((marker) => { const index = html.indexOf(marker); assert.notEqual(index, -1, marker); return index; });
   for (let i = 1; i < positions.length; i += 1) assert.ok(positions[i - 1] < positions[i], `${order[i - 1]} before ${order[i]}`);
   assert.match(html, /<script type="module" src="\/genre-explorer\.mjs\?v=3"><\/script>/u);
-  assert.match(html, /experience-layer\.css\?v=16/u);
+  assert.match(html, /experience-layer\.css\?v=17/u);
   assert.match(html, /id="genreBreadcrumb"/u);
   assert.match(html, /id="popularRankingButton"/u);
 });
@@ -31,6 +32,7 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 // 2026-09-17 大隆さん指示: 結果直下の通知リンク2つ（希望価格／クーポン・セール）は削除。「ホシる中」タブに集約。
 test('トップの副文言は通知の価値を含み、結果直下の通知リンクは出さない', () => {
   assert.doesNotMatch(html, /id="resultNoticeStrip"/u);
-  assert.match(html, /値下がりしたら、HOSHILUが知らせます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">探し続けるのはもう終わり。<\/span><span class="hero-sub-sentence">ホシっといて。<\/span><\/span><\/p>/u);
+  // 2026-10-02: 副文言は「スクショでも、一言でも。／商品を見つけて、今の価格と過去の価格を比べて買えます。」
+  assert.match(html, /<span class="hero-sub-sentence">スクショでも、一言でも。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">商品を見つけて。<\/span><span class="hero-sub-sentence">今と過去の値段を比べて、買う。<\/span>/u);
   assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
 });

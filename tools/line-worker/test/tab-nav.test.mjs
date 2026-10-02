@@ -9,14 +9,15 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=4">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=10"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=11"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
   for (const id of ['search', 'shops', 'hoshiru', 'buzz', 'account']) assert.match(nav, new RegExp(`id: '${id}'`));
   for (const label of ['探す', 'ショップ', 'ホシる中', 'ホシルバズ', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
   assert.match(nav, /\['#insight', 'hoshiru'\]/);
-  assert.match(nav, /\['#buzzHome', 'buzz'\]/);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は探すタブ（検索直下）。
+  assert.match(nav, /\['#buzzHome', 'search'\]/);
   assert.match(nav, /\['#watchDemand', 'buzz'\]/);
   assert.match(nav, /\['\.sale-center', 'account'\]/);
   assert.match(nav, /VIEW_ALIASES = \{ sale: 'account' \}/);
@@ -96,8 +97,10 @@ test('検索枠に「検索方法」の見出しが無く、フォームが枠�
 });
 
 // 2026-09-17 大隆さん指示: 主 CTA は「AIで探す」。検索欄の長方形枠は縦を縮めて上に寄せる。
-test('主 CTA は「AIで探す」、検索欄の枠は縦を詰めて上に寄せる', () => {
-  assert.match(read('index.html'), /<button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す<\/button>/);
+test('主 CTA は「探す」1つ、検索欄の枠は縦を詰めて上に寄せる', () => {
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9
+  assert.match(read('index.html'), /<div class="search-mode-actions search-mode-single"><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">探す<\/span>/);
+  assert.match(read('index.html'), /<button id="askAiButton" class="ask-ai-button search-secondary-button" type="button">AIに相談して探す<\/button>/);
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
     const text = read(css);
     assert.match(text, /\.search-panel\{padding-top:14px\}/);

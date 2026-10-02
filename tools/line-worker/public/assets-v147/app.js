@@ -44,6 +44,11 @@ Object.assign(copy.JA,{hero:'欲しい値段を、|先に決めておく。',her
 Object.assign(copy.EN,{hero:'Set your price first. |Then forget about it.',heroSub:'When it drops, HOSHILU tells you.\nNo more checking every day. Leave it to HOSHILU.'});
 Object.assign(copy.ZH,{hero:'先定好想要的价格。|然后交给 HOSHILU。',heroSub:'降价时，HOSHILU 会通知你。\n不用每天去看。'});
 Object.assign(copy.KO,{hero:'원하는 가격을 |먼저 정해두세요.',heroSub:'가격이 내리면 HOSHILU가 알려드립니다.\n매일 확인하지 않아도 돼요.'});
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 第一画面は「欲しいもの、今いくら？」。上は履歴として残す。
+Object.assign(copy.JA,{hero:'欲しいもの、|今いくら？',heroSub:'スクショでも、一言でも。\n商品を見つけて。今と過去の値段を比べて、買う。'});
+Object.assign(copy.EN,{hero:'Want it? |See the price now.',heroSub:'A screenshot or a few words is enough.\nFind it, compare today\'s price with the past, and buy.'});
+Object.assign(copy.ZH,{hero:'想要的东西，|现在多少钱？',heroSub:'截图或一句话就够了。\n找到商品，比较现价与过去价格，然后购买。'});
+Object.assign(copy.KO,{hero:'갖고 싶은 그것, |지금 얼마?',heroSub:'스크린샷이나 한마디면 충분해요.\n상품을 찾고, 지금 가격과 과거 가격을 비교해 구매하세요.'});
 // 2026-09-19 同（転換率）: Turnstile の初期化に失敗しても赤文字「セキュリティ設定を確認中」を即出さず、3/6/9 秒で3回まで静かに
 // やり直す（ページ全体で3回まで。検索ボタン押下時の取り直しは acquireTurnstileToken 側のまま）。関数宣言は再代入できるので、
 // 巨大な起動行(末尾)を触らずにここで包む。
@@ -68,10 +73,11 @@ const navigationCopy = {
   KO:{features:['HOSHILU 검색','목표 가격 감시'],account:'로그인／무료 가입',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const searchModeCopy={
-  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'AIで探す',directSubmit:'すぐ検索'},
-  EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search now',identifySubmit:'Leave it to HOSHILU',directSubmit:'Search now'},
-  ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'立即搜索',identifySubmit:'询问 AI 商品',directSubmit:'立即搜索'},
-  KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'바로 검색',identifySubmit:'AI에게 상품 묻기',directSubmit:'바로 검색'}
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」1つ。AI相談は補助導線。
+  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'探す',identifySubmit:'AIに相談して探す',directSubmit:'探す'},
+  EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search',identifySubmit:'Ask AI first',directSubmit:'Search'},
+  ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'搜索',identifySubmit:'先问 AI',directSubmit:'搜索'},
+  KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'검색',identifySubmit:'AI에게 먼저 묻기',directSubmit:'검색'}
 };
 const searchInputCopy={
   JA:{cameraAction:'カメラで撮る',cameraRetake:'撮り直す',cameraPhoto:'撮影した写真',screenshotAction:'画像を選ぶ',socialAction:'投稿URLを追加',socialLabel:'HOSHILU対応形式の公開SNS投稿単体URL（Instagram・TikTok・X・Threads・Facebook・Pinterest）',notice:'候補抽出にGoogleのAIを利用。顔や住所は写さないでください。',imageReady:'この画像を商品候補の抽出に使います',removeImage:'追加した画像を削除',missing:'一言・公開投稿URL・写真・画像のどれか1つを追加してください。',imageType:'JPEG・PNG・WebPの画像を選んでください。',imageLarge:'画像が大きすぎます。別の画像を選んでください。',urlUnsupported:'Instagram・TikTok・X・Threads・Facebook・Pinterestの、HOSHILU対応形式の公開SNS投稿単体URLを入力してください。'},
@@ -2297,7 +2303,8 @@ window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();ins
 window.addEventListener('appinstalled',()=>{installPrompt=null;elements.install.classList.add('hidden');});
 elements.install.addEventListener('click',async()=>{if(isStandalone()){elements.install.classList.add('hidden');return;}if(installPrompt){await installPrompt.prompt();const choice=await installPrompt.userChoice;installPrompt=null;if(choice.outcome==='accepted')elements.install.classList.add('hidden');return;}showInstallHelp();});
 $('#installDialogClose').addEventListener('click',()=>installDialog.close());$('#installDialogDone').addEventListener('click',()=>installDialog.close());installDialog.addEventListener('click',event=>{if(event.target===installDialog)installDialog.close();});if(isStandalone())elements.install.classList.add('hidden');
-const panelHeadingDetails=document.querySelector('.panel-heading-details');if(panelHeadingDetails&&!localStorage.getItem('hoshilu_panel_heading_seen')){panelHeadingDetails.open=true;localStorage.setItem('hoshilu_panel_heading_seen','1');}
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§7: 使い方・継続検索の説明は補助。初回でも開かない（必要な人だけ開く）。
+const panelHeadingDetails=document.querySelector('.panel-heading-details');if(panelHeadingDetails&&!localStorage.getItem('hoshilu_panel_heading_seen')){localStorage.setItem('hoshilu_panel_heading_seen','1');}
 // 2026-08-08時点では、ヒーロー直下のMARKETPLACE COVERAGEウィジェットを
 // 初回訪問時だけ開いた状態にしていた。しかし2026-08-16の実測データ
 // (/admin/promotion)で、訪問68件のうち検索を始めたのはわずか21件
