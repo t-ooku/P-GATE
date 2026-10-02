@@ -75,6 +75,12 @@ function itemCard(item) {
   document.addEventListener('hoshilu:kept-changed', paint);
   paint();
   actions.append(heart);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§10: BUZZ から「今いくら？」（商品詳細）へ。
+  if (/^(?:RAKUTEN:|YAHOO:|JAN:)/u.test(text(item.record_key)) && !/^(?:RAKUTEN|YAHOO):https?:/iu.test(text(item.record_key))) {
+    const detail = el('a', 'buzz-home-detail', '今いくら？ 過去の価格と比べる');
+    detail.href = `/product?key=${encodeURIComponent(text(item.record_key))}`;
+    wrap.append(detail);
+  }
   return wrap;
 }
 

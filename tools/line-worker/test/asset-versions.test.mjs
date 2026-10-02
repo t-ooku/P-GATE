@@ -21,7 +21,7 @@ const EXPECTED = Object.freeze({
   'growth-analytics.mjs': '16',
   'ai-search-ui.mjs': '16',
   'search-suggest.mjs': '3',
-  'buzz-home.mjs': '10',
+  'buzz-home.mjs': '11',
   'google-mall-results.css': '6',
   'google-mall-results.mjs': '5',
   'usual-barcode.css': '1',
@@ -31,8 +31,8 @@ const EXPECTED = Object.freeze({
   'usual-hoshiru.css': '4',
   'usual-hoshiru.mjs': '6',
   'result-compact.css': '5',
-  'unified-results-ui.css': '10',
-  'unified-results-ui.mjs': '13',
+  'unified-results-ui.css': '11',
+  'unified-results-ui.mjs': '14',
   'instagram-look.css': '9'
 });
 

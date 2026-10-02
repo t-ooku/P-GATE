@@ -1,5 +1,6 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { recordPriceObservations } from './price-observations.mjs';
+import { handleProductDetailRoutes } from './product-detail.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { runIndexNowSubmission } from './indexnow.mjs';
@@ -3646,6 +3647,20 @@ export default {
     if (sellerCandidateResponse) return sellerCandidateResponse;
     const sellerPilotResponse = await handleSellerListingPilotRoutes(request, env);
     if (sellerPilotResponse) return sellerPilotResponse;
+    // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 商品詳細（現在価格・過去価格・購入先）。
+    // 購入先リンクは検索結果と同じ /go 署名トークン（so=PRODUCT_DETAIL で「商品詳細→購入先クリック」を分けて数える）。
+    const productDetailResponse = await handleProductDetailRoutes(request, env, ctx, {
+      sign: async ({ d, m, j }) => {
+        const sessionHash = await hashUser(url.searchParams.get('s') || '');
+        const seed = crypto.randomUUID();
+        const token = await createTrackToken({
+          u: sessionHash, r: seed, a: '', d, exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+          j: `${seed}:${j}`, c: 'PWA', m, so: 'PRODUCT_DETAIL'
+        }, env.LINK_SIGNING_SECRET);
+        return `${url.origin}/go?token=${encodeURIComponent(token)}`;
+      }
+    });
+    if (productDetailResponse) return productDetailResponse;
     // 2026-10-03 指示書 ai-promo-20261003-v2: HOSHILU Seller「AI販促担当」。契約者側は SELLER_PROMO_ENABLED=false の間 404。
     const sellerPromoResponse = await handleSellerPromoRoutes(request, env);
     if (sellerPromoResponse) return sellerPromoResponse;

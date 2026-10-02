@@ -76,6 +76,8 @@ const EVENTS = new Set([
   'ai_result_clicked',
   'ranking_result_clicked',
   'price_comparison_opened',
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 商品詳細の閲覧。購入先クリックは marketplace_click(content=product_detail)。
+  'product_detail_view',
   'returning_visit',
   // Anonymous registration funnel stages. The final conversion remains the
   // server-owned member_registered event below; these fixed browser events

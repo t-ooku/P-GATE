@@ -242,3 +242,5 @@
   text-align:center;
 }
 .unified-card-full .keep-product-note.hidden{display:none}
+
+.unified-card-detail{display:block;margin:6px 0 0;color:#5140ba;font-size:11px;font-weight:850;text-decoration:none}.unified-card-detail:hover{text-decoration:underline}

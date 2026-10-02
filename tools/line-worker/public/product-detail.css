@@ -1,0 +1,23 @@
+/* 2026-10-02 商品詳細（指示書「今ほしい人が買うためのサービス」§9）。スマホ最優先、順序は固定。 */
+.product-detail{width:min(100% - 32px,760px);margin:20px auto 64px;display:grid;gap:14px}
+.product-detail section{padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--paper)}
+.product-detail h2{margin:0 0 10px;font-size:15px;letter-spacing:0;color:#5140ba}
+.product-detail-loading{color:var(--muted);text-align:center;padding:40px 0}
+.product-head{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:start}
+.product-head img{width:96px;height:96px;object-fit:contain;border-radius:12px;background:#fafafa}
+.product-name{margin:0;font-size:16px;line-height:1.5;letter-spacing:0}
+.product-mall{margin:6px 0 0;color:var(--muted);font-size:11px}
+.product-now-price{margin:0;font-size:36px;font-weight:950;letter-spacing:-.03em}
+.product-now-note,.product-now-missing,.product-history-since,.product-offer-note,.product-later-note{margin:6px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+.product-history-list{margin:0;padding-left:18px;font-size:13px;line-height:1.8}
+.product-history-none{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.product-chart{display:block;width:100%;height:auto;margin-top:12px}
+.product-chart-line{fill:none;stroke:var(--violet);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.product-chart-dot{fill:var(--violet)}
+.product-chart-label{fill:var(--muted);font-size:9px;font-weight:700}
+.product-offer-table{width:100%;border-collapse:collapse;font-size:12px}
+.product-offer-table th,.product-offer-table td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.product-offer-table th{color:var(--muted);font-size:10px;font-weight:800}
+.product-buy{display:inline-block;padding:9px 12px;border-radius:10px;background:var(--ink);color:#fff;text-decoration:none;font-weight:850;font-size:12px;white-space:nowrap}
+.product-later-link{display:block;padding:12px;border:1px solid #ded7ff;border-radius:12px;background:var(--soft);color:#5140ba;text-decoration:none;font-weight:850;font-size:13px;text-align:center}
+@media(max-width:480px){.product-offer-table thead{display:none}.product-offer-table tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}.product-offer-table td{padding:0;border:0}.product-offer-table td[data-label]:not(:first-child)::before{content:attr(data-label) ' ';color:var(--muted);font-size:10px}.product-offer-table td:first-child{grid-column:1/-1;font-weight:800}.product-offer-table td:last-child{grid-column:1/-1;margin-top:4px}.product-buy{display:block;text-align:center}}

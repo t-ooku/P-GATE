@@ -27,6 +27,7 @@ const COPY = {
   keep: '♡ ホシっとく',
   kept: '♥ ホシっとく済み',
   listing: '一覧ページ',
+  detail: '今いくら？ 過去の価格と比べる',
   openListing: 'このモールの一覧を見る',
   badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' },
   sortLabel: '並び順',
@@ -133,6 +134,12 @@ function card(item) {
   // 一覧・カテゴリページも出すが、商品のふりはさせない。ここでそう断る。
   if (item.listing) meta.append(el('span', 'unified-badge unified-badge-listing', COPY.listing));
   body.append(meta);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」: HOSHILU 商品から商品詳細（今いくら？・過去価格・購入先）へ。
+  if (item.source === 'HOSHILU' && /^(?:RAKUTEN:|YAHOO:|JAN:)/u.test(String(item.record_key || '')) && !/^(?:RAKUTEN|YAHOO):https?:/iu.test(String(item.record_key))) {
+    const detail = el('a', 'unified-card-detail', COPY.detail);
+    detail.href = `/product?key=${encodeURIComponent(item.record_key)}`;
+    body.append(detail);
+  }
   // 価格と「価格比較」を同じ行に置く（2026-09-22 大隆さん指示）。
   const priceRow = el('div', 'unified-card-price-row');
   body.append(priceRow);

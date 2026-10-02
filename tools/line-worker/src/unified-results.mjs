@@ -136,6 +136,8 @@ function fromCandidate(candidate, index) {
     product_url: httpsOnly(candidate?.product_url || offer?.product_url),
     shop_name: text(shop?.name || shop?.shop_name || offer?.marketplace_label, 60),
     marketplace: text(offer?.marketplace, 32),
+    // 2026-10-02 商品詳細（/product）への入口。楽天・Yahoo! の商品IDがあるものだけ。
+    record_key: text(candidate?.record_key, 160),
     asin: text(candidate?.asin, 20),
     // HOSHILU 商品だけ価格を出す。確認できた金額が無ければ出さない（0 と書かない）。
     price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
@@ -354,6 +356,7 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     url: row.url,
     shop_name: row.shop_name,
     marketplace: row.marketplace,
+    record_key: row.record_key || '',
     price_jpy: row.price_jpy,
     listed_price_jpy: row.listing ? null : (row.listed_price_jpy ?? null),
     listing: row.listing === true,
