@@ -6,21 +6,24 @@ import { hasVersionedAsset } from './helpers/asset-version.mjs';
 // 2026-09-16 大隆さん指示: 下部固定メニュー（探す／ショップ／ホシる中／セール／マイアカウント）と上部のページ名帯
 const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
-test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
+// 2026-10-03 大隆さん指示「ホシルバズのページ何もないなら削除」: 4 タブ（探す／ホシる中／ショップ／マイアカウント）
+test('トップは tab-nav を読み込み、4 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
-  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=4">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=11"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=5">/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=12"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
-  for (const id of ['search', 'shops', 'hoshiru', 'buzz', 'account']) assert.match(nav, new RegExp(`id: '${id}'`));
-  for (const label of ['探す', 'ショップ', 'ホシる中', 'ホシルバズ', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
+  for (const id of ['search', 'shops', 'hoshiru', 'account']) assert.match(nav, new RegExp(`id: '${id}'`));
+  assert.doesNotMatch(nav, /id: 'buzz'/);
+  for (const label of ['探す', 'ショップ', 'ホシる中', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
+  assert.ok(!nav.includes("label: 'ホシルバズ'"));
   assert.match(nav, /\['#insight', 'hoshiru'\]/);
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は探すタブ（検索直下）。
   assert.match(nav, /\['#buzzHome', 'search'\]/);
-  assert.match(nav, /\['#watchDemand', 'buzz'\]/);
+  assert.match(nav, /\['#watchDemand', 'hoshiru'\]/);
   assert.match(nav, /\['\.sale-center', 'account'\]/);
-  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account' \}/);
+  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account', buzz: 'search' \}/);
   assert.match(nav, /\['#shopDirectory', 'shops'\]/);
   assert.match(nav, /\['#officialSocial', 'account'\]/);
   // ページ内リンクは属するタブを開いてからスクロール
@@ -41,7 +44,7 @@ test('気になる商品は「ホシる中」タブに横スクロールで並�
   const nav = read('tab-nav.mjs');
   assert.match(nav, /\['#keptProducts', 'hoshiru'\]/);
   // 2026-09-20 大隆さん指示: 「気になる商品」は「値下がり待ち」の上（ホシってるものの中）。
-  assert.match(nav, /HOSHIRU_ORDER = \['#insight'\]/);
+  assert.match(nav, /HOSHIRU_ORDER = \['#insight', '#watchDemand'\]/);
   assert.match(nav, /entrusted\.before\(kept\)/);
   assert.match(nav, /kept\.classList\.add\('kept-in-insight'\)/);
   const app = read('app.js');

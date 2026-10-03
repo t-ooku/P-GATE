@@ -161,7 +161,8 @@ test('PCではページメニューを上帯へ。名前は現行のまま、下
   assert.match(desktop, /body\.has-tab-bar\{padding-bottom:0\}/u);
   // メニュー名は勝手に変えない（追加指示§5）
   const nav = readFileSync(new URL('../public/tab-nav.mjs', import.meta.url), 'utf8');
-  for (const label of ['探す', 'ホシる中', 'ショップ', 'ホシルバズ', 'マイアカウント']) {
+  // 2026-10-03 大隆さん指示でホシルバズのタブは外した（BUZZ は探すの中）
+  for (const label of ['探す', 'ホシる中', 'ショップ', 'マイアカウント']) {
     assert.ok(nav.includes(`label: '${label}'`), label);
   }
 });

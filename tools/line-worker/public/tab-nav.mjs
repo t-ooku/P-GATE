@@ -8,8 +8,8 @@ const VIEWS = [
   // 2026-09-19 大隆さん指示: 「ホシる中」と「ショップ」の位置を交換（探す → ホシる中 → ショップ → セール → マイアカウント）。
   { id: 'hoshiru', label: 'ホシる中', title: 'ホシる中', sub: 'ホシってるもの・気になる商品', icon: 'M12 2.5l2.7 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7l-5.8 3.4 1.5-6.5-5-4.4 6.6-.6L12 2.5Z' },
   { id: 'shops', label: 'ショップ', title: 'ショップから探す', sub: '全ショップ横断検索・ショップ・クーポン', icon: 'M4 4h16l1 5a3 3 0 0 1-2.5 3V20H5.5v-8A3 3 0 0 1 3 9l1-5Zm3.5 10v4h3v-4h-3Zm5 0v4h3v-4h-3Z' },
-  // 2026-09-20 大隆さん指示: 「セール」はマイアカウントへ移し、4番目は「ホシルバズ」（暇な時に覗きに来る場所: ランキング・みんなの値下がり待ち）。
-  { id: 'buzz', label: 'ホシルバズ', title: 'ホシルバズ', sub: 'みんなの値下がり待ち・ランキング（/buzz）', icon: 'M3.5 16.6l5.8-5.8 4 4 6.9-6.9V11h2V4.5h-6.5v2h3.1l-5.5 5.5-4-4-7.2 7.2 1.4 1.4Z' },
+  // 2026-09-20 大隆さん指示: 4番目は「ホシルバズ」→ 2026-10-03 大隆さん指示「ホシルバズのページ何もないなら削除」:
+  // BUZZ は探すタブ（検索直下）へ移ったので、このタブは外す（4タブ）。みんなの値下がり待ちはホシる中へ。旧 URL #tab-buzz は探すへ。
   { id: 'account', label: 'マイアカウント', title: 'マイアカウント', sub: 'ログイン・お知らせ・セール通知の設定・公式アカウント', icon: 'M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 11c4.4 0 8 2.2 8 5v2H4v-2c0-2.8 3.6-5 8-5Z' }
 ];
 
@@ -18,16 +18,17 @@ const SECTION_VIEW = [
   ['#shopSearch', 'shops'], ['#shopDirectory', 'shops'], ['#shopCouponsNote', 'shops'],
   ['#insight', 'hoshiru'], ['#keptProducts', 'hoshiru'],
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9・§10: BUZZ は検索のすぐ下（探すタブ）。みんなの値下がり待ちはホシルバズタブに残す。
-  ['#buzzHome', 'search'], ['#watchDemand', 'buzz'],
+  ['#buzzHome', 'search'], ['#watchDemand', 'hoshiru'],
   ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
 // 2026-09-20 大隆さん指示: ホシる中は「ホシってるもの」が先。「気になる商品」はその中の
 // 「値下がり待ち」の上に置く（ホシってるもの → 気になる商品 → 値下がり待ち → 追ってるキーワード）。
-const HOSHIRU_ORDER = ['#insight'];
+// 2026-10-03: みんなの値下がり待ちは「ホシってるもの」の後ろ（補助）。
+const HOSHIRU_ORDER = ['#insight', '#watchDemand'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
-const VIEW_ALIASES = { sale: 'account' };
+const VIEW_ALIASES = { sale: 'account', buzz: 'search' };
 
 const main = document.querySelector('#top');
 const primary = document.querySelector('.hoshilu-primary');
