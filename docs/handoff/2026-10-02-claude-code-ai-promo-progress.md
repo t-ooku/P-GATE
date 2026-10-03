@@ -9,7 +9,7 @@
 | 本番 | PR #537（コード・フラグ OFF）→ #539（`SELLER_PROMO_ENABLED=true`）を `feature/ui-search-v2` にマージ・deploy success。HEAD `e366cff0` |
 | migration | **0090〜0092 本番適用済み**（apply-d1-migrations.yml、未適用リストが 3 本ちょうどであることを確認してから適用） |
 | R2・鍵 | `hoshilu-seller-promo-assets` 作成済み。`SELLER_PROMO_KEK` 作成済み（値はどこにも出していない。作り直さない） |
-| QA 店舗 | `qa-shop-1`（架空・qa=1・LIGHT・商品 3・疑問 3・通知メールなし）を投入。初回の無人実行を見るため **土曜 04:00 JST** に設定（確認後に月曜 06:00 へ戻す） |
+| QA 店舗 | `qa-shop-1`（架空・qa=1・LIGHT・商品 3・疑問 3・通知メールなし）を投入。初回の無人実行を見るため土曜 04:00 JST に設定 → **2026-10-03 13:31 JST に月曜 06:00 へ戻した** |
 | vars | `SELLER_PROMO_ENABLED=true`。`SELLER_PROMO_PLANS_ENABLED=false`・`SELLER_PROMO_STRIPE_PRICES_APPROVED=false`・`SELLER_PROMO_LP_PREVIEW_PUBLIC=false` のまま |
 | 本番確認 | `/health` ok、`/api/seller-promo/deliverables` 401（未ログイン。フラグ OFF 時は 404 だった）、`/for-sellers-preview` 404（未公開のまま）、管理 API 401（認証必須）、`/seller-promo.js` 200 |
 | 手動ワークフロー | `seller-promo-infra.yml`・`seller-promo-status.yml`・`build-seller-promo-images.yml` は main にも置いた（PR #538。workflow_dispatch は既定ブランチに定義が要るため）。起動時は ref=feature/ui-search-v2 |
@@ -101,7 +101,19 @@
 - 記事（本文 1,675 字）・SNS 2 本・商品ページの直し案がすべて 1 回目で QA_PASSED（作り直しなし）
 - 原価の実測: gemini-3.6-flash 3 回、入力 2,911・出力 2,266 トークン、**1.61 円**（1 店・1 週）。月 4 週で約 6.4 円／店
 - job の error 欄 `IMAGE_SKIPPED_NO_R2` は「Worker に R2 の binding が無い」の意味（画像は手動ワークフローで作る方針どおり。R2 バケット自体は作成済み）
-- 次: QA 店舗を月曜 06:00 に戻す（Cowork 指示書 §1。runbook の 1 行）
+- 次: QA 店舗を月曜 06:00 に戻す（Cowork 指示書 §1。runbook の 1 行）→ 2026-10-03 13:31 JST 済（下の節）
+
+## Cowork 依頼 §1-1・§1-3・§2（2026-10-03 13:31 JST）
+
+経路: 管理 API の認証が無いため、`seller-promo-status.yml` を作業用ブランチだけで一時的に書き換え、ref=そのブランチで起動（run 37096808831、success）。`feature/ui-search-v2` の同ファイルは変えていない。
+
+- **§2 重複確認**: C1〜C6 の 6 件とも `seller_outreach_contacts`・`seller_outreach_suppressions`・`seller_contact_permissions` のいずれにも **0 件**（status なし）。
+  - C1: なし / C2: なし / C3: なし / C4: なし / C5: なし / C6: なし
+- **§1-3**: `qa-shop-1` を weekday 6・hour_jst 4（土 04:00）→ **weekday 1・hour_jst 6（月 06:00 JST）** に UPDATE（`updated_at` 2026-10-03T04:31:38.694Z）。`seller_promo_audit` に 1 行（ADMIN・`PROFILE_SCHEDULE_SET`・detail に from/to）。次回は 2026-10-05（月）06:00 JST・週 `2026-W41`。
+- **§1-1 記事の通読**（`2026-W40` の ARTICLE v1。本文はログに平文で出さず、公開鍵で暗号化して出力→手元で復号して読んだ。本文はリポジトリに残していない）。所見:
+  1. 事実: 寸法・素材・色・価格は商品データと一致。ただし「（税込）」と「ポリプロピレンはお手入れしやすい」は商品データに根拠が無い（税込かは店に要確認）。
+  2. 禁止表現: 「最安」「No.1」・効果の断定・他店比較などは無し。
+  3. 日本語: 「当店」の語りなのに FAQ で「直接お店に確認してください」「商品データ上」と第三者・内部の言い回しが混ざる。価格表記が「1980円」と「2,980円」で揺れる。
 
 ## 原価の実測
 
