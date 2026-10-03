@@ -13,6 +13,7 @@ import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle }
 import { bumpIdentifyCacheHit, identifyCacheKey, purgeExpiredIdentifyCache, readIdentifyCache, writeIdentifyCache } from './ai-identify-cache.mjs';
 import { identifyCandidateFromAnalysis, isIdentifyPreviewKey, readIdentifyPreviews, readMultimodalIdentifyCache, storeMultimodalIdentifyCache, withPreviewBudget } from './identify-route.mjs';
 import { purgeIdentifyLatencyLog, recordIdentifyLatency } from './identify-latency.mjs';
+import { createStageClock, purgeKnowledgeLatencyLog, recordKnowledgeLatency } from './knowledge-latency.mjs';
 import { readIdentifyMemory, rememberIdentifyAnswer } from './identify-memory.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
@@ -2718,6 +2719,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
   // Create this before validation so even rejected requests can be matched
   // to a Worker log without retaining the user's query text.
   const requestId = crypto.randomUUID();
+  // 2026-10-03 大隆さん指示（検索時間を 2 秒短くする）: 段階ごとの所要時間を D1 に残す。
+  // 残すのはミリ秒・入力の種類・レーン数だけ。検索文・画像・セッションIDは渡さない（src/knowledge-latency.mjs）。
+  const stageClock = createStageClock();
+  const latency = { lanes: 0, lateLanes: [], googleSettledAt: 0 };
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
@@ -2746,6 +2751,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         await admitTokenlessSearch(env, request);
       }
     }
+    stageClock.mark('gate_ms');
     const submittedQuery = validatedInput.query;
     // 2026-09-06 大隆さん指示: 一度当たった答えは D1 に残し、次の同じ質問に使う。
     // YES を押したときだけ（ai_candidate_fallback が付いているとき）記録する。
@@ -2764,6 +2770,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // 表示順(§7)にだけ使う(2026-09-03, src/search-origin.mjs)。
     const searchOrigin = extractSearchOrigin(submittedQuery);
     const hasMultimodalInput = Boolean(validatedInput.social_url || validatedInput.search_image);
+    // 所要時間ログ用の入力の種類（本文は持たない）: 確認済み候補／写真／投稿URL／文字。
+    const latencyInputKind = validatedInput.ai_candidate_fallback ? 'confirmed'
+      : validatedInput.search_image ? 'image' : validatedInput.social_url ? 'social' : 'text';
     let searchInputAnalysis = null;
     if (hasMultimodalInput) {
       try {
@@ -2790,6 +2799,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         });
       }
     }
+    stageClock.mark('analysis_ms');
     const analyzedQuery = searchInputAnalysis?.refined_query || '';
     const originalQuery = analyzedQuery
       ? mergeAiRefinedSearchQuery(searchOrigin.query, analyzedQuery) : searchOrigin.query;
@@ -2869,7 +2879,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // The effective query is now final. Overlap Google's existing single search
     // with D1 enrichment and live marketplaces instead of starting it after them.
     // Reuse the promise in decoration so quotas, candidates and ranking stay intact.
-    const googleMallPromise = startGoogleMallSearch(env, input.query);
+    // 所要時間ログ: Google 検索がいつ終わったかを控え、応答組み立てで待った分（google_wait_ms）を出す。
+    const googleMallPromise = startGoogleMallSearch(env, input.query)
+      .then((value) => { latency.googleSettledAt = Date.now(); return value; });
     if (ctx?.waitUntil) ctx.waitUntil(googleMallPromise);
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
@@ -2925,6 +2937,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     }
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
+    stageClock.mark('lookup_ms');
     const confirmedDiscovery = confirmedAiCandidateDiscovery(input.ai_candidate_fallback, input.query);
     const interpretedDiscovery = interpretedSearchInputDiscovery(
       analysisCandidate,
@@ -3050,6 +3063,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         request_id: requestId, elapsed_ms: Date.now() - stageStartedAt,
         budget_ms: stageBudgetMs, lanes: marketplaceSearches.length, late_lanes: lateLanes
       });
+      latency.lanes = marketplaceSearches.length;
+      latency.lateLanes = lateLanes;
       const priceWrite = persistMarketplacePrices(env, outcomes.flatMap(outcome =>
         outcome.status === 'fulfilled' && Array.isArray(outcome.value) ? outcome.value : []));
       if (ctx?.waitUntil) ctx.waitUntil(priceWrite); else await priceWrite;
@@ -3150,6 +3165,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       result.candidates = finalSlice;
 
     }
+    // marketplace_ms はモール検索レーンと順位付けまで。0 件時の AI 補完待ちは decorate_ms に入る。
+    stageClock.mark('marketplace_ms');
     const refinedCandidates = filterSearchCandidatesWithFallback(
       input.query, expandedQuery.query, result?.candidates || []
     );
@@ -3206,6 +3223,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const sessionHash = await hashUser(input.session_id);
     // 2026-10-02 価格推移: API で確認できた価格を1日1行で記録（検索本文・会員IDは入れない）。失敗しても検索は止めない。
     ctx.waitUntil(recordPriceObservations(env, result?.candidates, { source: 'search' }).catch(() => {}));
+    const decorateStartedAt = Date.now();
     let decorated = await decoratePwaResult(
       result,
       request,
@@ -3237,6 +3255,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         });
       }
     }
+    stageClock.mark('decorate_ms');
+    stageClock.set('google_wait_ms', latency.googleSettledAt ? Math.max(0, latency.googleSettledAt - decorateStartedAt) : 0);
     const events = (decorated.candidates || []).map((candidate) => ({
       event_id: `${decorated.query_id}:IMPRESSION:${candidate.asin}`,
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
@@ -3247,6 +3267,16 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       ctx.waitUntil(recordMeasurementEventsToD1(env, 'PWA', events));
     }
     console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query_length: input.query.length, ui_sent_count: (decorated.candidates || []).length });
+    // 段階ごとの所要時間を D1 に残す（ミリ秒・入力の種類・レーン名だけ。失敗しても検索は止めない）。
+    if (ctx?.waitUntil) ctx.waitUntil(recordKnowledgeLatency(env, {
+      inputKind: latencyInputKind,
+      trafficClass: input.traffic_class,
+      stages: stageClock.stages(),
+      lanes: latency.lanes,
+      lateLanes: latency.lateLanes.length,
+      lateLaneKeys: latency.lateLanes,
+      resultCount: (decorated.candidates || []).length
+    }));
     return Response.json({ ok: true, result: decorated }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
@@ -3925,6 +3955,8 @@ export default {
         purgeExpiredIdentifyCache(env, scheduledAt),
         // 「これですか？」の所要時間ログは14日で消す。
         purgeIdentifyLatencyLog(env, scheduledAt),
+        // 検索（/api/knowledge）の段階別所要時間ログは14日で消す。
+        purgeKnowledgeLatencyLog(env, scheduledAt),
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
         // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
         recordBuzzSnapshots(env, fetch, scheduledAt.getTime())
