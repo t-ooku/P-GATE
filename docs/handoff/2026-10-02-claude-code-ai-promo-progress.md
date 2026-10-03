@@ -115,6 +115,23 @@
   2. 禁止表現: 「最安」「No.1」・効果の断定・他店比較などは無し。
   3. 日本語: 「当店」の語りなのに FAQ で「直接お店に確認してください」「商品データ上」と第三者・内部の言い回しが混ざる。価格表記が「1980円」と「2,980円」で揺れる。
 
+## Cowork 依頼 §6・§8（2026-10-03 14:00 JST）
+
+- **§6 案内ページ**: `public/for-sellers-preview.html` の第一画面を「後回しになっていた『モールの外』の販促を、毎週かわりに。」に差し替えた。料金の前に「なぜ『モールの外』なのか」「HOSHILU の中と外、両方で」「毎週届くもの」の欄を追加。文は依頼の文そのまま。
+  - 「毎週届くもの」には「AI販促担当（有料プラン）で届くものです。掲載プランだけの場合は含みません。」の1行を足した。直後の掲載プラン（1,980円）は記事・SNS を含まないので、誤解を防ぐため。
+  - 料金・規約・約束しないことの欄はそのまま。
+  - テストで確認したこと: 禁止表現（`PROMO_FORBIDDEN_PHRASES`）が無いこと、`seller-marketing-guard` を通ること、9,800／19,800 が下書きに出ないこと。
+  - 公開 LP `/for-sellers` は変えていない。
+- **§8 相談（inquiry）**: 現状は `seller_business_inquiries` を作れる経路が公開フォーム（`POST /api/seller-business/inquiries`、Turnstile あり）だけで、管理 API からは作れなかった。既定 a で実装した。
+  - `POST /api/admin/seller-business/inquiries`（管理者のみ・同一 Origin）。body は次のとおり:
+    - 必須: `organization_name`、`contact_email`（返信メールの From）、`evidence_message_id`（返信メールの Message-ID）、`evidence_received_at`
+    - 任意: `contact_name`、`storefront_url`、`message`
+  - 保存のしかた: `inquiry_type=CONSULTATION`、`status=CONTACTED`、`source=EMAIL_REPLY`。同意の根拠は message 末尾に `[相談回答への同意: email_reply; 継続案内希望: no; evidence: <Message-ID>; received_at: …; recorded_by: admin]` の形で残す。
+  - 営業メールの許諾にはしない（`marketing_consent` は常に no）。
+  - inquiry_id は `SBI_` + sha256(Message-ID) なので、同じ返信メールから二重に作られない。
+  - 申込の手順: ① この API で相談を作る → ② 返った `inquiry_id` で掲載契約 CREATE → ③ AI販促プロファイル（§5 の手順）→ ④ 店に `https://hoshilu.app/login.html?next=/seller-pilot` を送る。店は返信に使ったメールアドレスでログインする。
+- テスト: `npm test` 2,955 件 pass。
+
 ## 原価の実測
 
 → 「本番の初回無人実行」の節を参照（1.61 円／週、月約 6.4 円／店。2026-10-03 実測）。

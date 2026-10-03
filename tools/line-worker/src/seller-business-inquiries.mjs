@@ -212,8 +212,56 @@ export async function createSellerBusinessInquiry(env, input, now = new Date(), 
   return { accepted: true, inquiry_id: id, notified, notification_tracking: tracked, verified };
 }
 
+// 2026-10-03 Cowork 依頼 §8（既定 a）: 案内はメールで送り、店はメールで返信してくる。
+// 掲載契約 CREATE には inquiry_id が要り、店はその相談のメールアドレスで /seller-pilot にログインする。
+// 返信のあったアドレスで管理者が相談を作れるようにする。同意の根拠は「店からの返信メール」（message_id を残す）。
+// 継続案内（営業メール）の許諾にはしない。同じ返信メールから二重に作らない。
+const EMAIL_REPLY_SOURCE = 'EMAIL_REPLY';
+export async function createSellerInquiryFromEmailReply(env, input = {}, now = new Date()) {
+  const { value, errors } = normalizeSellerBusinessInquiry({
+    organization_type: 'SELLER', ...input,
+    inquiry_type: 'CONSULTATION', marketing_consent: false, privacy_consent: true, company_website: ''
+  });
+  const messageId = clean(input.evidence_message_id, 200).replace(/^<|>$/gu, '');
+  const receivedAt = new Date(clean(input.evidence_received_at, 40));
+  if (!/^[^\s<>]{6,200}$/u.test(messageId)) errors.push('EVIDENCE_MESSAGE_ID_REQUIRED');
+  if (Number.isNaN(receivedAt.getTime()) || receivedAt.getTime() > now.getTime() + 600_000) errors.push('EVIDENCE_RECEIVED_AT_INVALID');
+  if (errors.length) return { accepted: false, errors };
+  const id = `SBI_${await digest(`email-reply:${messageId}`)}`;
+  const existing = (await env.PRODUCT_DB.prepare('SELECT inquiry_id FROM seller_business_inquiries WHERE inquiry_id=?1').bind(id).all()).results?.[0];
+  if (existing) return { accepted: true, inquiry_id: id, duplicate: true };
+  const offer = publicPilotOffer(env).offer_version;
+  const message = `${value.message}\n\n[相談回答への同意: email_reply; 継続案内希望: no; version: seller-email-reply-v1; evidence: ${messageId}; received_at: ${receivedAt.toISOString()}; recorded_by: admin${offer ? `; offer: ${offer}` : ''}]`;
+  const timestamp = now.toISOString();
+  const inserted = await env.PRODUCT_DB.prepare(`INSERT INTO seller_business_inquiries
+    (inquiry_id,inquiry_type,organization_type,organization_name,contact_name,contact_email,
+     storefront_url,marketplaces,monthly_order_range,plan_interest,payment_preference,message,
+     status,source,created_at,updated_at)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'CONTACTED',?14,?13,?13)
+    ON CONFLICT(inquiry_id) DO NOTHING`)
+    .bind(id, value.inquiry_type, value.organization_type, value.organization_name,
+      value.contact_name, value.contact_email, value.storefront_url, JSON.stringify(value.marketplaces),
+      value.monthly_order_range, value.plan_interest, value.payment_preference, message,
+      timestamp, EMAIL_REPLY_SOURCE).run();
+  if (inserted?.success === false) throw new Error('SAVE_FAILED');
+  if (inserted?.meta?.changes === 0) return { accepted: true, inquiry_id: id, duplicate: true };
+  return { accepted: true, inquiry_id: id, duplicate: false };
+}
+
 export async function handleSellerBusinessInquiryRoutes(request, env) {
   const url = new URL(request.url);
+  if (request.method === 'POST' && url.pathname === '/api/admin/seller-business/inquiries') {
+    if (!sameOrigin(request) || !await authorizeAdminRequest(request, env)) return json({ ok: false, error: 'UNAUTHORIZED' }, 403);
+    if (!env.PRODUCT_DB) return json({ ok: false, error: 'INQUIRY_STORE_UNAVAILABLE' }, 503);
+    const parsed = await readBoundedJson(request, 16_384);
+    if (!parsed.ok) return json({ ok: false, error: parsed.error }, parsed.error === 'REQUEST_TOO_LARGE' ? 413 : 400);
+    if (!parsed.value || typeof parsed.value !== 'object' || Array.isArray(parsed.value)) return json({ ok: false, error: 'INVALID_JSON' }, 400);
+    let result;
+    try { result = await createSellerInquiryFromEmailReply(env, parsed.value, new Date()); }
+    catch { return json({ ok: false, error: 'INQUIRY_SAVE_FAILED' }, 503); }
+    if (!result.accepted) return json({ ok: false, error: 'VALIDATION_FAILED', fields: result.errors }, 400);
+    return json({ ok: true, inquiry_id: result.inquiry_id, duplicate: result.duplicate, status: 'CONTACTED' }, result.duplicate ? 200 : 201);
+  }
   if (request.method === 'POST' && url.pathname === '/api/seller-business/inquiries') {
     if (!sameOrigin(request)) return json({ ok: false, error: 'ORIGIN_REQUIRED' }, 403);
     if (!env.PRODUCT_DB) return json({ ok: false, error: 'INQUIRY_STORE_UNAVAILABLE' }, 503);
