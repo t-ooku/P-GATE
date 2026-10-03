@@ -138,3 +138,18 @@ test('重点商品は 疑問が多い→未使用→価格が中央値に近い 
   assert.match(prompt, /商品データに無い数字は一切書かない/);
   assert.match(prompt, /前の記事/);
 });
+
+test('§9: 自動公開でも「要確認」の注記（商品データに無い性質語）が付いた版は承認しない', async () => {
+  const { db, adapter } = promoDb();
+  const env = promoEnv(adapter);
+  const seed = await seedQaShop(env);
+  db.prepare("UPDATE seller_promo_profiles SET approval_mode='AUTO'").run();
+  const sns = (theme) => ({ theme, variants: { instagram: `${theme}。丈夫な収納ボックスです。`, x: theme, threads: theme },
+    image_brief: { product_id: seed.productId, headline: '玄関すっきり', sub: '置き場所から選ぶ収納' } });
+  const ai = fakeGemini({ ...seed, overrides: { SNS: [{ posts: [sns('玄関の収納'), sns('置き場所')] }] } });
+  await runSellerPromoCycle(env, MONDAY_0605_JST, { fetchImpl: ai.fetchImpl });
+  const rows = Object.fromEntries(db.prepare('SELECT type,status,qa FROM seller_promo_deliverables').all().map((r) => [r.type, r]));
+  assert.equal(rows.SNS.status, 'QA_PASSED');
+  assert.deepEqual(JSON.parse(rows.SNS.qa).notes, [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }, { code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }]);
+  assert.notEqual(rows.ARTICLE.status, 'QA_PASSED');
+});

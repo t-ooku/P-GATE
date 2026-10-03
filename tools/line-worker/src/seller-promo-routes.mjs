@@ -68,7 +68,7 @@ export function publicDeliverable(row) {
   return {
     id: row.id, week_key: row.week_key, type: row.type, version: Number(row.version), status: row.status,
     payload: parseJsonColumn(row.payload, {}),
-    qa: { passed: qa.passed === true, reasons: Array.isArray(qa.reasons) ? qa.reasons.slice(0, 10) : [] },
+    qa: { passed: qa.passed === true, reasons: Array.isArray(qa.reasons) ? qa.reasons.slice(0, 10) : [], notes: Array.isArray(qa.notes) ? qa.notes.slice(0, 10) : [] },
     approved_at: row.approved_at || null, rejected_reason: row.rejected_reason || null,
     published_target: row.published_target || null, published_url: row.published_url || null, published_at: row.published_at || null,
     created_at: row.created_at
