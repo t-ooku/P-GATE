@@ -256,29 +256,16 @@ async function handleSeller(request, env, url, deps) {
   }
 }
 
-// 料金 LP の下書き（public/for-sellers-preview.html）。静的ファイルを直接見せず、ここで出し分ける。
-// - 公開は SELLER_PROMO_LP_PREVIEW_PUBLIC=true（OK② の後）か、管理者のセッションだけ。それ以外は 404。
-// - 有料プラン（Light／Standard）の欄は SELLER_PROMO_PLANS_ENABLED=true のときだけ差し込む。
-export const PAID_PLANS_PLACEHOLDER = '<!--SELLER_PROMO_PAID_PLANS-->';
-export const PAID_PLANS_SECTION = `<section class="pricing" id="promo-plans"><div class="pricing-head"><p class="eyebrow">AI PROMOTION</p><h2>AI販促担当</h2></div>
-    <article class="price-card"><p class="price-label">Light</p><p>Light 9,800円: 毎週、記事1本・SNS原稿2本と画像・商品ページの直し案が届きます。公開はお店が行います。</p></article>
-    <article class="price-card"><p class="price-label">Standard</p><p>Standard 19,800円: Light に加えて、お店のHP（WordPress）への公開、楽天GOLD 用のHTML、任意の声フォーム、需要への再案内。</p></article>
-  </section>`;
-async function handlePreviewPage(request, env, deps) {
-  const allowed = String(env.SELLER_PROMO_LP_PREVIEW_PUBLIC || '') === 'true' || Boolean(await (deps.authorize || authorizeAdminRequest)(request, env));
-  if (!allowed || !env.ASSETS) return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
-  const asset = await env.ASSETS.fetch(new Request(new URL('/for-sellers-preview.html', request.url), { method: 'GET' }));
-  if (!asset.ok) return new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
-  const html = (await asset.text()).replace(PAID_PLANS_PLACEHOLDER, promoPlansEnabled(env) ? PAID_PLANS_SECTION : '');
-  return new Response(request.method === 'HEAD' ? null : html, { headers: {
-    'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'x-content-type-options': 'nosniff'
-  } });
+// 料金 LP の下書きだった /for-sellers-preview（2026-10-03 案内メールのリンク先）。公開 LP /for-sellers に同じ内容を載せたので
+// （自社の販促素材 §0・大隆さん決定 b）、内容を二重に持たず /for-sellers へ送る。下書きの静的ファイルは消した。
+function handlePreviewPage(request) {
+  return new Response(null, { status: 301, headers: { location: new URL('/for-sellers', request.url).toString(), 'cache-control': 'no-store' } });
 }
 
 export async function handleSellerPromoRoutes(request, env, deps = {}) {
   const url = new URL(request.url);
   if (['GET', 'HEAD'].includes(request.method) && ['/for-sellers-preview', '/for-sellers-preview.html', '/for-sellers-preview/'].includes(url.pathname)) {
-    return handlePreviewPage(request, env, deps);
+    return handlePreviewPage(request);
   }
   if (url.pathname.startsWith('/api/admin/seller-promo/')) return handleAdmin(request, env, url, deps);
   if (url.pathname.startsWith('/api/seller-promo/')) return handleSeller(request, env, url, deps);
