@@ -12,7 +12,9 @@ export const PROMO_FORBIDDEN_PHRASES = Object.freeze([
   '日本一', '世界一', '世界初', 'No.1', 'ナンバーワン', '絶対', '保証します',
   // 2026-10-03 Cowork 依頼 §9-3: 原稿は店（当店）の語り。第三者・内部の言い回しを出さない。
   'お店に確認', 'お店にご確認', 'お店へ確認', 'お店へご確認', '直接お店', '店舗に確認', '店舗にご確認',
-  '商品データ', 'データ上', 'データに記載', 'データにありません', 'データにはありません'
+  '商品データ', 'データ上', 'データに記載', 'データにありません', 'データにはありません',
+  // 2026-10-03 §9-5 の作り直しで残った言い回し
+  '製品情報に記載', '情報に記載がございません', '記載がございません', '詳細は詳しくは'
 ]);
 
 // 2026-10-03 Cowork 依頼 §9-1: 商品データに根拠の無い性質・評価の断定。過検出がありうるので不合格にはせず、
@@ -22,8 +24,17 @@ export const PROPERTY_CLAIM_WORDS = Object.freeze([
   '丈夫', '頑丈', '壊れにく', '割れにく', '傷つきにく', '錆びにく', 'さびにく', '長持ち', '耐久性',
   '軽い', '軽量', '軽く', '重さを感じ', 'お手入れしやす', 'お手入れもしやす', 'お手入れが簡単', 'お手入れも簡単', 'お手入れ簡単',
   '手入れしやす', '汚れにく', '汚れが落ちやす', '抗菌', '防カビ', '防臭', '消臭', '防水', '撥水', '耐水', '耐熱', '耐冷',
-  '速乾', '乾きやす', '洗える', '洗濯できる', '洗濯可能', '丸洗い', '食洗機', '電子レンジ', '静音', '肌にやさし', '肌に優し'
+  '速乾', '乾きやす', '洗える', '洗濯できる', '洗濯可能', '丸洗い', '食洗機', '電子レンジ', '静音', '肌にやさし', '肌に優し',
+  // 2026-10-03 §9-5 の作り直しで残った評価（素材や価格の良し悪しの断定）
+  '扱いやす', 'お求めやす', '手頃な価格', 'お手頃'
 ]);
+
+// 同じ漢字が 2 つ続く誤字の疑い（例「目目的」）。「々」で書く語は対象外。人の名前などの例外があるので注記だけにする。
+export function doubledKanjiSuspects(strings = []) {
+  const found = new Set();
+  for (const raw of strings) for (const match of normalize(raw).matchAll(/(\p{Script=Han})\1/gu)) found.add(match[0]);
+  return [...found];
+}
 const QUESTION_AFTER_CLAIM = /^(?:かどうか|か否か|かは|か、|か\?|か？|のか|ますか|ますか？)/u;
 const TAX_LABEL = /税込|税抜|税別|内税|外税/u;
 
@@ -248,6 +259,8 @@ export function checkPromoDeliverable(type, rawPayload, ctx = {}) {
   // §9-1: 根拠の無い性質語は「要確認」の注記（不合格にはしない）。
   const claims = unverifiedPropertyClaims(strings, products);
   const notes = claims.length ? [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: claims.slice(0, 10).join(',') }] : [];
+  const typos = doubledKanjiSuspects(strings);
+  if (typos.length) notes.push({ code: 'TYPO_SUSPECT', detail: typos.slice(0, 10).join(',') });
   return {
     passed: reasons.length === 0,
     payload,

@@ -33,9 +33,13 @@ async function api(path, init = {}) {
 
 // 商品データに根拠が見つからない表現（要確認）。公開前に店が事実か確かめる。自動公開もしない。
 function claimNotes(item) {
-  const words = (item.qa?.notes || []).filter((n) => n.code === 'PROPERTY_CLAIM_UNVERIFIED').map((n) => n.detail).join(',');
-  if (!words) return [];
-  return [el('p', { class: 'metric-help', text: `要確認: 商品データに書かれていない表現があります（${words}）。事実と違う場合は直すか差し戻してください。` })];
+  const pick = (code) => (item.qa?.notes || []).filter((n) => n.code === code).map((n) => n.detail).join(',');
+  const words = pick('PROPERTY_CLAIM_UNVERIFIED');
+  const typos = pick('TYPO_SUSPECT');
+  return [
+    ...(words ? [el('p', { class: 'metric-help', text: `要確認: 商品データに書かれていない表現があります（${words}）。事実と違う場合は直すか差し戻してください。` })] : []),
+    ...(typos ? [el('p', { class: 'metric-help', text: `要確認: 誤字の疑いがあります（${typos}）。` })] : [])
+  ];
 }
 
 function preview(item) {
