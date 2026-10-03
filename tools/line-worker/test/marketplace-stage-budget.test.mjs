@@ -108,9 +108,33 @@ test('締め切りに遅れたレーン・呼ばなかったレーンは 0 件�
 
 test('モール検索は締め切り付きで待ち、遅れたレーンを記録する', () => {
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(source, /withMarketplaceStageBudget\(item\.run, stageBudgetMs/u);
+  assert.match(source, /withMarketplaceStageBudget\(item\.run, stageRemainingMs/u);
+  assert.match(source, /const stageRemainingMs = Math\.max\(0, stageDeadlineAt - Date\.now\(\)\)/u);
   assert.match(source, /SEARCH_MARKETPLACE_STAGE_MS/u);
   // 検索文をログに載せない（プライバシー境界）
   const log = source.slice(source.indexOf('SEARCH_MARKETPLACE_STAGE_MS'), source.indexOf('SEARCH_MARKETPLACE_STAGE_MS') + 400);
   assert.ok(!/input\.query|submittedQuery|expandedQuery/u.test(log));
+});
+
+// 2026-10-03 大隆さん指示「あと 2 秒短くして」: モール検索は AI 変換（GAS・D1 と並列、約 2 秒）の完了を待たずに
+// 展開後の検索語で先に始め、AI が検索語を変えた時だけ追加レーンを足す。
+test('モール検索は AI 変換の完了を待たずに始まり、AI が語を変えた時だけ追加レーンを足す', () => {
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const lanesStart = source.indexOf("key: 'rakuten_catalog_connected'");
+  const lookupStart = source.indexOf("callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } })");
+  assert.ok(lanesStart > 0 && lookupStart > 0 && lanesStart < lookupStart, 'レーンの作成が GAS・D1・AI 変換の await より前にある');
+  assert.match(source, /if \(shouldSearchMarketplaces && queryWasAiRefined\) \{/u);
+  assert.match(source, /key: 'rakuten_catalog_refined'/u);
+  assert.match(source, /key: 'yahoo_catalog_refined'/u);
+  // Yahoo! の追加レーンも締め切りに収まる時だけ（1 件ずつ 2.1 秒の直列待ちは変えない）
+  assert.match(source, /skippedLanes\.push\('yahoo_catalog_refined'\)/u);
+  // 締め切りは起点から 1 つ（レーンを作った時刻 + 予算）
+  assert.match(source, /const stageDeadlineAt = stageStartedAt \+ stageBudgetMs/u);
+});
+
+test('AI 変換と GAS の待ち時間は 1.2 秒に詰める', () => {
+  const intent = readFileSync(new URL('../src/ai-chat-intent.mjs', import.meta.url), 'utf8');
+  assert.match(intent, /timeoutMs: 1200,\n\s*totalBudgetMs: 1200,/u);
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(source, /action === 'KNOWLEDGE' \? 1200/u);
 });
