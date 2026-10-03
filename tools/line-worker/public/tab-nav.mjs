@@ -126,7 +126,10 @@ if (main && primary) {
     if (!item) return;
     event.preventDefault();
     if (location.hash !== `#tab-${item.dataset.view}`) history.pushState(null, '', `#tab-${item.dataset.view}`);
-    activate(item.dataset.view);
+    // 2026-10-03 大隆さん指示: 下部のボタンを押したら、そのページの一番上へ戻す。
+    // 同じタブをもう一度押した時も（activate は何もしないので）ここで先頭へスクロールする。
+    const view = activate(item.dataset.view);
+    if (current === view.id) window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   window.addEventListener('hashchange', applyHash);
   window.addEventListener('popstate', applyHash);

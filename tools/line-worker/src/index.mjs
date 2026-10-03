@@ -552,7 +552,9 @@ export function validateKnowledgeRequest(payload) {
     processing_notice_shown: true, attribution, ai_candidate_fallback: aiCandidateFallback,
     social_url: socialUrl, search_image: searchImage, defer_previews: deferPreviews,
     rejected_candidates: rejectedCandidates, identify_original_query: identifyOriginalQuery,
-    traffic_class: classifyGrowthTraffic(attribution)
+    traffic_class: classifyGrowthTraffic(attribution),
+    // 「続き」（間に合わなかったモールの取り直し）用。本検索の応答に付けた署名付きトークンをそのまま返す。
+    followup_token: String(payload.followup_token || '').trim().slice(0, 4096)
   };
 }
 
@@ -1468,7 +1470,8 @@ export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [],
 // waitUntil へ逃がして価格キャッシュにだけ反映する（結果は捨てるが、取得は捨てない）。
 // 締め切り超過は「そのモールが0件」ではなく「間に合わなかった」であり、
 // 0件と混同しない（主幹指示書: 計測不能と0を区別する）。
-export const MARKETPLACE_STAGE_BUDGET_MS = 4500;
+// 2026-10-03 大隆さん指示: 間に合わなかったモールは「さらに見る」で後から取れるようになったので、締め切りを 4.5 → 3.5 秒に下げる。
+export const MARKETPLACE_STAGE_BUDGET_MS = 3500;
 export function marketplaceStageBudgetMs(env = {}) {
   const value = Number(env.MARKETPLACE_STAGE_BUDGET_MS);
   return Number.isFinite(value) && value >= 1000 && value <= 20000
@@ -2726,6 +2729,143 @@ async function safeAiProductDiscovery(query, language, env) {
   }
 }
 
+// 2026-10-03 大隆さん指示「Yahoo!・ZOZO 以外も、間に合わなかったら『さらに見る』で後から出す」:
+// レーンの作り方を 1 か所にまとめ、本検索（AI 変換と並行して先に開始）と「続き」（間に合わなかった
+// レーンだけを長めの締め切りで取り直す）の両方で使う。続きは本検索の応答に付けた短命の署名付き
+// トークン（セッションと展開後検索語のハッシュ、対象レーン名、3 分）がある時だけ受け付け、
+// ボット確認・トークン無し枠は消費しない。検索文そのものはトークンにも D1 にも入れない。
+export const MARKETPLACE_FOLLOWUP_BUDGET_MS = 6000;
+export const MARKETPLACE_FOLLOWUP_TOKEN_TTL_SECONDS = 180;
+const FOLLOWUP_LANE_STATUSES = new Set(['LATE', 'SKIPPED', 'REQUEST_FAILED']);
+const FOLLOWUP_LANE_ALIASES = { rakuten_catalog_refined: 'rakuten_catalog_connected', yahoo_catalog_refined: 'yahoo_catalog_connected' };
+// 間に合わなかった（LATE）・呼べなかった（SKIPPED）・落ちた（REQUEST_FAILED）レーンを、続きで取り直す名前に直す。
+export function followupLaneKeys(status) {
+  const keys = (Array.isArray(status?.sources) ? status.sources : [])
+    .filter((source) => FOLLOWUP_LANE_STATUSES.has(String(source?.status || '')))
+    .map((source) => FOLLOWUP_LANE_ALIASES[source.source] || String(source.source || ''))
+    .filter((key) => /^[a-z0-9_]{1,40}$/u.test(key));
+  return [...new Set(keys)];
+}
+// ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with no marketplace code collapses
+// "ブラウス" to the broad category "トップス" alone (reported 2026-08-07/08). Restore the noun here.
+export function yahooKeywordsFor(query) {
+  return ensureApparelQualifierTerms(query, ensureApparelProductTypeTerm(query, buildMarketplaceSearchKeywords(query)));
+}
+// 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。Amazon は検索リンクとして扱う。
+// only を渡すと、その名前のレーンだけを作る（続き用）。
+export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, skippedLanes, only = null }) {
+  const marketplaceSearches = [];
+  const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
+  const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
+  const wanted = (key) => !only || only.has(key);
+  let yahooCatalogRun = null;
+  if (rakutenApiConfigured(env) && wanted('rakuten_catalog_connected')) marketplaceSearches.push({
+    key: 'rakuten_catalog_connected',
+    run: searchRakutenMarketplaceWithFallback(
+      env, buildRakutenSearchKeywordCandidates(query, query), fetch, query, requestId, query
+    )
+  });
+  if (yahooShoppingApiConfigured(env) && wanted('yahoo_catalog_connected')) {
+    // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。候補は 2 通りまで、
+    // 待ち行列の上限も段階の締め切りまでに合わせる。2026-10-03: 2 候補目は締め切りに収まる時だけ。
+    yahooCatalogRun = searchMarketplaceApiWithFallback(
+      (keywords) => searchYahooShopping(env, keywords, fetch, {
+        queueTimeoutMs: yahooQueueTimeoutMs()
+      }),
+      buildMarketplaceApiKeywordCandidates(query, yahooKeywordsFor(query), yahooKeywordsFor(query), query),
+      query,
+      query,
+      { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
+    );
+    marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
+  }
+  // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
+  // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの商品を確実に検索結果へ載せる。
+  // 合流処理が Promise.allSettled で個別の失敗を握りつぶし、提供元ごとにラウンドロビンで混ぜてから
+  // 一度だけ順位付けするので、1店舗が落ちても本体検索に影響せず、順位付けもモール中立のまま。
+  // 検索語は本体と同じ展開後クエリ。店舗ごとの絞り込み段階は持たない（1店舗あたり必ず1回）。
+  // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
+  if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
+    const officialStoreKeywords = yahooKeywordsFor(query) || query;
+    for (const store of OFFICIAL_STORE_SEARCHES) {
+      if (!wanted(store.key)) continue;
+      if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
+      if (store.platform === 'YAHOO' && !yahooShoppingApiConfigured(env)) continue;
+      marketplaceSearches.push({
+        key: store.key,
+        run: store.platform === 'RAKUTEN'
+          ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
+          : (async () => {
+            // Keep the generic and seller-specific requests in one Yahoo
+            // lane. A provider failure stops the lane, and a generic hit
+            // from this official store makes the extra request unnecessary.
+            const catalogCandidates = await yahooCatalogRun;
+            if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
+            // 2026-10-03 検索時間 2 秒短縮（実測: この公式店レーンが 3 回中 3 回締め切りに遅れ、段階を 4.5 秒に
+            // 固定していた）: 追加の 1 回が締め切りに収まらない時は呼ばず SKIPPED にする（0件とは区別）。
+            // 裏で走らせても Yahoo! の待ち行列を占めて次の人の検索を遅らせるだけなので、裏にも回さない。
+            if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push(store.key); return []; }
+            return searchYahooShopping(env, officialStoreKeywords, fetch, {
+              sellerId: store.sellerId, queueTimeoutMs: yahooQueueTimeoutMs()
+            });
+          })()
+      });
+    }
+  }
+  // 合流（allSettled）までの間に別の段階で例外が出ても unhandled rejection にしない（結果の扱いは合流で決める）。
+  for (const item of marketplaceSearches) Promise.resolve(item.run).catch(() => {});
+  return { marketplaceSearches, yahooCatalogRun };
+}
+
+// 「続き」: 本検索で間に合わなかったレーンだけを、長めの締め切りで取り直す。
+async function handleKnowledgeFollowup(request, env, ctx, input, requestId) {
+  const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId };
+  let payload = null;
+  try { payload = await verifyTrackToken(input.followup_token, env.LINK_SIGNING_SECRET); } catch { payload = null; }
+  const searchOrigin = extractSearchOrigin(input.query);
+  const expandedQuery = expandSearchQuery(searchOrigin.query);
+  const sessionHash = await hashUser(input.session_id);
+  if (!payload || payload.t !== 'SEARCH_FOLLOWUP' || payload.u !== sessionHash || payload.q !== await hashUser(expandedQuery.query)) {
+    throw new Error('FOLLOWUP_TOKEN_INVALID');
+  }
+  const only = new Set((Array.isArray(payload.l) ? payload.l : []).map((key) => String(key)));
+  const stageStartedAt = Date.now();
+  const stageDeadlineAt = stageStartedAt + MARKETPLACE_FOLLOWUP_BUDGET_MS;
+  const skippedLanes = [];
+  const lateLanes = [];
+  const { marketplaceSearches } = startMarketplaceLanes({ env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes, only });
+  const outcomes = await Promise.allSettled(marketplaceSearches.map((item) =>
+    withMarketplaceStageBudget(item.run, MARKETPLACE_FOLLOWUP_BUDGET_MS, { onLate: () => lateLanes.push(item.key) })));
+  const perSource = outcomes.map((outcome) => (outcome.status === 'fulfilled' && Array.isArray(outcome.value)
+    ? filterSearchCandidatesWithFallback(expandedQuery.query, expandedQuery.query, outcome.value) : []));
+  const acceptedCounts = perSource.map((candidates) => candidates.length);
+  const candidates = rankMerchantCandidates([], interleaveCandidatesBySource(perSource), expandedQuery.query).slice(0, CLIENT_CANDIDATE_LIMIT);
+  // 検索文は載せない（プライバシー境界）。
+  console.info('SEARCH_MARKETPLACE_FOLLOWUP_MS', {
+    request_id: requestId, elapsed_ms: Date.now() - stageStartedAt, budget_ms: MARKETPLACE_FOLLOWUP_BUDGET_MS,
+    lanes: marketplaceSearches.map((item) => item.key), late_lanes: lateLanes, skipped_lanes: skippedLanes, accepted: acceptedCounts
+  });
+  const priceWrite = persistMarketplacePrices(env, outcomes.flatMap((outcome) =>
+    outcome.status === 'fulfilled' && Array.isArray(outcome.value) ? outcome.value : []));
+  if (ctx?.waitUntil) ctx.waitUntil(priceWrite); else await priceWrite;
+  const result = {
+    query_id: crypto.randomUUID(), traffic_class: input.traffic_class, followup: true, candidates,
+    marketplace_search_status: summarizeMarketplaceSearchOutcomes(marketplaceSearches, outcomes, acceptedCounts, { lateLanes, skippedLanes })
+  };
+  const decorated = await decoratePwaResult(
+    result, request, env, sessionHash, expandedQuery.query, input.language,
+    { origin: searchOrigin.origin, korean: searchOrigin.korean },
+    Promise.resolve({ items: [], source: 'disabled', reason: 'FOLLOWUP' })
+  );
+  const elapsed = Date.now() - stageStartedAt;
+  if (ctx?.waitUntil) ctx.waitUntil(recordKnowledgeLatency(env, {
+    inputKind: 'followup', trafficClass: input.traffic_class,
+    stages: { marketplace_ms: elapsed, total_ms: elapsed },
+    lanes: marketplaceSearches.length, lateLanes: lateLanes.length, lateLaneKeys: lateLanes, resultCount: candidates.length
+  }));
+  return Response.json({ ok: true, result: decorated }, { headers });
+}
+
 async function handleKnowledgeApi(request, env, ctx, options = {}) {
   // Create this before validation so even rejected requests can be matched
   // to a Worker log without retaining the user's query text.
@@ -2753,6 +2893,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const validatedInput = validateKnowledgeRequest(body);
     // 検索品質カナリア(src/search-qa-canary.mjs)だけが options.internalQa で
     // Turnstile検証を省略できる。公開ルートは常に3引数で呼ばれ、到達不能。
+    // 「続き」（間に合わなかったモールの取り直し）は本検索で発行した署名付きトークンで通す。
+    if (validatedInput.followup_token && options.internalQa !== true) {
+      return await handleKnowledgeFollowup(request, env, ctx, validatedInput, requestId);
+    }
     if (options.internalQa !== true) {
       if (validatedInput.turnstile_token) {
         await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
@@ -2869,70 +3013,11 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
     const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
     const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(analysisCandidate?.name), env);
-    // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with no marketplace code collapses
-    // "ブラウス" to the broad category "トップス" alone (reported 2026-08-07/08). Restore the noun here.
-    const yahooKeywordsFor = (query) => ensureApparelQualifierTerms(
-      query, ensureApparelProductTypeTerm(query, buildMarketplaceSearchKeywords(query))
-    );
     let yahooCatalogRun = null;
     if (shouldSearchMarketplaces) {
-      if (rakutenApiConfigured(env)) marketplaceSearches.push({
-        key: 'rakuten_catalog_connected',
-        run: searchRakutenMarketplaceWithFallback(
-          env, buildRakutenSearchKeywordCandidates(expandedQuery.query, expandedQuery.query), fetch,
-          expandedQuery.query, requestId, expandedQuery.query
-        )
-      });
-      if (yahooShoppingApiConfigured(env)) {
-        // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。候補は 2 通りまで、
-        // 待ち行列の上限も段階の締め切りまでに合わせる。2026-10-03: 2 候補目は締め切りに収まる時だけ。
-        yahooCatalogRun = searchMarketplaceApiWithFallback(
-          (keywords) => searchYahooShopping(env, keywords, fetch, {
-            queueTimeoutMs: yahooQueueTimeoutMs()
-          }),
-          buildMarketplaceApiKeywordCandidates(
-            expandedQuery.query, yahooKeywordsFor(expandedQuery.query), yahooKeywordsFor(expandedQuery.query), expandedQuery.query
-          ),
-          expandedQuery.query,
-          expandedQuery.query,
-          { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
-        );
-        marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
-      }
-      // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
-      // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの商品を確実に検索結果へ載せる。
-      // 合流処理が Promise.allSettled で個別の失敗を握りつぶし、提供元ごとにラウンドロビンで混ぜてから
-      // 一度だけ順位付けするので、1店舗が落ちても本体検索に影響せず、順位付けもモール中立のまま。
-      // 検索語は本体と同じ展開後クエリ。店舗ごとの絞り込み段階は持たない（1店舗あたり必ず1回）。
-      // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
-      if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
-        const officialStoreKeywords = yahooKeywordsFor(expandedQuery.query) || expandedQuery.query;
-        for (const store of OFFICIAL_STORE_SEARCHES) {
-          if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
-          if (store.platform === 'YAHOO' && !yahooShoppingApiConfigured(env)) continue;
-          marketplaceSearches.push({
-            key: store.key,
-            run: store.platform === 'RAKUTEN'
-              ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
-              : (async () => {
-                // Keep the generic and seller-specific requests in one Yahoo
-                // lane. A provider failure stops the lane, and a generic hit
-                // from this official store makes the extra request unnecessary.
-                const catalogCandidates = await yahooCatalogRun;
-                if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
-                // 2026-10-03 検索時間 2 秒短縮（実測: この公式店レーンが 3 回中 3 回締め切りに遅れ、段階を 4.5 秒に
-                // 固定していた）: 追加の 1 回が締め切りに収まらない時は呼ばず SKIPPED にする（0件とは区別）。
-                // 裏で走らせても Yahoo! の待ち行列を占めて次の人の検索を遅らせるだけなので、裏にも回さない。
-                if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push(store.key); return []; }
-                return searchYahooShopping(env, officialStoreKeywords, fetch, {
-                  sellerId: store.sellerId, queueTimeoutMs: yahooQueueTimeoutMs()
-                });
-              })()
-          });
-        }
-      }
-      // 合流（allSettled）までの間に別の段階で例外が出ても unhandled rejection にしない（結果の扱いは合流で決める）。
-      for (const item of marketplaceSearches) Promise.resolve(item.run).catch(() => {});
+      const lanes = startMarketplaceLanes({ env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes });
+      marketplaceSearches.push(...lanes.marketplaceSearches);
+      yahooCatalogRun = lanes.yahooCatalogRun;
     }
     // 通常検索でもAIを検索語変換器として使う。ただし既存DB/GAS検索と並列に
     // 走らせるため、Gemini待ちを丸ごと検索時間へ上乗せしない。
@@ -3147,6 +3232,17 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       result.marketplace_search_status = summarizeMarketplaceSearchOutcomes(
         marketplaceSearches, outcomes, acceptedCounts, { lateLanes, skippedLanes }
       );
+      // 間に合わなかった・呼べなかった・落ちたレーンがあれば、「さらに見る」で取り直せる続きトークンを付ける。
+      const followupLanes = followupLaneKeys(result.marketplace_search_status);
+      if (followupLanes.length && env.LINK_SIGNING_SECRET) {
+        result.marketplace_followup = {
+          lanes: followupLanes,
+          token: await createTrackToken({
+            t: 'SEARCH_FOLLOWUP', u: await hashUser(input.session_id), q: await hashUser(expandedQuery.query), l: followupLanes,
+            exp: Math.floor(Date.now() / 1000) + MARKETPLACE_FOLLOWUP_TOKEN_TTL_SECONDS
+          }, env.LINK_SIGNING_SECRET)
+        };
+      }
       if (options.internalQa === true) result.qa_trace = {
         expansion_rule: expandedQuery.expansion?.rule_id || null,
         expanded_query: expandedQuery.query,
@@ -3314,7 +3410,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
   } catch (error) {
     const code = String(error.message || error);
     const clientErrors = [
-      'PROCESSING_NOTICE_REQUIRED', 'CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID',
+      'PROCESSING_NOTICE_REQUIRED', 'CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'FOLLOWUP_TOKEN_INVALID',
       'TURNSTILE_VERIFICATION_FAILED', 'SOCIAL_URL_INVALID', 'SOCIAL_URL_UNSUPPORTED',
       'SEARCH_IMAGE_INVALID', 'SEARCH_IMAGE_TYPE_UNSUPPORTED', 'SEARCH_IMAGE_SIGNATURE_INVALID',
       'SEARCH_IMAGE_TOO_LARGE'

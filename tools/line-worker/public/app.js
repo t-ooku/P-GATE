@@ -1708,7 +1708,7 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
   // 2026-09-22: 商品カードを並べ**終わってから**送る。以前はこの行が renderResults の先頭に
   // あったため、統合表示（unified-results-ui.mjs）が畳もうとした時点でまだ古い棚が
   // DOM に無く、「ホシルからの提案」が二重に出ていた。
-  try{document.dispatchEvent(new CustomEvent('hoshilu:results-rendered',{detail:{executionId,google_mall_results:result?.google_mall_results||null,unified_results:result?.unified_results||null,candidates:Array.isArray(result?.candidates)?result.candidates:[]}}));}catch{}
+  try{document.dispatchEvent(new CustomEvent('hoshilu:results-rendered',{detail:{executionId,google_mall_results:result?.google_mall_results||null,unified_results:result?.unified_results||null,candidates:Array.isArray(result?.candidates)?result.candidates:[],marketplace_followup:result?.marketplace_followup||null}}));}catch{}
   syncStickySearch();
   if(!preserveInstantPosition)elements.results.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -2388,3 +2388,19 @@ function autoRunInboundSearch(query){
   })();
 }
 const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(memberSession&&!inboundCampaign.query&&new URLSearchParams(location.search).get('member')==='logged-in'&&!location.hash){window.HoshiluTabs?.activate('hoshiru',{scroll:false});document.querySelector('#insight')?.scrollIntoView({block:'start'});}if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
+// 2026-10-03 大隆さん指示「間に合わなかったモールも『さらに見る』で」: 本検索の応答に付いた続きトークンで、
+// 間に合わなかったレーンだけを取り直す。ボット確認は要らない（トークンが本検索の通過を証明する）。
+// 検索文は同じものを送る（サーバーはトークンのハッシュと照合する）。結果は unified-results-ui.mjs が末尾に足す。
+document.addEventListener('hoshilu:search-followup',async(event)=>{
+  const token=String(event.detail?.token||'');const query=String(shareDiscoveryQuery||elements.query.value||'').trim();
+  const done=(detail)=>{try{document.dispatchEvent(new CustomEvent('hoshilu:results-followup',{detail}));}catch{}};
+  if(!token||!query)return done({ok:false});
+  try{
+    const timed=timedAbortController(12000);
+    let response;try{response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},signal:timed.controller.signal,body:JSON.stringify({query,processing_notice_shown:true,session_id:sessionId,language:elements.language.value,followup_token:token,...(window.HoshiluGrowthAttribution||{})})});}finally{timed.clear();}
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok||!payload.ok)return done({ok:false});
+    const result=payload.result||{};
+    done({ok:true,unified_results:result.unified_results||null,candidates:Array.isArray(result.candidates)?result.candidates:[],marketplace_search_status:result.marketplace_search_status||null});
+  }catch{done({ok:false});}
+});

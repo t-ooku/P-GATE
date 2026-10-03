@@ -65,7 +65,8 @@ test('段階の時計は mark の間隔を段階に積み、合計は開始か�
 test('/api/knowledge は段階ごとの所要時間を D1 に残し、検索文を渡さない。古い行は定期実行で消す', () => {
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(source, /recordKnowledgeLatency\(env, \{[\s\S]{0,400}?inputKind[\s\S]{0,400}?trafficClass: input\.traffic_class/u);
-  const call = source.slice(source.indexOf('recordKnowledgeLatency(env, {'), source.indexOf('recordKnowledgeLatency(env, {') + 600);
+  // 本検索の記録（続き handleKnowledgeFollowup の記録より後ろにある方）
+  const call = source.slice(source.lastIndexOf('recordKnowledgeLatency(env, {'), source.lastIndexOf('recordKnowledgeLatency(env, {') + 600);
   assert.ok(!/input\.query|submittedQuery|session_id|search_image|social_url/u.test(call), '検索文・画像・セッションIDを渡さない');
   assert.match(call, /lateLaneKeys: latency\.lateLanes/u, '遅れたレーン名を残す（対策 (b)(c) の判断材料）');
   for (const stage of ['gate_ms', 'lookup_ms', 'marketplace_ms', 'google_wait_ms', 'decorate_ms']) assert.match(source, new RegExp(`'${stage}'`, 'u'), stage);

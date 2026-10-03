@@ -95,7 +95,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 156); // 2026-10-03 Seller 向け記事 2 本を追加
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v412/);
+  assert.match(worker, /hoshilu-shell-v413/);
 });
 
 test('SNS URL FAQは静的表示とruntime上書きで対応形式の公開単体URLに統一する', async () => {

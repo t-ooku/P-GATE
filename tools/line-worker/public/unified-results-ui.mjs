@@ -31,8 +31,24 @@ const COPY = {
   openListing: 'このモールの一覧を見る',
   badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' },
   sortLabel: '並び順',
-  sort: { recommended: 'おすすめ順', cheap: '安い順' }
+  sort: { recommended: 'おすすめ順', cheap: '安い順' },
+  // 2026-10-03 大隆さん指示「間に合わなかったモールも『さらに見る』で」
+  followup: (malls) => `間に合わなかった ${malls} の結果も見る`,
+  followupBusy: '取りに行っています…',
+  followupAdded: (n) => `${n}件を末尾に足しました`,
+  followupNone: '追加の商品はありませんでした',
+  followupFailed: '取得できませんでした'
 };
+// 2026-10-03: 続きで取り直すレーン名 → 画面に出すモール名（文字だけ。ロゴは使わない）。
+const LANE_MALL = {
+  rakuten_catalog_connected: '楽天市場', rakuten_catalog_refined: '楽天市場',
+  yahoo_catalog_connected: 'Yahoo!ショッピング', yahoo_catalog_refined: 'Yahoo!ショッピング',
+  zozotown_official_store: 'ZOZOTOWN', hands_official_store: 'ハンズ', matsukiyo_official_store: 'マツキヨ',
+  cosme_official_store: '@cosme', abcmart_official_store: 'ABC-MART'
+};
+export function followupMallLabel(lanes = []) {
+  return [...new Set((Array.isArray(lanes) ? lanes : []).map((key) => LANE_MALL[key] || '').filter(Boolean))].join('・');
+}
 const PAGE = 12;
 // 2026-10-01 大隆さん指示「ホシルの商品提示も、楽天市場やYahoo!ショッピングと表記して」。
 // HOSHILU が API で確認した商品は、バッジを「HOSHILU」ではなく販売先のモール名にする。モール名は文字だけ（ロゴは使わない）。
@@ -335,13 +351,87 @@ export function render(unified, candidates = []) {
   if (unified.truncated) host.append(el('p', 'unified-note', COPY.narrow));
 }
 
+// 2026-10-03 大隆さん指示「Yahoo!・ZOZO など間に合わなかった検索も『さらに見る』で」:
+// 本検索の締め切りに間に合わなかった・呼べなかった・落ちたモールがある時だけ、列の後ろにボタンを出す。
+// 押すと app.js が続きトークンで取り直し（hoshilu:search-followup → hoshilu:results-followup）、
+// 届いた商品を列の **末尾に足す**（既存のカードは動かさない。§28）。ボタンは 1 回だけ押せる。
+let followupButton = null;
+function renderFollowup(host, followup) {
+  followupButton?.remove();
+  followupButton = null;
+  const lanes = Array.isArray(followup?.lanes) ? followup.lanes : [];
+  const label = followupMallLabel(lanes);
+  if (!host || !followup?.token || !label) return;
+  const button = el('button', 'unified-more unified-followup', COPY.followup(label));
+  button.type = 'button';
+  button.addEventListener('click', () => {
+    button.disabled = true;
+    button.textContent = COPY.followupBusy;
+    document.dispatchEvent(new CustomEvent('hoshilu:search-followup', { detail: { token: followup.token, lanes } }));
+  }, { once: true });
+  host.append(button);
+  followupButton = button;
+}
+
+// 続きで届いた商品を末尾に足す。同じ URL は足さない。candidate_index は手元の候補配列の後ろへずらす。
+export function appendFollowup(unified, candidates = []) {
+  const host = section();
+  const list = host?.querySelector('.unified-list');
+  const incoming = Array.isArray(unified?.items) ? unified.items : [];
+  const known = new Set(state.items.map((item) => item.url));
+  const offset = state.candidates.length;
+  const added = [];
+  for (const item of incoming) {
+    if (!item?.url || known.has(item.url)) continue;
+    known.add(item.url);
+    const next = { ...item, position: state.items.length + added.length + 1 };
+    if (Number.isInteger(item.candidate_index)) next.candidate_index = item.candidate_index + offset;
+    added.push(next);
+  }
+  state.candidates = [...state.candidates, ...(Array.isArray(candidates) ? candidates : [])];
+  if (!added.length) return 0;
+  // 本検索が 0 件だった時は列そのものが無い。続きの商品で列を作り直す。
+  if (!list) {
+    const merged = [...state.items, ...added];
+    render({ items: merged, truncated: false }, state.candidates);
+    return added.length;
+  }
+  state.items = [...state.items, ...added];
+  if (state.orders) state.orders = { recommended: [...state.orders.recommended, ...added], cheap: [...state.orders.cheap, ...added] };
+  // いま全部出ている時はカードもすぐ足す。まだ「さらに見る」が残っている時は、その続きとして出る。
+  if (list && state.shown >= state.items.length - added.length) {
+    list.append(...added.map(safeCard).filter(Boolean));
+    state.shown += added.length;
+  }
+  if (host && list) {
+    renderMore(host, list);
+    const count = host.querySelector('.unified-count');
+    if (count) count.textContent = COPY.found(state.items.length);
+  }
+  return added.length;
+}
+
 document.addEventListener('hoshilu:results-rendered', (event) => {
   const unified = event.detail?.unified_results;
   if (!unified) {
     const node = section();
     if (node) { node.hidden = true; node.replaceChildren(); }
     foldLegacySections(false);
+    followupButton?.remove();
+    followupButton = null;
     return;
   }
   render(unified, event.detail?.candidates || []);
+  renderFollowup(section(), event.detail?.marketplace_followup || null);
+});
+
+document.addEventListener('hoshilu:results-followup', (event) => {
+  const button = followupButton;
+  if (!button) return;
+  if (!event.detail?.ok) { button.textContent = COPY.followupFailed; return; }
+  const added = appendFollowup(event.detail.unified_results, event.detail.candidates || []);
+  button.textContent = added ? COPY.followupAdded(added) : COPY.followupNone;
+  button.classList.add('unified-followup-done');
+  // 0 件から列を作り直した時はボタンが外れているので、列の後ろに戻す。
+  if (!button.isConnected) section()?.append(button);
 });

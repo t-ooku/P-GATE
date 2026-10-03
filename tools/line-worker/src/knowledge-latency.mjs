@@ -4,7 +4,8 @@
 // 残すのはミリ秒・入力の種類・レーン数・利用区分（QA か実利用者か）だけ。検索文・画像・会員ID・
 // セッションIDは入れない。14 日で消す（古い数字は改善の判断に使わない）。
 export const KNOWLEDGE_LATENCY_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
-const INPUT_KINDS = new Set(['text', 'image', 'social', 'confirmed']);
+// followup = 「さらに見る」で間に合わなかったモールだけを取り直した回（2026-10-03）。
+const INPUT_KINDS = new Set(['text', 'image', 'social', 'confirmed', 'followup']);
 const TRAFFIC_CLASSES = new Set(['QA', 'INTERNAL', 'ATTRIBUTED', 'UNATTRIBUTED']);
 export const KNOWLEDGE_LATENCY_STAGES = Object.freeze([
   'gate_ms',        // ボット確認（Turnstile／トークン無しの上限）まで
