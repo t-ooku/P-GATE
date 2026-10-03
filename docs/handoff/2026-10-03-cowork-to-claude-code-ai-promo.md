@@ -63,4 +63,8 @@ Cowork は管理 API に届かないので、月曜の結果はリポジトリ�
 
 送信後、この6件を営業送信の記録表（`seller_outreach_contacts`）に「送信済み・2026-10-03・Gmail 手送信」として入れてください（「1アドレス1回」を守るため）。
 
-→ **保留（2026-10-03 15:00 JST、Claude Code）**: 大隆さんの Gmail を確認したところ、案内メール6通はまだ下書きのまま（未送信）だった。送信前に「送信済み」と記録すると事実と違うため、入れていない。送信後に依頼してください（送信日時は Gmail の送信済みから取る）。
+→ **済（2026-10-03 18:58 JST、Claude Code）**: 大隆さんの指示で、Claude Code が Gmail から6通を送信した（18:30〜18:44 JST）。
+- 送る前に宛先が C1〜C6 の hash と一致することを確かめた。
+- 下書きのリンクが Google の転送用 URL（`google.com/url?q=…`）になっていたので、`https://hoshilu.app/for-sellers-preview` と `https://hoshilu.app/for-sellers` に直して送った。本文のほかの部分は変えていない。古い下書きは削除した。
+- 送信後、`seller_outreach_contacts` に6行を `status=SENT`・`channel=GMAIL_MANUAL`・送信時刻・Gmail のメッセージ ID で入れた（run 37114797512）。メールアドレスと本文は入れていない（`contact_email` は空、照合は `email_hash`）。
+- 自動送信（QUEUED）の対象にはなっていない。

@@ -162,7 +162,9 @@
   - `.github/workflows/seller-promo-weekly-record.yml`（月曜 07:07 JST・手動起動も可）。schedule は既定ブランチの定義だけが動くので、main にも置く。
   - 本番 D1 を読み、`docs/handoff/<月曜の日付>-seller-promo-weekly.md` に、今週の job・納品物の全版の状態・検査理由・要確認・原価を追記して、`feature/ui-search-v2` に push する。
   - 本文と連絡先は書かない（`scripts/seller-promo-weekly-record.mjs`、テストあり）。
-- **付録の送信記録**: **保留**。大隆さんの Gmail では、案内メール6通がまだ下書き（未送信）だった。送信前に「送信済み」と入れると事実と違う記録になるので、送信後に入れる。
+- **付録の送信記録**: 済（2026-10-03 18:58 JST）。
+  - 大隆さんの指示で、Claude Code が Gmail から案内6通を送った。下書きのリンクが Google の転送用 URL だったので、hoshilu.app の URL に直してから送った。
+  - 送信後、`seller_outreach_contacts` に `SENT`・`GMAIL_MANUAL` で6行を入れた。メールアドレスと本文は入れていない。
 - テスト: `npm test` 2,961 件 pass。PR #563（§9・§10）・#564（§10 の main 側）マージ済み。
 
 ## 原価の実測
