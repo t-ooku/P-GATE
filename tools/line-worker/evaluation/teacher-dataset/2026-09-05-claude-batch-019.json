@@ -9357,5 +9357,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "排水口のヌメリがすぐ気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "排水口にヌメリ(ぬめり)がすぐ付いて気になる/取れない",
+    "ideal_answer": "ぬめり防止加工の排水口ネット・排水口カバー",
+    "reason": "「ヌメリが気になる/取れない」は商品名では「ぬめり防止」。 展開規則 drain-net-anti-slime（モール検索語「ぬめり防止 排水口ネット」）。",
+    "category": "drain-net-anti-slime",
+    "search_terms": {
+      "ja": [
+        "ぬめり防止 排水口ネット",
+        "ぬめり防止 排水口カバー",
+        "防臭 排水口ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "排水口のぬめりがなかなか取れない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "排水口にヌメリ(ぬめり)がすぐ付いて気になる/取れない",
+    "ideal_answer": "ぬめり防止加工の排水口ネット・排水口カバー",
+    "reason": "「ヌメリが気になる/取れない」は商品名では「ぬめり防止」。 展開規則 drain-net-anti-slime（モール検索語「ぬめり防止 排水口ネット」）。",
+    "category": "drain-net-anti-slime",
+    "search_terms": {
+      "ja": [
+        "ぬめり防止 排水口ネット",
+        "ぬめり防止 排水口カバー",
+        "防臭 排水口ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "キッチンの排水口がすぐヌメリで汚れる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "排水口にヌメリ(ぬめり)がすぐ付いて気になる/取れない",
+    "ideal_answer": "ぬめり防止加工の排水口ネット・排水口カバー",
+    "reason": "「ヌメリが気になる/取れない」は商品名では「ぬめり防止」。 展開規則 drain-net-anti-slime（モール検索語「ぬめり防止 排水口ネット」）。",
+    "category": "drain-net-anti-slime",
+    "search_terms": {
+      "ja": [
+        "ぬめり防止 排水口ネット",
+        "ぬめり防止 排水口カバー",
+        "防臭 排水口ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "子供が引き出しを開けていたずらしてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が引き出し・収納の扉を開けていたずらしてしまう/触ってしまう",
+    "ideal_answer": "引き出し・収納扉用のチャイルドロック・いたずら防止ロック",
+    "reason": "「子供がいたずらする/開けてしまう」は商品名では「チャイルドロック」。 展開規則 lockable-storage-cabinet（モール検索語「チャイルドロック 引き出し用」）。",
+    "category": "lockable-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "チャイルドロック 引き出し用",
+        "チャイルドロック 収納扉用",
+        "いたずら防止ロック 引き出し"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんが収納の扉を開けて触ってしまうので困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が引き出し・収納の扉を開けていたずらしてしまう/触ってしまう",
+    "ideal_answer": "引き出し・収納扉用のチャイルドロック・いたずら防止ロック",
+    "reason": "「子供がいたずらする/開けてしまう」は商品名では「チャイルドロック」。 展開規則 lockable-storage-cabinet（モール検索語「チャイルドロック 引き出し用」）。",
+    "category": "lockable-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "チャイルドロック 引き出し用",
+        "チャイルドロック 収納扉用",
+        "いたずら防止ロック 引き出し"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "引き出しを子供が開けられないように固定したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が引き出し・収納の扉を開けていたずらしてしまう/触ってしまう",
+    "ideal_answer": "引き出し・収納扉用のチャイルドロック・いたずら防止ロック",
+    "reason": "「子供がいたずらする/開けてしまう」は商品名では「チャイルドロック」。 展開規則 lockable-storage-cabinet（モール検索語「チャイルドロック 引き出し用」）。",
+    "category": "lockable-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "チャイルドロック 引き出し用",
+        "チャイルドロック 収納扉用",
+        "いたずら防止ロック 引き出し"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "包丁の切れ味が悪くて困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "包丁の切れ味が悪い・すぐ切れなくなる・研げない",
+    "ideal_answer": "包丁研ぎ器・シャープナー(ロール式等、砥石不要タイプを含む)",
+    "reason": "「切れ味が悪い/研げない」は商品名では「包丁研ぎ器」「シャープナー」。 展開規則 dull-knife-sharpener（モール検索語「包丁研ぎ器」）。",
+    "category": "dull-knife-sharpener",
+    "search_terms": {
+      "ja": [
+        "包丁研ぎ器",
+        "シャープナー 包丁用",
+        "包丁研ぎ 簡単"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "包丁がすぐ切れなくなるので困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "包丁の切れ味が悪い・すぐ切れなくなる・研げない",
+    "ideal_answer": "包丁研ぎ器・シャープナー(ロール式等、砥石不要タイプを含む)",
+    "reason": "「切れ味が悪い/研げない」は商品名では「包丁研ぎ器」「シャープナー」。 展開規則 dull-knife-sharpener（モール検索語「包丁研ぎ器」）。",
+    "category": "dull-knife-sharpener",
+    "search_terms": {
+      "ja": [
+        "包丁研ぎ器",
+        "シャープナー 包丁用",
+        "包丁研ぎ 簡単"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "包丁の刃が研げなくて切れ味が悪い",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "包丁の切れ味が悪い・すぐ切れなくなる・研げない",
+    "ideal_answer": "包丁研ぎ器・シャープナー(ロール式等、砥石不要タイプを含む)",
+    "reason": "「切れ味が悪い/研げない」は商品名では「包丁研ぎ器」「シャープナー」。 展開規則 dull-knife-sharpener（モール検索語「包丁研ぎ器」）。",
+    "category": "dull-knife-sharpener",
+    "search_terms": {
+      "ja": [
+        "包丁研ぎ器",
+        "シャープナー 包丁用",
+        "包丁研ぎ 簡単"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "浴室の壁や床にピンクのぬめりがすぐ出て取れない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・お風呂の壁や床にピンクのぬめりがすぐ出て取れない",
+    "ideal_answer": "ぬめり取りに特化した浴室用洗剤・お風呂用洗剤",
+    "reason": "「ピンクのぬめりが取れない」は商品名では「浴室用洗剤」「ぬめり取り」。 展開規則 pink-slime-bathroom-cleaner（モール検索語「浴室用洗剤」）。",
+    "category": "pink-slime-bathroom-cleaner",
+    "search_terms": {
+      "ja": [
+        "浴室用洗剤",
+        "ぬめり取り 浴室用洗剤",
+        "お風呂用洗剤 ピンクぬめり"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂の床にピンクのぬめりがついて困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・お風呂の壁や床にピンクのぬめりがすぐ出て取れない",
+    "ideal_answer": "ぬめり取りに特化した浴室用洗剤・お風呂用洗剤",
+    "reason": "「ピンクのぬめりが取れない」は商品名では「浴室用洗剤」「ぬめり取り」。 展開規則 pink-slime-bathroom-cleaner（モール検索語「浴室用洗剤」）。",
+    "category": "pink-slime-bathroom-cleaner",
+    "search_terms": {
+      "ja": [
+        "浴室用洗剤",
+        "ぬめり取り 浴室用洗剤",
+        "お風呂用洗剤 ピンクぬめり"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "浴室の壁のぬめりがすぐに出てなかなか落ちない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・お風呂の壁や床にピンクのぬめりがすぐ出て取れない",
+    "ideal_answer": "ぬめり取りに特化した浴室用洗剤・お風呂用洗剤",
+    "reason": "「ピンクのぬめりが取れない」は商品名では「浴室用洗剤」「ぬめり取り」。 展開規則 pink-slime-bathroom-cleaner（モール検索語「浴室用洗剤」）。",
+    "category": "pink-slime-bathroom-cleaner",
+    "search_terms": {
+      "ja": [
+        "浴室用洗剤",
+        "ぬめり取り 浴室用洗剤",
+        "お風呂用洗剤 ピンクぬめり"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "うんち袋から臭いが漏れて気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "うんち袋・うんち処理袋・マナーポーチから臭い・匂いが漏れる/気になる",
+    "ideal_answer": "防臭・消臭機能付きのうんち袋・うんち処理袋・マナーポーチ",
+    "reason": "「臭いが漏れる/気になる」は商品名では「防臭」「消臭」。 展開規則 odor-block-poop-bag（モール検索語「防臭 うんち袋」）。",
+    "category": "odor-block-poop-bag",
+    "search_terms": {
+      "ja": [
+        "防臭 うんち袋",
+        "消臭 うんち処理袋",
+        "防臭 マナーポーチ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬のうんち処理袋から匂いがすることがある",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "うんち袋・うんち処理袋・マナーポーチから臭い・匂いが漏れる/気になる",
+    "ideal_answer": "防臭・消臭機能付きのうんち袋・うんち処理袋・マナーポーチ",
+    "reason": "「臭いが漏れる/気になる」は商品名では「防臭」「消臭」。 展開規則 odor-block-poop-bag（モール検索語「防臭 うんち袋」）。",
+    "category": "odor-block-poop-bag",
+    "search_terms": {
+      "ja": [
+        "防臭 うんち袋",
+        "消臭 うんち処理袋",
+        "防臭 マナーポーチ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マナーポーチの臭いが気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "うんち袋・うんち処理袋・マナーポーチから臭い・匂いが漏れる/気になる",
+    "ideal_answer": "防臭・消臭機能付きのうんち袋・うんち処理袋・マナーポーチ",
+    "reason": "「臭いが漏れる/気になる」は商品名では「防臭」「消臭」。 展開規則 odor-block-poop-bag（モール検索語「防臭 うんち袋」）。",
+    "category": "odor-block-poop-bag",
+    "search_terms": {
+      "ja": [
+        "防臭 うんち袋",
+        "消臭 うんち処理袋",
+        "防臭 マナーポーチ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
