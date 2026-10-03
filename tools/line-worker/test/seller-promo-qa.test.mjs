@@ -107,3 +107,17 @@ test('§9: 商品データに無い性質語は「要確認」の注記（不合
   assert.equal(out.passed, true);
   assert.deepEqual(out.qa.notes, [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }]);
 });
+
+test('§9-5 の作り直しで残った点: 素材・価格の評価は要確認、「製品情報に記載がございません」は不合格、同じ漢字の重複は誤字の疑い', async () => {
+  const { doubledKanjiSuspects } = await import('../src/seller-promo-qa.mjs');
+  assert.deepEqual(doubledKanjiSuspects(['目目的にあわせて', '人々の暮らし', '時々']), ['目目']);
+  const products = [{ id: 'spp_1', name: '収納かご', price_jpy: 880, attrs: { 素材: '綿' } }];
+  const sns = (instagram) => checkPromoDeliverable('SNS', { theme: 'かご', variants: { instagram, x: 'かご', threads: 'かご' },
+    image_brief: { product_id: 'spp_1', headline: 'かご', sub: '' } }, { products });
+  const evaluated = sns('綿素材は扱いやすく、880円とお求めやすい設定です。目目的にあわせて。');
+  assert.equal(evaluated.passed, true);
+  assert.deepEqual(evaluated.qa.notes, [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '扱いやす,お求めやす' }, { code: 'TYPO_SUSPECT', detail: '目目' }]);
+  for (const text of ['お手入れ方法は製品情報に記載がございません。', 'お手入れ方法の詳細は詳しくはお問い合わせください。']) {
+    assert.ok(sns(text).qa.reasons.some((r) => r.code === 'FORBIDDEN_EXPRESSION'), text);
+  }
+});
