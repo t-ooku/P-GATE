@@ -167,6 +167,28 @@
   - 送信後、`seller_outreach_contacts` に `SENT`・`GMAIL_MANUAL` で6行を入れた。メールアドレスと本文は入れていない。
 - テスト: `npm test` 2,961 件 pass。PR #563（§9・§10）・#564（§10 の main 側）マージ済み。
 
+## 自社の販促素材 §3（2026-10-03、`2026-10-03-cowork-seller-promo-content-pack.md`）
+
+- **§3-1 公開 LP**（21:25 JST 反映、PR #567）:
+  - `/for-sellers` に AI販促担当を料金まで載せた。第一画面を「モールの外」の訴求にし、料金の前に「なぜモールの外か」「中と外」「毎週届くもの」を置いた。
+  - 料金は 3 段（掲載プラン 1,980円は「掲載のみ」／Light 9,800円／Standard 19,800円）。JSON-LD・FAQ・`/legal` の販売価格・`/terms` の自動移行の金額も 3 段に揃えた。
+  - 料金は公開ファイルに置かず、`SELLER_PROMO_PLANS_ENABLED=true` のときだけ Worker が差し込む（`src/seller-promo-public-pages.mjs`）。OFF なら元の掲載プランだけのページに戻る。
+  - `/for-sellers-preview` は `/for-sellers` へ 301。スマホ幅・デスクトップで横はみ出し 0。
+  - 大隆さんの Gmail にリンクと変更点を送った。スクリーンショットは添付が大きくなるので、Claude Code のチャットで渡した（LP は公開ページなので、スマホでそのまま開ける）。
+- **§3-2 SNS**: Seller 枠（平日 12:35 JST）に 10 本を X・Threads 各 1 本ずつ予約（`social_post_queue`・`APPROVED`・`campaign_id=hoshilu-seller-daily-v1`・`content_id=seller-aipromo-01〜10`）。
+  - 日時: 10/5・6・7・8・9・13・14・15・16・19 の各 12:35。10/12（スポーツの日）は営業日でないので飛ばした。
+  - 10 本とも、本番の正規化・`seller-marketing-guard`・禁止表現の検査を通した。X は切り詰めなしで、最大 242（リンクを含めても 280 以内）。料金は書いていない。
+  - 4 本目の「商品データ」は禁止語に当たるので「商品情報」に替えた（意味は同じ）。
+  - 既存の行には触れていない（`INSERT OR IGNORE`）。10/2 にも同じ枠で投稿があった。
+- **§3-3 記事**（21:52 JST 公開、PR #568）:
+  - https://hoshilu.app/ja/netshop-blog-sns-tsuzukanai
+  - https://hoshilu.app/ja/rakuten-gold-erabikata-page
+  - 既存の Seller 向け記事と同じ型で、品質スコアは 100。本文に料金はなく、ボタンは「AI販促担当について見る」→ `/for-sellers`。
+  - サイトマップに追加し、`/for-sellers` にも lastmod 2026-10-03 を付けた。ガイド一覧の「出品者・メーカー向け」に追加した。
+  - 既存の Seller 向け記事は 14 本（依頼文の「5本」より多い）。すべてボタンが `/for-sellers` を指していて、LP の第一画面が AI販促担当なのでそこに着地する。
+  - 気づいたこと: 既存 12 本の FAQ「費用はいくらですか？」は、今も「1,980円・体験開始の準備中」の文言のまま（`TRIAL_PENDING_COPY`）。受付開始と 3 段の料金に合わせるかどうかは別に判断が要る。
+- **§3-4**: 週次の記録（`seller-promo-weekly-record.yml`、月曜 07:07 JST）に「投稿の反応（直近7日）」の行を足した。内容は、公開本数・表示・LP 閲覧・LP のボタン・相談の 5 つ。取れない数は「—」で、相談は経路を問わない全件。
+
 ## 原価の実測
 
 → 「本番の初回無人実行」の節を参照（1.61 円／週、月約 6.4 円／店。2026-10-03 実測）。
