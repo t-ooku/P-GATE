@@ -229,3 +229,33 @@ html:lang(ja) #heroTitle {
   #insightTitle { font-size: clamp(21px, 6vw, 30px); white-space: normal; }
   html:lang(ja) #insightTitle { white-space: nowrap; }
 }
+
+/* 2026-10-03 大隆さん指摘「トップ画面の文字線が細すぎる。もっと濃ゆくおしゃれに」。
+   端末の標準フォントは日本語の Black（900）を持たないことが多く、見出しが細く出ていた。
+   トップの見出し・説明文に使う字だけを Noto Sans CJK JP Black から切り出した 15KB の
+   自前フォント（/fonts/hoshilu-hero.woff2、SIL OFL 1.1）を読み、無い字は元の書体で出す。 */
+@font-face {
+  font-family: "HOSHILU Hero";
+  src: url("/fonts/hoshilu-hero.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+#heroTitle,
+.hero-sub {
+  font-family: "HOSHILU Hero", Inter, "Noto Sans JP", system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+#heroTitle {
+  font-weight: 900;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+html:lang(ja) #heroTitle { font-size: clamp(22px, 7.2vw, 38px); }
+#heroTitle .hero-title-line:not(.hero-title-accent) { color: #14142a; }
+.hero-sub {
+  font-weight: 900;
+  color: #2b2a44;
+  font-size: clamp(14px, 3.9vw, 18px);
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+}

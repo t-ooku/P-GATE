@@ -320,7 +320,10 @@ body{background:radial-gradient(circle at 72% 0,#eee8ff 0,transparent 32%),#f8f7
   -webkit-text-fill-color:transparent;
 }
 #heroTitle .hero-title-line:not(.hero-title-accent){color:#17172b !important}
-.hero>p:not(.eyebrow),#heroSub,.hero-sub{color:#6d6b80 !important}
+.hero>p:not(.eyebrow),#heroSub{color:#6d6b80 !important}
+/* 2026-10-03 大隆さん指摘「文字線が細すぎる。もっと濃ゆく」。説明文は薄い灰色をやめ、濃い墨に。 */
+.hero>p.hero-sub,.hero #heroSub.hero-sub,.hero-sub{color:#2b2a44 !important;font-weight:900 !important}
+#heroTitle{font-weight:900 !important}
 
 /* 2026-09-22 大隆さん指示「スクショのように、以前の字体に戻して」。
    Instagram 風にするとき、文字の太さを一律に下げていた
