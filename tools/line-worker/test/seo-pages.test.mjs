@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語140ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 145);
+test('検索意図が異なる日本語142ページと英語5ページを提供する', () => {
+  // 2026-10-03 自社の販促素材 §2: Seller 向け記事 2 本（ブログ・SNSが続かない理由／楽天GOLD の選び方ページ）を追加。
+  assert.equal(seoPagePaths.length, 147);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +43,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは140記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは142記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +55,7 @@ test('日本語ガイドハブは140記事を重複なく分類し全記事か�
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 140);
+  assert.equal(japanesePaths.length, 142);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -575,7 +576,7 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 154);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 156);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
@@ -821,5 +822,21 @@ test('2026-09-05公開のクリエイター募集6記事＋値下げ・クーポ
     assert.match(html, /data-seo-cluster="sale-timing"/);
     assert.match(html, /href="\/" data-seo-feature-link/);
     assert.match(html, /販売ページ|キャンペーンページ/);
+  }
+});
+
+// 2026-10-03 自社の販促素材 §2・§3-3: Seller 向け記事 2 本。本文に料金を書かず、末尾のボタンで /for-sellers（AI販促担当の欄）へ。
+test('Seller 向け記事（ブログ・SNSが続かない／楽天GOLD）は料金を書かず、AI販促担当として /for-sellers へつなぐ', () => {
+  for (const slug of ['netshop-blog-sns-tsuzukanai', 'rakuten-gold-erabikata-page']) {
+    const path = `/ja/${slug}`;
+    const html = renderSeoPage(path);
+    assert.ok(html, path);
+    assert.match(html, /datetime="2026-10-03"/);
+    assert.match(html, /data-seo-article-type="seller-guide"/);
+    assert.match(html, /href="\/for-sellers" data-seo-feature-link[^>]*>AI販促担当について見る/);
+    const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<[^>]+>/gu, ' ');
+    assert.doesNotMatch(text, /[0-9][0-9,]*円/u, '本文に料金を書かない');
+    assert.doesNotMatch(text, /売上が(?:必ず|確実に)?(?:上がります|増えます)|最安(?:値)?です|人気No\.1|絶対おすすめ/u);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
   }
 });
