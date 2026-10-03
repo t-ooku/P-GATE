@@ -203,7 +203,9 @@ function render(data) {
 
 async function main() {
   if (!root || !key) return;
-  send('product_detail_view');
+  // 入口（search / buzz）だけを content に入れて数える（§12）。それ以外は空。
+  const from = new URLSearchParams(location.search).get('from');
+  send('product_detail_view', { content: ['search', 'buzz'].includes(from) ? from : '' });
   try {
     const res = await fetch(`/api/product?key=${encodeURIComponent(key)}&s=${encodeURIComponent(window.HoshiluGrowthIdentity?.sessionId?.() || '')}`, { cache: 'no-store' });
     const data = await res.json();

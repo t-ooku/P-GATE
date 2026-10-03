@@ -48,7 +48,7 @@ export function adminPromotionPageResponse() {
   <button id="runSearchQaCanary" class="ghost-button" type="button">検索品質カナリアを今すぐ実行</button></div>
   <pre id="searchQaCanaryResult" class="search-qa-canary-result" hidden></pre></section>
   <!-- 2026-09-17 第2指示書 §18: 4 つのタブ（経営KPI／検索品質／SHOP・Seller／流入・販促） -->
-  <nav class="kpi-tabs" role="tablist" aria-label="KPIの区分"><button type="button" role="tab" data-kpi-tab="business" class="active" aria-selected="true">経営KPI</button><button type="button" role="tab" data-kpi-tab="search" aria-selected="false">検索品質</button><button type="button" role="tab" data-kpi-tab="shop" aria-selected="false">SHOP・Seller</button><button type="button" role="tab" data-kpi-tab="acquisition" aria-selected="false">流入・販促</button></nav>
+  <nav class="kpi-tabs" role="tablist" aria-label="KPIの区分"><button type="button" role="tab" data-kpi-tab="business" class="active" aria-selected="true">経営KPI</button><button type="button" role="tab" data-kpi-tab="search" aria-selected="false">検索品質</button><button type="button" role="tab" data-kpi-tab="shop" aria-selected="false">SHOP・Seller</button><button type="button" role="tab" data-kpi-tab="acquisition" aria-selected="false">流入・販促</button><button type="button" role="tab" data-kpi-tab="buy" aria-selected="false">購入導線</button></nav>
   <div class="kpi-tab-panel" data-kpi-panel="business">
   <section class="auth-card kpi-overview"><div class="kpi-period-head"><div><p class="eyebrow">NORTH STAR &amp; GROWTH</p><h2>事業の現在地</h2></div>
   <div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
@@ -78,6 +78,13 @@ export function adminPromotionPageResponse() {
   <div class="section-head"><div><p class="eyebrow">NOW</p><h3>いまの在庫的な数字</h3></div></div>
   <div id="shopStockGrid" class="business-kpi-grid" aria-live="polite"></div></section>
   </div>
+  <div class="kpi-tab-panel" data-kpi-panel="buy" hidden>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">BUY FUNNEL</p><h2>購入導線</h2></div><span class="section-note">訪問 → 検索 → 商品詳細 → 購入先クリック（回数と計測できる率だけ。購入成果は推定しない）</span></div>
+  <p class="funnel-note">2026-10-02 指示書「今ほしい人が買うためのサービス」§12。期間は上の「集計期間」と同じ（7日／30日）。「/go 実通過」はサーバー側の記録で、ブラウザのイベントとは別に数えています。</p>
+  <div id="buyFunnelGrid" class="business-kpi-grid" aria-live="polite"></div>
+  <div class="section-head"><div><p class="eyebrow">PRICE RECORDING</p><h3>価格記録の進み具合</h3></div></div>
+  <div id="priceRecordingGrid" class="business-kpi-grid" aria-live="polite"></div></section>
+  </div>
   <div class="kpi-tab-panel" data-kpi-panel="acquisition" hidden>
   <section class="dashboard-split">
   <article class="auth-card"><div class="section-head"><div><p class="eyebrow">ACQUISITION QUALITY</p><h2>流入元別の成果</h2></div></div>
@@ -88,7 +95,7 @@ export function adminPromotionPageResponse() {
   <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </div>
-  </main><script type="module" src="/admin-promotion.js?v=3"></script></body></html>`, { headers });
+  </main><script type="module" src="/admin-promotion.js?v=4"></script></body></html>`, { headers });
 }
 
 export function adminReelsPageResponse() {

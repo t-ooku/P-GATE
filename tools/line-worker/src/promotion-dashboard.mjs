@@ -706,7 +706,9 @@ const TAB_EVENT_TYPES = Object.freeze([
   'shop_search_completed', 'shop_demand_saved', 'shop_demand_matched',
   'shop_viewed', 'shop_followed', 'shop_unfollowed', 'coupon_clicked', 'seller_landing_view', 'seller_cta_clicked',
   // 2026-09-18 大隆さん指示 P1（SHOP 強化と KPI の接続）: 横断検索開始率の分母
-  'landing_view'
+  'landing_view',
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 購入導線（検索→商品詳細→購入先クリック）
+  'product_detail_view', 'marketplace_click', 'price_comparison_opened'
 ]);
 const TAB_EVENT_SQL = `SELECT event_type,campaign,content,COUNT(*) AS total FROM growth_events
   WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
@@ -777,13 +779,66 @@ function shopSellerPeriod(counts) {
   };
 }
 
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 購入導線。
+// 訪問 → 検索 → 商品詳細 → 購入先クリック。回数と、計測できる率だけ。購入成果は推定しない。
+// 商品詳細の入口（content）: search＝検索結果カード / buzz＝BUZZ カード / 空＝直接・不明。
+// 購入先クリックは 2 系統: ブラウザのイベント（marketplace_click, content=product_detail）と、/go を実際に通った件数（outbound_commerce_events, source_marketplace=PRODUCT_DETAIL）。
+function buyFunnelPeriod(counts, outbound = {}) {
+  const c = counts.byType;
+  const detailBy = counts.byContent.product_detail_view || {};
+  const clickBy = counts.byContent.marketplace_click || {};
+  const detailViews = c.product_detail_view || 0;
+  const detailFromSearch = detailBy.search || 0;
+  const detailFromBuzz = detailBy.buzz || 0;
+  const detailClicks = clickBy.product_detail || 0;
+  return {
+    landing_view: c.landing_view || 0,
+    search_started: c.search_started || 0,
+    search_completed: c.search_completed || 0,
+    search_completion_rate: percentage(c.search_completed || 0, c.search_started || 0),
+    price_comparison_opened: c.price_comparison_opened || 0,
+    product_detail_view: detailViews,
+    product_detail_from_search: detailFromSearch,
+    product_detail_from_buzz: detailFromBuzz,
+    // 検索→商品詳細到達率: 検索成功のうち、検索結果から商品詳細を開いた割合
+    search_to_detail_rate: percentage(detailFromSearch, c.search_completed || 0),
+    marketplace_click: c.marketplace_click || 0,
+    detail_marketplace_click: detailClicks,
+    // 商品詳細→購入先クリック率
+    detail_to_click_rate: percentage(detailClicks, detailViews),
+    // /go を実際に通った件数（サーバー側の記録）
+    detail_outbound_go: outbound.detail ?? null,
+    outbound_go_total: outbound.total ?? null,
+    // 訪問→購入先クリック（全体）
+    landing_to_click_rate: percentage(c.marketplace_click || 0, c.landing_view || 0)
+  };
+}
+
+async function outboundByPeriod(env, start, end) {
+  try {
+    const rows = (await env.PRODUCT_DB.prepare(`SELECT source_marketplace, COUNT(*) AS total FROM outbound_commerce_events
+      WHERE occurred_at>=?1 AND occurred_at<?2 GROUP BY source_marketplace`).bind(iso(start), iso(end)).all())?.results || [];
+    let total = 0; let detail = 0;
+    for (const row of rows) { const n = safeCount(row.total); total += n; if (String(row.source_marketplace) === 'PRODUCT_DETAIL') detail += n; }
+    return { total, detail };
+  } catch { return { total: null, detail: null }; }
+}
+
+// 価格記録の進み具合（§5）: 行数・商品数・記録開始日。表が無ければ null（未計測）。
+async function priceRecordingStock(env) {
+  try {
+    const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS rows, COUNT(DISTINCT record_key) AS products, MIN(observed_date) AS since, MAX(observed_date) AS latest FROM price_observations`).first();
+    return { rows: safeCount(row?.rows), products: safeCount(row?.products), since: row?.since || null, latest: row?.latest || null };
+  } catch { return { rows: null, products: null, since: null, latest: null }; }
+}
+
 async function tabPeriods(env, now) {
   const out = {};
   for (const days of [7, 30]) {
     const end = new Date(now);
     const start = shiftDays(end, -days);
     const result = await env.PRODUCT_DB.prepare(TAB_EVENT_SQL).bind(iso(start), iso(end)).all();
-    out[`${days}d`] = { days, start_at: iso(start), end_at: iso(end), counts: tabCounts(result?.results || []) };
+    out[`${days}d`] = { days, start_at: iso(start), end_at: iso(end), counts: tabCounts(result?.results || []), outbound: await outboundByPeriod(env, start, end) };
   }
   return out;
 }
@@ -797,9 +852,11 @@ async function tabSummaries(env, now) {
     const periods = await tabPeriods(env, now);
     const searchQuality = { status: 'READY', periods: {} };
     const shopSeller = { status: 'READY', periods: {}, stock: {} };
+    const buyFunnel = { status: 'READY', periods: {}, price_recording: await priceRecordingStock(env) };
     for (const [key, period] of Object.entries(periods)) {
       searchQuality.periods[key] = { days: period.days, start_at: period.start_at, end_at: period.end_at, ...searchQualityPeriod(period.counts) };
       shopSeller.periods[key] = { days: period.days, start_at: period.start_at, end_at: period.end_at, ...shopSellerPeriod(period.counts) };
+      buyFunnel.periods[key] = { days: period.days, start_at: period.start_at, end_at: period.end_at, ...buyFunnelPeriod(period.counts, period.outbound) };
     }
     // 在庫的な数字（今この瞬間）。テーブルが無い環境では null（未計測）
     shopSeller.stock = {
@@ -810,12 +867,13 @@ async function tabSummaries(env, now) {
       demand_groups_5plus: await optionalCount(env, `SELECT COUNT(*) AS total FROM (SELECT demand_key FROM shop_demand_requests WHERE status<>'CLOSED' GROUP BY demand_key HAVING COUNT(DISTINCT COALESCE(NULLIF(member_id,''),visitor_hash))>=5)`),
       shop_follows: await optionalCount(env, `SELECT COUNT(*) AS total FROM member_shop_follows`)
     };
-    return { search_quality: searchQuality, shop_seller: shopSeller };
+    return { search_quality: searchQuality, shop_seller: shopSeller, buy_funnel: buyFunnel };
   } catch (error) {
     console.error(JSON.stringify({ event: 'promotion_tab_query_failed', error: String(error?.message || error).slice(0, 120) }));
     return {
       search_quality: { status: 'UNAVAILABLE', periods: {} },
-      shop_seller: { status: 'UNAVAILABLE', periods: {}, stock: {} }
+      shop_seller: { status: 'UNAVAILABLE', periods: {}, stock: {} },
+      buy_funnel: { status: 'UNAVAILABLE', periods: {}, price_recording: {} }
     };
   }
 }
@@ -828,7 +886,7 @@ export async function promotionDashboardSummary(env, now = new Date()) {
     ok: true, generated_at: now.toISOString(),
     autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
     business_kpis: businessKpis, social_warnings: social.warnings, channels: social.channels,
-    search_quality: tabs.search_quality, shop_seller: tabs.shop_seller
+    search_quality: tabs.search_quality, shop_seller: tabs.shop_seller, buy_funnel: tabs.buy_funnel
   };
 }
 

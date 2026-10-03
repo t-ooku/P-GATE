@@ -137,7 +137,7 @@ function card(item) {
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」: HOSHILU 商品から商品詳細（今いくら？・過去価格・購入先）へ。
   if (item.source === 'HOSHILU' && /^(?:RAKUTEN:|YAHOO:|JAN:)/u.test(String(item.record_key || '')) && !/^(?:RAKUTEN|YAHOO):https?:/iu.test(String(item.record_key))) {
     const detail = el('a', 'unified-card-detail', COPY.detail);
-    detail.href = `/product?key=${encodeURIComponent(item.record_key)}`;
+    detail.href = `/product?key=${encodeURIComponent(item.record_key)}&from=search`;
     body.append(detail);
   }
   // 価格と「価格比較」を同じ行に置く（2026-09-22 大隆さん指示）。

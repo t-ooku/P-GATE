@@ -380,9 +380,10 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   assert.equal(search.result_rejected, 1);
   assert.equal(search.rejected_rate, 50);
   const html = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
-  for (const tab of ['business', 'search', 'shop', 'acquisition']) assert.ok(html.includes(`data-kpi-tab="${tab}"`) && html.includes(`data-kpi-panel="${tab}"`), tab);
-  for (const label of ['経営KPI', '検索品質', 'SHOP・Seller', '流入・販促']) assert.ok(html.includes(`>${label}</button>`), label);
-  assert.match(html, /admin-promotion\.js\?v=3/);
+  // 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 5 つ目のタブ「購入導線」
+  for (const tab of ['business', 'search', 'shop', 'acquisition', 'buy']) assert.ok(html.includes(`data-kpi-tab="${tab}"`) && html.includes(`data-kpi-panel="${tab}"`), tab);
+  for (const label of ['経営KPI', '検索品質', 'SHOP・Seller', '流入・販促', '購入導線']) assert.ok(html.includes(`>${label}</button>`), label);
+  assert.match(html, /admin-promotion\.js\?v=4/);
   const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
   assert.match(client, /function renderShopSeller\(\)/);
   assert.match(client, /function activateTab\(name\)/);
@@ -392,4 +393,38 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   assert.match(analytics, /storedAttribution\(\) \|\| referrerAttribution\(\) \|\| urlAttribution/);
   assert.match(analytics, /new URL\(document\.referrer\)\.hostname/);
   assert.doesNotMatch(analytics, /document\.referrer\)\.(pathname|search)/);
+});
+
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 購入導線（訪問→検索→商品詳細→購入先クリック）。回数と計測できる率だけ。
+test('ダッシュボードは購入導線を返す: 商品詳細の入口別・商品詳細からの購入先クリック・/go 実通過・価格記録の進み具合', async () => {
+  const db = setup();
+  const event = db.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  for (const [id, type, content] of [
+    ['pd1', 'product_detail_view', 'search'], ['pd2', 'product_detail_view', 'search'], ['pd3', 'product_detail_view', 'buzz'], ['pd4', 'product_detail_view', ''],
+    ['mc1', 'marketplace_click', 'product_detail'], ['mc2', 'marketplace_click', ''], ['pc1', 'price_comparison_opened', '']
+  ]) event.run(id, type, 'JA', '', '', '', content, type === 'marketplace_click' ? 'RAKUTEN_JP' : '', '2026-08-09T12:05:00Z', 'UNATTRIBUTED', '', '');
+  event.run('qa-pd', 'product_detail_view', 'JA', 'codex', 'qa', '', 'search', '', '2026-08-09T12:05:00Z', 'QA', '', '');
+  const summary = await promotionDashboardSummary({ PRODUCT_DB: d1(db) }, new Date('2026-08-10T00:00:00Z'));
+  assert.equal(summary.buy_funnel.status, 'READY');
+  const buy = summary.buy_funnel.periods['7d'];
+  assert.equal(buy.product_detail_view, 4, 'QA は除外');
+  assert.deepEqual([buy.product_detail_from_search, buy.product_detail_from_buzz], [2, 1]);
+  assert.equal(buy.detail_marketplace_click, 1);
+  assert.equal(buy.marketplace_click, 3, 'setup の 1 件 + 追加 2 件');
+  assert.equal(buy.detail_to_click_rate, 25);
+  assert.equal(buy.price_comparison_opened, 2);
+  assert.equal(buy.search_started, 2, 'setup の検索開始');
+  // outbound_commerce_events / price_observations が無い環境は null（未計測）。0 と断定しない
+  assert.equal(buy.detail_outbound_go, null);
+  assert.equal(summary.buy_funnel.price_recording.rows, null);
+  assert.ok(!JSON.stringify(summary.buy_funnel).match(/revenue|sales|conversion|purchase_estimate/i), '購入成果を推定しない');
+  const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
+  assert.match(client, /function renderBuyFunnel\(\)/);
+  assert.match(client, /payload\.buy_funnel/);
+  // 入口の印: 検索結果カードは from=search、BUZZ カードは from=buzz。商品詳細はそれだけを content に送る
+  assert.match(readFileSync(new URL('../public/unified-results-ui.mjs', import.meta.url), 'utf8'), /&from=search`/);
+  assert.match(readFileSync(new URL('../public/buzz-home.mjs', import.meta.url), 'utf8'), /&from=buzz`/);
+  assert.match(readFileSync(new URL('../public/product-detail.mjs', import.meta.url), 'utf8'), /send\('product_detail_view', \{ content: \['search', 'buzz'\]\.includes\(from\) \? from : '' \}\)/);
 });

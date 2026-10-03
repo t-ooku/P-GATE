@@ -14,6 +14,8 @@ const marketplaceTable = document.querySelector('#marketplaceTable');
 const searchQualityGrid = document.querySelector('#searchQualityGrid');
 const shopSellerGrid = document.querySelector('#shopSellerGrid');
 const shopStockGrid = document.querySelector('#shopStockGrid');
+const buyFunnelGrid = document.querySelector('#buyFunnelGrid');
+const priceRecordingGrid = document.querySelector('#priceRecordingGrid');
 let businessKpis = null;
 let kpiPeriod = '7d';
 
@@ -236,7 +238,7 @@ function renderDetailKpis(data) {
 }
 
 // 2026-09-17 第2指示書 §18: 検索品質タブ。回数だけ（QA 除外、検索文なし）
-let tabData = { search_quality: null, shop_seller: null };
+let tabData = { search_quality: null, shop_seller: null, buy_funnel: null };
 function renderSearchQuality() {
   if (!searchQualityGrid) return;
   const period = tabData.search_quality?.periods?.[kpiPeriod];
@@ -282,6 +284,29 @@ function renderShopSeller() {
     metric('ショップのホシる', count(stock.shop_follows))
   );
 }
+// 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 購入導線タブ。回数と計測できる率だけ。
+function renderBuyFunnel() {
+  if (!buyFunnelGrid || !priceRecordingGrid) return;
+  const period = tabData.buy_funnel?.periods?.[kpiPeriod];
+  if (!period) { buyFunnelGrid.replaceChildren(element('p', '購入導線データを取得できません。', 'empty-row')); priceRecordingGrid.replaceChildren(); return; }
+  const count = value => value === null || value === undefined ? '未計測' : formatNumber(value);
+  buyFunnelGrid.replaceChildren(
+    metric('訪問（着地）', formatNumber(period.landing_view), '', `${period.days}日｜クローラ除外`),
+    metric('検索開始', formatNumber(period.search_started), '', `成功 ${formatNumber(period.search_completed)}（${rate(period.search_completion_rate)}）`),
+    metric('商品詳細を開いた', formatNumber(period.product_detail_view), period.product_detail_view ? 'success' : '', `検索から ${formatNumber(period.product_detail_from_search)}・BUZZから ${formatNumber(period.product_detail_from_buzz)}`),
+    metric('検索→商品詳細 到達率', rate(period.search_to_detail_rate), '', '検索成功のうち、結果カードから商品詳細を開いた割合'),
+    metric('商品詳細→購入先クリック', formatNumber(period.detail_marketplace_click), period.detail_marketplace_click ? 'success' : '', `到達率 ${rate(period.detail_to_click_rate)}`),
+    metric('購入先クリック（全体）', formatNumber(period.marketplace_click), '', `訪問に対して ${rate(period.landing_to_click_rate)}`),
+    metric('/go 実通過（商品詳細から）', count(period.detail_outbound_go), '', `全体 ${count(period.outbound_go_total)}｜サーバー記録`),
+    metric('価格比較を開いた', formatNumber(period.price_comparison_opened))
+  );
+  const stock = tabData.buy_funnel?.price_recording || {};
+  priceRecordingGrid.replaceChildren(
+    metric('記録した価格（行）', count(stock.rows), '', '1商品×1販売先×1日で1行'),
+    metric('記録している商品', count(stock.products)),
+    metric('記録開始日', stock.since || '未計測', '', stock.latest ? `最新 ${stock.latest}` : '')
+  );
+}
 const TAB_KEY = 'hoshilu_admin_kpi_tab';
 function activateTab(name) {
   document.querySelectorAll('[data-kpi-tab]').forEach(button => {
@@ -295,7 +320,7 @@ document.querySelectorAll('[data-kpi-tab]').forEach(button => button.addEventLis
 try { const saved = localStorage.getItem(TAB_KEY); if (saved && document.querySelector(`[data-kpi-tab="${saved}"]`)) activateTab(saved); } catch {}
 
 function renderBusinessKpis() {
-  renderSearchQuality(); renderShopSeller();
+  renderSearchQuality(); renderShopSeller(); renderBuyFunnel();
   if (!businessKpis) return;
   if (businessKpis.status !== 'READY') {
     unavailable.hidden = false;
@@ -359,7 +384,7 @@ async function load() {
     if (!response.ok) throw new Error('PROMOTION_STATUS_FAILED');
     const payload = await response.json();
     businessKpis = payload.business_kpis;
-    tabData = { search_quality: payload.search_quality || null, shop_seller: payload.shop_seller || null };
+    tabData = { search_quality: payload.search_quality || null, shop_seller: payload.shop_seller || null, buy_funnel: payload.buy_funnel || null };
     renderBusinessKpis();
     grid.replaceChildren(...(payload.channels || []).map(renderChannel));
     const warning = payload.social_warnings?.length ? '・SNSデータの一部を取得できません' : '';
