@@ -158,3 +158,35 @@ test('販売 ON: 月次レポートも有効な契約がある店（と QA 店�
   assert.equal(out.created, 1);
   assert.deepEqual(db.prepare("SELECT seller_key FROM seller_promo_deliverables WHERE type='REPORT'").all().map((r) => r.seller_key), ['qa-shop-1']);
 });
+
+test('外部店: /seller-pilot の会員ログインで、自分の契約に紐づく AI販促の納品物だけを見て承認できる', async () => {
+  const { handleSellerPromoRoutes } = await import('../src/seller-promo-routes.mjs');
+  const { handleSellerListingPilotRoutes } = await import('../src/seller-listing-pilot.mjs');
+  const { db, adapter } = promoDb();
+  db.exec(readFileSync(new URL('../migrations/0089_seller_listing_pilot.sql', import.meta.url), 'utf8'));
+  db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?,?,?,?,?,?)').run('SPL_a', 'SBI_a', 'member-a', 1, '{}', 'x', 'x');
+  db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?,?,?,?,?,?)').run('SPL_b', 'SBI_b', 'member-b', 1, '{}', 'x', 'x');
+  await upsertPromoProfile(adapter, { seller_key: 'pilot-SPL_a', categories: ['文具'], plan: 'LIGHT', pilot_id: 'SPL_a' });
+  await upsertPromoProfile(adapter, { seller_key: 'pilot-SPL_b', categories: ['文具'], plan: 'LIGHT', pilot_id: 'SPL_b' });
+  const ins = (id, key) => db.prepare(`INSERT INTO seller_promo_deliverables(id,job_id,seller_key,week_key,type,version,status,payload,qa,created_at) VALUES(?,'j',?,'2026-W41','SNS',1,'QA_PASSED','{}','{}','2026-10-05T00:00:00Z')`).run(id, key);
+  ins('spd_' + 'a'.repeat(32), 'pilot-SPL_a');
+  ins('spd_' + 'b'.repeat(32), 'pilot-SPL_b');
+  const env = promoEnv(adapter);
+  const as = (memberId) => ({ readSeller: async () => null, member: async () => (memberId ? { id: memberId } : null) });
+  const get = async (memberId) => (await handleSellerPromoRoutes(new Request('https://hoshilu.app/api/seller-promo/deliverables'), env, as(memberId))).json();
+  const a = await get('member-a');
+  assert.equal(a.enrolled, true);
+  assert.deepEqual(a.deliverables.map((d) => d.id), ['spd_' + 'a'.repeat(32)]);
+  const approve = (memberId, id) => handleSellerPromoRoutes(new Request(`https://hoshilu.app/api/seller-promo/deliverables/${id}/approve`, { method: 'POST', headers: { origin: 'https://hoshilu.app' }, body: '{}' }), env, as(memberId));
+  assert.equal((await approve('member-a', 'spd_' + 'b'.repeat(32))).status, 404);
+  assert.equal((await approve('member-a', 'spd_' + 'a'.repeat(32))).status, 200);
+  // 契約の無い会員は「まだ始めていません」、未ログインは 401
+  assert.deepEqual(await get('member-x'), { ok: true, enrolled: false, deliverables: [] });
+  assert.equal((await handleSellerPromoRoutes(new Request('https://hoshilu.app/api/seller-promo/deliverables'), env, as(null))).status, 401);
+  // /seller-pilot のページに「今週のサポート」とスクリプトが出る（AI販促 ON のとき）
+  const page = await (await handleSellerListingPilotRoutes(new Request('https://hoshilu.app/seller-pilot'), { ...env, SELLER_MANUAL_PILOT_ENABLED: 'true' }, { member: async () => ({ id: 'member-a' }) })).text();
+  assert.match(page, /今週のサポート/);
+  assert.match(page, /seller-promo\.js/);
+  const off = await (await handleSellerListingPilotRoutes(new Request('https://hoshilu.app/seller-pilot'), { ...env, SELLER_PROMO_ENABLED: 'false', SELLER_MANUAL_PILOT_ENABLED: 'true' }, { member: async () => ({ id: 'member-a' }) })).text();
+  assert.doesNotMatch(off, /今週のサポート/);
+});

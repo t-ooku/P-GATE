@@ -48,7 +48,7 @@ const safeDate = (value) => {
 };
 
 // 2026-10-03 AI販促担当: 中身は /seller-promo.js が /api/seller-promo/deliverables から描く（料金は載せない）。
-const PROMO_SECTION = `<section class="auth-card" id="promo"><p class="eyebrow">WEEKLY SUPPORT</p><h2>今週のサポート</h2>
+export const PROMO_SECTION = `<section class="auth-card" id="promo"><p class="eyebrow">WEEKLY SUPPORT</p><h2>今週のサポート</h2>
   <p class="section-intro">毎週の記事・SNS原稿・商品ページの直し案です。内容を確認して「承認」か「差し戻し」を選んでください。承認したものだけが公開・納品されます。</p>
   <div id="sellerPromoStatus" class="operation-status" role="status" aria-live="polite"></div>
   <label class="data-note"><input type="checkbox" id="sellerPromoAuto"> 検査に通ったものは自動で公開してよい（いつでも戻せます）</label>

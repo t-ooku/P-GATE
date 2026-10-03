@@ -8,6 +8,7 @@ import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS } from '../public/seller-trial-polic
 // 2026-10-03: offer の判定はサーバー側 registry（1,980円は公開ポリシーのまま、AI販促担当 Light/Standard を足す）。
 import { isAutoRenewOffer, autoRenewPolicy, contractMonthlyJpy, knownOffer, trialEnd, creatableOffer } from './seller-offer-registry.mjs';
 import { PROMO_PLAN_OFFERS } from './seller-promo-billing.mjs';
+import { PROMO_SECTION } from './seller-page.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
@@ -142,7 +143,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const savePath=path.match(/^\/api\/seller-pilot\/(SPL_[a-zA-Z0-9-]+)\/save$/u);
   const member=!adminPath&&!publicId?await (deps.member||readMemberSession)(request,env):null;
   if(!publicId&&!admin&&!member) return json({ok:false,error:'AUTH_REQUIRED',login:'/login.html'},401);
-  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>新規料金：月額1,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=promo-1"></script>`);
+  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>新規料金：月額1,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=promo-1"></script>${!admin&&String(env.SELLER_PROMO_ENABLED||'').toLowerCase()==='true'?`${PROMO_SECTION}<script type="module" src="/seller-promo.js?v=1"></script>`:''}`);
   const db=env.PRODUCT_DB;if(!db) return json({ok:false,error:'STORE_UNAVAILABLE'},503);
   const select=async(id)=> (await db.prepare('SELECT * FROM seller_listing_pilots WHERE pilot_id=?1').bind(id).all()).results?.[0];
   const offerEnabled=knownOffer(env.SELLER_PILOT_OFFER_VERSION);
