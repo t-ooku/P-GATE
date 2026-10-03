@@ -321,8 +321,10 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
   return analyzeChatTurn(
     [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
     {
-      timeoutMs: 1500,
-      totalBudgetMs: 1500,
+      // 2026-10-03 検索時間短縮（大隆さん指示）: 1.5 → 1.2 秒。間に合わなければ展開後の元の検索語で進む
+      // （モール検索は AI 変換と並行して先に走っている）。
+      timeoutMs: 1200,
+      totalBudgetMs: 1200,
       telemetryComponent: 'query_structurer',
       // Gemini is intentionally isolated from OpenAI here to avoid normal
       // double billing. With Gemini absent, OpenAI-only (or no-provider)

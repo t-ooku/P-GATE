@@ -808,7 +808,8 @@ export async function fetchTrustedGasBackend(urlValue, init, fetchImpl = fetch) 
 }
 
 async function callGas(env, action, body) {
-  const timeoutMs = action === 'KNOWLEDGE' ? 1500 : action === 'EVENT' ? 3000 : 5000;
+  // 2026-10-03 検索時間短縮: KNOWLEDGE は D1・AI 変換と並列で、1.2 秒で返らなければ D1 の結果だけで進む。
+  const timeoutMs = action === 'KNOWLEDGE' ? 1200 : action === 'EVENT' ? 3000 : 5000;
   const response = await fetchTrustedGasBackend(env.GAS_BACKEND_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -2854,6 +2855,85 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       input_image: Boolean(validatedInput.search_image),
       input_image_bytes: validatedInput.search_image?.byte_length || 0
     });
+    // 2026-10-03 大隆さん指示「あと 2 秒短くして」（段階別ログの実測: 確認 0.3 秒 → GAS・D1・AI 変換 2.0 秒 →
+    // モール検索、と直列だった）: モール検索（楽天・Yahoo!・公式店）は AI 変換の完了を待たず、展開後の検索語で
+    // ここから始める。AI が検索語を変えた時だけ、変えた語の追加レーンを後から足す（下の queryWasAiRefined）。
+    // 段階の締め切り（4.5 秒）はここを起点に 1 つ決め、Yahoo! の追加呼び出しは締め切りに収まる時だけにする。
+    // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。Amazon は検索リンクとして扱う。
+    // 写真・投稿URLの解釈で商品仮説が出た時は、従来どおりモール検索を走らせない（低遅延の引き渡し）。
+    const marketplaceSearches = [];
+    const skippedLanes = [];
+    const stageBudgetMs = marketplaceStageBudgetMs(env);
+    const stageStartedAt = Date.now();
+    const stageDeadlineAt = stageStartedAt + stageBudgetMs;
+    const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
+    const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
+    const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(analysisCandidate?.name), env);
+    // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with no marketplace code collapses
+    // "ブラウス" to the broad category "トップス" alone (reported 2026-08-07/08). Restore the noun here.
+    const yahooKeywordsFor = (query) => ensureApparelQualifierTerms(
+      query, ensureApparelProductTypeTerm(query, buildMarketplaceSearchKeywords(query))
+    );
+    let yahooCatalogRun = null;
+    if (shouldSearchMarketplaces) {
+      if (rakutenApiConfigured(env)) marketplaceSearches.push({
+        key: 'rakuten_catalog_connected',
+        run: searchRakutenMarketplaceWithFallback(
+          env, buildRakutenSearchKeywordCandidates(expandedQuery.query, expandedQuery.query), fetch,
+          expandedQuery.query, requestId, expandedQuery.query
+        )
+      });
+      if (yahooShoppingApiConfigured(env)) {
+        // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。候補は 2 通りまで、
+        // 待ち行列の上限も段階の締め切りまでに合わせる。2026-10-03: 2 候補目は締め切りに収まる時だけ。
+        yahooCatalogRun = searchMarketplaceApiWithFallback(
+          (keywords) => searchYahooShopping(env, keywords, fetch, {
+            queueTimeoutMs: yahooQueueTimeoutMs()
+          }),
+          buildMarketplaceApiKeywordCandidates(
+            expandedQuery.query, yahooKeywordsFor(expandedQuery.query), yahooKeywordsFor(expandedQuery.query), expandedQuery.query
+          ),
+          expandedQuery.query,
+          expandedQuery.query,
+          { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
+        );
+        marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
+      }
+      // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
+      // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの商品を確実に検索結果へ載せる。
+      // 合流処理が Promise.allSettled で個別の失敗を握りつぶし、提供元ごとにラウンドロビンで混ぜてから
+      // 一度だけ順位付けするので、1店舗が落ちても本体検索に影響せず、順位付けもモール中立のまま。
+      // 検索語は本体と同じ展開後クエリ。店舗ごとの絞り込み段階は持たない（1店舗あたり必ず1回）。
+      // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
+      if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
+        const officialStoreKeywords = yahooKeywordsFor(expandedQuery.query) || expandedQuery.query;
+        for (const store of OFFICIAL_STORE_SEARCHES) {
+          if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
+          if (store.platform === 'YAHOO' && !yahooShoppingApiConfigured(env)) continue;
+          marketplaceSearches.push({
+            key: store.key,
+            run: store.platform === 'RAKUTEN'
+              ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
+              : (async () => {
+                // Keep the generic and seller-specific requests in one Yahoo
+                // lane. A provider failure stops the lane, and a generic hit
+                // from this official store makes the extra request unnecessary.
+                const catalogCandidates = await yahooCatalogRun;
+                if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
+                // 2026-10-03 検索時間 2 秒短縮（実測: この公式店レーンが 3 回中 3 回締め切りに遅れ、段階を 4.5 秒に
+                // 固定していた）: 追加の 1 回が締め切りに収まらない時は呼ばず SKIPPED にする（0件とは区別）。
+                // 裏で走らせても Yahoo! の待ち行列を占めて次の人の検索を遅らせるだけなので、裏にも回さない。
+                if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push(store.key); return []; }
+                return searchYahooShopping(env, officialStoreKeywords, fetch, {
+                  sellerId: store.sellerId, queueTimeoutMs: yahooQueueTimeoutMs()
+                });
+              })()
+          });
+        }
+      }
+      // 合流（allSettled）までの間に別の段階で例外が出ても unhandled rejection にしない（結果の扱いは合流で決める）。
+      for (const item of marketplaceSearches) Promise.resolve(item.run).catch(() => {});
+    }
     // 通常検索でもAIを検索語変換器として使う。ただし既存DB/GAS検索と並列に
     // 走らせるため、Gemini待ちを丸ごと検索時間へ上乗せしない。
     const aiRefinementTask = input.ai_candidate_fallback || searchInputAnalysis
@@ -2886,6 +2966,31 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // 2026-09-04 大隆さん実機報告: 検索窓に「そこまで洗えるボトル 水筒 底が外せる 水筒 洗いやすい」の
     // ように同じ語が重複して出ていた（展開の正式名詞＋AI変換語の連結）。重複語は落として渡す。
     input = { ...input, query: dedupeQueryTokens(queryWasAiRefined ? aiExpandedQuery.query : expandedQuery.query) };
+    // AI が検索語を変えた時だけ、変えた語のレーンを足す。楽天は直列制限が無いので並行に 1 本。Yahoo! は
+    // 先に走らせた展開語の結果が使えなかった時だけ、締め切りに収まるなら 1 回（合計は従来と同じ最大 2 候補）。
+    if (shouldSearchMarketplaces && queryWasAiRefined) {
+      if (rakutenApiConfigured(env)) marketplaceSearches.push({
+        key: 'rakuten_catalog_refined',
+        run: searchRakutenMarketplaceWithFallback(
+          env, buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query), fetch,
+          input.query, requestId, expandedQuery.query
+        )
+      });
+      if (yahooShoppingApiConfigured(env) && yahooCatalogRun) {
+        const refinedQuery = input.query;
+        const baseRun = yahooCatalogRun;
+        marketplaceSearches.push({
+          key: 'yahoo_catalog_refined',
+          run: (async () => {
+            const base = await baseRun.then((value) => value, () => []);
+            if (filterSearchCandidatesWithFallback(refinedQuery, expandedQuery.query, Array.isArray(base) ? base : []).length) return [];
+            if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push('yahoo_catalog_refined'); return []; }
+            return searchYahooShopping(env, yahooKeywordsFor(refinedQuery) || refinedQuery, fetch, { queueTimeoutMs: yahooQueueTimeoutMs() });
+          })()
+        });
+      }
+      for (const item of marketplaceSearches) Promise.resolve(item.run).catch(() => {});
+    }
     // The effective query is now final. Overlap Google's existing single search
     // with D1 enrichment and live marketplaces instead of starting it after them.
     // Reuse the promise in decoration so quotas, candidates and ranking stay intact.
@@ -2969,112 +3074,14 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // Only take the low-latency handoff after Vision/Gemini produced a usable
     // product hypothesis. If image/social analysis failed but the visitor also
     // supplied independent text, preserve the normal live catalog search.
-    const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(interpretedDiscovery), env);
     if (shouldSearchMarketplaces) {
-      const marketplaceSearches = [];
-      // 2026-10-03 検索時間 2 秒短縮: 段階の締め切りをレーンを作る前に 1 つ決め、Yahoo! の 2 候補目・公式店の
-      // 追加呼び出しは「この締め切りに収まる時だけ」にする。Yahoo! は 1 件ずつ 2.1 秒間隔で直列化されるため、
-      // 追加 1 回の見込み費用 = 待ち間隔 + 応答時間（最大 2.5 秒）。
-      const stageBudgetMs = marketplaceStageBudgetMs(env);
-      const stageDeadlineAt = Date.now() + stageBudgetMs;
-      const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
-      const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
-      const skippedLanes = [];
-      let yahooCatalogRun = null;
-      if (rakutenApiConfigured(env)) marketplaceSearches.push({
-        key: 'rakuten_catalog_connected',
-        run: searchRakutenMarketplaceWithFallback(
-          env,
-          buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query),
-          fetch,
-          input.query,
-          requestId,
-          expandedQuery.query
-        )
-      });
-      if (yahooShoppingApiConfigured(env)) {
-        // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。
-        // キーワード候補を 3 通り試すと待ち時間だけで 4.2 秒かかり、締め切りに間に合わず
-        // 結局 Yahoo! の結果が出なくなる。2 通りに抑えて締め切り内に収める。
-        // 待ち行列の上限も既定の 8 秒ではなくこの段階の締め切りまでに合わせる。
-        // 2026-10-03: 2 候補目は締め切りに収まる時だけ（実測で 3 回中 2 回、カタログ自体が遅れていた）。
-        yahooCatalogRun = searchMarketplaceApiWithFallback(
-          (keywords) => searchYahooShopping(env, keywords, fetch, {
-            queueTimeoutMs: yahooQueueTimeoutMs()
-          }),
-          // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
-          // no marketplace code collapses "ブラウス" to the broad category
-          // "トップス" alone, dropping the specific noun entirely (reported
-          // 2026-08-07/2026-08-08). Amazon/Rakuten/SHEIN/Yahoo destination
-          // link building already restore it; this is the Yahoo catalog API
-          // search path, which did not.
-          buildMarketplaceApiKeywordCandidates(
-            input.query,
-            ensureApparelQualifierTerms(
-              input.query,
-              ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
-            ),
-            ensureApparelQualifierTerms(
-              expandedQuery.query,
-              ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
-            ),
-            expandedQuery.query
-          ),
-          input.query,
-          expandedQuery.query,
-          { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
-        );
-        marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
-      }
-      // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
-      // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの
-      // 商品を確実に検索結果へ載せる。
-      //
-      // ここで足すだけでよいのは、この直後の合流処理が
-      //   ・Promise.allSettled で個別の失敗を握りつぶす
-      //   ・提供元ごとにラウンドロビンで混ぜてから一度だけ順位付けする
-      // という作りになっているため。1店舗が429や遅延で落ちても本体検索には
-      // 影響せず、順位付けもモール中立のまま(ユーザー指示「提示反映基準は
-      // ルールに基づき平等に」)。
-      //
-      // 検索語は本体と同じ展開後クエリを使い、店舗ごとの絞り込み段階は
-      // 持たない(1店舗あたり必ず1回の呼び出しに収める)。
-      // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
-      if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
-        const officialStoreKeywords = ensureApparelQualifierTerms(
-          input.query,
-          ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
-        ) || expandedQuery.query || input.query;
-        for (const store of OFFICIAL_STORE_SEARCHES) {
-          if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
-          if (store.platform === 'YAHOO' && !yahooShoppingApiConfigured(env)) continue;
-          marketplaceSearches.push({
-            key: store.key,
-            run: store.platform === 'RAKUTEN'
-              ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
-              : (async () => {
-                // Keep the generic and seller-specific requests in one Yahoo
-                // lane. A provider failure stops the lane, and a generic hit
-                // from this official store makes the extra request unnecessary.
-                const catalogCandidates = await yahooCatalogRun;
-                if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
-                // 2026-10-03 検索時間 2 秒短縮（実測: この公式店レーンが 3 回中 3 回締め切りに遅れ、段階を 4.5 秒に
-                // 固定していた）: 追加の 1 回が締め切りに収まらない時は呼ばず SKIPPED にする（0件とは区別）。
-                // 裏で走らせても Yahoo! の待ち行列を占めて次の人の検索を遅らせるだけなので、裏にも回さない。
-                if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push(store.key); return []; }
-                return searchYahooShopping(env, officialStoreKeywords, fetch, {
-                  sellerId: store.sellerId, queueTimeoutMs: yahooQueueTimeoutMs()
-                });
-              })()
-          });
-        }
-      }
       // 実時間の締め切り付きで待つ。間に合わなかったレーンは結果に入れず、
       // 取得自体は waitUntil で走り切らせて価格キャッシュにだけ反映する。
-      const stageStartedAt = Date.now();
+      // レーンは AI 変換と並行して先に走っている。締め切りは起点から 1 つなので、残り時間で待つ。
+      const stageRemainingMs = Math.max(0, stageDeadlineAt - Date.now());
       const lateLanes = [];
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) =>
-        withMarketplaceStageBudget(item.run, stageBudgetMs, {
+        withMarketplaceStageBudget(item.run, stageRemainingMs, {
           onLate: (settled) => {
             lateLanes.push(item.key);
             if (!ctx?.waitUntil) return;
