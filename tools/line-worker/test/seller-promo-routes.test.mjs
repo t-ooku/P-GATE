@@ -140,45 +140,52 @@ test('月次レポート: 前月分を 1 回だけ作り、取れない数字は
   assert.equal((await createMonthlyReport(env, profile, '2026-09', now)).created, false);
 });
 
-test('料金 LP の下書き: OK② 前は管理者だけ。有料プランは販売 ON のときだけ差し込み、1,980円は「掲載のみ」', async () => {
-  const { readFileSync } = await import('node:fs');
-  const file = readFileSync(new URL('../public/for-sellers-preview.html', import.meta.url), 'utf8');
-  assert.match(file, /noindex/);
-  assert.match(file, /記事・SNS原稿・画像の制作は含みません/);
-  assert.doesNotMatch(file.normalize('NFKC'), /9,?800|19,?800/);
-  const ASSETS = { fetch: async () => new Response(file, { headers: { 'content-type': 'text/html' } }) };
-  const page = (env, deps = {}) => handleSellerPromoRoutes(new Request(`${ORIGIN}/for-sellers-preview`), { ASSETS, ...env }, deps);
-  assert.equal((await page({}, { authorize: async () => null })).status, 404);
-  const asAdmin = await page({}, admin);
-  assert.equal(asAdmin.status, 200);
-  assert.equal(asAdmin.headers.get('x-robots-tag'), 'noindex, nofollow');
-  const draft = await asAdmin.text();
-  assert.doesNotMatch(draft.normalize('NFKC'), /9,?800|19,?800|SELLER_PROMO_PAID_PLANS/);
-  const publicOff = await (await page({ SELLER_PROMO_LP_PREVIEW_PUBLIC: 'true' }, { authorize: async () => null })).text();
-  assert.doesNotMatch(publicOff.normalize('NFKC'), /9,?800|19,?800/);
-  const plansOn = await (await page({ SELLER_PROMO_LP_PREVIEW_PUBLIC: 'true', SELLER_PROMO_PLANS_ENABLED: 'true' }, { authorize: async () => null })).text();
-  assert.match(plansOn, /Light 9,800円/);
-  assert.match(plansOn, /Standard 19,800円/);
+test('/for-sellers-preview（案内メールのリンク先）は公開 LP /for-sellers へ 301 で送る', async () => {
+  for (const path of ['/for-sellers-preview', '/for-sellers-preview.html', '/for-sellers-preview/']) {
+    const res = await handleSellerPromoRoutes(new Request(`${ORIGIN}${path}`), {}, {});
+    assert.equal(res.status, 301, path);
+    assert.equal(res.headers.get('location'), `${ORIGIN}/for-sellers`);
+  }
 });
 
-test('料金 LP の下書き: 第一画面と料金の前は「モールの外」の訴求（Cowork 依頼 §6）。禁止表現・旧オファーの文言は無い', async () => {
+// 2026-10-03 自社の販促素材 §0（大隆さん決定 b）: 公開 LP に AI販促担当を料金まで載せる。料金は販売 ON のときだけ Worker が差し込む。
+test('公開 LP: 販売 ON で「モールの外」の訴求と 3 段の料金を差し込み、JSON-LD・FAQ・特商法・規約も 3 段に揃える', async () => {
   const { readFileSync } = await import('node:fs');
+  const { applyPromoPlansToPublicPage, PROMO_LP_MARKERS } = await import('../src/seller-promo-public-pages.mjs');
   const { PROMO_FORBIDDEN_PHRASES } = await import('../src/seller-promo-qa.mjs');
-  const { assertSellerMarketingCurrent } = await import('../src/seller-marketing-guard.mjs');
-  const { AUTO_RENEW_OFFER } = await import('../public/seller-trial-policy.mjs');
-  const file = readFileSync(new URL('../public/for-sellers-preview.html', import.meta.url), 'utf8');
-  const text = file.replace(/<!--[\s\S]*?-->/gu, '').replace(/<style>[\s\S]*?<\/style>/gu, '').replace(/<[^>]+>/gu, ' ').replace(/&amp;/gu, '&');
-  assert.match(text, /後回しになっていた「モールの外」の販促を、毎週かわりに。/);
-  assert.match(text, /なぜ「モールの外」なのか/);
-  assert.match(text, /HOSHILU の中と外、両方で/);
-  assert.match(text, /毎週届くもの/);
-  assert.ok(text.indexOf('なぜ「モールの外」なのか') < text.indexOf('掲載プラン'), '説明欄は料金の前');
-  assert.match(text, /売上や順位は約束しません/);
+  const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url), 'utf8');
+  const raw = read('for-sellers.html');
+  // 販売 OFF のまま配るファイルには AI販促担当の料金を置かない
+  assert.doesNotMatch(raw.normalize('NFKC'), /9,?800|19,?800/u);
+  for (const marker of Object.values(PROMO_LP_MARKERS)) assert.equal(raw.split(marker).length - 1, 1, marker);
+  const html = applyPromoPlansToPublicPage('/for-sellers', raw);
+  const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<style>[\s\S]*?<\/style>/gu, '').replace(/<!--[\s\S]*?-->/gu, '').replace(/<[^>]+>/gu, ' ').replace(/&amp;/gu, '&');
+  assert.match(text, /後回しになっていた「モールの外」の販促を、\s*毎週かわりに。/u);
+  assert.doesNotMatch(text, /モールの出店は、そのまま。/u, '第一画面は差し替える');
+  for (const heading of ['なぜ「モールの外」なのか', 'HOSHILU の中と外、両方で', '毎週届くもの']) {
+    assert.ok(text.indexOf(heading) !== -1 && text.indexOf(heading) < text.indexOf('掲載だけなら1,980円。'), `${heading} は料金の前`);
+  }
+  assert.match(text, /¥1,980/u);
+  assert.match(text, /AI販促担当 Light\s*¥9,800/u);
+  assert.match(text, /AI販促担当 Standard\s*¥19,800/u);
+  assert.match(text, /記事・SNS原稿・画像の制作は含みません/u, '掲載プランは掲載のみのまま');
+  assert.match(text, /31日目から月額9,800円（税込）で自動課金/u);
+  assert.match(text, /売上、注文、掲載順位は保証しません/u);
+  assert.doesNotMatch(text, /料金は月額1,980円だけ/u, '1,980円だけ、と言い切る文を残さない');
   for (const phrase of PROMO_FORBIDDEN_PHRASES) assert.ok(!text.includes(phrase), `禁止表現: ${phrase}`);
-  const active = { SELLER_MANUAL_PILOT_ENABLED: 'true', SELLER_PILOT_OFFER_VERSION: AUTO_RENEW_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED: AUTO_RENEW_OFFER,
-    SELLER_PILOT_AUTORENEW_ENABLED: 'true', SELLER_PILOT_PAYMENTS_ENABLED: 'true', SELLER_PILOT_PAYMENT_MODE: 'live',
-    SELLER_PILOT_1980_LIVE_PRICE_ID: 'price_fixture', SELLER_PILOT_1980_LIVE_PRODUCT_ID: 'prod_fixture' };
-  assert.doesNotThrow(() => assertSellerMarketingCurrent({ content_id: 'seller-preview', caption: text }, active));
+  assert.match(html, /data-seller-cta="hero-inquiry"/u);
+  const ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/u)[1]);
+  const service = ld['@graph'].find((n) => n['@type'] === 'Service');
+  assert.deepEqual(service.offers.map((o) => o.price), ['1980', '9800', '19800']);
+  const faq = ld['@graph'].find((n) => n['@type'] === 'FAQPage').mainEntity;
+  assert.ok(faq.some((q) => q.name === 'AI販促担当の料金は？' && /Light 月額9,800円、Standard 月額19,800円/u.test(q.acceptedAnswer.text)));
+  assert.ok(!faq.some((q) => /料金は月額1,980円だけ/u.test(q.acceptedAnswer.text)));
+  const legal = applyPromoPlansToPublicPage('/legal', read('legal.html'));
+  assert.match(legal, /掲載プラン 月額1,980円（税込）。AI販促担当 Light 月額9,800円（税込）、AI販促担当 Standard 月額19,800円（税込）。/u);
+  const terms = applyPromoPlansToPublicPage('/terms', read('terms.html'));
+  assert.match(terms, /申し込んだプランの月額料金（掲載プラン1,980円・AI販促担当 Light 9,800円・Standard 19,800円、いずれも税込）/u);
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(source, /\['\/for-sellers','\/legal','\/terms'\]\.includes\(url\.pathname\)&&asset\.ok&&promoPlansEnabled\(env\)/u);
 });
 
 test('見出しが分からない CSV は AI が対応表の案を出すだけで取り込まず、人が確認して mapping 付きで再送する', async () => {

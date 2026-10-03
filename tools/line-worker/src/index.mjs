@@ -3807,8 +3807,12 @@ export default {
     });
     if (env.ASSETS) {
       const asset=await env.ASSETS.fetch(request);
-      if(request.method==='GET'&&['/terms','/for-sellers','/for-creators','/legal'].includes(url.pathname)&&asset.ok&&recruitmentVerified(env)) {
-        const html=(await asset.text()).replaceAll(TRIAL_PENDING_COPY,TRIAL_COPY).replace('<span data-seller-enrollment-pending>現在、この条件での体験開始は準備中です。</span>','');
+      // 2026-10-03 自社の販促素材 §0: AI販促担当の販売中（SELLER_PROMO_PLANS_ENABLED=true）だけ、LP・特商法・規約を 3 段の料金にする。
+      const promoPage=request.method==='GET'&&['/for-sellers','/legal','/terms'].includes(url.pathname)&&asset.ok&&promoPlansEnabled(env);
+      if(request.method==='GET'&&['/terms','/for-sellers','/for-creators','/legal'].includes(url.pathname)&&asset.ok&&(recruitmentVerified(env)||promoPage)) {
+        let html=await asset.text();
+        if(recruitmentVerified(env)) html=html.replaceAll(TRIAL_PENDING_COPY,TRIAL_COPY).replace('<span data-seller-enrollment-pending>現在、この条件での体験開始は準備中です。</span>','');
+        if(promoPage) html=applyPromoPlansToPublicPage(url.pathname,html);
         const headers=new Headers(asset.headers);headers.delete('content-length');headers.delete('etag');headers.set('cache-control','no-store');
         return new Response(html,{status:asset.status,headers});
       }
@@ -3931,4 +3935,6 @@ export default {
 };
 import { runAutoRenewReconciliation } from './seller-pilot-autorenew.mjs';
 import { handleSellerPromoRoutes } from './seller-promo-routes.mjs';
+import { applyPromoPlansToPublicPage } from './seller-promo-public-pages.mjs';
+import { promoPlansEnabled } from './seller-promo-store.mjs';
 import { runSellerPromoCycle } from './seller-promo-scheduler.mjs';
