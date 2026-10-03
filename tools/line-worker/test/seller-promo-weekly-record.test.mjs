@@ -23,3 +23,12 @@ test('§10 週次の記録: job・納品物の状態と検査理由・要確認�
   assert.doesNotMatch(md, /本文は渡されても書かない/u);
   assert.match(formatWeeklyRecord({ weekKey: '2026-W41', now, jobs: [] }), /今週の job はまだありません/u);
 });
+
+test('§3-4 週次の記録に自社投稿の反応を 1 行（取れない数は「—」）', async () => {
+  const { formatReactionLine } = await import('../scripts/seller-promo-weekly-record.mjs');
+  assert.equal(formatReactionLine({ published: 5, impressions: 1200, lpViews: 30, ctaClicks: 4, inquiries: 1 }),
+    '投稿の反応（直近7日・hoshilu-seller-daily-v1）: 公開 5 本・表示 1200・LP 閲覧 30・LP のボタン 4・相談 1（相談は経路を問わない全件）');
+  assert.match(formatReactionLine({ published: 0 }), /公開 0 本・表示 —・LP 閲覧 —/u);
+  const md = formatWeeklyRecord({ weekKey: '2026-W41', now: new Date('2026-10-04T22:07:00Z'), jobs: [], reaction: { published: 1 } });
+  assert.match(md, /投稿の反応（直近7日/u);
+});

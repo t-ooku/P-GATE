@@ -19,8 +19,16 @@ export function jstDate(date = new Date()) {
 
 // data: { weekKey, now, jobs:[{seller_key,status,attempt,error,started_at,finished_at}],
 //         deliverables:[{seller_key,type,version,status,qa}], usage:[{seller_key,calls,input_tokens,output_tokens,cost_jpy}] }
-export function formatWeeklyRecord({ weekKey, now = new Date(), jobs = [], deliverables = [], usage = [] }) {
+// 2026-10-03 自社の販促素材 §3-4: 自社の投稿（Seller 枠・hoshilu-seller-daily-v1）の反応を 1 行。取れなかった数は「—」。
+export const SELLER_SNS_CAMPAIGN = 'hoshilu-seller-daily-v1';
+export function formatReactionLine({ published = null, impressions = null, lpViews = null, ctaClicks = null, inquiries = null } = {}) {
+  const v = (n) => (n === null || n === undefined ? '—' : String(n));
+  return `投稿の反応（直近7日・${SELLER_SNS_CAMPAIGN}）: 公開 ${v(published)} 本・表示 ${v(impressions)}・LP 閲覧 ${v(lpViews)}・LP のボタン ${v(ctaClicks)}・相談 ${v(inquiries)}（相談は経路を問わない全件）`;
+}
+
+export function formatWeeklyRecord({ weekKey, now = new Date(), jobs = [], deliverables = [], usage = [], reaction = null }) {
   const lines = [`## ${weekKey}（記録 ${jstDate(now)} ${new Date(now.getTime() + 9 * 3600_000).toISOString().slice(11, 16)} JST、自動）`, ''];
+  if (reaction) lines.push(formatReactionLine(reaction), '');
   if (!jobs.length) {
     lines.push('今週の job はまだありません（月曜 06:00 JST の起動前、または対象の店なし）。', '');
     return lines.join('\n');
@@ -56,12 +64,23 @@ async function main() {
   const deliverables = d1(`SELECT seller_key,type,version,status,qa FROM seller_promo_deliverables WHERE week_key='${weekKey}' ORDER BY seller_key,type,version`);
   const usage = d1(`SELECT u.seller_key,COUNT(*) AS calls,SUM(u.input_tokens) AS input_tokens,SUM(u.output_tokens) AS output_tokens,ROUND(SUM(u.cost_jpy_est),2) AS cost_jpy
     FROM seller_promo_usage u JOIN seller_promo_jobs j ON j.id=u.job_id WHERE j.week_key='${weekKey}' GROUP BY u.seller_key ORDER BY u.seller_key`);
+  // 反応（直近 7 日）。表が無い・読めない数は null（「—」）にして、記録そのものは止めない。
+  const since = new Date(now.getTime() - 7 * 86400_000).toISOString();
+  const one = (sql, key) => { try { const row = d1(sql)[0]; return row && row[key] !== null && row[key] !== undefined ? Number(row[key]) : null; } catch { return null; } };
+  const reaction = {
+    published: one(`SELECT COUNT(*) AS n FROM social_post_queue WHERE campaign_id='${SELLER_SNS_CAMPAIGN}' AND status='PUBLISHED' AND published_at>='${since}'`, 'n'),
+    impressions: one(`SELECT SUM(m) AS n FROM (SELECT MAX(p.impressions) AS m FROM social_post_performance p JOIN social_post_queue q ON q.post_id=p.post_id
+      WHERE q.campaign_id='${SELLER_SNS_CAMPAIGN}' AND q.published_at>='${since}' GROUP BY p.post_id)`, 'n'),
+    lpViews: one(`SELECT COUNT(*) AS n FROM growth_events WHERE event_type='seller_landing_view' AND campaign='${SELLER_SNS_CAMPAIGN}' AND occurred_at>='${since}'`, 'n'),
+    ctaClicks: one(`SELECT COUNT(*) AS n FROM growth_events WHERE event_type='seller_cta_clicked' AND campaign='${SELLER_SNS_CAMPAIGN}' AND occurred_at>='${since}'`, 'n'),
+    inquiries: one(`SELECT COUNT(*) AS n FROM seller_business_inquiries WHERE created_at>='${since}'`, 'n')
+  };
   const file = resolve(process.env.RECORD_FILE || `../../docs/handoff/${jstDate(now)}-seller-promo-weekly.md`);
   mkdirSync(dirname(file), { recursive: true });
   if (!existsSync(file)) {
     writeFileSync(file, `# AI販促担当 週次の結果（自動記録）\n\n\`seller-promo-weekly-record.yml\`（月曜 07:00 JST）が本番 D1 を読んで追記する。状態・検査理由・原価だけで、本文と連絡先は書かない。\n\n`);
   }
-  appendFileSync(file, `${formatWeeklyRecord({ weekKey, now, jobs, deliverables, usage })}\n`);
+  appendFileSync(file, `${formatWeeklyRecord({ weekKey, now, jobs, deliverables, usage, reaction })}\n`);
   console.log(`recorded ${weekKey} -> ${file} (jobs ${jobs.length}, deliverables ${deliverables.length})`);
 }
 
