@@ -31,7 +31,7 @@ test('index loads the atomic versioned app and layout assets', async () => {
 test('service worker precaches canonical and versioned UI assets', async () => {
   const worker = await read('service-worker.js');
 
-  assert.match(worker, /hoshilu-shell-v412/);
+  assert.match(worker, /hoshilu-shell-v413/);
   for (const asset of [
     '/app.js',
     '/assets-v147/app.js',
