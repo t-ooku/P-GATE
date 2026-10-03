@@ -9,6 +9,10 @@ The startup gate is mandatory for every Codex session working in this repository
 1. Fetch and inspect `https://hoshilu.app/health` using the failure conditions in the canonical rule. OAuth, Runway, and database checks live under `checks.x_oauth.connected`, `checks.instagram_oauth.connected`, `checks.runway_video_generation.ready`, and `checks.database_features.*`.
 2. Inspect open GitHub Issues titled `[AUTO][HOSHILU] Production reliability incident`, excluding only the documented `GITHUB_SCHEDULE_HEARTBEAT_STALE` / `#49` self-reference failures.
 3. Inspect new `docs/handoff/*-claude-to-codex-*.md` messages and add actionable requests to the work queue.
+4. Check Seller AI promotion:
+   - Confirm `/health` is `ok`.
+   - On Monday at or after 07:30 JST, confirm that week's `docs/handoff/<date>-seller-promo-weekly.md` exists and the QA shop job is `DONE`.
+   - If the weekly record contains `FAILED` or `SKIPPED` due to a limit, add a one-line report under `docs/handoff/` and do not repair Seller promotion code.
 
 If a check cannot be completed because the network, GitHub authentication, or another dependency is unavailable, report it as **unverified**; do not treat it as healthy. For comparisons with a previous health state, use the latest reliable prior self-check or production-monitor evidence. If no reliable baseline exists, establish the initial baseline without claiming that a regression occurred.
 

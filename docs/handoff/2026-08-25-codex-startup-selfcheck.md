@@ -11,11 +11,15 @@
 
 異常検知から対応までの流れから大隆さんの中継を外す。Claude（Cowork）側の監視は、今後「Codexが対応できないもの・大隆さんの承認が要るもの」だけを大隆さんに通知し、機械的に対応可能な異常はCodexが自走で拾って直す。
 
-## 毎セッション冒頭のセルフチェック（3項目・5分以内）
+## 毎セッション冒頭のセルフチェック（4項目・5分以内）
 
 1. **本番ヘルス**: <https://hoshilu.app/health> を取得し、`ok:false`、`missing`・`weak` に項目あり、`checks.x_oauth.connected:false`、`checks.instagram_oauth.connected:false`、`checks.runway_video_generation.ready:false`、または `checks.database_features.*` の `false` が前回より増加していれば異常。
 2. **自動インシデントIssue**: リポジトリのopen Issueのうち、`[AUTO][HOSHILU] Production reliability incident` を確認する。既知の自己参照failure（`GITHUB_SCHEDULE_HEARTBEAT_STALE`、#49系）は除外し、それ以外の新しいincidentは異常。
 3. **Claudeからの連絡**: `docs/handoff/` の新着 `*-claude-to-codex-*.md` を読む。修正指示・調査依頼があれば作業キューに積む。
+4. **Seller AI販促担当**:
+   - `/health` が `ok` か確認する。
+   - 月曜07:30 JST以降は、その週の `docs/handoff/<日付>-seller-promo-weekly.md` があり、QA店舗のjobが`DONE`か確認する。
+   - `FAILED`または上限による`SKIPPED`があれば、`docs/handoff/`に1行で報告し、Seller販促コードは直さない。
 
 ## 異常があったときの行動
 
