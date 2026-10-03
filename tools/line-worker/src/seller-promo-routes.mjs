@@ -20,6 +20,7 @@
 // SELLER_PROMO_ENABLED=false の間、契約者側は 404（存在を見せない）、手動起動は 503。
 import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readSellerSession } from './seller-auth.mjs';
+import { readMemberSession } from './member-auth.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
   addPromoQuestions, dbAll, promoAudit, hydrateProfile, importPromoProducts, isPromoWeekKey, jstMonthRange, normalizeProductItems,
@@ -188,11 +189,30 @@ async function handleAdmin(request, env, url, deps) {
   }
 }
 
+// 外部店（/seller-pilot にメールのコードでログインする店）: 会員セッションから、本人の掲載契約（owner_member_id）に
+// pilot_id で紐づいた AI販促プロファイルを探す。プロファイルの seller_key は申込時に決めておける（例: pilot-<契約ID>）。
+// 1 人が複数の契約を持つときは ?seller_key= で選ぶ（本人の契約に紐づくものだけ）。
+async function memberPromoSession(request, env, deps) {
+  const member = await (deps.member || readMemberSession)(request, env);
+  if (!member?.id) return null;
+  const rows = await dbAll(env.PRODUCT_DB, `SELECT p.seller_key FROM seller_promo_profiles p
+    JOIN seller_listing_pilots l ON l.pilot_id=p.pilot_id WHERE p.pilot_id<>'' AND l.owner_member_id=?1 ORDER BY p.created_at`, member.id);
+  // ログイン済みでも AI販促を契約していない店には「まだ始めていません」を返す（401 にしない）。
+  if (!rows.length) return { seller_key: null, via: 'MEMBER', enrolled: false };
+  const wanted = new URL(request.url).searchParams.get('seller_key');
+  const row = wanted ? rows.find((r) => r.seller_key === wanted) : rows[0];
+  return row ? { seller_key: row.seller_key, via: 'MEMBER' } : null;
+}
+
 async function handleSeller(request, env, url, deps) {
   if (!promoEnabled(env)) return json({ ok: false, error: 'NOT_FOUND' }, 404);
-  const session = await (deps.readSeller || readSellerSession)(request, env);
-  if (!session?.seller_key) return json({ ok: false, error: 'UNAUTHORIZED' }, 401);
   if (!env.PRODUCT_DB) return json({ ok: false, error: 'DB_UNAVAILABLE' }, 503);
+  const session = await (deps.readSeller || readSellerSession)(request, env)
+    || await memberPromoSession(request, env, deps).catch(() => null);
+  if (session?.enrolled === false && request.method === 'GET' && url.pathname === '/api/seller-promo/deliverables') {
+    return json({ ok: true, enrolled: false, deliverables: [] });
+  }
+  if (!session?.seller_key) return json({ ok: false, error: 'UNAUTHORIZED' }, 401);
   if (request.method !== 'GET' && request.headers.get('origin') !== url.origin) return json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, 403);
   const sellerKey = session.seller_key;
   const db = env.PRODUCT_DB;
