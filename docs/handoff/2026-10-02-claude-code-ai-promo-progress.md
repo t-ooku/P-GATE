@@ -209,6 +209,17 @@
 8. 画像の自動起動: Worker から `build-seller-promo-images.yml` を起動するには GitHub の起動用トークンを Worker Secret に持たせる必要がある（新しい資格情報）。既定: 持たせず、Cowork が手動起動（briefs は管理 API の SNS 納品物の `image_brief` から作る）。Cloud Vision の文字崩れ検査は Actions 側に Google の鍵が無いため未接続。
 9. KEK と R2 は `.github/workflows/seller-promo-infra.yml`（手動・`confirm=APPLY`・既にあれば何もしない・KEK は作り直さない）で作る。OK① の後に起動する。
 
+## 検索時間 2 秒短縮（2026-10-03 大隆さん指示、計測 → 対策 → 実測確認）
+
+このコンテナからは `wrangler tail` が使えないため、計測は「curl の端末所要時間」＋「`/api/knowledge` の段階別ログを D1 に残す表」で行った（Cowork メモ `claude/hoshilu_search_latency_2026-09-21.md` はリポジトリに無かったのでコードから読んだ）。
+
+- **計測の仕込み（PR #570、マージ・migration 0094 適用済み）**: `knowledge_latency_log`（14 日保持）。残すのはミリ秒・レーン数・遅れたレーン名・入力の種類・利用区分だけで、検索文・画像・会員ID・セッションIDは入れない。読み方は `seller-promo-status.yml` を作業用ブランチで一時的に読み取り専用の SQL に差し替えて実行（マージはしない）。
+- **対策前の実測（同じ文字検索 3 件、端末から）**: 7.66 / 7.20 / 7.68 秒（平均 7.5 秒）。段階別（サーバ側）は gate 0.2〜0.3 秒、lookup（GAS・D1・AI 変換）1.9〜2.1 秒、**marketplace 4500ms（3/3 とも締め切りいっぱい）**、google_wait 0、decorate 0.2 秒。遅れたレーンは `zozotown_official_store` 3/3、`yahoo_catalog_connected` 2/3。
+- **対策（PR #571）**: 候補 (b)+(c)。段階の締め切りをレーンを作る前に 1 つ決め、Yahoo! カタログの 2 候補目と公式店（ZOZOTOWN）の Yahoo! レーンは「待ち間隔 2.1 秒＋応答時間」が締め切りに収まる時だけ呼ぶ。収まらない公式店レーンは `SKIPPED`（裏にも回さない。Yahoo! の待ち行列を占めて次の人を遅らせるだけ）。遅れた `LATE`・呼ばなかった `SKIPPED` を 0 件と区別して返す。候補 (a)（楽天先出しの段階表示）は、締め切りに当たる構造を直す方が先と判断して見送り。候補 (d) は次の段階（下記）。
+- **対策後の実測**: （PR #571 マージ後に同じ 3 件で追記）
+- **次に削るなら**: lookup の約 2.0 秒（AI 変換 1.5 秒の予算と、その後の D1 再検索・多言語・契約の直列 3 回）。AI 変換を 1.0 秒に詰めて D1 の 3 回を並列にすれば、見込み −0.7〜1.0 秒。
+- 気づいたこと（別件）: 楽天の公式店 4 レーンはカタログ検索（最大 3 候補を同時送信）と同時に走り、`hands_official_store` 等が `REQUEST_FAILED` になる回があった（同時送信による制限の疑い）。検索時間には効かないので今回は触っていない。
+
 ## 次
 
 1. Phase 3: `seller-pilot-payment.mjs` のプラン引数（本番の決済経路なので、Light/Standard を足しても 1,980円の既存経路が 1 文字も変わらないことをテストで固定してから）。
