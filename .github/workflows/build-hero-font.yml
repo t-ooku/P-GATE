@@ -1,0 +1,83 @@
+name: Build hero font (hoshilu-hero.woff2)
+
+# 2026-10-03 大隆さん指摘「トップ画面の文字線が細すぎる。もっと濃ゆくおしゃれに」。
+# トップの見出し・説明文に使う字だけを Noto Sans CJK JP Black（SIL OFL 1.1）から切り出し、
+# tools/line-worker/public/fonts/hoshilu-hero.woff2 としてブランチに commit する。
+# バイナリは [PATCH] Issue に貼れないので、このファイル自体の外部 push で起動して runner 上で作る。
+# 同じ内容なら何も commit しない（冪等）。ライセンス文は public/fonts/OFL.txt（別 patch）。
+
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths:
+      - '.github/workflows/build-hero-font.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-hero-font
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-search-v2
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          pip install -q 'fonttools>=4.50' brotli
+          curl -sSL -o /tmp/NotoSansCJKjp-Black.otf \
+            https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Japanese/NotoSansCJKjp-Black.otf
+          test "$(stat -c %s /tmp/NotoSansCJKjp-Black.otf)" -gt 1000000
+          TEXT='欲しいもの、今いくら？スクショでも一言。商品を見つけて今と過去の値段比べて、買う。！・「」ー'
+          pyftsubset /tmp/NotoSansCJKjp-Black.otf --text="$TEXT" \
+            --unicodes="U+0020-007E,U+00A5,U+2010-2027,U+3000-303F,U+30FC" \
+            --layout-features='kern,palt' --flavor=woff2 --no-hinting --desubroutinize \
+            --name-IDs='*' --output-file=/tmp/hoshilu-hero.woff2
+          python3 - <<'PY'
+          from fontTools.ttLib import TTFont
+          f = TTFont('/tmp/hoshilu-hero.woff2')
+          n = f['name']
+          # OFL §3: 改変版は Reserved Font Name（Noto）を名乗らない。著作権表記（ID 0）と OFL 表記（ID 13/14）は残す。
+          for rec in n.names:
+              if rec.nameID in (1, 4, 16): rec.string = 'HOSHILU Hero'
+              elif rec.nameID == 3: rec.string = 'HOSHILU Hero Black'
+              elif rec.nameID == 6: rec.string = 'HOSHILUHero-Black'
+          n.names = [r for r in n.names if r.nameID != 5]
+          f.flavor = 'woff2'
+          f.save('/tmp/hoshilu-hero.woff2')
+          cmap = TTFont('/tmp/hoshilu-hero.woff2').getBestCmap()
+          missing = [c for c in '欲しいもの、今いくら？スクショでも一言。商品を見つけて過去の値段比べ買う' if ord(c) not in cmap]
+          assert not missing, missing
+          import os
+          size = os.path.getsize('/tmp/hoshilu-hero.woff2')
+          print('bytes', size, 'glyphs', len(f.getGlyphOrder()))
+          assert 5000 < size < 60000, size
+          PY
+      - name: Commit if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tools/line-worker/public/fonts
+          cp /tmp/hoshilu-hero.woff2 tools/line-worker/public/fonts/hoshilu-hero.woff2
+          if git diff --quiet -- tools/line-worker/public/fonts/hoshilu-hero.woff2 && git ls-files --error-unmatch tools/line-worker/public/fonts/hoshilu-hero.woff2 >/dev/null 2>&1; then
+            echo "unchanged"; exit 0
+          fi
+          git config user.name "hoshilu-patch-bot"
+          git config user.email "noreply@hoshilu.app"
+          git add tools/line-worker/public/fonts/hoshilu-hero.woff2
+          git commit -m "assets(top): 見出し用フォント hoshilu-hero.woff2（Noto Sans CJK JP Black の切り出し、OFL）を追加" \
+            -m "大隆さん指摘「トップ画面の文字線が細すぎる。もっと濃ゆくおしゃれに」（2026-10-03）。build-hero-font.yml で runner 上で生成。"
+          git push origin HEAD:refs/heads/feature/ui-search-v2
+          echo "sha256 $(sha256sum tools/line-worker/public/fonts/hoshilu-hero.woff2)"
