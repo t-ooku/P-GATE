@@ -3857,7 +3857,9 @@ const guideHubGroups = [
       'ec-coupon-strategy',
       'ec-repeat-customers',
       'oudan-kensaku-de-mitsukete-morau',
-      'mall-seller-see-demand-outside-the-mall'
+      'mall-seller-see-demand-outside-the-mall',
+      'netshop-blog-sns-tsuzukanai',
+      'rakuten-gold-erabikata-page'
     ]
   },
   {
