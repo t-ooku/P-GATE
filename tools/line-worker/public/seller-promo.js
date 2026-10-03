@@ -31,6 +31,13 @@ async function api(path, init = {}) {
   return body;
 }
 
+// 商品データに根拠が見つからない表現（要確認）。公開前に店が事実か確かめる。自動公開もしない。
+function claimNotes(item) {
+  const words = (item.qa?.notes || []).filter((n) => n.code === 'PROPERTY_CLAIM_UNVERIFIED').map((n) => n.detail).join(',');
+  if (!words) return [];
+  return [el('p', { class: 'metric-help', text: `要確認: 商品データに書かれていない表現があります（${words}）。事実と違う場合は直すか差し戻してください。` })];
+}
+
 function preview(item) {
   const p = item.payload || {};
   const box = el('div', { class: 'seller-panel' });
@@ -109,7 +116,7 @@ async function load() {
       list.append(el('article', { class: 'auth-card' },
         el('p', { class: 'eyebrow', text: `${item.week_key} ／ ${TYPE_LABEL[item.type] || item.type}` }),
         el('p', { text: `状態: ${STATUS_LABEL[item.status] || item.status}${item.rejected_reason ? `（${item.rejected_reason}）` : ''}` }),
-        preview(item), actions(item, data.profile)));
+        ...claimNotes(item), preview(item), actions(item, data.profile)));
     }
   } catch (error) {
     list.replaceChildren(el('p', { class: 'metric-help', text: `読み込めませんでした（${error.message}）。` }));

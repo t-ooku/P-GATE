@@ -9,8 +9,60 @@ export const PROMO_FORBIDDEN_PHRASES = Object.freeze([
   ...OUTREACH_FORBIDDEN_PHRASES,
   '治る', '治ります', '完治', '痩せ', 'やせる', '効く', '効きます', '効果抜群', '医師推奨', '医師も推奨', '医師が推奨',
   '返金保証', '全額返金', '今だけ', '期間限定', '数量限定', '限定品', '限定販売', '残りわずか', '在庫限り', '最安',
-  '日本一', '世界一', '世界初', 'No.1', 'ナンバーワン', '絶対', '保証します'
+  '日本一', '世界一', '世界初', 'No.1', 'ナンバーワン', '絶対', '保証します',
+  // 2026-10-03 Cowork 依頼 §9-3: 原稿は店（当店）の語り。第三者・内部の言い回しを出さない。
+  'お店に確認', 'お店にご確認', 'お店へ確認', 'お店へご確認', '直接お店', '店舗に確認', '店舗にご確認',
+  '商品データ', 'データ上', 'データに記載', 'データにありません', 'データにはありません'
 ]);
+
+// 2026-10-03 Cowork 依頼 §9-1: 商品データに根拠の無い性質・評価の断定。過検出がありうるので不合格にはせず、
+// 「要確認」の注記として店に見せ、自動公開からも外す。
+// 活用（〜しやすく・〜にくい／にくく）でも拾えるよう語幹で持つ。
+export const PROPERTY_CLAIM_WORDS = Object.freeze([
+  '丈夫', '頑丈', '壊れにく', '割れにく', '傷つきにく', '錆びにく', 'さびにく', '長持ち', '耐久性',
+  '軽い', '軽量', '軽く', '重さを感じ', 'お手入れしやす', 'お手入れもしやす', 'お手入れが簡単', 'お手入れも簡単', 'お手入れ簡単',
+  '手入れしやす', '汚れにく', '汚れが落ちやす', '抗菌', '防カビ', '防臭', '消臭', '防水', '撥水', '耐水', '耐熱', '耐冷',
+  '速乾', '乾きやす', '洗える', '洗濯できる', '洗濯可能', '丸洗い', '食洗機', '電子レンジ', '静音', '肌にやさし', '肌に優し'
+]);
+const QUESTION_AFTER_CLAIM = /^(?:かどうか|か否か|かは|か、|か\?|か？|のか|ますか|ますか？)/u;
+const TAX_LABEL = /税込|税抜|税別|内税|外税/u;
+
+function productEvidenceText(products = []) {
+  return normalize(products.flatMap((p) => [p.name, p.description, ...Object.keys(p.attrs || {}), ...Object.values(p.attrs || {})]).join('\n'));
+}
+
+// 生成後の整形（§9-2・§9-4）。数字そのものは変えない。
+// - 商品データに税の表記が無ければ「（税込）」「税込」などを外す（断定しない）。
+// - 4 桁以上の「〇〇円」は 3 桁区切りに揃える。
+export function formatPromoText(text, { taxLabelKnown = false } = {}) {
+  let out = String(text ?? '');
+  const before = out;
+  if (!taxLabelKnown) {
+    out = out.replace(/\s*[（(]\s*(?:税込み?|税抜き?|税別|内税|外税)\s*[)）]/gu, '')
+      .replace(/(\d[\d,]*\s*円)\s*(?:税込み?|税抜き?|税別)/gu, '$1')
+      .replace(/(?:税込み?|税抜き?|税別)\s*(?=[¥￥]?\s*\d)/gu, '');
+  }
+  out = out.replace(/(?<![\d,.])(\d{4,})(?=\s*円)/gu, (digits) => Number(digits).toLocaleString('en-US'));
+  return { text: out, changed: out !== before };
+}
+
+// 商品データに無い性質語を拾う（「洗えるかどうか」のような疑問の形は除く）。
+export function unverifiedPropertyClaims(strings, products = []) {
+  const evidence = productEvidenceText(products);
+  const found = new Set();
+  for (const raw of strings) {
+    const text = normalize(raw);
+    for (const word of PROPERTY_CLAIM_WORDS) {
+      if (evidence.includes(normalize(word))) continue;
+      let index = text.indexOf(word);
+      while (index !== -1) {
+        if (!QUESTION_AFTER_CLAIM.test(text.slice(index + word.length, index + word.length + 5))) { found.add(word); break; }
+        index = text.indexOf(word, index + word.length);
+      }
+    }
+  }
+  return [...found];
+}
 
 export const ARTICLE_MIN_CHARS = 1500;
 export const ARTICLE_MAX_CHARS = 2500;
@@ -150,8 +202,15 @@ export function checkPromoDeliverable(type, rawPayload, ctx = {}) {
   const products = ctx.products || [];
   const allowedUrls = new Set(products.map((p) => p.url).filter(Boolean));
   const removedUrls = [];
+  const formatted = new Set();
+  const taxLabelKnown = TAX_LABEL.test(productEvidenceText(products));
   // 4. 外部 URL は落とす（店の商品 URL だけ残す）。落としたことは qa に残す。
-  const payload = mapStrings(rawPayload && typeof rawPayload === 'object' ? rawPayload : {}, (s) => stripUrls(s, allowedUrls, removedUrls));
+  // §9-2・§9-4: 税の表記と価格の書き方を整える（直したことは qa.formatted に残す）。
+  const payload = mapStrings(rawPayload && typeof rawPayload === 'object' ? rawPayload : {}, (s) => {
+    const { text, changed } = formatPromoText(stripUrls(s, allowedUrls, removedUrls), { taxLabelKnown });
+    if (changed) formatted.add('TAX_OR_PRICE_FORMAT');
+    return text;
+  });
   reasons.push(...schemaReasons(type, payload, ctx));
   // 本文の検査対象から、検査済みの ID 列（product_refs / evidence / product_id）は外す。
   const { product_refs: _r, evidence: _e, product_id: _p, image_brief, ...textual } = payload;
@@ -186,9 +245,12 @@ export function checkPromoDeliverable(type, rawPayload, ctx = {}) {
     const near = (ctx.otherSimhashes || []).find((other) => /^[0-9a-f]{16}$/u.test(other) && hammingDistance(simhash, other) <= 3);
     if (near) reasons.push({ code: 'SAME_STRUCTURE_ACROSS_SELLERS', detail: near });
   }
+  // §9-1: 根拠の無い性質語は「要確認」の注記（不合格にはしない）。
+  const claims = unverifiedPropertyClaims(strings, products);
+  const notes = claims.length ? [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: claims.slice(0, 10).join(',') }] : [];
   return {
     passed: reasons.length === 0,
     payload,
-    qa: { checked_at: new Date().toISOString(), passed: reasons.length === 0, reasons, removed_urls: removedUrls, simhash, chars }
+    qa: { checked_at: new Date().toISOString(), passed: reasons.length === 0, reasons, notes, formatted: [...formatted], removed_urls: removedUrls, simhash, chars }
   };
 }

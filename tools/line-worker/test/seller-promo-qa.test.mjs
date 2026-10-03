@@ -70,3 +70,40 @@ test('同型検査: 他店の記事と h2 の並びがほぼ同じなら落と�
   assert.equal(checkPromoDeliverable('ARTICLE', payload, { ...ctx, otherSimhashes: [other] }).passed, true);
   assert.ok(articleChars(payload) > 0);
 });
+
+// 2026-10-03 Cowork 依頼 §9（QA 店舗の初回記事の所見から）
+test('§9: 税の表記は商品データにあるときだけ残し、4 桁以上の価格は 3 桁区切りに揃える', async () => {
+  const { formatPromoText } = await import('../src/seller-promo-qa.mjs');
+  assert.equal(formatPromoText('価格は1980円（税込）です。').text, '価格は1,980円です。');
+  assert.equal(formatPromoText('税込2980円、880円(税抜)').text, '2,980円、880円');
+  assert.equal(formatPromoText('1,980円（税込）', { taxLabelKnown: true }).text, '1,980円（税込）');
+  assert.equal(formatPromoText('幅40cm、880円').changed, false);
+  const products = [{ id: 'spp_1', name: '収納かご', price_jpy: 1980, attrs: { 幅: '30cm', 素材: '綿' } }];
+  const out = checkPromoDeliverable('SNS', { theme: 'かご', variants: { instagram: 'かごです。1980円（税込）。', x: 'かご 1980円（税込）', threads: 'かごです。1980円です。' },
+    image_brief: { product_id: 'spp_1', headline: 'かご', sub: '綿 1980円' } }, { products });
+  assert.equal(out.payload.variants.instagram, 'かごです。1,980円。');
+  assert.equal(out.payload.image_brief.sub, '綿 1,980円');
+  assert.deepEqual(out.qa.formatted, ['TAX_OR_PRICE_FORMAT']);
+  assert.equal(out.passed, true);
+});
+
+test('§9: 「お店に確認」「商品データ上」などの第三者・内部の言い回しは不合格', () => {
+  const products = [{ id: 'spp_1', name: '収納かご', price_jpy: 1980, attrs: {} }];
+  for (const text of ['お手入れは直接お店に確認してください。', '商品データ上、記載がございません。', '詳しくはお店にご確認ください。']) {
+    const out = checkPromoDeliverable('SNS', { theme: 'かご', variants: { instagram: text, x: 'かご', threads: 'かご' },
+      image_brief: { product_id: 'spp_1', headline: 'かご', sub: '' } }, { products });
+    assert.equal(out.passed, false, text);
+    assert.ok(out.qa.reasons.some((r) => r.code === 'FORBIDDEN_EXPRESSION'), text);
+  }
+});
+
+test('§9: 商品データに無い性質語は「要確認」の注記（不合格にしない）。疑問の形・データにある語は拾わない', async () => {
+  const { unverifiedPropertyClaims } = await import('../src/seller-promo-qa.mjs');
+  const products = [{ id: 'spp_1', name: '玄関収納ボックス', price_jpy: 2980, attrs: { 素材: 'ポリプロピレン', 特徴: '軽量' } }];
+  assert.deepEqual(unverifiedPropertyClaims(['ポリプロピレン素材は日常のお手入れもしやすく、丈夫です。'], products), ['丈夫', 'お手入れもしやす']);
+  assert.deepEqual(unverifiedPropertyClaims(['洗えるかどうかはお問い合わせください。', '軽量なボックスです。'], products), []);
+  const out = checkPromoDeliverable('SNS', { theme: '箱', variants: { instagram: '丈夫な箱です。', x: '箱', threads: '箱' },
+    image_brief: { product_id: 'spp_1', headline: '箱', sub: '' } }, { products });
+  assert.equal(out.passed, true);
+  assert.deepEqual(out.qa.notes, [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }]);
+});

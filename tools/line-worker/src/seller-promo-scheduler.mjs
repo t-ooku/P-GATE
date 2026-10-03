@@ -89,7 +89,8 @@ function deliverableFromRound(type, checked) {
     return {
       passed,
       payload: { posts: checked.map((c) => c.payload) },
-      qa: { checked_at: new Date().toISOString(), passed, reasons: checked.flatMap((c) => c.qa.reasons), posts: checked.map((c) => c.qa), model: checked[0]?.model || '' }
+      qa: { checked_at: new Date().toISOString(), passed, reasons: checked.flatMap((c) => c.qa.reasons), notes: checked.flatMap((c) => c.qa.notes || []),
+        posts: checked.map((c) => c.qa), model: checked[0]?.model || '' }
     };
   }
   const [only] = checked;
@@ -107,12 +108,13 @@ async function persistPackage(env, job, profile, pkg, now) {
       await dbRun(db, `INSERT INTO seller_promo_deliverables(id,job_id,seller_key,week_key,type,version,status,payload,qa,created_at,updated_at)
         VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?10)`, id, job.id, job.seller_key, job.week_key, type, version,
       row.passed ? 'QA_PASSED' : 'QA_FAILED', JSON.stringify(row.payload), JSON.stringify(row.qa), nowIso(now));
-      created.push({ id, type, version, status: row.passed ? 'QA_PASSED' : 'QA_FAILED' });
+      created.push({ id, type, version, status: row.passed ? 'QA_PASSED' : 'QA_FAILED', notes: (row.qa.notes || []).length });
     }
   }
   // 自動公開を店本人が許可している場合だけ、検査に通った最新版を承認・公開する。
+  // 「要確認」の注記（§9-1）が付いた版は自動公開しない（店が見てから承認する）。
   if (profile.approval_mode === 'AUTO') {
-    for (const item of created.filter((c) => c.status === 'QA_PASSED')) {
+    for (const item of created.filter((c) => c.status === 'QA_PASSED' && !c.notes)) {
       await autoApproveDeliverable(env, item.id, now).catch((error) => console.error('SELLER_PROMO_AUTO_APPROVE_FAILED', { code: promoText(error?.message, 80) }));
     }
   }
