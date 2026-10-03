@@ -39,6 +39,7 @@ import {
 import {
   fetchYahooHighRatingRanking, searchYahooShopping, withYahooRequestGate, yahooShoppingApiConfigured
 } from './yahoo-shopping-api.mjs';
+import { YAHOO_REQUEST_INTERVAL_MS } from './yahoo-request-coordinator.mjs';
 export { YahooRequestCoordinator } from './yahoo-request-coordinator.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
@@ -1427,23 +1428,26 @@ export function filterSearchCandidatesWithFallback(refinedQuery, fallbackQuery, 
   return filterCategoryMismatches(fallbackQuery, candidates);
 }
 
-export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [], acceptedCounts = []) {
+// 2026-10-03 検索時間 2 秒短縮: 締め切りに遅れたレーン(LATE)と、締め切りに収まらないので
+// 呼ばなかったレーン(SKIPPED)は「0件」(NO_RESULTS)と区別する（間に合わなかった ≠ 無かった）。
+export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [], acceptedCounts = [], { lateLanes = [], skippedLanes = [] } = {}) {
+  const late = new Set(lateLanes);
+  const skipped = new Set(skippedLanes);
   const sources = searches.map((search, index) => {
     const outcome = outcomes[index];
+    const key = String(search?.key || '');
     const fulfilled = outcome?.status === 'fulfilled';
     const returned = fulfilled && Array.isArray(outcome.value) ? outcome.value.length : 0;
     const accepted = Math.max(0, Number(acceptedCounts[index]) || 0);
-    return {
-      source: String(search?.key || ''),
-      status: fulfilled ? (returned ? (accepted ? 'AVAILABLE' : 'FILTERED_OUT') : 'NO_RESULTS') : 'REQUEST_FAILED',
-      returned,
-      accepted
-    };
+    const status = !fulfilled ? 'REQUEST_FAILED'
+      : returned ? (accepted ? 'AVAILABLE' : 'FILTERED_OUT')
+        : late.has(key) ? 'LATE' : skipped.has(key) ? 'SKIPPED' : 'NO_RESULTS';
+    return { source: key, status, returned, accepted };
   });
   return {
     checked: sources.length > 0,
     all_requests_failed: sources.length > 0 && sources.every((source) => source.status === 'REQUEST_FAILED'),
-    any_request_succeeded: sources.some((source) => source.status !== 'REQUEST_FAILED'),
+    any_request_succeeded: sources.some((source) => !['REQUEST_FAILED', 'LATE', 'SKIPPED'].includes(source.status)),
     sources
   };
 }
@@ -1501,7 +1505,13 @@ export async function searchMarketplaceApiWithFallback(
   const variants = [...new Set((keywordCandidates || [])
     .map((value) => String(value || '').normalize('NFKC').trim())
     .filter(Boolean))].slice(0, maxVariants);
-  for (const keywords of variants) {
+  // 2026-10-03 検索時間 2 秒短縮（実測: 2 候補目まで試すと Yahoo! カタログ自体が 3 回中 2 回締め切りに遅れた）:
+  // 2 候補目以降は「待ち間隔 + 応答時間」が締め切りまでに収まる時だけ試す。収まらない時は
+  // 1 候補目の結果（0件）で返し、段階全体を締め切りまで引き延ばさない。
+  const deadlineAt = Number(options.deadlineAt) || 0;
+  const nextVariantCostMs = Math.max(0, Number(options.nextVariantCostMs) || 0);
+  for (const [index, keywords] of variants.entries()) {
+    if (index > 0 && deadlineAt && Date.now() + nextVariantCostMs > deadlineAt) break;
     // A transport/provider rejection is not query-quality feedback. Stop
     // immediately instead of multiplying auth/rate/upstream failures across
     // alternate keywords.
@@ -2962,6 +2972,14 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(interpretedDiscovery), env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
+      // 2026-10-03 検索時間 2 秒短縮: 段階の締め切りをレーンを作る前に 1 つ決め、Yahoo! の 2 候補目・公式店の
+      // 追加呼び出しは「この締め切りに収まる時だけ」にする。Yahoo! は 1 件ずつ 2.1 秒間隔で直列化されるため、
+      // 追加 1 回の見込み費用 = 待ち間隔 + 応答時間（最大 2.5 秒）。
+      const stageBudgetMs = marketplaceStageBudgetMs(env);
+      const stageDeadlineAt = Date.now() + stageBudgetMs;
+      const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
+      const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
+      const skippedLanes = [];
       let yahooCatalogRun = null;
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
@@ -2978,10 +2996,11 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。
         // キーワード候補を 3 通り試すと待ち時間だけで 4.2 秒かかり、締め切りに間に合わず
         // 結局 Yahoo! の結果が出なくなる。2 通りに抑えて締め切り内に収める。
-        // 待ち行列の上限も既定の 8 秒ではなくこの段階の予算に合わせる。
+        // 待ち行列の上限も既定の 8 秒ではなくこの段階の締め切りまでに合わせる。
+        // 2026-10-03: 2 候補目は締め切りに収まる時だけ（実測で 3 回中 2 回、カタログ自体が遅れていた）。
         yahooCatalogRun = searchMarketplaceApiWithFallback(
           (keywords) => searchYahooShopping(env, keywords, fetch, {
-            queueTimeoutMs: marketplaceStageBudgetMs(env)
+            queueTimeoutMs: yahooQueueTimeoutMs()
           }),
           // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
           // no marketplace code collapses "ブラウス" to the broad category
@@ -3003,7 +3022,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
           ),
           input.query,
           expandedQuery.query,
-          { maxVariants: 2 }
+          { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
         );
         marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
       }
@@ -3039,14 +3058,19 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
                 // from this official store makes the extra request unnecessary.
                 const catalogCandidates = await yahooCatalogRun;
                 if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
-                return searchYahooShopping(env, officialStoreKeywords, fetch, { sellerId: store.sellerId });
+                // 2026-10-03 検索時間 2 秒短縮（実測: この公式店レーンが 3 回中 3 回締め切りに遅れ、段階を 4.5 秒に
+                // 固定していた）: 追加の 1 回が締め切りに収まらない時は呼ばず SKIPPED にする（0件とは区別）。
+                // 裏で走らせても Yahoo! の待ち行列を占めて次の人の検索を遅らせるだけなので、裏にも回さない。
+                if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push(store.key); return []; }
+                return searchYahooShopping(env, officialStoreKeywords, fetch, {
+                  sellerId: store.sellerId, queueTimeoutMs: yahooQueueTimeoutMs()
+                });
               })()
           });
         }
       }
       // 実時間の締め切り付きで待つ。間に合わなかったレーンは結果に入れず、
       // 取得自体は waitUntil で走り切らせて価格キャッシュにだけ反映する。
-      const stageBudgetMs = marketplaceStageBudgetMs(env);
       const stageStartedAt = Date.now();
       const lateLanes = [];
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) =>
@@ -3061,7 +3085,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       // 検索文は載せない（プライバシー境界）。どのレーンが締め切りに間に合わなかったかだけ残す。
       console.info('SEARCH_MARKETPLACE_STAGE_MS', {
         request_id: requestId, elapsed_ms: Date.now() - stageStartedAt,
-        budget_ms: stageBudgetMs, lanes: marketplaceSearches.length, late_lanes: lateLanes
+        budget_ms: stageBudgetMs, lanes: marketplaceSearches.length, late_lanes: lateLanes, skipped_lanes: skippedLanes
       });
       latency.lanes = marketplaceSearches.length;
       latency.lateLanes = lateLanes;
@@ -3114,7 +3138,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         acceptedCounts.push(candidates.length);
       });
       result.marketplace_search_status = summarizeMarketplaceSearchOutcomes(
-        marketplaceSearches, outcomes, acceptedCounts
+        marketplaceSearches, outcomes, acceptedCounts, { lateLanes, skippedLanes }
       );
       if (options.internalQa === true) result.qa_trace = {
         expansion_rule: expandedQuery.expansion?.rule_id || null,

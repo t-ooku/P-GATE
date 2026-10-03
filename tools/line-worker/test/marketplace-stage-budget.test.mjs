@@ -7,7 +7,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  MARKETPLACE_STAGE_BUDGET_MS, marketplaceStageBudgetMs, withMarketplaceStageBudget
+  MARKETPLACE_STAGE_BUDGET_MS, marketplaceStageBudgetMs, searchMarketplaceApiWithFallback,
+  summarizeMarketplaceSearchOutcomes, withMarketplaceStageBudget
 } from '../src/index.mjs';
 
 const sleep = (ms, value) => new Promise((resolve) => setTimeout(() => resolve(value), ms));
@@ -58,10 +59,51 @@ test('締め切りは env で上書きでき、極端な値は既定へ戻す', 
   assert.equal(marketplaceStageBudgetMs({ MARKETPLACE_STAGE_BUDGET_MS: 'abc' }), MARKETPLACE_STAGE_BUDGET_MS);
 });
 
-test('Yahoo! カタログ検索は候補2通りまでに抑え、待ち行列も段階予算に合わせる', () => {
+test('Yahoo! カタログ検索は候補2通りまでに抑え、待ち行列も段階の締め切りまでに合わせる', () => {
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(source, /queueTimeoutMs: marketplaceStageBudgetMs\(env\)/u);
-  assert.match(source, /\{ maxVariants: 2 \}/u);
+  assert.match(source, /queueTimeoutMs: yahooQueueTimeoutMs\(\)/u);
+  assert.match(source, /const yahooQueueTimeoutMs = \(\) => Math\.max\(500, stageDeadlineAt - Date\.now\(\)\)/u);
+  assert.match(source, /\{ maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs \}/u);
+});
+
+// 2026-10-03 検索時間 2 秒短縮（実測: 対策前 3 回とも段階が 4500ms で、ZOZOTOWN 公式店レーンが 3/3、
+// Yahoo! カタログが 2/3 締め切りに遅れていた）。追加の Yahoo! 呼び出しは締め切りに収まる時だけ行う。
+test('Yahoo! の 2 候補目は「待ち間隔＋応答時間」が締め切りに収まる時だけ試す', async () => {
+  const calls = [];
+  const searcher = async (keywords) => { calls.push(keywords); return []; };
+  // 収まらない: 1 候補目だけ
+  await searchMarketplaceApiWithFallback(searcher, ['a', 'b'], '', '', { maxVariants: 2, deadlineAt: Date.now() + 1000, nextVariantCostMs: 3600 });
+  assert.deepEqual(calls, ['a']);
+  // 収まる: 2 候補目も試す
+  calls.length = 0;
+  await searchMarketplaceApiWithFallback(searcher, ['a', 'b'], '', '', { maxVariants: 2, deadlineAt: Date.now() + 10000, nextVariantCostMs: 3600 });
+  assert.deepEqual(calls, ['a', 'b']);
+  // 締め切り指定なし: 従来どおり
+  calls.length = 0;
+  await searchMarketplaceApiWithFallback(searcher, ['a', 'b'], '', '', { maxVariants: 2 });
+  assert.deepEqual(calls, ['a', 'b']);
+});
+
+test('公式店の Yahoo! レーンは締め切りに収まらない時は呼ばず SKIPPED にする（裏にも回さない）', () => {
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(source, /if \(Date\.now\(\) \+ yahooFollowUpCostMs > stageDeadlineAt\) \{ skippedLanes\.push\(store\.key\); return \[\]; \}/u);
+  assert.match(source, /const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS \+ 1500/u);
+  assert.match(source, /summarizeMarketplaceSearchOutcomes\(\s*marketplaceSearches, outcomes, acceptedCounts, \{ lateLanes, skippedLanes \}/u);
+});
+
+test('締め切りに遅れたレーン・呼ばなかったレーンは 0 件と区別して返す', () => {
+  const searches = [{ key: 'rakuten_catalog_connected' }, { key: 'yahoo_catalog_connected' }, { key: 'zozotown_official_store' }, { key: 'hands_official_store' }];
+  const summary = summarizeMarketplaceSearchOutcomes(searches, [
+    { status: 'fulfilled', value: [{ product_name: 'A' }] },
+    { status: 'fulfilled', value: [] },
+    { status: 'fulfilled', value: [] },
+    { status: 'fulfilled', value: [] }
+  ], [1, 0, 0, 0], { lateLanes: ['yahoo_catalog_connected'], skippedLanes: ['zozotown_official_store'] });
+  assert.deepEqual(summary.sources.map((s) => s.status), ['AVAILABLE', 'LATE', 'SKIPPED', 'NO_RESULTS']);
+  assert.equal(summary.any_request_succeeded, true);
+  const allLate = summarizeMarketplaceSearchOutcomes(searches.slice(1, 2), [{ status: 'fulfilled', value: [] }], [0], { lateLanes: ['yahoo_catalog_connected'] });
+  assert.equal(allLate.any_request_succeeded, false, '遅れただけのレーンを「成功」に数えない');
+  assert.equal(allLate.all_requests_failed, false, '遅れただけのレーンを「失敗」にも数えない');
 });
 
 test('モール検索は締め切り付きで待ち、遅れたレーンを記録する', () => {
