@@ -161,6 +161,26 @@ test('料金 LP の下書き: OK② 前は管理者だけ。有料プランは�
   assert.match(plansOn, /Standard 19,800円/);
 });
 
+test('料金 LP の下書き: 第一画面と料金の前は「モールの外」の訴求（Cowork 依頼 §6）。禁止表現・旧オファーの文言は無い', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { PROMO_FORBIDDEN_PHRASES } = await import('../src/seller-promo-qa.mjs');
+  const { assertSellerMarketingCurrent } = await import('../src/seller-marketing-guard.mjs');
+  const { AUTO_RENEW_OFFER } = await import('../public/seller-trial-policy.mjs');
+  const file = readFileSync(new URL('../public/for-sellers-preview.html', import.meta.url), 'utf8');
+  const text = file.replace(/<!--[\s\S]*?-->/gu, '').replace(/<style>[\s\S]*?<\/style>/gu, '').replace(/<[^>]+>/gu, ' ').replace(/&amp;/gu, '&');
+  assert.match(text, /後回しになっていた「モールの外」の販促を、毎週かわりに。/);
+  assert.match(text, /なぜ「モールの外」なのか/);
+  assert.match(text, /HOSHILU の中と外、両方で/);
+  assert.match(text, /毎週届くもの/);
+  assert.ok(text.indexOf('なぜ「モールの外」なのか') < text.indexOf('掲載プラン'), '説明欄は料金の前');
+  assert.match(text, /売上や順位は約束しません/);
+  for (const phrase of PROMO_FORBIDDEN_PHRASES) assert.ok(!text.includes(phrase), `禁止表現: ${phrase}`);
+  const active = { SELLER_MANUAL_PILOT_ENABLED: 'true', SELLER_PILOT_OFFER_VERSION: AUTO_RENEW_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED: AUTO_RENEW_OFFER,
+    SELLER_PILOT_AUTORENEW_ENABLED: 'true', SELLER_PILOT_PAYMENTS_ENABLED: 'true', SELLER_PILOT_PAYMENT_MODE: 'live',
+    SELLER_PILOT_1980_LIVE_PRICE_ID: 'price_fixture', SELLER_PILOT_1980_LIVE_PRODUCT_ID: 'prod_fixture' };
+  assert.doesNotThrow(() => assertSellerMarketingCurrent({ content_id: 'seller-preview', caption: text }, active));
+});
+
 test('見出しが分からない CSV は AI が対応表の案を出すだけで取り込まず、人が確認して mapping 付きで再送する', async () => {
   const { db, adapter } = promoDb();
   const env = promoEnv(adapter);

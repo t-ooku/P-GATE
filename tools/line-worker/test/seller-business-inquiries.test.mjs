@@ -320,3 +320,34 @@ test('同時に再送されても申込みと通知は1件', async () => {
   assert.equal(results.filter(r=>r.duplicate).length,1);
   assert.equal(db.prepare('SELECT count(*) n FROM seller_business_inquiries').get().n,1);
 });
+
+test('店からの返信メールで管理者が相談を作れる（Cowork 依頼 §8 a）。根拠は返信メール、営業許諾にはしない、二重に作らない', async () => {
+  const { db, env } = databaseEnv();
+  env.SOCIAL_ADMIN_SECRET = 'x'.repeat(40);
+  const post = (body, headers = {}) => handleSellerBusinessInquiryRoutes(new Request('https://hoshilu.app/api/admin/seller-business/inquiries', {
+    method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app', authorization: `Bearer ${'x'.repeat(40)}`, ...headers },
+    body: JSON.stringify(body) }), env);
+  const reply = { organization_name: '星雑貨店', contact_email: ' Owner@Example.com ', storefront_url: 'https://example.com/shop',
+    evidence_message_id: '<CAF123abc@mail.gmail.com>', evidence_received_at: '2026-10-03T03:00:00Z', message: '案内メールへの返信で申込み',
+    marketing_consent: true, inquiry_type: 'ACCOUNT_APPLICATION' };
+  assert.equal((await post(reply, { authorization: 'Bearer wrong' })).status, 403);
+  assert.equal((await post(reply, { origin: 'https://evil.example' })).status, 403);
+  const created = await post(reply);
+  assert.equal(created.status, 201);
+  const { inquiry_id } = await created.json();
+  assert.match(inquiry_id, /^SBI_[a-f0-9]{64}$/u);
+  const row = db.prepare('SELECT * FROM seller_business_inquiries WHERE inquiry_id=?').get(inquiry_id);
+  assert.equal(row.contact_email, 'owner@example.com');
+  assert.equal(row.inquiry_type, 'CONSULTATION');
+  assert.equal(row.organization_type, 'SELLER');
+  assert.equal(row.status, 'CONTACTED');
+  assert.equal(row.source, 'EMAIL_REPLY');
+  assert.match(row.message, /\[相談回答への同意: email_reply; 継続案内希望: no; version: seller-email-reply-v1; evidence: CAF123abc@mail\.gmail\.com; received_at: 2026-10-03T03:00:00\.000Z; recorded_by: admin/u);
+  const again = await post({ ...reply, organization_name: '別名' });
+  assert.equal(again.status, 200);
+  assert.deepEqual(await again.json(), { ok: true, inquiry_id, duplicate: true, status: 'CONTACTED' });
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM seller_business_inquiries').get().n, 1);
+  const missing = await post({ ...reply, evidence_message_id: '', evidence_received_at: 'not-a-date', contact_email: 'bad' });
+  assert.equal(missing.status, 400);
+  assert.deepEqual((await missing.json()).fields, ['CONTACT_EMAIL_INVALID', 'EVIDENCE_MESSAGE_ID_REQUIRED', 'EVIDENCE_RECEIVED_AT_INVALID']);
+});
