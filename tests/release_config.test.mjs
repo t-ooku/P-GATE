@@ -84,8 +84,10 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   // 以降 npm test が落ちていた(2026-09-03に検知)。
   // build-hero-font.yml (2026-10-03追加): トップ見出し用フォント hoshilu-hero.woff2 を runner 側で
   // 切り出して同じブランチへコミットする（バイナリは [PATCH] Issue に貼れないため）。自ファイルの push でだけ動く。
+  // seller-promo-weekly-record.yml (2026-10-03追加、Cowork 依頼 §10): 月曜 07:07 JST に本番 D1 を読むだけで、
+  // AI販促担当の週次の結果（状態・検査理由・原価。本文と連絡先は書かない）を docs/handoff/ に追記して同じブランチへコミットする。
   assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
-    ['apply-patch.yml', 'apply-price-observations-0093.yml', 'build-hero-font.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
+    ['apply-patch.yml', 'apply-price-observations-0093.yml', 'build-hero-font.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml', 'seller-promo-weekly-record.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
