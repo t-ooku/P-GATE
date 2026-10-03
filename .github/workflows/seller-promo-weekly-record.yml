@@ -1,0 +1,57 @@
+name: Seller promo weekly record (Mon 07:00 JST)
+
+# 2026-10-03 Cowork 依頼 §10（既定 a）: 月曜 06:00 JST の AI販促担当の自動作成の結果（job・納品物の状態・検査理由・原価）を
+# docs/handoff/<月曜の日付>-seller-promo-weekly.md に追記して feature/ui-search-v2 に push する。本文と連絡先は書かない。
+# 本番 D1 は読むだけ。schedule は既定ブランチ（main）に置いた定義だけが動くため、このファイルは main にも置く。
+
+on:
+  schedule:
+    # 日曜 22:07 UTC = 月曜 07:07 JST（毎時 0 分の混雑を避ける）
+    - cron: '7 22 * * 0'
+  workflow_dispatch:
+    inputs:
+      week_key:
+        description: '記録する週（例 2026-W41）。空なら今週'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seller-promo-weekly-record
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-search-v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Record this week's seller promo results
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WEEK_KEY: ${{ github.event.inputs.week_key }}
+        run: |
+          set -euo pipefail
+          node scripts/seller-promo-weekly-record.mjs
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name "hoshilu-patch-bot"
+          git config user.email "noreply@hoshilu.app"
+          git add docs/handoff/*-seller-promo-weekly.md
+          if git diff --cached --quiet; then echo "nothing to record"; exit 0; fi
+          git commit -m "docs(seller-promo): 週次の結果を自動記録（seller-promo-weekly-record.yml）"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:refs/heads/feature/ui-search-v2; then exit 0; fi
+            git pull --rebase origin feature/ui-search-v2
+          done
+          exit 1
