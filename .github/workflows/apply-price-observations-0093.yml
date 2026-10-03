@@ -51,8 +51,11 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS rows, MIN(observed_date) AS since FROM price_observations;" | tee price-observations-check.json
+          # 2026-10-03: 結果本体（.[0].results）だけ残す。Issue コメントの 400 文字に meta が入って数字が見えなかったため。
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS rows, COUNT(DISTINCT record_key) AS products, MIN(observed_date) AS since, MAX(observed_date) AS latest, SUM(marketplace='RAKUTEN_JP') AS rakuten, SUM(marketplace='YAHOO_JP') AS yahoo, SUM(source='search') AS src_search, SUM(source='rakuten_ranking_api') AS src_buzz, SUM(source='target_price_scan') AS src_watch, SUM(source='product_detail') AS src_detail FROM price_observations;" | jq -c '.[0].results' | tee price-observations-check.json
           grep -q '"rows"' price-observations-check.json
+          # 10/3 カルーセル（#543: 送る直前に「（体験開始は準備中）」を外す）の確認。本文は出さず、準備中の有無だけ。
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id, status, substr(published_at,1,16) AS published_at, (caption LIKE '%準備中%') AS has_pending, substr(last_error,1,60) AS err FROM social_post_queue WHERE post_id LIKE 'hoshilu-carousel-v3-%-2026-10-03' OR post_id LIKE 'hoshilu-carousel-v3-fallback-%-2026-10-03' ORDER BY post_id;" | jq -c '.[0].results' | tee carousel-check.json || true
       # 結果を Issue #545（[PATCH] 価格推移の記録）に書く。サンドボックスから Actions の実行結果を読めないため。
       - name: Report to issue 545
         if: always()
@@ -62,6 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           status="${{ job.status }}"
-          check="$(tr -d '\n' < price-observations-check.json 2>/dev/null | tail -c 400 || echo 'no check output')"
-          body="migration 0093 workflow: **${status}** (run ${{ github.run_id }}, head ${GITHUB_SHA::7})\n\ncheck: \`${check}\`"
+          check="$(tr -d '\n' < price-observations-check.json 2>/dev/null | tail -c 900 || echo 'no check output')"
+          carousel="$(tr -d '\n' < carousel-check.json 2>/dev/null | tail -c 900 || echo 'no carousel output')"
+          body="migration 0093 workflow: **${status}** (run ${{ github.run_id }}, head ${GITHUB_SHA::7})\n\nprice_observations: \`${check}\`\n\ncarousel 2026-10-03: \`${carousel}\`"
           gh api repos/${{ github.repository }}/issues/545/comments -f body="$(printf '%b' "$body")"
