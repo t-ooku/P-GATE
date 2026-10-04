@@ -31,7 +31,6 @@ test('検索意図が異なる日本語142ページと英語5ページを提供�
     assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|絶対おすすめ/);
     assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
     assert.ok(evaluateSeoPageQuality(path).total >= 85);
-    assert.match(text, slug === 'netshop-blog-sns-tsuzukanai' ? /今日もできなかった/ : /選べない理由/);
   }
 });
 
@@ -832,12 +831,13 @@ test('Seller 向け記事（ブログ・SNSが続かない／楽天GOLD）は料
     const path = `/ja/${slug}`;
     const html = renderSeoPage(path);
     assert.ok(html, path);
-    assert.match(html, /datetime="2026-10-03"/);
+    assert.match(html, /datetime="2026-10-04"/);
     assert.match(html, /data-seo-article-type="seller-guide"/);
     assert.match(html, /href="\/for-sellers" data-seo-feature-link[^>]*>AI販促担当について見る/);
     const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<[^>]+>/gu, ' ');
     assert.doesNotMatch(text, /[0-9][0-9,]*円/u, '本文に料金を書かない');
     assert.doesNotMatch(text, /売上が(?:必ず|確実に)?(?:上がります|増えます)|最安(?:値)?です|人気No\.1|絶対おすすめ/u);
     assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    assert.match(text, slug === 'netshop-blog-sns-tsuzukanai' ? /今日もできなかった/ : /選べない理由/);
   }
 });
