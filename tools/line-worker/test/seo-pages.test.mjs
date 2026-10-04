@@ -31,6 +31,7 @@ test('検索意図が異なる日本語142ページと英語5ページを提供�
     assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|絶対おすすめ/);
     assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
     assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    assert.match(text, slug === 'netshop-blog-sns-tsuzukanai' ? /今日もできなかった/ : /選べない理由/);
   }
 });
 
@@ -825,7 +826,7 @@ test('2026-09-05公開のクリエイター募集6記事＋値下げ・クーポ
   }
 });
 
-// 2026-10-03 自社の販促素材 §2・§3-3: Seller 向け記事 2 本。本文に料金を書かず、末尾のボタンで /for-sellers（AI販促担当の欄）へ。
+// 2026-10-04 読者の悩み起点へ改稿。Seller 向け記事 2 本。本文に料金を書かず、末尾のボタンで /for-sellers（AI販促担当の欄）へ。
 test('Seller 向け記事（ブログ・SNSが続かない／楽天GOLD）は料金を書かず、AI販促担当として /for-sellers へつなぐ', () => {
   for (const slug of ['netshop-blog-sns-tsuzukanai', 'rakuten-gold-erabikata-page']) {
     const path = `/ja/${slug}`;
