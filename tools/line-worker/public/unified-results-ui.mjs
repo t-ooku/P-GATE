@@ -35,7 +35,7 @@ const COPY = {
   // 2026-10-03 大隆さん指示「間に合わなかったモールも『さらに見る』で」
   followup: (malls) => `間に合わなかった ${malls} の結果も見る`,
   followupBusy: '取りに行っています…',
-  followupAdded: (n) => `${n}件を末尾に足しました`,
+  followupAdded: (n) => `${n}件を追加表示しました`,
   followupNone: '追加の商品はありませんでした',
   followupFailed: '取得できませんでした'
 };

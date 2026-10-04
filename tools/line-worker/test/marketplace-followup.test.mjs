@@ -75,3 +75,10 @@ test('下部ナビは押したタブのページ先頭へスクロールする�
   const nav = readFileSync(new URL('../public/tab-nav.mjs', import.meta.url), 'utf8');
   assert.match(nav, /const view = activate\(item\.dataset\.view\);\s*if \(current === view\.id\) window\.scrollTo\(\{ top: 0, behavior: 'smooth' \}\);/u);
 });
+
+// 2026-10-04 大隆さん指示: 「○件を末尾に足しました」→「○件を追加表示しました」
+test('さらに見るで足した後の文言は「○件を追加表示しました」', () => {
+  const ui = readFileSync(new URL('../public/unified-results-ui.mjs', import.meta.url), 'utf8');
+  assert.match(ui, /followupAdded: \(n\) => `\$\{n\}件を追加表示しました`/u);
+  assert.ok(!ui.includes('末尾に足しました'));
+});
