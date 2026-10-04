@@ -35,3 +35,44 @@
 .quick-queries .chip {
   min-height: 44px;
 }
+
+/* 2026-10-04 大隆さん指示「マイクのマーク小さくして、クリアのボタンを押しやすく右端に大きく配置して」。
+   マイク: 押せる範囲は 44px のまま（指で押しやすさは保つ）、見た目の丸とアイコンだけ小さくする。
+   クリア: 右下の端に、幅を広く・文字を大きく。入力欄の下に余白を取り、文字と重ならないようにする。 */
+.query-field textarea {
+  padding-right: 52px;
+  padding-bottom: 66px;
+}
+
+.query-field .speech-input {
+  top: 6px;
+  right: 6px;
+  border: 0;
+  background: radial-gradient(circle, #fff 0 14px, #ded7ff 14px 15px, transparent 15.5px);
+  font-size: 14px;
+}
+
+.query-field .speech-input.listening {
+  background: radial-gradient(circle, var(--pink) 0 15px, transparent 15.5px);
+  box-shadow: none;
+}
+
+.query-field .clear-query {
+  top: auto;
+  bottom: 10px;
+  right: 10px;
+  min-width: 92px;
+  height: 48px;
+  padding: 0 18px;
+  border: 1px solid #ded7ff;
+  border-radius: 14px;
+  background: #f4f0ff;
+  color: #5140ba;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+
+.query-field .clear-query:active {
+  background: #e8e2ff;
+}

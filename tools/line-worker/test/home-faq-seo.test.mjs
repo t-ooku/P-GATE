@@ -58,7 +58,7 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
   assert.match(speechStyles, /\.speech-input\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/);
   assert.match(speechStyles, /\.quick-queries \.chip\s*\{[^}]*min-height:\s*44px;/);
-  assert.match(html, /<link rel="stylesheet" href="\/speech-input\.css\?v=3">/);
+  assert.match(html, /<link rel="stylesheet" href="\/speech-input\.css\?v=4">/);
 });
 test('UIクロームはdata-nosnippet、本文セクションはスニペット対象のまま', async () => {
   const html = await read('index.html');
@@ -95,7 +95,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 156); // 2026-10-03 Seller 向け記事 2 本を追加
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v415/);
+  assert.match(worker, /hoshilu-shell-v416/);
 });
 
 test('SNS URL FAQは静的表示とruntime上書きで対応形式の公開単体URLに統一する', async () => {
@@ -114,4 +114,12 @@ test('SNS URL FAQは静的表示とruntime上書きで対応形式の公開単�
     'HOSHILU 支持格式公开单帖链接',
     'HOSHILU 지원 형식 공개 단일 게시물 URL'
   ]) assert.ok(i18n.includes(copy), `runtime FAQに対応形式の説明がない: ${copy}`);
+});
+
+// 2026-10-04 大隆さん指示「マイクのマーク小さくして、クリアのボタンを押しやすく右端に大きく配置して」
+test('検索欄: マイクは見た目を小さく（押せる範囲は 44px のまま）、クリアは右下の端に大きく', async () => {
+  const css = await read('speech-input.css');
+  assert.match(css, /\.query-field \.speech-input \{[^}]*font-size: 14px;/);
+  assert.match(css, /\.query-field \.clear-query \{[^}]*right: 10px;[^}]*min-width: 92px;[^}]*height: 48px;[^}]*font-size: 16px;/);
+  assert.match(css, /\.query-field textarea \{\s*padding-right: 52px;\s*padding-bottom: 66px;/);
 });
