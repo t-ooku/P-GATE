@@ -428,3 +428,27 @@ test('ダッシュボードは購入導線を返す: 商品詳細の入口別・
   assert.match(readFileSync(new URL('../public/buzz-home.mjs', import.meta.url), 'utf8'), /&from=buzz`/);
   assert.match(readFileSync(new URL('../public/product-detail.mjs', import.meta.url), 'utf8'), /send\('product_detail_view', \{ content: \['search', 'buzz'\]\.includes\(from\) \? from : '' \}\)/);
 });
+
+
+test('SHOP・Sellerタブは相談・30日無料開始・有料契約を3プランの実数で返す', async () => {
+  const db = setup();
+  db.exec(`CREATE TABLE seller_business_inquiries(inquiry_id TEXT PRIMARY KEY);
+    INSERT INTO seller_business_inquiries VALUES('SBI_1'),('SBI_2');
+    CREATE TABLE seller_listing_pilots(pilot_id TEXT PRIMARY KEY,document_json TEXT NOT NULL);`);
+  const insert = db.prepare('INSERT INTO seller_listing_pilots VALUES(?,?)');
+  const doc = (offer_version, extra = {}) => JSON.stringify({
+    offer_version, starts_at: '2026-10-01T00:00:00.000Z', status: 'PUBLISHED', test: false, ...extra
+  });
+  insert.run('listing', doc('external-seller-1980-30d-autorenew-v1', { autorenew: { paid: true } }));
+  insert.run('light', doc('external-seller-promo-light-30d-autorenew-v1'));
+  insert.run('standard', doc('external-seller-promo-standard-30d-autorenew-v1'));
+  insert.run('qa', JSON.stringify({ offer_version: 'external-seller-promo-standard-30d-autorenew-v1', starts_at: '2026-10-01T00:00:00.000Z', test: true }));
+  const summary = await promotionDashboardSummary({ PRODUCT_DB: d1(db) }, new Date('2026-10-04T00:00:00.000Z'));
+  assert.deepEqual(summary.shop_seller.stock, {
+    active_shops: null, business_sellers: null, seller_inquiries: 2, seller_trials_started: 3,
+    seller_listing_trials_started: 1, seller_light_trials_started: 1, seller_standard_trials_started: 1,
+    seller_paid_contracts: 1, open_demands: null, matched_demands: null, demand_groups_5plus: null, shop_follows: null
+  });
+  const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
+  for (const label of ['Seller 相談受付', '30日無料を開始', '有料契約確認済み']) assert.ok(client.includes(label), label);
+});
