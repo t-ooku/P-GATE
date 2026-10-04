@@ -862,6 +862,22 @@ async function tabSummaries(env, now) {
     shopSeller.stock = {
       active_shops: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_shops WHERE status='ACTIVE'`),
       business_sellers: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_billing_accounts WHERE plan='BUSINESS' AND status='ACTIVE'`),
+      // 売上ファネルは実在する相談・初回公開・支払確認だけを数える。異なる時点の在庫なので推定CV率は作らない。
+      seller_inquiries: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_business_inquiries`),
+      seller_trials_started: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_listing_pilots
+        WHERE coalesce(json_extract(document_json,'$.test'),0)=0 AND json_extract(document_json,'$.starts_at') IS NOT NULL`),
+      seller_listing_trials_started: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_listing_pilots
+        WHERE coalesce(json_extract(document_json,'$.test'),0)=0 AND json_extract(document_json,'$.starts_at') IS NOT NULL
+        AND json_extract(document_json,'$.offer_version')='external-seller-1980-30d-autorenew-v1'`),
+      seller_light_trials_started: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_listing_pilots
+        WHERE coalesce(json_extract(document_json,'$.test'),0)=0 AND json_extract(document_json,'$.starts_at') IS NOT NULL
+        AND json_extract(document_json,'$.offer_version')='external-seller-promo-light-30d-autorenew-v1'`),
+      seller_standard_trials_started: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_listing_pilots
+        WHERE coalesce(json_extract(document_json,'$.test'),0)=0 AND json_extract(document_json,'$.starts_at') IS NOT NULL
+        AND json_extract(document_json,'$.offer_version')='external-seller-promo-standard-30d-autorenew-v1'`),
+      seller_paid_contracts: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_listing_pilots
+        WHERE coalesce(json_extract(document_json,'$.test'),0)=0
+        AND (coalesce(json_extract(document_json,'$.autorenew.paid'),0)=1 OR json_extract(document_json,'$.payment.status')='ACTIVE')`),
       open_demands: await optionalCount(env, `SELECT COUNT(*) AS total FROM shop_demand_requests WHERE status='OPEN'`),
       matched_demands: await optionalCount(env, `SELECT COUNT(*) AS total FROM shop_demand_requests WHERE status='MATCHED'`),
       demand_groups_5plus: await optionalCount(env, `SELECT COUNT(*) AS total FROM (SELECT demand_key FROM shop_demand_requests WHERE status<>'CLOSED' GROUP BY demand_key HAVING COUNT(DISTINCT COALESCE(NULLIF(member_id,''),visitor_hash))>=5)`),
