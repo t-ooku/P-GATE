@@ -248,17 +248,30 @@ function foldLegacySections(folded) {
   if (google) google.classList.toggle('hidden', folded);
 }
 
+// 2026-10-04 大隆さん報告「さらに見るボタンが反応してない」。スマホでは列が横スライドなので、
+// 足したカードは列の右端（画面の外）に入り、押しても何も変わらないように見えていた。
+// 足した最初のカードまで列を横に送る（PC の格子では下に並ぶので、そのまま見える）。
+export function revealAppended(list, node) {
+  if (!list || !node) return;
+  if (list.scrollWidth > list.clientWidth + 1) {
+    const left = list.scrollLeft + node.getBoundingClientRect().left - list.getBoundingClientRect().left;
+    list.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }
+}
+
 function renderMore(host, list) {
   const remaining = state.items.length - state.shown;
-  host.querySelector('.unified-more')?.remove();
+  host.querySelector('.unified-more:not(.unified-followup)')?.remove();
   if (remaining <= 0) return;
   const button = el('button', 'unified-more', COPY.more);
   button.type = 'button';
   button.addEventListener('click', () => {
     const next = state.items.slice(state.shown, state.shown + PAGE);
-    list.append(...next.map(safeCard).filter(Boolean));
+    const cards = next.map(safeCard).filter(Boolean);
+    list.append(...cards);
     state.shown += next.length;
     renderMore(host, list);
+    revealAppended(list, cards[0]);
   });
   // 列のすぐ後ろに置く（並び順を変えて描き直しても、下の注意書きより前に来るように）。
   list.after(button);
@@ -396,18 +409,21 @@ export function appendFollowup(unified, candidates = []) {
     render({ items: merged, truncated: false }, state.candidates);
     return added.length;
   }
-  state.items = [...state.items, ...added];
-  if (state.orders) state.orders = { recommended: [...state.orders.recommended, ...added], cheap: [...state.orders.cheap, ...added] };
-  // いま全部出ている時はカードもすぐ足す。まだ「さらに見る」が残っている時は、その続きとして出る。
-  if (list && state.shown >= state.items.length - added.length) {
-    list.append(...added.map(safeCard).filter(Boolean));
-    state.shown += added.length;
+  // 2026-10-04 大隆さん報告「反応してない」: 「さらに見る」が残っている時に列の最後尾へ入れると、
+  // 何回も押さないと見えなかった。今見えているカードのすぐ後ろに入れて、すぐ出す（既存のカードは動かさない）。
+  const insertAt = state.shown;
+  state.items = [...state.items.slice(0, insertAt), ...added, ...state.items.slice(insertAt)];
+  if (state.orders) {
+    const insertInto = (order) => [...order.slice(0, insertAt), ...added, ...order.slice(insertAt)];
+    state.orders = { recommended: insertInto(state.orders.recommended), cheap: insertInto(state.orders.cheap) };
   }
-  if (host && list) {
-    renderMore(host, list);
-    const count = host.querySelector('.unified-count');
-    if (count) count.textContent = COPY.found(state.items.length);
-  }
+  const cards = added.map(safeCard).filter(Boolean);
+  list.append(...cards);
+  state.shown += added.length;
+  renderMore(host, list);
+  const count = host.querySelector('.unified-count');
+  if (count) count.textContent = COPY.found(state.items.length);
+  revealAppended(list, cards[0]);
   return added.length;
 }
 
