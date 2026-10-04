@@ -80,3 +80,27 @@
 単純に全ての `<br>` を削除するのではなく、画面幅ごとに自然なまとまりで折り返す。句読点だけが行末・行頭に残る、1〜3文字だけ次行へ送られる、`AI販促担当`・`Light`・`Standard`・金額と単位が分離する状態を避ける。
 
 320px、375px、390px、430px、768px、PC幅で、ヒーロー、3プラン料金、CTA、フォーム直前説明まで目視確認し、スマホの横はみ出しがないこともテストする。
+
+
+## P0追加：Light／Standardの契約作成経路が未接続
+
+読み取り監査で、表示・Stripe Priceの存在とは別に、Light／Standardを実際の契約へ進める経路が未接続であることを確認した。
+
+- `src/seller-listing-pilot.mjs` の管理者 `CREATE` は、`doc.offer_version=env.SELLER_PILOT_OFFER_VERSION` に固定されている。
+- 本番の `SELLER_PILOT_OFFER_VERSION` は掲載プラン `external-seller-1980-30d-autorenew-v1`。
+- `public/seller-pilot.js` の非公開見本作成フォームにも、掲載／Light／Standardのoffer選択がない。
+- `seller-offer-registry.mjs` と `seller-promo-billing.mjs` にはLight／Standardのpolicy・Price設定があるが、新規契約作成時に選べない。
+
+このままでは、Light／Standardは料金表示とStripe Priceがあっても、通常の相談→見本→カード登録→公開→30日無料の契約へ到達できない。
+
+### 必須修正
+
+1. 問い合わせで保存した新3プランの `plan_interest` を、管理者の見本作成時に正しいofferへ明示的に結び付ける。
+2. 管理者CREATEで、`creatableOffer(env, requested_offer)` を満たす現行offerだけを選択可能にする。クライアント文字列だけを信用しない。
+3. 掲載／Light／Standardのoffer・terms・amount・Price IDを契約snapshotへ保存し、後からデフォルトが変わっても既存契約を壊さない。
+4. 店舗本人の同意画面に、選択したプラン名・月額・30日終了期限・31日目からの自動更新・解約方法を表示する。
+5. 旧4,980円・カード不要・自動課金なし等の既存契約は変更しない。
+6. 3プランそれぞれで、相談→CREATE→同意→カード登録→初回公開→30日→解約／有料化のテストを追加する。
+7. Price／product／金額／税区分／環境が不一致なら契約を作らない。
+
+成功条件は、LPに3プランが見えることではなく、Light／Standardの申込希望が正しいofferの契約として開始できること。
