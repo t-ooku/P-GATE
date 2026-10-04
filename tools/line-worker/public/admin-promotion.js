@@ -277,7 +277,10 @@ function renderShopSeller() {
   const count = value => value === null || value === undefined ? '未計測' : formatNumber(value);
   shopStockGrid.replaceChildren(
     metric('掲載中ショップ', count(stock.active_shops)),
-    metric('Business 契約', count(stock.business_sellers), '', '有効な有料契約の数'),
+    metric('Business 契約', count(stock.business_sellers), '', '旧請求基盤の有効契約'),
+    metric('Seller 相談受付', count(stock.seller_inquiries), '', '保存済みの相談件数。送信数ではありません'),
+    metric('30日無料を開始', count(stock.seller_trials_started), '', `掲載 ${count(stock.seller_listing_trials_started)}・Light ${count(stock.seller_light_trials_started)}・Standard ${count(stock.seller_standard_trials_started)}`),
+    metric('有料契約確認済み', count(stock.seller_paid_contracts), stock.seller_paid_contracts ? 'success' : '', 'Stripeの支払確認済みだけ'),
     metric('探し中の需要（OPEN）', count(stock.open_demands)),
     metric('見つかった需要（MATCHED）', count(stock.matched_demands), stock.matched_demands ? 'success' : ''),
     metric('Seller に見える需要', count(stock.demand_groups_5plus), '', '同じ条件を 5 人以上が探しているもの'),
