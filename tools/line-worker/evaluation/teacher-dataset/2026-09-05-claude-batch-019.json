@@ -9702,5 +9702,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "瓶のふたが固くて開かない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "瓶・ジャム瓶・密閉びんのふた(フタ)が固くて/硬くて開かない・開けられない",
+    "ideal_answer": "滑りにくい・テコの力で開けられる瓶・ジャム瓶用のオープナー(蓋開け器)",
+    "reason": "「ふたが固くて開かない」は商品名では「オープナー」「蓋開け器」。 展開規則 stuck-lid-jar-opener（モール検索語「瓶 オープナー」）。",
+    "category": "stuck-lid-jar-opener",
+    "search_terms": {
+      "ja": [
+        "瓶 オープナー",
+        "ジャム瓶 オープナー",
+        "蓋開け オープナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ジャム瓶のふたが開けられない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "瓶・ジャム瓶・密閉びんのふた(フタ)が固くて/硬くて開かない・開けられない",
+    "ideal_answer": "滑りにくい・テコの力で開けられる瓶・ジャム瓶用のオープナー(蓋開け器)",
+    "reason": "「ふたが固くて開かない」は商品名では「オープナー」「蓋開け器」。 展開規則 stuck-lid-jar-opener（モール検索語「瓶 オープナー」）。",
+    "category": "stuck-lid-jar-opener",
+    "search_terms": {
+      "ja": [
+        "瓶 オープナー",
+        "ジャム瓶 オープナー",
+        "蓋開け オープナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "密閉びんのフタが硬くて開かない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "瓶・ジャム瓶・密閉びんのふた(フタ)が固くて/硬くて開かない・開けられない",
+    "ideal_answer": "滑りにくい・テコの力で開けられる瓶・ジャム瓶用のオープナー(蓋開け器)",
+    "reason": "「ふたが固くて開かない」は商品名では「オープナー」「蓋開け器」。 展開規則 stuck-lid-jar-opener（モール検索語「瓶 オープナー」）。",
+    "category": "stuck-lid-jar-opener",
+    "search_terms": {
+      "ja": [
+        "瓶 オープナー",
+        "ジャム瓶 オープナー",
+        "蓋開け オープナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベビーカーの紫外線が気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーカーの紫外線・日差し・日焼けが気になる/対策したい",
+    "ideal_answer": "UVカット・サンシェード機能付きのベビーカー用カバー・ベビーカー",
+    "reason": "「紫外線/日差しが気になる」は商品名では「UVカット」「サンシェード」。 展開規則 uv-shade-stroller-canopy（モール検索語「UVカット サンシェード ベビーカー」）。",
+    "category": "uv-shade-stroller-canopy",
+    "search_terms": {
+      "ja": [
+        "UVカット サンシェード ベビーカー",
+        "ベビーカー 日除けカバー",
+        "UVカット ベビーカーカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんが日差しで眩しそうなベビーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーカーの紫外線・日差し・日焼けが気になる/対策したい",
+    "ideal_answer": "UVカット・サンシェード機能付きのベビーカー用カバー・ベビーカー",
+    "reason": "「紫外線/日差しが気になる」は商品名では「UVカット」「サンシェード」。 展開規則 uv-shade-stroller-canopy（モール検索語「UVカット サンシェード ベビーカー」）。",
+    "category": "uv-shade-stroller-canopy",
+    "search_terms": {
+      "ja": [
+        "UVカット サンシェード ベビーカー",
+        "ベビーカー 日除けカバー",
+        "UVカット ベビーカーカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベビーカーの日焼け対策をしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーカーの紫外線・日差し・日焼けが気になる/対策したい",
+    "ideal_answer": "UVカット・サンシェード機能付きのベビーカー用カバー・ベビーカー",
+    "reason": "「紫外線/日差しが気になる」は商品名では「UVカット」「サンシェード」。 展開規則 uv-shade-stroller-canopy（モール検索語「UVカット サンシェード ベビーカー」）。",
+    "category": "uv-shade-stroller-canopy",
+    "search_terms": {
+      "ja": [
+        "UVカット サンシェード ベビーカー",
+        "ベビーカー 日除けカバー",
+        "UVカット ベビーカーカバー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ニットが型崩れしないか心配で洗濯ネットを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ニット・セーターが洗濯で型崩れ・伸びるのが心配で洗濯ネットを探している",
+    "ideal_answer": "ニット専用の型崩れ防止・大きめ洗濯ネット",
+    "reason": "「型崩れしない/伸びない」ように洗うなら商品名では「ニット専用 洗濯ネット」。 展開規則 shape-keeping-knit-wash-net（モール検索語「ニット専用 洗濯ネット」）。",
+    "category": "shape-keeping-knit-wash-net",
+    "search_terms": {
+      "ja": [
+        "ニット専用 洗濯ネット",
+        "型崩れ防止 洗濯ネット",
+        "セーター用 洗濯ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "伸びてしまうセーターを洗濯ネットに入れて洗いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ニット・セーターが洗濯で型崩れ・伸びるのが心配で洗濯ネットを探している",
+    "ideal_answer": "ニット専用の型崩れ防止・大きめ洗濯ネット",
+    "reason": "「型崩れしない/伸びない」ように洗うなら商品名では「ニット専用 洗濯ネット」。 展開規則 shape-keeping-knit-wash-net（モール検索語「ニット専用 洗濯ネット」）。",
+    "category": "shape-keeping-knit-wash-net",
+    "search_terms": {
+      "ja": [
+        "ニット専用 洗濯ネット",
+        "型崩れ防止 洗濯ネット",
+        "セーター用 洗濯ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯ネットに入れてもニットが型崩れしそうで心配",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ニット・セーターが洗濯で型崩れ・伸びるのが心配で洗濯ネットを探している",
+    "ideal_answer": "ニット専用の型崩れ防止・大きめ洗濯ネット",
+    "reason": "「型崩れしない/伸びない」ように洗うなら商品名では「ニット専用 洗濯ネット」。 展開規則 shape-keeping-knit-wash-net（モール検索語「ニット専用 洗濯ネット」）。",
+    "category": "shape-keeping-knit-wash-net",
+    "search_terms": {
+      "ja": [
+        "ニット専用 洗濯ネット",
+        "型崩れ防止 洗濯ネット",
+        "セーター用 洗濯ネット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "まつげのカールがすぐ下がってしまうマスカラが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まつげのカールがすぐ下がる/持続しないマスカラで困っている",
+    "ideal_answer": "カールキープ(カール持続)タイプのマスカラ",
+    "reason": "「カールが下がる/持続しない」は商品名では「カールキープ」。 展開規則 curl-lasting-mascara（モール検索語「カールキープ マスカラ」）。",
+    "category": "curl-lasting-mascara",
+    "search_terms": {
+      "ja": [
+        "カールキープ マスカラ",
+        "カール持続 マスカラ",
+        "カールロング マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マスカラをつけてもまつ毛がすぐ下がる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まつげのカールがすぐ下がる/持続しないマスカラで困っている",
+    "ideal_answer": "カールキープ(カール持続)タイプのマスカラ",
+    "reason": "「カールが下がる/持続しない」は商品名では「カールキープ」。 展開規則 curl-lasting-mascara（モール検索語「カールキープ マスカラ」）。",
+    "category": "curl-lasting-mascara",
+    "search_terms": {
+      "ja": [
+        "カールキープ マスカラ",
+        "カール持続 マスカラ",
+        "カールロング マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "カールが持続しないマスカラで困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まつげのカールがすぐ下がる/持続しないマスカラで困っている",
+    "ideal_answer": "カールキープ(カール持続)タイプのマスカラ",
+    "reason": "「カールが下がる/持続しない」は商品名では「カールキープ」。 展開規則 curl-lasting-mascara（モール検索語「カールキープ マスカラ」）。",
+    "category": "curl-lasting-mascara",
+    "search_terms": {
+      "ja": [
+        "カールキープ マスカラ",
+        "カール持続 マスカラ",
+        "カールロング マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "散歩後に犬の足が泥だらけになって困る",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "散歩後に犬の足・肉球が汚れる/泥だらけになり、洗うのが大変",
+    "ideal_answer": "シリコン製などの犬用・ペット用足洗いカップ",
+    "reason": "「足が汚れる/洗うのが大変」は商品名では「足洗いカップ」。 展開規則 easy-paw-cleaning-cup（モール検索語「犬用 足洗いカップ」）。",
+    "category": "easy-paw-cleaning-cup",
+    "search_terms": {
+      "ja": [
+        "犬用 足洗いカップ",
+        "ペット用 足洗いカップ",
+        "シリコン 足洗いカップ 犬"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬の足を洗うのが大変でシリコンカップを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "散歩後に犬の足・肉球が汚れる/泥だらけになり、洗うのが大変",
+    "ideal_answer": "シリコン製などの犬用・ペット用足洗いカップ",
+    "reason": "「足が汚れる/洗うのが大変」は商品名では「足洗いカップ」。 展開規則 easy-paw-cleaning-cup（モール検索語「犬用 足洗いカップ」）。",
+    "category": "easy-paw-cleaning-cup",
+    "search_terms": {
+      "ja": [
+        "犬用 足洗いカップ",
+        "ペット用 足洗いカップ",
+        "シリコン 足洗いカップ 犬"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "愛犬の足が汚れるのでさっと洗えるグッズが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "散歩後に犬の足・肉球が汚れる/泥だらけになり、洗うのが大変",
+    "ideal_answer": "シリコン製などの犬用・ペット用足洗いカップ",
+    "reason": "「足が汚れる/洗うのが大変」は商品名では「足洗いカップ」。 展開規則 easy-paw-cleaning-cup（モール検索語「犬用 足洗いカップ」）。",
+    "category": "easy-paw-cleaning-cup",
+    "search_terms": {
+      "ja": [
+        "犬用 足洗いカップ",
+        "ペット用 足洗いカップ",
+        "シリコン 足洗いカップ 犬"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
