@@ -58,6 +58,7 @@ jobs:
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id, status, substr(published_at,1,16) AS published_at, (caption LIKE '%準備中%') AS has_pending, substr(last_error,1,60) AS err FROM social_post_queue WHERE post_id LIKE 'hoshilu-carousel-v3-%-2026-10-03' OR post_id LIKE 'hoshilu-carousel-v3-fallback-%-2026-10-03' ORDER BY post_id;" | jq -c '.[0].results' | tee carousel-check.json || true
       # 2026-10-05 大隆さん指摘「ホシルバズが商品出てないよ」（20:15 JST、画面は「公式ランキングを取得できませんでした」）。
       # Cowork からは hoshilu.app に届かないので、本番の /api/buzz/shelf を 3 回叩いて状態・所要時間・棚の数だけ記録する（読むだけ）。
+      # 2026-10-05 20:31 JST 再計測: #586（結果全体のキャッシュ）反映後の所要時間を確認する。
       - name: Probe /api/buzz/shelf
         if: always()
         working-directory: tools/line-worker
