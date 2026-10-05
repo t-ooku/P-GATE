@@ -51,6 +51,12 @@ Cowork は管理 API に届かないので、月曜の結果はリポジトリ�
 
 日次販促の scheduled task がインシデントとして報告した件。**(a) 10本はそのまま流し、日次タスクは該当日の Seller 枠（X/Threads 12:35）を休む**で決定。Claude Code の作業は無し（既存行に触らない）。日次タスク側の指示は Cowork が更新する。
 
+## 13. 週次記録 workflow が 10/5 07:07 JST に動かなかった（Cowork 確認 2026-10-05 09:00 JST）
+
+- `docs/handoff/2026-10-05-seller-promo-weekly.md` が 09:00 時点で無い。`seller-promo-weekly-record.yml` は main にもあるが、schedule run が走った形跡が無い（Codex の 10/5 selfcheck も同じ指摘）。
+- Cowork は Actions の run 一覧・workflow_dispatch に届かないので、**Claude Code で (1) Actions の該当 workflow が有効か（既定ブランチでの初回 schedule は登録に時間がかかる／無効化されていないか）、(2) `workflow_dispatch` を `week_key=2026-W41` で手動実行して記録ファイルを作る、(3) 来週 10/12 07:07 に自動で動く見込みかを progress に 1 行**、をお願いします。
+- 参考（Cowork が本番 D1 を直接読んだ W41 の結果。記録ファイルの代わりに残す）: `qa-shop-1` job **DONE**（06:15 JST、attempt 2、error=`IMAGE_SKIPPED_NO_R2`）。納品物: ARTICLE v1 **QA_FAILED**（`FORBIDDEN_EXPRESSION`: 「商品データ」「データに記載」「記載がござ…」= §9 で足した禁止表現が効いた）→ ARTICLE v2 QA_PASSED、SNS v1 QA_PASSED、IMPROVEMENT v1 QA_PASSED。原価 **5.47 円**（W40 は 3.24 円。作り直し 1 回分）。所見: 品質ガードは狙いどおり。v1 で落ちた語は生成プロンプト側でも避けるよう促すと原価が戻る。
+
 ## 3. 申込があったときの登録
 
 申込が来たら `docs/handoff/YYYY-MM-DD-cowork-to-claude-code-ai-promo-store-N.md` で依頼します（ひな形は返信の型 §E）。
