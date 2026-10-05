@@ -10047,5 +10047,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "収納ボックスの中身が一目でわからなくて困る",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納ボックス・ケース・ラックの中身が一目でわからない",
+    "ideal_answer": "中身がわかるクリア(透明)タイプの収納ボックス・ケース",
+    "reason": "「中身がわからない」は商品名では「クリア」「透明」。 展開規則 clear-view-storage-box（モール検索語「クリア 収納ボックス」）。",
+    "category": "clear-view-storage-box",
+    "search_terms": {
+      "ja": [
+        "クリア 収納ボックス",
+        "中身がわかる 収納ケース",
+        "透明 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "収納ケースに何を入れたか分からなくなる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納ボックス・ケース・ラックの中身が一目でわからない",
+    "ideal_answer": "中身がわかるクリア(透明)タイプの収納ボックス・ケース",
+    "reason": "「中身がわからない」は商品名では「クリア」「透明」。 展開規則 clear-view-storage-box（モール検索語「クリア 収納ボックス」）。",
+    "category": "clear-view-storage-box",
+    "search_terms": {
+      "ja": [
+        "クリア 収納ボックス",
+        "中身がわかる 収納ケース",
+        "透明 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "収納ラックのどこに何があるかわからなくて探すのが大変",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納ボックス・ケース・ラックの中身が一目でわからない",
+    "ideal_answer": "中身がわかるクリア(透明)タイプの収納ボックス・ケース",
+    "reason": "「中身がわからない」は商品名では「クリア」「透明」。 展開規則 clear-view-storage-box（モール検索語「クリア 収納ボックス」）。",
+    "category": "clear-view-storage-box",
+    "search_terms": {
+      "ja": [
+        "クリア 収納ボックス",
+        "中身がわかる 収納ケース",
+        "透明 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お弁当袋の口を子供が自分では開けられない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お弁当袋の口を子供が自分では開けられない/うまく開け閉めできない",
+    "ideal_answer": "ゴム口など子供でも自分で開け閉めしやすいお弁当袋",
+    "reason": "「自分で開けられない/開け閉めが難しい」は商品名では「開けやすい」。 展開規則 easy-open-lunch-pouch（モール検索語「開けやすい お弁当袋」）。",
+    "category": "easy-open-lunch-pouch",
+    "search_terms": {
+      "ja": [
+        "開けやすい お弁当袋",
+        "子供でも開けやすい お弁当袋",
+        "ゴム式 お弁当袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お弁当袋の口がうまく開けられなくて困っている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お弁当袋の口を子供が自分では開けられない/うまく開け閉めできない",
+    "ideal_answer": "ゴム口など子供でも自分で開け閉めしやすいお弁当袋",
+    "reason": "「自分で開けられない/開け閉めが難しい」は商品名では「開けやすい」。 展開規則 easy-open-lunch-pouch（モール検索語「開けやすい お弁当袋」）。",
+    "category": "easy-open-lunch-pouch",
+    "search_terms": {
+      "ja": [
+        "開けやすい お弁当袋",
+        "子供でも開けやすい お弁当袋",
+        "ゴム式 お弁当袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "幼稚園のお弁当袋の開け閉めが難しいみたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お弁当袋の口を子供が自分では開けられない/うまく開け閉めできない",
+    "ideal_answer": "ゴム口など子供でも自分で開け閉めしやすいお弁当袋",
+    "reason": "「自分で開けられない/開け閉めが難しい」は商品名では「開けやすい」。 展開規則 easy-open-lunch-pouch（モール検索語「開けやすい お弁当袋」）。",
+    "category": "easy-open-lunch-pouch",
+    "search_terms": {
+      "ja": [
+        "開けやすい お弁当袋",
+        "子供でも開けやすい お弁当袋",
+        "ゴム式 お弁当袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "扇風機の羽根に指を入れてしまいそうで心配",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "扇風機・サーキュレーターの羽根に指を入れてしまいそうで心配/子供が触っても安全なものが欲しい",
+    "ideal_answer": "指が入りにくい安全設計(羽根なし含む)の扇風機・サーキュレーター",
+    "reason": "「指を入れてしまいそうで心配」は商品名では「安全設計」「羽根なし」。 展開規則 finger-safe-fan-guard（モール検索語「安全設計 扇風機」）。",
+    "category": "finger-safe-fan-guard",
+    "search_terms": {
+      "ja": [
+        "安全設計 扇風機",
+        "指が入らない 扇風機",
+        "安全カバー サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "小さい子供が触っても安全な扇風機が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "扇風機・サーキュレーターの羽根に指を入れてしまいそうで心配/子供が触っても安全なものが欲しい",
+    "ideal_answer": "指が入りにくい安全設計(羽根なし含む)の扇風機・サーキュレーター",
+    "reason": "「指を入れてしまいそうで心配」は商品名では「安全設計」「羽根なし」。 展開規則 finger-safe-fan-guard（モール検索語「安全設計 扇風機」）。",
+    "category": "finger-safe-fan-guard",
+    "search_terms": {
+      "ja": [
+        "安全設計 扇風機",
+        "指が入らない 扇風機",
+        "安全カバー サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "サーキュレーターの羽根に指が入らないか不安",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "扇風機・サーキュレーターの羽根に指を入れてしまいそうで心配/子供が触っても安全なものが欲しい",
+    "ideal_answer": "指が入りにくい安全設計(羽根なし含む)の扇風機・サーキュレーター",
+    "reason": "「指を入れてしまいそうで心配」は商品名では「安全設計」「羽根なし」。 展開規則 finger-safe-fan-guard（モール検索語「安全設計 扇風機」）。",
+    "category": "finger-safe-fan-guard",
+    "search_terms": {
+      "ja": [
+        "安全設計 扇風機",
+        "指が入らない 扇風機",
+        "安全カバー サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "靴下がすぐ破れてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴下・ソックスがすぐ破れる/穴が開く",
+    "ideal_answer": "丈夫で破れにくい・穴があきにくい靴下",
+    "reason": "「すぐ破れる/穴が開く」は商品名では「丈夫な」「破れにくい」。 展開規則 durable-no-hole-socks（モール検索語「丈夫な 靴下」）。",
+    "category": "durable-no-hole-socks",
+    "search_terms": {
+      "ja": [
+        "丈夫な 靴下",
+        "破れにくい 靴下",
+        "穴があきにくい ソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ソックスのつま先にすぐ穴が開く",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴下・ソックスがすぐ破れる/穴が開く",
+    "ideal_answer": "丈夫で破れにくい・穴があきにくい靴下",
+    "reason": "「すぐ破れる/穴が開く」は商品名では「丈夫な」「破れにくい」。 展開規則 durable-no-hole-socks（モール検索語「丈夫な 靴下」）。",
+    "category": "durable-no-hole-socks",
+    "search_terms": {
+      "ja": [
+        "丈夫な 靴下",
+        "破れにくい 靴下",
+        "穴があきにくい ソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "靴下に穴が空いてすぐダメになる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "靴下・ソックスがすぐ破れる/穴が開く",
+    "ideal_answer": "丈夫で破れにくい・穴があきにくい靴下",
+    "reason": "「すぐ破れる/穴が開く」は商品名では「丈夫な」「破れにくい」。 展開規則 durable-no-hole-socks（モール検索語「丈夫な 靴下」）。",
+    "category": "durable-no-hole-socks",
+    "search_terms": {
+      "ja": [
+        "丈夫な 靴下",
+        "破れにくい 靴下",
+        "穴があきにくい ソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "歯ぎしりがひどいので使うマウスピース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歯ぎしり・食いしばりが気になる/つらい",
+    "ideal_answer": "歯ぎしり・食いしばり対策用のマウスピース(ナイトガード)",
+    "reason": "「歯ぎしり/食いしばりがひどい」は商品名では「マウスピース」「ナイトガード」。 展開規則 teeth-grinding-mouthguard（モール検索語「マウスピース 歯ぎしり対策」）。",
+    "category": "teeth-grinding-mouthguard",
+    "search_terms": {
+      "ja": [
+        "マウスピース 歯ぎしり対策",
+        "歯ぎしり防止 マウスピース",
+        "食いしばり対策 マウスピース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "食いしばりがつらくて探しているマウスピース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歯ぎしり・食いしばりが気になる/つらい",
+    "ideal_answer": "歯ぎしり・食いしばり対策用のマウスピース(ナイトガード)",
+    "reason": "「歯ぎしり/食いしばりがひどい」は商品名では「マウスピース」「ナイトガード」。 展開規則 teeth-grinding-mouthguard（モール検索語「マウスピース 歯ぎしり対策」）。",
+    "category": "teeth-grinding-mouthguard",
+    "search_terms": {
+      "ja": [
+        "マウスピース 歯ぎしり対策",
+        "歯ぎしり防止 マウスピース",
+        "食いしばり対策 マウスピース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝ている間の歯ぎしり対策になるマウスピース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歯ぎしり・食いしばりが気になる/つらい",
+    "ideal_answer": "歯ぎしり・食いしばり対策用のマウスピース(ナイトガード)",
+    "reason": "「歯ぎしり/食いしばりがひどい」は商品名では「マウスピース」「ナイトガード」。 展開規則 teeth-grinding-mouthguard（モール検索語「マウスピース 歯ぎしり対策」）。",
+    "category": "teeth-grinding-mouthguard",
+    "search_terms": {
+      "ja": [
+        "マウスピース 歯ぎしり対策",
+        "歯ぎしり防止 マウスピース",
+        "食いしばり対策 マウスピース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
