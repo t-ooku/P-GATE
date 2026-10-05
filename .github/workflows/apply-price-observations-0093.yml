@@ -56,6 +56,21 @@ jobs:
           grep -q '"rows"' price-observations-check.json
           # 10/3 カルーセル（#543: 送る直前に「（体験開始は準備中）」を外す）の確認。本文は出さず、準備中の有無だけ。
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id, status, substr(published_at,1,16) AS published_at, (caption LIKE '%準備中%') AS has_pending, substr(last_error,1,60) AS err FROM social_post_queue WHERE post_id LIKE 'hoshilu-carousel-v3-%-2026-10-03' OR post_id LIKE 'hoshilu-carousel-v3-fallback-%-2026-10-03' ORDER BY post_id;" | jq -c '.[0].results' | tee carousel-check.json || true
+      # 2026-10-05 大隆さん指摘「ホシルバズが商品出てないよ」（20:15 JST、画面は「公式ランキングを取得できませんでした」）。
+      # Cowork からは hoshilu.app に届かないので、本番の /api/buzz/shelf を 3 回叩いて状態・所要時間・棚の数だけ記録する（読むだけ）。
+      - name: Probe /api/buzz/shelf
+        if: always()
+        working-directory: tools/line-worker
+        run: |
+          set -uo pipefail
+          : > buzz-probe.txt
+          for i in 1 2 3; do
+            code_time="$(curl -sS -o /tmp/buzz.json -w '%{http_code} %{time_total} %{content_type}' --max-time 60 -H 'accept: application/json' https://hoshilu.app/api/buzz/shelf 2>&1 || true)"
+            summary="$(jq -c '{ok, error, shelves: (.result.shelf_count // null), items: ([.result.shelves[]?.items | length] | add // 0), empty_shelves: ([.result.shelves[]? | select((.items|length)==0) | .shelf_id])}' /tmp/buzz.json 2>/dev/null || head -c 160 /tmp/buzz.json | tr -d '\n')"
+            echo "#$i ${code_time} ${summary}" >> buzz-probe.txt
+            sleep 20
+          done
+          cat buzz-probe.txt
       # 結果を Issue #545（[PATCH] 価格推移の記録）に書く。サンドボックスから Actions の実行結果を読めないため。
       - name: Report to issue 545
         if: always()
@@ -67,5 +82,6 @@ jobs:
           status="${{ job.status }}"
           check="$(tr -d '\n' < price-observations-check.json 2>/dev/null | tail -c 900 || echo 'no check output')"
           carousel="$(tr -d '\n' < carousel-check.json 2>/dev/null | tail -c 900 || echo 'no carousel output')"
-          body="migration 0093 workflow: **${status}** (run ${{ github.run_id }}, head ${GITHUB_SHA::7})\n\nprice_observations: \`${check}\`\n\ncarousel 2026-10-03: \`${carousel}\`"
+          buzz="$(sed 's/$/ ;/' buzz-probe.txt 2>/dev/null | tr -d '\n' | tail -c 1200 || echo 'no buzz probe')"
+          body="migration 0093 workflow: **${status}** (run ${{ github.run_id }}, head ${GITHUB_SHA::7})\n\nprice_observations: \`${check}\`\n\ncarousel 2026-10-03: \`${carousel}\`\n\nbuzz shelf probe: \`${buzz}\`"
           gh api repos/${{ github.repository }}/issues/545/comments -f body="$(printf '%b' "$body")"
