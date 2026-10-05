@@ -11,7 +11,7 @@ import { TRIAL_PENDING_COPY } from '../public/seller-trial-policy.mjs';
 const SELLERS_PATH = '/for-sellers';
 const SELLERS_LABEL = '自店の掲載見本を相談する（新規Sellerは商品公開から30日間無料）';
 const UPDATED = '2026-09-27';
-const PROMO_LABEL = 'AI販促担当について見る';
+const PROMO_LABEL = '販促をひとりで抱えない方法を見る';
 
 const sellerEvidence = [
   '各モールの手数料・広告・クーポンの条件は、そのモールの公式ヘルプが正です。数字は必ずそこで確認してください。',

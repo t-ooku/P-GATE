@@ -774,14 +774,21 @@ test('全記事で結論の直後に ?q= 付きの検索CTAが正確な文言と
 // 実数で検索導線クリック(seo_search_transition)が依然0件だった。スクロール
 // 位置に関わらず常に見える固定フッターCTAを追加し、既存のdata-seo-search-link
 // 計測(seo-article-analytics.mjs)にそのまま乗せる。
-test('全記事にスクロール追従の固定検索CTAがあり、既存の計測属性を使う', () => {
+test('全記事にスクロール追従CTAがあり、読者目的に合う既存の計測属性を使う', () => {
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     const stickyCta = html.match(/<div class="sticky-cta">([\s\S]*?)<\/div>\s*<script/)?.[1] || '';
     assert.ok(stickyCta, `${path} must render a sticky footer CTA`);
-    const query = stickyCta.match(/href="\/\?q=([^"]+)" data-seo-search-link/)?.[1] || '';
-    assert.ok(query, `${path} sticky CTA must carry a prefilled ?q= and reuse data-seo-search-link tracking`);
-    assert.ok(decodeURIComponent(query).length <= 200);
+    if (/data-seo-cluster="seller-growth"/.test(html)) {
+      assert.match(stickyCta, /href="\/for-sellers" data-seo-feature-link/,
+        `${path} seller sticky CTA must lead to the seller consultation funnel`);
+      assert.doesNotMatch(stickyCta, /data-seo-search-link/,
+        `${path} seller sticky CTA must not prioritize the buyer search funnel`);
+    } else {
+      const query = stickyCta.match(/href="\/\?q=([^"]+)" data-seo-search-link/)?.[1] || '';
+      assert.ok(query, `${path} sticky CTA must carry a prefilled ?q= and reuse data-seo-search-link tracking`);
+      assert.ok(decodeURIComponent(query).length <= 200);
+    }
   }
 });
 
@@ -833,7 +840,7 @@ test('Seller 向け記事（ブログ・SNSが続かない／楽天GOLD）は料
     assert.ok(html, path);
     assert.match(html, /datetime="2026-10-04"/);
     assert.match(html, /data-seo-article-type="seller-guide"/);
-    assert.match(html, /href="\/for-sellers" data-seo-feature-link[^>]*>AI販促担当について見る/);
+    assert.match(html, /href="\/for-sellers" data-seo-feature-link[^>]*>販促をひとりで抱えない方法を見る/);
     const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<[^>]+>/gu, ' ');
     assert.doesNotMatch(text, /[0-9][0-9,]*円/u, '本文に料金を書かない');
     assert.doesNotMatch(text, /売上が(?:必ず|確実に)?(?:上がります|増えます)|最安(?:値)?です|人気No\.1|絶対おすすめ/u);

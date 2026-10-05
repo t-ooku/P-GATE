@@ -4252,10 +4252,13 @@ export function renderSeoPage(pathname, env = {}) {
   // 2026-09-05: 実数(直近30日)でSEO記事は184閲覧に対し、結論直後・記事中盤・
   // 末尾の3箇所にCTAを置いた後も検索導線クリック(seo_search_transition)が
   // 依然0件だった。読者がスクロール中にCTAへ到達できていない可能性が高いため、
-  // スクロール位置に関わらず常に見える固定フッターCTAを追加する。既存の
-  // data-seo-search-link属性を使うので、既存の計測(seo-article-analytics.mjs)
-  // がそのまま拾う。
-  const stickyCta = `<div class="sticky-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></div>`;
+  // スクロール位置に関わらず常に見える固定フッターCTAを追加する。
+  // 2026-10-06: セラー向け記事は購入者検索ではなく /for-sellers が主目的。
+  // seller-growth だけ featurePath を固定CTAに採用し、既存の
+  // data-seo-feature-link 計測へ載せる。その他の記事は従来の検索導線を維持する。
+  const stickyCta = profile.cluster === 'seller-growth' && page.featurePath
+    ? `<div class="sticky-cta"><a href="${esc(page.featurePath)}" data-seo-feature-link>${esc(page.featureLabel || (isJa ? 'HOSHILUへの掲載を相談する' : 'Talk to HOSHILU'))}</a></div>`
+    : `<div class="sticky-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></div>`;
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
     evidence: 'おすすめ・比較の根拠', reviews: '口コミを確認するときのポイント', identity: '同一商品と類似商品の違い',
