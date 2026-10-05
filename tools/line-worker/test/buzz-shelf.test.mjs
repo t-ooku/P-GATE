@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS, BUZZ_HOME_GENRE_IDS, BUZZ_HOME_GENRE_ITEM_LIMIT, BUZZ_GENRE_EMOJI,
-  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots
+  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots,
+  BUZZ_RESULT_CACHE_TTL_MS, cachedBuzzShelfResult, warmBuzzShelves
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 import { hasVersionedAsset } from './helpers/asset-version.mjs';
@@ -284,7 +285,8 @@ test('workerは/api/buzz/shelfをGET・5分キャッシュで公開する', () =
   assert.match(source, /url\.pathname === '\/api\/buzz\/shelf'/u);
   const route = source.slice(source.indexOf("'/api/buzz/shelf'"));
   assert.match(route.slice(0, 2000), /max-age=300/u);
-  assert.match(source, /import \{ buzzShelfResult, recordBuzzSnapshots, warmBuzzShelves \} from '\.\/buzz-shelf\.mjs';/u);
+  assert.match(source, /import \{ cachedBuzzShelfResult, recordBuzzSnapshots, warmBuzzShelves \} from '\.\/buzz-shelf\.mjs';/u);
+  assert.match(route.slice(0, 2000), /await cachedBuzzShelfResult\(env, fetch\)/u);
   // 2026-09-20: 15 分ごとの cron で棚キャッシュを温める。
   assert.match(source, /ctx\.waitUntil\(warmBuzzShelves\(env, fetch, scheduledAt\.getTime\(\)\)\);/u);
   // v3.1 §11-14/§33: 「◯◯で探す」検索フォールバックは署名付き/goリンクで付与し、
@@ -618,4 +620,59 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
   assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=11/);
+});
+
+
+// 2026-10-05 大隆さん指摘「ホシルバズが商品出てないよ」: 訪問時は予熱済みの結果全体を 1 回読むだけにする。
+function memoryRankingCacheDb() {
+  const rows = new Map();
+  return {
+    rows,
+    prepare(sql) {
+      const statement = (args = []) => ({
+        async first() {
+          if (/FROM marketplace_ranking_cache/u.test(sql)) return rows.get(args.slice(0, 3).join('|')) || null;
+          return null;
+        },
+        async run() {
+          if (/INSERT INTO marketplace_ranking_cache/u.test(sql)) {
+            const [marketplace, category, type, payload, expiresAt] = args;
+            rows.set([marketplace, category, type].join('|'), { payload_json: payload, expires_at: expiresAt });
+          }
+          return { success: true };
+        },
+        async all() { return { results: [] }; }
+      });
+      return { ...statement(), bind: (...args) => statement(args) };
+    },
+    async batch() { return []; }
+  };
+}
+
+test('BUZZ: 予熱が結果全体を置き、訪問はそれを読むだけで楽天へ行かない', async () => {
+  const db = memoryRankingCacheDb();
+  const now = Date.parse('2026-10-05T20:15:00+09:00');
+  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, rankingFetcher(), now);
+  assert.equal(warmed.stored, true);
+  const stored = db.rows.get('HOSHILU|buzz_shelf_result|RESULT');
+  assert.ok(stored, '結果全体が 1 行で置かれる');
+  assert.equal(Date.parse(stored.expires_at) - now, BUZZ_RESULT_CACHE_TTL_MS);
+  let calls = 0;
+  const countingFetcher = async () => { calls += 1; throw new Error('should not fetch'); };
+  const result = await cachedBuzzShelfResult({ ...env, PRODUCT_DB: db }, countingFetcher, now + 5 * 60 * 1000);
+  assert.equal(calls, 0);
+  assert.equal(result.served_from, 'result_cache');
+  assert.ok(result.shelves.some((shelf) => shelf.items.length > 0));
+  // 期限切れなら従来どおり組み上げる（公式データだけ）。
+  const later = await cachedBuzzShelfResult({ ...env, PRODUCT_DB: db }, rankingFetcher(), now + BUZZ_RESULT_CACHE_TTL_MS + 1000);
+  assert.equal(later.served_from, undefined);
+  assert.ok(later.shelves.some((shelf) => shelf.items.length > 0));
+});
+
+test('BUZZ: 商品が 1 件も無い結果は置かない（空の棚を 20 分見せない）', async () => {
+  const db = memoryRankingCacheDb();
+  const failing = async () => new Response('down', { status: 503 });
+  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, failing, Date.parse('2026-10-05T20:15:00+09:00'));
+  assert.equal(warmed.stored, false);
+  assert.equal(db.rows.has('HOSHILU|buzz_shelf_result|RESULT'), false);
 });

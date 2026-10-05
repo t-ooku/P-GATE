@@ -308,7 +308,8 @@ export async function recordBuzzSnapshots(env, fetcher = fetch, now = Date.now()
 export async function warmBuzzShelves(env, fetcher = fetch, now = Date.now()) {
   try {
     const result = await buzzShelfResult(env, fetcher, now);
-    return { warmed: result.shelf_count };
+    const stored = await storeBuzzShelfResult(env, result, now);
+    return { warmed: result.shelf_count, stored };
   } catch (error) {
     return { warmed: 0, error: String(error?.message || 'BUZZ_WARM_FAILED').slice(0, 80) };
   }
@@ -443,7 +444,8 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   }
   if (!candidates.length) return null;
   if (shouldWriteCache) {
-    await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates);
+    // 2026-10-05: 既定 5 分だと訪問のたびに Yahoo! の直列キュー（2.1 秒間隔）を待っていた。他の棚と同じ 20 分にして、15 分ごとの予熱で切らさない。
+    await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
   }
   const items = (candidates || [])
     .map(sanitizeShelfItem)
@@ -497,6 +499,31 @@ function withBuzzRanks(shelf) {
       rank: index + 1
     }))
   };
+}
+
+// 2026-10-05 大隆さん指摘「ホシルバズが商品出てないよ」: 本番の /api/buzz/shelf は棚キャッシュが温まっていても
+// 7〜15 秒かかり（19 棚ぶんの D1 読み＋韓国コスメ棚の Yahoo! 直列キュー）、遅い回は画面に「取得できませんでした」が出た。
+// 15 分ごとの予熱で組み上げた結果全体を D1 に 1 行で置き、訪問時はそれを 1 回読むだけにする。
+// 中身は同じ公式ランキングのデータで、作り足さない。商品が 1 件も無い結果は置かない（空の棚を 20 分見せない）。
+export const BUZZ_RESULT_CACHE_TTL_MS = 20 * 60 * 1000;
+const BUZZ_RESULT_CACHE = Object.freeze({ marketplace: 'HOSHILU', category: 'buzz_shelf_result', type: 'RESULT' });
+
+function hasAnyItems(result) {
+  return Array.isArray(result?.shelves) && result.shelves.some((shelf) => (shelf.items || []).length > 0);
+}
+
+async function storeBuzzShelfResult(env, result, now = Date.now()) {
+  if (!hasAnyItems(result)) return false;
+  await writeRankingCache(env, BUZZ_RESULT_CACHE.marketplace, BUZZ_RESULT_CACHE.category, BUZZ_RESULT_CACHE.type, [result], now, BUZZ_RESULT_CACHE_TTL_MS);
+  return true;
+}
+
+export async function cachedBuzzShelfResult(env, fetcher = fetch, now = Date.now()) {
+  const cached = await readRankingCache(env, BUZZ_RESULT_CACHE.marketplace, BUZZ_RESULT_CACHE.category, BUZZ_RESULT_CACHE.type, now);
+  if (hasAnyItems(cached?.[0])) return { ...cached[0], served_from: 'result_cache' };
+  const result = await buzzShelfResult(env, fetcher, now);
+  await storeBuzzShelfResult(env, result, now);
+  return result;
 }
 
 export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {

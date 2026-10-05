@@ -55,7 +55,7 @@ import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.m
 import { readBoundedJson } from './bounded-json.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
-import { buzzShelfResult, recordBuzzSnapshots, warmBuzzShelves } from './buzz-shelf.mjs';
+import { cachedBuzzShelfResult, recordBuzzSnapshots, warmBuzzShelves } from './buzz-shelf.mjs';
 import { handleBuzzNotificationRoutes, queueBuzzThemeNotifications } from './buzz-notifications.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import {
@@ -3907,7 +3907,8 @@ export default {
       // HOSHILU BUZZ棚(Phase 1)。順位根拠はモール公式ランキングAPIのみ。
       // 上流はmarketplace_ranking_cache(D1・5分)で保護し、レスポンスも5分キャッシュ。
       try {
-        const result = await buzzShelfResult(env, fetch);
+        // 2026-10-05: 予熱済みの結果全体を 1 回読むだけにする（無い時だけ従来どおり組み上げる）。
+        const result = await cachedBuzzShelfResult(env, fetch);
         // v3.1 §11-14/§17/§30: 商品の発見と購入先の解決を分離する。各ジャンル棚へ
         // 「◯◯で探す」検索フォールバック(署名付き/goリンク=モールクリック計測§33)
         // を付与。検索語は検証済み小ジャンル名。「見る」(直接商品URL)とは表示を
