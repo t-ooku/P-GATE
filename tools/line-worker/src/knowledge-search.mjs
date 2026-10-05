@@ -2848,6 +2848,31 @@ export function filterCategoryMismatches(query, candidates = []) {
     ) || implicitLightUpPhoneCase;
   const evidenceFilteredCandidates = candidates.filter((candidate) =>
     passesExplicitSearchEvidenceGate(normalizedQuery, candidate));
+  // Teacher Dataset connection (2026-08-05 v3.1; moved up 2026-10-05): when the
+  // query exactly matches a committed teacher-dataset entry (evaluation/
+  // teacher-dataset/*.json), its GPT/human-authored excluded_conditions are
+  // enforced against every candidate. This used to be computed and applied
+  // only after the early-return below, so the comment's claim ("enforced...
+  // before any of the category-specific checks below run") was false for any
+  // query whose RULES category set is empty and that also doesn't match one
+  // of the many narrow intent flags above (requested.size===0, every *Intent
+  // false) - energy_saving_kotatsu ("電気代が気にならないこたつ") is exactly
+  // this case ('kotatsu' has no RULES entry), so a "こたつ布団セット"
+  // accessory the teacher explicitly excludes never actually got filtered,
+  // taking the #1 slot ahead of real こたつ本体 candidates (2026-10-05 canary
+  // FAIL). Computing and applying it here, before the early return, makes the
+  // enforcement real for every query, independent of whether a RULES
+  // category or narrow intent flag also matched.
+  const teacherEntry = lookupTeacherDatasetEntry(query);
+  const teacherExcludedTerms = (teacherEntry?.excluded_conditions || [])
+    .map((term) => String(term || '').normalize('NFKC').toLowerCase())
+    .filter(Boolean);
+  const teacherFilteredCandidates = teacherExcludedTerms.length
+    ? evidenceFilteredCandidates.filter((candidate) => {
+      const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
+      return !teacherExcludedTerms.some((term) => candidateText.includes(term));
+    })
+    : evidenceFilteredCandidates;
   if (!requested.size && !bentoDividerIntent && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
@@ -2861,7 +2886,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
     && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent
-    && !cameraPetFeederIntent && !iplHairRemovalIntent) return evidenceFilteredCandidates;
+    && !cameraPetFeederIntent && !iplHairRemovalIntent) return teacherFilteredCandidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = !rejectsLightUpPhoneCase(normalizedQuery) && ((groups.some((group) => group.category === 'light-up')
@@ -2902,21 +2927,9 @@ export function filterCategoryMismatches(query, candidates = []) {
     screenSize: tabletScreenSize(query),
     generation: tabletGeneration(query)
   };
-  // Teacher Dataset connection (2026-08-05 v3.1): when the query exactly
-  // matches a committed teacher-dataset entry (evaluation/teacher-dataset/
-  // *.json), its GPT/human-authored excluded_conditions are enforced against
-  // every candidate before any of the category-specific checks below run.
-  // Only fires on an exact/normalized match, so non-matching queries are
-  // unaffected.
-  const teacherEntry = lookupTeacherDatasetEntry(query);
-  const teacherExcludedTerms = (teacherEntry?.excluded_conditions || [])
-    .map((term) => String(term || '').normalize('NFKC').toLowerCase())
-    .filter(Boolean);
-  return evidenceFilteredCandidates.filter((candidate) => {
-    if (teacherExcludedTerms.length) {
-      const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
-      if (teacherExcludedTerms.some((term) => candidateText.includes(term))) return false;
-    }
+  // teacherExcludedTerms is already applied above (teacherFilteredCandidates),
+  // before this point, so it is not re-checked here.
+  return teacherFilteredCandidates.filter((candidate) => {
     if (bentoDividerIntent) return !isBentoDividerMismatch(candidate);
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);

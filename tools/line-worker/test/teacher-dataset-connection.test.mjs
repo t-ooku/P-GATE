@@ -62,6 +62,24 @@ test('filterCategoryMismatchesは教師データのexcluded_conditionsで候補�
   assert.deepEqual(filtered.map((item) => item.asin), ['REAL01']);
 });
 
+// 2026-10-05 カナリアFAIL(energy_saving_kotatsu)で発覚: filterCategoryMismatches
+// の教師データexcluded_conditions適用(上の「カットソー」テスト)は、このクエリの
+// ようにRULESカテゴリが1件も無く(「こたつ」はsearch-intelligence.mjsのRULESに
+// 未登録)、他の個別intentフラグも立たない場合、requested.size===0の早期returnが
+// それより前に走ってしまい、一度も適用されずに素通りしていた(関数内コメントの
+// 「excluded_conditionsはどの個別チェックより先に効く」という説明に反する実動作)。
+// 本体商品(ポケットこたつ)は通り、teacherが明示的に除外している「こたつ布団」
+// アクセサリ単品(本体なし)は除外されることを確認する。
+test('filterCategoryMismatchesは教師データのexcluded_conditionsで候補を除外する(RULESカテゴリの無いクエリ: こたつ)', () => {
+  const entry = lookupTeacherDatasetEntry('電気代が気にならないこたつ');
+  assert.ok(entry.excluded_conditions.includes('こたつ布団'));
+  const filtered = filterCategoryMismatches('電気代が気にならないこたつ', [
+    { asin: 'REAL01', product_name: 'ポケットこたつ 省エネ 一人用 こたつ本体' },
+    { asin: 'BAD01', product_name: 'こたつ布団セット 正方形 こたつ こたつセット コタツ布団セット こたつふとんセット' }
+  ]);
+  assert.deepEqual(filtered.map((item) => item.asin), ['REAL01']);
+});
+
 test('必須検索テストの6クエリすべてが教師データで解決またはUNCLASSIFIED確認質問を持つ', () => {
   const requiredQueries = [
     'カットソー',
