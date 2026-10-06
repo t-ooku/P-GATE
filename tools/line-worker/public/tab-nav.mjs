@@ -7,7 +7,10 @@ const VIEWS = [
   { id: 'search', label: '探す', title: '探す', sub: 'メイン検索・ジャンル・人気の小ジャンル', icon: 'M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm5.6 8.2 4.9 4.9-1.4 1.4-4.9-4.9 1.4-1.4Z' },
   // 2026-09-19 大隆さん指示: 「ホシる中」と「ショップ」の位置を交換（探す → ホシる中 → ショップ → セール → マイアカウント）。
   { id: 'hoshiru', label: 'ホシる中', title: 'ホシる中', sub: 'ホシってるもの・気になる商品', icon: 'M12 2.5l2.7 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7l-5.8 3.4 1.5-6.5-5-4.4 6.6-.6L12 2.5Z' },
-  { id: 'shops', label: 'ショップ', title: 'ショップから探す', sub: '全ショップ横断検索・ショップ・クーポン', icon: 'M4 4h16l1 5a3 3 0 0 1-2.5 3V20H5.5v-8A3 3 0 0 1 3 9l1-5Zm3.5 10v4h3v-4h-3Zm5 0v4h3v-4h-3Z' },
+  // 2026-10-06 大隆さん指示「今、ショップページに出店してるセラーいないからショップページは一旦非表示に。固定メニューから外そう」:
+  // ITG 3店舗を非表示にして掲載ショップが 0 になったので、下部メニューから外す（hidden）。節は消さずに隠すだけ
+  // （ショップ一覧・横断検索・クーポンの節はどのタブにも出ない）。出店が始まったら hidden を外せば戻る。旧 URL #tab-shops は探すへ。
+  { id: 'shops', hidden: true, label: 'ショップ', title: 'ショップから探す', sub: '全ショップ横断検索・ショップ・クーポン', icon: 'M4 4h16l1 5a3 3 0 0 1-2.5 3V20H5.5v-8A3 3 0 0 1 3 9l1-5Zm3.5 10v4h3v-4h-3Zm5 0v4h3v-4h-3Z' },
   // 2026-09-20 大隆さん指示: 4番目は「ホシルバズ」→ 2026-10-03 大隆さん指示「ホシルバズのページ何もないなら削除」:
   // BUZZ は探すタブ（検索直下）へ移ったので、このタブは外す（4タブ）。みんなの値下がり待ちはホシる中へ。旧 URL #tab-buzz は探すへ。
   { id: 'account', label: 'マイアカウント', title: 'マイアカウント', sub: 'ログイン・お知らせ・セール通知の設定・公式アカウント', icon: 'M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 11c4.4 0 8 2.2 8 5v2H4v-2c0-2.8 3.6-5 8-5Z' }
@@ -28,7 +31,7 @@ const HOSHIRU_ORDER = ['#insight', '#watchDemand'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
-const VIEW_ALIASES = { sale: 'account', buzz: 'search' };
+const VIEW_ALIASES = { sale: 'account', buzz: 'search', shops: 'search' };
 
 const main = document.querySelector('#top');
 const primary = document.querySelector('.hoshilu-primary');
@@ -74,7 +77,11 @@ if (main && primary) {
   const bar = document.createElement('nav');
   bar.className = 'tab-bar';
   bar.setAttribute('aria-label', 'メインメニュー');
-  for (const view of VIEWS) {
+  const visibleViews = VIEWS.filter((view) => !view.hidden);
+  bar.style.gridTemplateColumns = `repeat(${visibleViews.length},minmax(0,1fr))`;
+  // 検索欄の「ショップから探す」も、ショップを出していない間は出さない。
+  if (VIEWS.some((view) => view.id === 'shops' && view.hidden)) document.querySelector('#shopSearchButton')?.classList.add('hidden');
+  for (const view of visibleViews) {
     const button = document.createElement('a');
     button.className = 'tab-bar-item';
     button.href = `#tab-${view.id}`;
@@ -87,7 +94,7 @@ if (main && primary) {
 
   let current = '';
   function activate(id, { scroll = true } = {}) {
-    const view = VIEWS.find((item) => item.id === (VIEW_ALIASES[id] || id)) || VIEWS[0];
+    const view = VIEWS.find((item) => item.id === (VIEW_ALIASES[id] || id) && !item.hidden) || VIEWS[0];
     if (current === view.id) return view;
     current = view.id;
     for (const node of primary.children) node.classList.toggle('view-hidden', node.dataset.view !== view.id);

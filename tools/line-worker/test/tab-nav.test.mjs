@@ -10,7 +10,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、4 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=5">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=13"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=14"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
@@ -23,7 +23,12 @@ test('トップは tab-nav を読み込み、4 タブと節の割り当てを持
   assert.match(nav, /\['#buzzHome', 'search'\]/);
   assert.match(nav, /\['#watchDemand', 'hoshiru'\]/);
   assert.match(nav, /\['\.sale-center', 'account'\]/);
-  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account', buzz: 'search' \}/);
+  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account', buzz: 'search', shops: 'search' \}/);
+  // 2026-10-06 大隆さん指示: 出店セラーが 0 の間はショップタブを下部メニューから外す（3 タブ）。
+  assert.match(nav, /\{ id: 'shops', hidden: true,/);
+  assert.match(nav, /const visibleViews = VIEWS\.filter\(\(view\) => !view\.hidden\);/);
+  assert.match(nav, /for \(const view of visibleViews\)/);
+  assert.match(nav, /item\.id === \(VIEW_ALIASES\[id\] \|\| id\) && !item\.hidden/);
   assert.match(nav, /\['#shopDirectory', 'shops'\]/);
   assert.match(nav, /\['#officialSocial', 'account'\]/);
   // ページ内リンクは属するタブを開いてからスクロール
