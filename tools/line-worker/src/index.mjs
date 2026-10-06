@@ -23,7 +23,7 @@ import { purgeSellerAuthRecords } from './seller-login-guard.mjs';
 import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
 import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
-import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions, teacherDatasetExclusionCount } from './knowledge-search.mjs';
+import { applyIndexedSearchPolicy, applyTeacherDatasetExclusions, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions, teacherDatasetExclusionCount } from './knowledge-search.mjs';
 import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import {
@@ -3300,9 +3300,21 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const originalLaneCandidates = filterCategoryMismatches(
       expandedQuery.query, originalSearchCandidates
     );
-    const combinedSearchCandidates = rankMerchantCandidates(
+    // Teacher Dataset excluded_conditions are authored against the user's
+    // literal original query text (originalQuery, captured before expansion
+    // at the top of this handler), not the AI/feature-rule-expanded text in
+    // expandedQuery.query/input.query that every filter above this point
+    // actually received. lookupTeacherDatasetEntry() cannot match an
+    // expanded string against the teacher dataset's key, so excluded_conditions
+    // silently never applied to refinedCandidates/originalLaneCandidates
+    // above - confirmed by the 2026-10-06 canary FAIL recurrence of
+    // energy_saving_kotatsu (same bug the 2026-10-05 fix above only partially
+    // addressed). Apply them here, once, as a final independent pass over the
+    // combined candidate pool using the one query string that can actually
+    // match the teacher dataset.
+    const combinedSearchCandidates = applyTeacherDatasetExclusions(originalQuery, rankMerchantCandidates(
       [], interleaveCandidatesBySource([refinedCandidates, originalLaneCandidates]), expandedQuery.query
-    );
+    ));
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,

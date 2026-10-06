@@ -3050,6 +3050,35 @@ export function teacherDatasetExclusionCount(query, candidates = []) {
   }).length;
 }
 
+// 2026-10-06 canary FAIL (energy_saving_kotatsu, second recurrence after the
+// 2026-10-05 early-return-ordering fix above): that fix made excluded_conditions
+// apply reliably whenever filterCategoryMismatches() itself is called with the
+// user's literal original query text - but by the time index.mjs assembles the
+// candidates it shows the user, the `query` string threaded through
+// filterCategoryMismatches()/rankMerchantCandidates() for most lanes is the
+// AI/feature-rule-EXPANDED search text (e.g. "省エネ こたつ" for the literal
+// query "電気代が気にならないこたつ"), not the literal text the teacher
+// dataset is keyed on. lookupTeacherDatasetEntry() then finds no entry for the
+// expanded string, so excluded_conditions never apply, no matter where in
+// filterCategoryMismatches the check runs. index.mjs separately keeps the
+// user's literal pre-expansion text (`originalQuery`) in scope throughout its
+// search handler, so this standalone helper lets it apply the teacher
+// dataset's excluded_conditions as one final, independent pass over whatever
+// candidates survived the expanded-query-based filtering, instead of relying
+// on excluded_conditions having been threaded through the right query string
+// at every intermediate step.
+export function applyTeacherDatasetExclusions(query, candidates = []) {
+  const entry = query ? lookupTeacherDatasetEntry(query) : null;
+  const excludedTerms = (entry?.excluded_conditions || [])
+    .map((term) => String(term || '').normalize('NFKC').toLowerCase())
+    .filter(Boolean);
+  if (!excludedTerms.length) return candidates;
+  return candidates.filter((candidate) => {
+    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
+    return !excludedTerms.some((term) => text.includes(term));
+  });
+}
+
 // 100-point apparel relevance score (2026-08-05 v4.0 rubric):
 // category 40 / product-type 20 / audience 10 / color 10 / use-case 10 /
 // feature 5 / raw-query-word 5. Only computed when the query requests an

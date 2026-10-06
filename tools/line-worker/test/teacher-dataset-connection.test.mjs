@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { lookupTeacherDatasetEntry, teacherDatasetStats } from '../src/search-quality/teacher-dataset-lookup.mjs';
 import { structureSearchQuery } from '../src/search-quality/query-structurer.mjs';
-import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
+import { applyTeacherDatasetExclusions, filterCategoryMismatches } from '../src/knowledge-search.mjs';
 import { buildAmazonSearchKeywords, buildRakutenSearchKeywords } from '../src/index.mjs';
 
 test('approved scalp-brand spelling corrections are compiled locally and restricted to exact contextual queries', () => {
@@ -78,6 +78,31 @@ test('filterCategoryMismatchesは教師データのexcluded_conditionsで候補�
     { asin: 'BAD01', product_name: 'こたつ布団セット 正方形 こたつ こたつセット コタツ布団セット こたつふとんセット' }
   ]);
   assert.deepEqual(filtered.map((item) => item.asin), ['REAL01']);
+});
+
+// 2026-10-06 カナリアFAIL再発(energy_saving_kotatsu): 2026-10-05の修正
+// (上のテスト)で、filterCategoryMismatches自体に渡す query がリテラルな
+// 元クエリであれば除外が効くようになった。しかし本番の index.mjs
+// (handleKnowledgeApi)では、query-expansion-feature-rules.mjs の展開規則が
+// 変換した検索語(「電気代が気にならないこたつ」→「省エネ こたつ」)が
+// filterCategoryMismatches/rankMerchantCandidates へ渡る経路がほとんどで、
+// この変換語には教師データのエントリが存在しないため、除外は一度も効かず
+// 同じ不具合が再発した(リテラルな元クエリがその経路のどこにも渡っていな
+// かった)。applyTeacherDatasetExclusions は、リテラルな元クエリを別途保持
+// している呼び出し元(index.mjsのoriginalQuery)が最後に一度だけ掛けるための
+// 独立した補正で、展開語によるフィルタ結果に関わらず機能する。
+test('展開後の検索語では教師データのexcluded_conditionsが効かないことを確認し、applyTeacherDatasetExclusionsがリテラルな元クエリで最終的に除外することを確認する(こたつ)', () => {
+  const goodCandidate = { asin: 'REAL01', product_name: 'ポケットこたつ 省エネ 一人用 こたつ本体' };
+  const badCandidate = { asin: 'BAD01', product_name: 'こたつ布団セット 正方形 こたつ こたつセット コタツ布団セット こたつふとんセット 選べるこたつ布団 70 75 80' };
+  const expandedQuery = '省エネ こたつ'; // energy-saving-kotatsu rule の primary(src/query-expansion-feature-rules.mjs)
+  assert.equal(lookupTeacherDatasetEntry(expandedQuery), null, '展開語自体には教師データのエントリが無い(不具合の前提)');
+  const afterExpandedFilter = filterCategoryMismatches(expandedQuery, [goodCandidate, badCandidate]);
+  assert.deepEqual(
+    afterExpandedFilter.map((item) => item.asin), ['REAL01', 'BAD01'],
+    '展開語だけでは教師データの除外が効かず、除外されるべき商品が残ってしまう(本番のバグそのもの)'
+  );
+  const final = applyTeacherDatasetExclusions('電気代が気にならないこたつ', afterExpandedFilter);
+  assert.deepEqual(final.map((item) => item.asin), ['REAL01'], 'リテラルな元クエリで最終的に掛けると正しく除外される');
 });
 
 test('必須検索テストの6クエリすべてが教師データで解決またはUNCLASSIFIED確認質問を持つ', () => {

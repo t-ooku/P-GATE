@@ -80,7 +80,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-10-02 展開規則 pink-slime-bathroom-cleaner の代表クエリ(機能語「ピンクのぬめりが取れない」→ 売り手の語「浴室用洗剤」)。
   { id: 'pink_slime_bathroom_cleaner', query: '浴室の壁や床にピンクのぬめりがすぐ出て取れない', expect: /浴室用洗剤|お風呂用洗剤|ぬめり取り/iu, reject: /スポンジのみ|ブラシのみ|タオルのみ|交換用/u },
   // 2026-10-04 展開規則 uv-shade-stroller-canopy の代表クエリ(機能語「紫外線が気になる」→ 売り手の語「UVカット サンシェード」)。
-  { id: 'uv_shade_stroller_canopy', query: 'ベビーカーの紫外線が気になる', expect: /サンシェード|UVカット|日除け/iu, reject: /抱っこ紐|レインカバー|チャイルドシート|替えカバーのみ|交換用/u }
+  { id: 'uv_shade_stroller_canopy', query: 'ベビーカーの紫外線が気になる', expect: /サンシェード|UVカット|日除け/iu, reject: /抱っこ紐|レインカバー|チャイルドシート|替えカバーのみ|交換用/u },
+  // 2026-10-06 展開規則 dark-ink-name-pen の代表クエリ(機能語「すぐ薄くなって読めない」→ 売り手の語「濃く書ける」)。
+  { id: 'dark_ink_name_pen', query: 'お名前ペンで書いた文字がすぐ薄くなって読めない', expect: /お名前ペン|名前ペン|布用ペン/iu, reject: /名前シール|ネームシール|お名前スタンプ|アイロンシート|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([

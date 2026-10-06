@@ -62,7 +62,7 @@ test('包丁研ぎ器: 砥石を同梱する本体は通す、砥石単体は落
 });
 
 test('固定クエリは指示書 §54 の9件+2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
-  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 24);
+  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 25);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'pet_shedding_brush' && f.query === '猫の抜け毛がごっそり取れるブラシ'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'auto_off_humidifier' && f.query === 'つけっぱなしでも安心な加湿器'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'easy_clean_baby_bottle' && f.query === '奥まで洗いやすい哺乳瓶'));
