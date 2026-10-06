@@ -203,7 +203,7 @@ export function adminCreatorsPageResponse() {
     <label>campaign_id（任意、例: sep_launch） <input name="campaign_id" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label>
     <label>creative_id（任意、例: reel_a） <input name="creative_id" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label>
     <label>掲載先（utm_source、任意） <select name="utm_source"><option value="">指定しない</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="x">X</option><option value="youtube">YouTube</option><option value="threads">Threads</option></select></label>
-    <label>着地先 <select name="path"><option value="/">トップ（横断検索）</option><option value="/shop/with-care">ショップ with care</option><option value="/buzz.html">BUZZ</option></select></label>
+    <label>着地先 <select name="path"><option value="/">トップ（横断検索）</option><option value="/buzz.html">BUZZ</option></select></label>
     <label>検索語を入れておく（任意） <input name="q" maxlength="80" placeholder="例: 自立するトートバッグ"></label>
     <button class="primary-button" type="submit">URLを作る</button>
   </form>
