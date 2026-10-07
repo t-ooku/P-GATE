@@ -194,3 +194,29 @@
 }
 
 .buzz-home-detail{display:block;margin-top:6px;color:#5140ba;font-size:11px;font-weight:850;text-decoration:none;text-align:center}.buzz-home-detail:hover{text-decoration:underline}
+
+/* 2026-10-07 ホシルバズタブ: 「トレンド先取り」「みんなのバズ」の見出しと、探すタブからの導線 */
+.buzz-group-head {
+  margin: 22px 0 2px;
+  padding-top: 14px;
+  border-top: 1px solid #ece7ff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  color: #2b2a44;
+}
+.buzz-group-head.buzz-group-trend { margin-top: 10px; padding-top: 0; border-top: 0; color: #c2337f; }
+.buzz-home-tabmore {
+  display: block;
+  margin: 16px auto 0;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #ded7ff;
+  color: #5140ba;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+  text-decoration: none;
+}
+.buzz-tab .buzz-home-heading h2 { font-size: clamp(24px, 6vw, 34px); }

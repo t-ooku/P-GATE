@@ -33,7 +33,15 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
   { id: 'pet', label: 'ペット・ペットグッズ', genre_id: '101213', patterns: [/^ペット・ペットグッズ$/u] },
   { id: 'toys', label: 'おもちゃ', genre_id: '215333', patterns: [/^おもちゃ$/u] },
   { id: 'beauty_health_appliance', label: '美容・健康家電', genre_id: '100191', patterns: [/^美容・健康家電$/u] },
-  { id: 'supplement', label: 'サプリメント', genre_id: '563727', patterns: [/^サプリメント$/u] }
+  { id: 'supplement', label: 'サプリメント', genre_id: '563727', patterns: [/^サプリメント$/u] },
+  // 2026-10-07 大隆さん指示「ホシルバズはオシャレ先取り。上位に若者向けアパレル・靴・化粧品・洗顔・スマホ関連」。
+  // 洗顔料 216301 は楽天市場のジャンルページで名称を確認。他も楽天市場の公式ジャンル ID。
+  // 違うジャンルが返った時は BUZZ 側の商品名チェック（BUZZ_CATEGORY_SANITY）で棚ごと出さない。
+  { id: 'mens_fashion', label: 'メンズファッション', genre_id: '551177', patterns: [/^メンズファッション$/u] },
+  // 「靴」だけの検索は従来どおり小分類を聞き返す（広い順位で答えない）ため、ラベルは「靴（総合）」にする。
+  { id: 'shoes', label: '靴（総合）', genre_id: '558885', patterns: [/^靴（総合）$/u] },
+  { id: 'face_wash', label: '洗顔料', genre_id: '216301', patterns: [/^洗顔料$/u] },
+  { id: 'smartphone', label: 'スマートフォン・タブレット', genre_id: '562637', patterns: [/^スマートフォン・タブレット$/u] }
 ]);
 
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([

@@ -11,6 +11,8 @@ const VIEWS = [
   // ITG 3店舗を非表示にして掲載ショップが 0 になったので、下部メニューから外す（hidden）。節は消さずに隠すだけ
   // （ショップ一覧・横断検索・クーポンの節はどのタブにも出ない）。出店が始まったら hidden を外せば戻る。旧 URL #tab-shops は探すへ。
   { id: 'shops', hidden: true, label: 'ショップ', title: 'ショップから探す', sub: '全ショップ横断検索・ショップ・クーポン', icon: 'M4 4h16l1 5a3 3 0 0 1-2.5 3V20H5.5v-8A3 3 0 0 1 3 9l1-5Zm3.5 10v4h3v-4h-3Zm5 0v4h3v-4h-3Z' },
+  // 2026-10-07 大隆さん指示「やはり、ホシルバズのページを設けよう。探すページにも残しつつ」: 3番目に戻す（探す／ホシる中／ホシルバズ／マイアカウント）。
+  { id: 'buzz', label: 'ホシルバズ', title: 'ホシルバズ', sub: 'トレンド先取り・みんなのバズ', icon: 'M12 2l2.2 6.3 6.3 1.7-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7L12 2Zm7 12 1 2.7 2.7 1-2.7 1-1 2.8-1-2.8-2.7-1 2.7-1 1-2.7Z' },
   // 2026-09-20 大隆さん指示: 4番目は「ホシルバズ」→ 2026-10-03 大隆さん指示「ホシルバズのページ何もないなら削除」:
   // BUZZ は探すタブ（検索直下）へ移ったので、このタブは外す（4タブ）。みんなの値下がり待ちはホシる中へ。旧 URL #tab-buzz は探すへ。
   { id: 'account', label: 'マイアカウント', title: 'マイアカウント', sub: 'ログイン・お知らせ・セール通知の設定・公式アカウント', icon: 'M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 11c4.4 0 8 2.2 8 5v2H4v-2c0-2.8 3.6-5 8-5Z' }
@@ -21,7 +23,7 @@ const SECTION_VIEW = [
   ['#shopSearch', 'shops'], ['#shopDirectory', 'shops'], ['#shopCouponsNote', 'shops'],
   ['#insight', 'hoshiru'], ['#keptProducts', 'hoshiru'],
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9・§10: BUZZ は検索のすぐ下（探すタブ）。みんなの値下がり待ちはホシルバズタブに残す。
-  ['#buzzHome', 'search'], ['#watchDemand', 'hoshiru'],
+  ['#buzzHome', 'search'], ['#buzzTab', 'buzz'], ['#watchDemand', 'hoshiru'],
   ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
 // 2026-09-20 大隆さん指示: ホシる中は「ホシってるもの」が先。「気になる商品」はその中の
@@ -31,7 +33,7 @@ const HOSHIRU_ORDER = ['#insight', '#watchDemand'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
-const VIEW_ALIASES = { sale: 'account', buzz: 'search', shops: 'search' };
+const VIEW_ALIASES = { sale: 'account', shops: 'search' };
 
 const main = document.querySelector('#top');
 const primary = document.querySelector('.hoshilu-primary');

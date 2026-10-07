@@ -33,6 +33,16 @@ export const BUZZ_HOME_GENRE_IDS = Object.freeze([
   'kids_baby', 'food', 'sweets', 'daily_goods', 'kitchen', 'interior', 'beauty_cosme', 'skincare',
   'womens_fashion', 'bags', 'pet', 'toys', 'beauty_health_appliance', 'supplement'
 ]);
+// 2026-10-07 大隆さん指示「ホシルバズはオシャレ先取りな感じに。ランキングを増やして、上位は若者向けアパレル・靴・化粧品・洗顔・スマホ関連、
+// その下に従来のバズ」: 先頭の「トレンド先取り」棚（楽天市場の公式ランキング。各 10 件）。表示名は短く。
+export const BUZZ_TREND_GENRES = Object.freeze([
+  Object.freeze({ id: 'womens_fashion', label: 'レディースファッション', emoji: '👗', search: 'レディースファッション' }),
+  Object.freeze({ id: 'mens_fashion', label: 'メンズファッション', emoji: '👕', search: 'メンズファッション' }),
+  Object.freeze({ id: 'shoes', label: '靴・スニーカー', emoji: '👟', search: 'スニーカー' }),
+  Object.freeze({ id: 'beauty_cosme', label: 'コスメ', emoji: '💄', search: 'コスメ' }),
+  Object.freeze({ id: 'face_wash', label: '洗顔', emoji: '🫧', search: '洗顔料' }),
+  Object.freeze({ id: 'smartphone', label: 'スマホまわり', emoji: '📱', search: 'スマホケース' })
+]);
 export const BUZZ_GENRE_EMOJI = Object.freeze({
   kids_baby: '🧸', food: '🍱', sweets: '🍰', daily_goods: '🧴', kitchen: '🍳', interior: '🛋️', beauty_cosme: '💄', skincare: '🧖',
   womens_fashion: '👗', bags: '👜', pet: '🐾', toys: '🎲', beauty_health_appliance: '💆', supplement: '💊'
@@ -109,6 +119,11 @@ const BUZZ_CATEGORY_SANITY = Object.freeze({
   handheld_fan: /ファン|扇風機|fan/iu,
   mobile_battery: /バッテリー|充電|power\s*bank/iu,
   face_lotion: /化粧水|ローション|スキンケア|toner|lotion/iu,
+  // 2026-10-07 トレンド先取り棚: ジャンル ID 違い・API の絞り込み漏れを商品名で弾く（過半一致しなければ棚を出さない）。
+  mens_fashion: /メンズ|men'?s|男性|紳士/iu,
+  shoes: /スニーカー|シューズ|靴|ブーツ|サンダル|パンプス|ローファー|ミュール|スリッポン|sneakers?|shoes?|boots?/iu,
+  face_wash: /洗顔|クレンジング|フォーム|ソープ|石鹸|石けん|wash|cleans/iu,
+  smartphone: /スマホ|スマートフォン|iPhone|アイフォン|Android|Galaxy|Pixel|AQUOS|Xperia|ケース|フィルム|ガラス|充電|ケーブル|タブレット|iPad|モバイル|ストラップ/iu,
   // Yahoo!高評価トレンドAPIは検索語と無関係な総合ランキングを返すことがある。
   // 「韓国コスメ」明記または代表的なK-beautyブランドを商品名で確認できる物だけ通す。
   korean_beauty: /韓国(?:コスメ|化粧品|スキンケア)?|k\s*[-‐‑]?\s*beauty|rom&nd|ロムアンド|clio|クリオ|tirtir|ティルティル|vt(?:\s+cosmetics)?|cosrx|コスアールエックス|anua|アヌア|mediheal|メディヒール|laneige|ラネージュ|etude|エチュード|missha|ミシャ|innisfree|イニスフリー|hince|ヒンス|dasique|デイジーク|jung\s*saem\s*mool|ジョンセンムル|numbuzin|ナンバーズイン/iu
@@ -236,6 +251,26 @@ export async function buildHomeGenreShelves(env, fetcher = fetch) {
     .filter(Boolean);
   const shelves = await buildShelvesThrottled(env, categories, fetcher);
   return shelves.map((shelf) => ({ ...shelf, emoji: BUZZ_GENRE_EMOJI[shelf.shelf_id] || shelf.emoji, shelf_group: 'home_genre', items: (shelf.all_items || shelf.items).slice(0, BUZZ_HOME_GENRE_ITEM_LIMIT) }));
+}
+
+// 2026-10-07: トレンド先取り棚（先頭）。中身は公式ランキングのまま、ラベルと絵文字だけ短くする。
+export async function buildTrendShelves(env, fetcher = fetch) {
+  const categories = BUZZ_TREND_GENRES
+    .map((trend) => RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === trend.id))
+    .filter(Boolean);
+  const shelves = await buildShelvesThrottled(env, categories, fetcher);
+  return shelves.map((shelf) => {
+    const trend = BUZZ_TREND_GENRES.find((entry) => entry.id === shelf.shelf_id) || {};
+    return {
+      ...shelf,
+      label: trend.label || shelf.label,
+      emoji: trend.emoji || shelf.emoji,
+      // 「◯◯で探す」の検索語は、表示名ではなく実際に探しやすい語（例: スマホまわり → スマホケース）。
+      search_keyword: trend.search || shelf.search_keyword,
+      shelf_group: 'trend',
+      items: (shelf.all_items || shelf.items).slice(0, BUZZ_HOME_GENRE_ITEM_LIMIT)
+    };
+  });
 }
 
 // 💰予算別棚 (§19): 追加API呼び出しなし。取得済み公式ランキングの商品を
@@ -535,6 +570,8 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     buildKoreanShelf(env, fetcher),
     buildHomeGenreShelves(env, fetcher)
   ]);
+  // トレンド先取り棚は主婦層ジャンル棚の後に取る（同じ楽天 API を 1 秒間隔で使うため、並列にしない）。
+  const trendShelves = await buildTrendShelves(env, fetcher);
   // 予算別棚はテーマ棚＋主婦層ジャンル棚の全商品から（追加 API 呼び出しなし）。
   const budgetShelves = buildBudgetShelves([...genreShelves, ...homeGenreShelves]);
   // 同一商品が半数以上重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。
@@ -551,6 +588,8 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     return true;
   };
   const shelves = [
+    // 2026-10-07 大隆さん指示: 上位はトレンド先取り（若者向けアパレル・靴・コスメ・洗顔・スマホ）、その下に従来のバズ。
+    ...trendShelves.map(publicShelf),
     ...(risingShelf ? [risingShelf] : []),
     // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず上位に1つ置く。
     // API一時障害でも韓国関連の入口自体は消さない。商品・順位は作らず、

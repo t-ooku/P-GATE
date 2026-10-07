@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS, BUZZ_HOME_GENRE_IDS, BUZZ_HOME_GENRE_ITEM_LIMIT, BUZZ_GENRE_EMOJI,
   buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots,
-  BUZZ_RESULT_CACHE_TTL_MS, cachedBuzzShelfResult, warmBuzzShelves
+  BUZZ_RESULT_CACHE_TTL_MS, BUZZ_TREND_GENRES, cachedBuzzShelfResult, warmBuzzShelves
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 import { hasVersionedAsset } from './helpers/asset-version.mjs';
@@ -110,15 +110,27 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
   // 2026-09-20 大隆さん指示: テーマ棚の後ろに主婦層向けの公式ジャンル棚（BUZZ_HOME_GENRE_IDS、10 件ずつ）を全部並べる。
   assert.deepEqual(
     result.shelves.map((shelf) => shelf.shelf_id),
-    ['korean_beauty', ...buzzThemeFor(now).category_ids, ...BUZZ_HOME_GENRE_IDS, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
+    // 2026-10-07 大隆さん指示: 先頭はトレンド先取り（若者向けアパレル・靴・コスメ・洗顔・スマホ）、その下に従来のバズ。
+    // 主婦層ジャンル棚のうちトレンドと同じジャンル（レディースファッション・美容コスメ）は中身が同じなので重ねない。
+    [...BUZZ_TREND_GENRES.map((trend) => trend.id), 'korean_beauty', ...buzzThemeFor(now).category_ids,
+      ...BUZZ_HOME_GENRE_IDS.filter((id) => !BUZZ_TREND_GENRES.some((trend) => trend.id === id)),
+      ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
   );
+  for (const shelf of result.shelves.filter((entry) => entry.shelf_group === 'trend')) {
+    const trend = BUZZ_TREND_GENRES.find((entry) => entry.id === shelf.shelf_id);
+    assert.equal(shelf.label, trend.label);
+    assert.equal(shelf.emoji, trend.emoji);
+    assert.equal(shelf.search_keyword, trend.search);
+    assert.ok(shelf.items.length > 0 && shelf.items.length <= BUZZ_HOME_GENRE_ITEM_LIMIT);
+    assert.equal(shelf.source, 'RAKUTEN_OFFICIAL_RANKING_API');
+  }
   for (const shelf of result.shelves.filter((entry) => entry.shelf_group === 'home_genre')) {
     assert.ok(shelf.items.length > 0 && shelf.items.length <= BUZZ_HOME_GENRE_ITEM_LIMIT);
     assert.ok(BUZZ_GENRE_EMOJI[shelf.shelf_id]);
   }
   assert.equal(result.shelf_count, result.shelves.length);
   // v3.1 §13: ジャンル棚は「◯◯で探す」用の安全な検索語(検証済み小ジャンル名)を持つ。
-  for (const shelf of result.shelves.filter((entry) => !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
+  for (const shelf of result.shelves.filter((entry) => entry.shelf_group !== 'trend' && !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
     assert.equal(shelf.search_keyword, shelf.label);
   }
   for (const shelf of result.shelves.filter((entry) => !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
@@ -126,7 +138,7 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
     assert.equal(shelf.marketplace, 'RAKUTEN_JP');
     assert.equal(shelf.headline, 'いま売れてる。');
     assert.match(shelf.ranking_type, /リアルタイムランキング/u);
-    assert.ok(shelf.items.length > 0 && shelf.items.length <= (shelf.shelf_group === 'home_genre' ? BUZZ_HOME_GENRE_ITEM_LIMIT : BUZZ_SHELF_ITEM_LIMIT));
+    assert.ok(shelf.items.length > 0 && shelf.items.length <= (['home_genre', 'trend'].includes(shelf.shelf_group) ? BUZZ_HOME_GENRE_ITEM_LIMIT : BUZZ_SHELF_ITEM_LIMIT));
     for (const item of shelf.items) {
       assert.ok(item.name);
       assert.match(item.product_url, /^https:\/\/item\.rakuten\.co\.jp\//u);
@@ -298,10 +310,15 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   const html = fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8');
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   assert.match(html, /<section id="buzzHome" class="buzz-home"/u);
+  // 2026-10-07: 探すタブは先頭 3 棚＋「ホシルバズで全部見る」、ホシルバズタブは全部を見出しつきで。
+  assert.match(script, /const SEARCH_SHELF_LIMIT = 3;/u);
+  assert.match(script, /root: document\.querySelector\('#buzzTabShelves'\), limit: Infinity/u);
+  assert.match(script, /GROUP_HEADINGS = Object\.freeze\(\{ trend: '✨ トレンド先取り', rest: '🔥 みんなのバズ' \}\)/u);
+  assert.match(script, /more\.href = '#tab-buzz';/u);
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=12"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=13"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -548,7 +565,7 @@ test('中身が過半重複する棚は2つ並べない', async () => {
   };
   const result = await buzzShelfResult(env, fetcher);
   const genreShelfIds = result.shelves.map((shelf) => shelf.shelf_id)
-    .filter((id) => BUZZ_SHELF_CATEGORY_IDS.includes(id));
+    .filter((id) => BUZZ_SHELF_CATEGORY_IDS.includes(id) || BUZZ_TREND_GENRES.some((trend) => trend.id === id));
   assert.equal(genreShelfIds.length, 1, `duplicated shelves should collapse to one, got ${genreShelfIds.join(',')}`);
 });
 
@@ -619,7 +636,7 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
-  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=11/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=12/);
 });
 
 

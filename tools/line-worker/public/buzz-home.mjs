@@ -1,9 +1,18 @@
 // ホームのHOSHILU BUZZ棚 (2026-08-19 大隆さん指示: 目立つ箇所=検索直下へ設置)。
 // /api/buzz/shelf の実データだけを表示する。クライアント側で順位・価格・
 // 人気を創作しない。棚は5種類+「すべて見る」導線（2026-09-05 夜 大隆さん訂正: 「3列→5列」は棚の数のこと）。
-const root = document.querySelector('#buzzHomeShelves');
-// 2026-09-20 大隆さん指示: 「ホシルバズ」が専用タブになったので、棚は届いた分をすべて同時に並べる（順位・商品は API のまま）。
-const HOME_SHELF_LIMIT = Infinity;
+// 2026-10-07 大隆さん指示「やはり、ホシルバズのページを設けよう。探すページにも残しつつ、ホシルバズのページもある状態に」:
+// 1 回の取得で 2 か所に描く。探すタブ（#buzzHomeShelves）は先頭の数棚だけ＋「ホシルバズで全部見る」、
+// ホシルバズタブ（#buzzTabShelves）は全部の棚を「トレンド先取り」「みんなのバズ」の見出しつきで並べる（順位・商品は API のまま）。
+const SEARCH_SHELF_LIMIT = 3;
+const TARGETS = [
+  { root: document.querySelector('#buzzHomeShelves'), limit: SEARCH_SHELF_LIMIT, idPrefix: 'buzzShelf-', groups: false, moreToTab: true },
+  { root: document.querySelector('#buzzTabShelves'), limit: Infinity, idPrefix: 'buzzTabShelf-', groups: true, moreToTab: false }
+].filter((target) => target.root);
+const GROUP_HEADINGS = Object.freeze({ trend: '✨ トレンド先取り', rest: '🔥 みんなのバズ' });
+// 探すタブ見出しの「すべて見る →」もホシルバズタブへ。
+const headerMore = document.querySelector('#buzzHome .buzz-home-more');
+if (headerMore) headerMore.href = '#tab-buzz';
 
 const text = (value) => String(value ?? '');
 const yen = (value) => `¥${Number(value).toLocaleString('ja-JP')}`;
@@ -98,14 +107,14 @@ function searchOnHoshilu(keyword) {
 }
 
 // ジャンルの帯（横スクロール）: 押すとその棚へ移動。棚は API が返した分だけ（創作しない）。
-function genreNav(shelves) {
+function genreNav(shelves, idPrefix) {
   const nav = el('nav', 'buzz-home-genres');
   nav.setAttribute('aria-label', 'ランキングのジャンル');
   for (const shelf of shelves) {
     const chip = el('button', 'buzz-home-genre-chip', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label));
     chip.type = 'button';
     chip.addEventListener('click', () => {
-      document.getElementById(`buzzShelf-${text(shelf.shelf_id)}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(`${idPrefix}${text(shelf.shelf_id)}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     nav.append(chip);
   }
@@ -113,17 +122,31 @@ function genreNav(shelves) {
 }
 
 function render(result) {
+  for (const target of TARGETS) renderInto(target, result);
+}
+
+function renderInto({ root, limit, idPrefix, groups, moreToTab }, result) {
   root.textContent = '';
-  const shelves = (result.shelves || []).slice(0, HOME_SHELF_LIMIT);
+  const allShelves = result.shelves || [];
+  const shelves = allShelves.slice(0, limit);
   if (!shelves.length) {
     // 2026-09-20: 専用タブになったので枠は畳まず、取れていない事実だけを書く（順位は作らない）。
     root.append(el('p', 'buzz-home-loading', '公式ランキングを取得できませんでした。少し待ってから開き直してください。'));
     return;
   }
-  if (shelves.length > 3) root.append(genreNav(shelves));
+  if (shelves.length > 3) root.append(genreNav(shelves, idPrefix));
+  let lastGroup = '';
   for (const shelf of shelves) {
+    if (groups) {
+      const group = shelf.shelf_group === 'trend' ? 'trend' : 'rest';
+      if (group !== lastGroup) {
+        // トレンド先取りの棚が無い時は見出しも出さない（作らない）。
+        if (group === 'trend' || allShelves.some((entry) => entry.shelf_group === 'trend')) root.append(el('h3', `buzz-group-head buzz-group-${group}`, GROUP_HEADINGS[group]));
+        lastGroup = group;
+      }
+    }
     const block = el('div', 'buzz-home-shelf');
-    block.id = `buzzShelf-${text(shelf.shelf_id)}`;
+    block.id = `${idPrefix}${text(shelf.shelf_id)}`;
     const head = el('div', 'buzz-home-shelf-head');
     head.append(el('h3', '', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
     // 2026-09-05 夜 大隆さん訂正: 横スクロールの棚に戻す。2026-09-20: 棚が返した件数をそのまま並べる（主婦層ジャンルは 10 件）。
@@ -144,9 +167,15 @@ function render(result) {
     block.append(head, rail);
     root.append(block);
   }
+  if (moreToTab && allShelves.length > shelves.length) {
+    const more = el('a', 'buzz-home-tabmore', `ホシルバズで全部見る（${allShelves.length}ランキング）→`);
+    more.href = '#tab-buzz';
+    root.append(more);
+  }
 }
 
 async function load() {
+  if (!TARGETS.length) return;
   try {
     const response = await fetch('/api/buzz/shelf', { headers: { accept: 'application/json' } });
     const payload = await response.json();

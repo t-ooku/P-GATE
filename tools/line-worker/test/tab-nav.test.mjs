@@ -10,20 +10,23 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、4 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=5">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=14"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=15"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
-  for (const id of ['search', 'shops', 'hoshiru', 'account']) assert.match(nav, new RegExp(`id: '${id}'`));
-  assert.doesNotMatch(nav, /id: 'buzz'/);
-  for (const label of ['探す', 'ショップ', 'ホシる中', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
-  assert.ok(!nav.includes("label: 'ホシルバズ'"));
+  for (const id of ['search', 'shops', 'hoshiru', 'buzz', 'account']) assert.match(nav, new RegExp(`id: '${id}'`));
+  // 2026-10-07 大隆さん指示「やはり、ホシルバズのページを設けよう。探すページにも残しつつ」: ホシルバズタブを戻す（ショップは隠したまま）。
+  for (const label of ['探す', 'ショップ', 'ホシる中', 'ホシルバズ', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
+  assert.match(nav, /\['#buzzTab', 'buzz'\]/);
+  assert.ok(nav.indexOf("id: 'hoshiru'") < nav.indexOf("id: 'buzz'") && nav.indexOf("id: 'buzz'") < nav.indexOf("id: 'account'"));
+  assert.match(html, /<section id="buzzTab" class="buzz-home buzz-tab"/);
+  assert.match(html, /<div id="buzzTabShelves" class="buzz-home-shelves"/);
   assert.match(nav, /\['#insight', 'hoshiru'\]/);
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: BUZZ は探すタブ（検索直下）。
   assert.match(nav, /\['#buzzHome', 'search'\]/);
   assert.match(nav, /\['#watchDemand', 'hoshiru'\]/);
   assert.match(nav, /\['\.sale-center', 'account'\]/);
-  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account', buzz: 'search', shops: 'search' \}/);
+  assert.match(nav, /VIEW_ALIASES = \{ sale: 'account', shops: 'search' \}/);
   // 2026-10-06 大隆さん指示: 出店セラーが 0 の間はショップタブを下部メニューから外す（3 タブ）。
   assert.match(nav, /\{ id: 'shops', hidden: true,/);
   assert.match(nav, /const visibleViews = VIEWS\.filter\(\(view\) => !view\.hidden\);/);
