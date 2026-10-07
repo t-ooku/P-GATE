@@ -37,7 +37,13 @@ const PRODUCT_HEADS = Object.freeze([
   'ドライヤー', 'アイロン', 'ヘアアイロン', '掃除機', '炊飯器', 'トースター', 'ケトル', 'ブレンダー', 'ミキサー', 'テレビ', 'タブレット', 'スマートウォッチ',
   // 食品・その他
   'キムチ', 'コーヒー', '紅茶', 'お茶', 'チョコレート', 'クッキー', 'グミ', 'サプリ', 'プロテイン', 'おもちゃ', 'ぬいぐるみ', 'フィギュア', '文房具', 'ノート', 'ペン',
-  'マスク', 'ステッカー', 'シール', 'クリップ', 'カバー', 'ホルダー', 'スタンド', 'リモコン', 'Tシャツ'
+  'マスク', 'ステッカー', 'シール', 'クリップ', 'カバー', 'ホルダー', 'スタンド', 'リモコン', 'Tシャツ',
+  // 2026-10-07 カナリア dark_ink_name_pen FAIL対応: 「名前ペン」のように漢字+カタカナが
+  // 混在する複合語は、末尾の同一スクリプト区間(run)だけを見ると末尾のカタカナ「ペン」しか
+  // 取れず、汎用語「ペン」に一致する無関係な商品(名入れボールペン等)を主名詞一致(強)として
+  // 拾ってしまう。「名前ペン」を辞書に登録し、下のextractHeadNounsでlast(末尾トークン全体)
+  // とも照合することで、より長く具体的な複合語を優先させる。
+  '名前ペン', '布用ペン'
 ]);
 const HEAD_ALIASES = Object.freeze({
   '指輪': ['リング'], 'リング': ['指輪'], '靴': ['スニーカー', 'シューズ', 'サンダル', 'ブーツ', 'パンプス'], 'ワンピース': ['ワンピ'],
@@ -112,11 +118,19 @@ export function extractHeadNouns(query) {
     const hiraganaHead = PRODUCT_HEADS.filter((noun) => run.endsWith(noun)).sort((a, b) => b.length - a.length)[0] || '';
     return hiraganaHead ? [{ term: hiraganaHead, strength: 2 }] : [];
   }
-  const dictionary = PRODUCT_HEADS.filter((noun) => run.endsWith(noun)).sort((a, b) => b.length - a.length);
+  // 2026-10-07: 辞書照合は run(末尾の同一スクリプト区間)ではなく last(末尾トークン全体、
+  // スクリプトの境界をまたぐ)に対して行う。run は「お名前ペン」では末尾カタカナの「ペン」
+  // しか取れないが、last なら辞書に登録した「名前ペン」のような複合語にも一致できる。
+  // run・dictionaryHead のどちらが長いかで強い主名詞/弱い主名詞を決める(以前は run が常に
+  // dictionaryHead 以上の長さだったため常に run=強だったが、複合語辞書登録により
+  // dictionaryHead の方が長くなるケースが出てきたため、長さで決める)。
+  const dictionary = PRODUCT_HEADS.filter((noun) => last.endsWith(noun)).sort((a, b) => b.length - a.length);
   const dictionaryHead = dictionary[0] || '';
   if (dictionaryHead && dictionaryHead !== run) {
-    heads.push({ term: run, strength: 2 });
-    heads.push({ term: dictionaryHead, strength: 1 });
+    const strongTerm = dictionaryHead.length > run.length ? dictionaryHead : run;
+    const weakTerm = dictionaryHead.length > run.length ? run : dictionaryHead;
+    heads.push({ term: strongTerm, strength: 2 });
+    heads.push({ term: weakTerm, strength: 1 });
   } else if (dictionaryHead) {
     heads.push({ term: dictionaryHead, strength: 2 });
   } else if (KATAKANA.test(run) && run.length >= 3) {

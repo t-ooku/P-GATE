@@ -118,3 +118,21 @@ test('ひらがなの主名詞「こたつ」を取り、こたつ毛布・布�
   assert.equal(headNounScore('スモーキークォーツ リング', 'リングケース 木製'), 0);
   assert.equal(headNounScore('SHEINで見たワンピース', 'ワンピースセット 2点 春'), 2);
 });
+
+// 2026-10-07 カナリア dark_ink_name_pen FAIL対応: 主名詞の末尾抽出は同一スクリプト区間
+// (run)だけでなく末尾トークン全体(last)も辞書と照合する。「名前ペン」のように漢字+カタカナが
+// 混在する複合語は run だと末尾カタカナの「ペン」しか取れず、汎用語「ペン」に一致する無関係な
+// 商品(名入れボールペン)を主名詞一致(強)として拾っていた。辞書に「名前ペン」を登録し、長い
+// 方を強い主名詞にすることで解消する。
+test('「お名前ペン」は末尾の「ペン」単独ではなく複合語で強い主名詞を取り、名入れボールペン等を弾く', () => {
+  const query = 'お名前ペンで書いた文字がすぐ薄くなって読めない 濃く書ける お名前ペン';
+  assert.deepEqual(extractHeadNouns(query).map((h) => h.term), ['名前ペン', 'ペン']);
+  for (const [title, score] of [
+    ['名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン', 1],
+    ['濃く書ける お名前ペン 極細 太字 2本セット 布用 油性', 2],
+    ['シヤチハタ お名前ペン にじまない 布用 太字', 2]
+  ]) assert.equal(headNounScore(query, title), score, title);
+  const genericPen = { product_name: '名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン' };
+  const namePen = { product_name: '濃く書ける お名前ペン 極細 太字 2本セット 布用 油性' };
+  assert.deepEqual(applyHeadNounGate(query, [genericPen, namePen]), [namePen, genericPen]);
+});
