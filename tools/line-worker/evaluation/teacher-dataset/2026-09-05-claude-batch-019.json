@@ -10392,5 +10392,395 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんのお風呂のお湯がちょうどいい温度か分からない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの入浴時にお湯の温度がちょうどいいか分からず不安",
+    "ideal_answer": "浮かせるだけで計測できる赤ちゃん用のお風呂の湯温計",
+    "reason": "「お湯の温度が分からない」は商品名では「湯温計」。 展開規則 float-bath-thermometer（モール検索語「浮かせるだけ 湯温計」）。",
+    "category": "float-bath-thermometer",
+    "search_terms": {
+      "ja": [
+        "浮かせるだけ 湯温計",
+        "赤ちゃん 湯温計 浮かせるだけ",
+        "ベビー用 湯温計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "体温計",
+      "非接触体温計"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんを入浴させるときお湯の温度が分からず不安",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの入浴時にお湯の温度がちょうどいいか分からず不安",
+    "ideal_answer": "浮かせるだけで計測できる赤ちゃん用のお風呂の湯温計",
+    "reason": "「お湯の温度が分からない」は商品名では「湯温計」。 展開規則 float-bath-thermometer（モール検索語「浮かせるだけ 湯温計」）。",
+    "category": "float-bath-thermometer",
+    "search_terms": {
+      "ja": [
+        "浮かせるだけ 湯温計",
+        "赤ちゃん 湯温計 浮かせるだけ",
+        "ベビー用 湯温計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "体温計",
+      "非接触体温計"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベビーバスのお湯がぬるいか熱いか分からない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの入浴時にお湯の温度がちょうどいいか分からず不安",
+    "ideal_answer": "浮かせるだけで計測できる赤ちゃん用のお風呂の湯温計",
+    "reason": "「お湯の温度が分からない」は商品名では「湯温計」。 展開規則 float-bath-thermometer（モール検索語「浮かせるだけ 湯温計」）。",
+    "category": "float-bath-thermometer",
+    "search_terms": {
+      "ja": [
+        "浮かせるだけ 湯温計",
+        "赤ちゃん 湯温計 浮かせるだけ",
+        "ベビー用 湯温計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "体温計",
+      "非接触体温計"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂の鏡が湯気ですぐ曇ってしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室の鏡が湯気で曇ってしまい顔や髭剃りがよく見えない",
+    "ideal_answer": "浴室用の曇り止めコート鏡・曇り止めスプレー/フィルム",
+    "reason": "「鏡が曇る」は商品名では「曇り止め」。 展開規則 anti-fog-bathroom-mirror（モール検索語「浴室用 曇り止め 鏡」）。",
+    "category": "anti-fog-bathroom-mirror",
+    "search_terms": {
+      "ja": [
+        "浴室用 曇り止め 鏡",
+        "浴室 鏡 曇り止めコート",
+        "お風呂 曇らない鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "水垢クリーナー",
+      "カビ取り剤"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "浴室の鏡が曇って顔がよく見えない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室の鏡が湯気で曇ってしまい顔や髭剃りがよく見えない",
+    "ideal_answer": "浴室用の曇り止めコート鏡・曇り止めスプレー/フィルム",
+    "reason": "「鏡が曇る」は商品名では「曇り止め」。 展開規則 anti-fog-bathroom-mirror（モール検索語「浴室用 曇り止め 鏡」）。",
+    "category": "anti-fog-bathroom-mirror",
+    "search_terms": {
+      "ja": [
+        "浴室用 曇り止め 鏡",
+        "浴室 鏡 曇り止めコート",
+        "お風呂 曇らない鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "水垢クリーナー",
+      "カビ取り剤"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂でひげを剃るときに鏡が曇って困る",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室の鏡が湯気で曇ってしまい顔や髭剃りがよく見えない",
+    "ideal_answer": "浴室用の曇り止めコート鏡・曇り止めスプレー/フィルム",
+    "reason": "「鏡が曇る」は商品名では「曇り止め」。 展開規則 anti-fog-bathroom-mirror（モール検索語「浴室用 曇り止め 鏡」）。",
+    "category": "anti-fog-bathroom-mirror",
+    "search_terms": {
+      "ja": [
+        "浴室用 曇り止め 鏡",
+        "浴室 鏡 曇り止めコート",
+        "お風呂 曇らない鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "水垢クリーナー",
+      "カビ取り剤"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "皮脂で眉マスカラが崩れてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "皮脂で眉マスカラが崩れる/色が落ちる",
+    "ideal_answer": "ウォータープルーフ(皮脂・水に強い)タイプの眉マスカラ・アイブロウマスカラ",
+    "reason": "「皮脂で崩れる/色が落ちる」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyebrow-mascara（モール検索語「ウォータープルーフ 眉マスカラ」）。",
+    "category": "waterproof-eyebrow-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 眉マスカラ",
+        "崩れない アイブロウマスカラ",
+        "皮脂に強い 眉マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "アイブロウパウダー",
+      "アイブロウペンシルのみ"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "眉マスカラの色がすぐ取れてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "皮脂で眉マスカラが崩れる/色が落ちる",
+    "ideal_answer": "ウォータープルーフ(皮脂・水に強い)タイプの眉マスカラ・アイブロウマスカラ",
+    "reason": "「皮脂で崩れる/色が落ちる」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyebrow-mascara（モール検索語「ウォータープルーフ 眉マスカラ」）。",
+    "category": "waterproof-eyebrow-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 眉マスカラ",
+        "崩れない アイブロウマスカラ",
+        "皮脂に強い 眉マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "アイブロウパウダー",
+      "アイブロウペンシルのみ"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "崩れやすい眉マスカラをなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "皮脂で眉マスカラが崩れる/色が落ちる",
+    "ideal_answer": "ウォータープルーフ(皮脂・水に強い)タイプの眉マスカラ・アイブロウマスカラ",
+    "reason": "「皮脂で崩れる/色が落ちる」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyebrow-mascara（モール検索語「ウォータープルーフ 眉マスカラ」）。",
+    "category": "waterproof-eyebrow-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 眉マスカラ",
+        "崩れない アイブロウマスカラ",
+        "皮脂に強い 眉マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "アイブロウパウダー",
+      "アイブロウペンシルのみ"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬の爪切りでどこまで切っていいか分からない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの爪切りでどこまで切っていいか分からず血管を切ってしまいそうで不安",
+    "ideal_answer": "血管(クイック)が見えるLEDライト付きの犬・猫用爪切り",
+    "reason": "「どこまで切っていいか分からない/血管を切りそう」は商品名では「LEDライト付き」。 展開規則 led-pet-nail-clipper（モール検索語「LEDライト付き 爪切り ペット」）。",
+    "category": "led-pet-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "LEDライト付き 爪切り ペット",
+        "血管が見える 爪切り 犬",
+        "光る爪切り 猫"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "爪やすりのみ",
+      "人間用 爪切り"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫の爪切りで血管を切ってしまいそうで怖い",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの爪切りでどこまで切っていいか分からず血管を切ってしまいそうで不安",
+    "ideal_answer": "血管(クイック)が見えるLEDライト付きの犬・猫用爪切り",
+    "reason": "「どこまで切っていいか分からない/血管を切りそう」は商品名では「LEDライト付き」。 展開規則 led-pet-nail-clipper（モール検索語「LEDライト付き 爪切り ペット」）。",
+    "category": "led-pet-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "LEDライト付き 爪切り ペット",
+        "血管が見える 爪切り 犬",
+        "光る爪切り 猫"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "爪やすりのみ",
+      "人間用 爪切り"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ペットの爪切りがどこまで切れるか見えづらい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの爪切りでどこまで切っていいか分からず血管を切ってしまいそうで不安",
+    "ideal_answer": "血管(クイック)が見えるLEDライト付きの犬・猫用爪切り",
+    "reason": "「どこまで切っていいか分からない/血管を切りそう」は商品名では「LEDライト付き」。 展開規則 led-pet-nail-clipper（モール検索語「LEDライト付き 爪切り ペット」）。",
+    "category": "led-pet-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "LEDライト付き 爪切り ペット",
+        "血管が見える 爪切り 犬",
+        "光る爪切り 猫"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "爪やすりのみ",
+      "人間用 爪切り"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お名前ペンで書いた文字がすぐ薄くなって読めない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お名前ペン・布用ペンで書いた名前がすぐ薄くなる/かすれて読みにくくなる",
+    "ideal_answer": "濃くはっきり書けて消えにくいお名前ペン・布用ペン",
+    "reason": "「すぐ薄くなる/かすれる」は商品名では「濃く書ける」「にじまない」。 展開規則 dark-ink-name-pen（モール検索語「濃く書ける お名前ペン」）。",
+    "category": "dark-ink-name-pen",
+    "search_terms": {
+      "ja": [
+        "濃く書ける お名前ペン",
+        "にじまない 布用ペン",
+        "太字 名前ペン 濃い"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "シール",
+      "アイロンシート"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "布用ペンで書いた名前がかすれて見えにくくなる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お名前ペン・布用ペンで書いた名前がすぐ薄くなる/かすれて読みにくくなる",
+    "ideal_answer": "濃くはっきり書けて消えにくいお名前ペン・布用ペン",
+    "reason": "「すぐ薄くなる/かすれる」は商品名では「濃く書ける」「にじまない」。 展開規則 dark-ink-name-pen（モール検索語「濃く書ける お名前ペン」）。",
+    "category": "dark-ink-name-pen",
+    "search_terms": {
+      "ja": [
+        "濃く書ける お名前ペン",
+        "にじまない 布用ペン",
+        "太字 名前ペン 濃い"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "シール",
+      "アイロンシート"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "服のタグに書いた名前ペンの字が消えかかっている",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お名前ペン・布用ペンで書いた名前がすぐ薄くなる/かすれて読みにくくなる",
+    "ideal_answer": "濃くはっきり書けて消えにくいお名前ペン・布用ペン",
+    "reason": "「すぐ薄くなる/かすれる」は商品名では「濃く書ける」「にじまない」。 展開規則 dark-ink-name-pen（モール検索語「濃く書ける お名前ペン」）。",
+    "category": "dark-ink-name-pen",
+    "search_terms": {
+      "ja": [
+        "濃く書ける お名前ペン",
+        "にじまない 布用ペン",
+        "太字 名前ペン 濃い"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "シール",
+      "アイロンシート"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
