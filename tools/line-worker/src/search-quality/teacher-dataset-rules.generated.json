@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T21:18:03.585Z",
+  "generated_at": "2026-10-07T23:45:11.126Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -48,7 +48,7 @@
     "2026-10-06-claude-batch-045.json",
     "2026-10-07-claude-batch-046.json"
   ],
-  "entry_count": 2493,
+  "entry_count": 2508,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -25915,6 +25915,372 @@
       "excluded_conditions": [
         "シール",
         "アイロンシート"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ed2c7da88c2cee5119d4d62904cc04f4c6a079680979e7678da0dbcf021d40f8",
+      "query_text": "まな板のにおいが取れない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antibacterial-cutting-board",
+      "ideal_answer": "抗菌加工で黒ずみ・ぬめりが付きにくいまな板",
+      "search_terms": {
+        "ja": [
+          "抗菌 まな板",
+          "抗菌加工 まな板",
+          "黒ずみにくい まな板"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "まな板立てのみ",
+        "包丁差しのみ",
+        "食洗機用洗剤"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ea36a5676067a9d8fdf50c9f146903812276e14ed4ecc1dc219ad454ef7878c9",
+      "query_text": "まな板の黒ずみが気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antibacterial-cutting-board",
+      "ideal_answer": "抗菌加工で黒ずみ・ぬめりが付きにくいまな板",
+      "search_terms": {
+        "ja": [
+          "抗菌 まな板",
+          "抗菌加工 まな板",
+          "黒ずみにくい まな板"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "まな板立てのみ",
+        "包丁差しのみ",
+        "食洗機用洗剤"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e3648c3bb45f2a97ae2faf8e507b83c1a3cfc4b0357fe69555cdae0106ce8715",
+      "query_text": "まな板がぬるぬるして気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antibacterial-cutting-board",
+      "ideal_answer": "抗菌加工で黒ずみ・ぬめりが付きにくいまな板",
+      "search_terms": {
+        "ja": [
+          "抗菌 まな板",
+          "抗菌加工 まな板",
+          "黒ずみにくい まな板"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "まな板立てのみ",
+        "包丁差しのみ",
+        "食洗機用洗剤"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "576cf61e8f8733ebdc821dd5ae38944f98918bff6726169145cac0910cd9a1db",
+      "query_text": "引き出しの中の小物がバラバラになる収納ケースが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "divided-drawer-organizer",
+      "ideal_answer": "仕切り付きで小物が混ざらない引き出し用収納ケース",
+      "search_terms": {
+        "ja": [
+          "仕切り付き 収納ケース",
+          "引き出し 仕切りケース",
+          "小物 整理トレー 仕切り"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "引き出しレール単品",
+        "取っ手のみ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "36604847acdc36d3cb85f80c03d6c1ce2b3f694b66ed7607098d8cf36d3f8962",
+      "query_text": "引き出しの中がごちゃごちゃして整理ケースを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "divided-drawer-organizer",
+      "ideal_answer": "仕切り付きで小物が混ざらない引き出し用収納ケース",
+      "search_terms": {
+        "ja": [
+          "仕切り付き 収納ケース",
+          "引き出し 仕切りケース",
+          "小物 整理トレー 仕切り"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "引き出しレール単品",
+        "取っ手のみ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ebbe0ab86c8952be4963d88b8fff97e646306b26e19683810a030bac4332f465",
+      "query_text": "引き出しの小物がぐちゃぐちゃに混ざるので仕切りケースが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "divided-drawer-organizer",
+      "ideal_answer": "仕切り付きで小物が混ざらない引き出し用収納ケース",
+      "search_terms": {
+        "ja": [
+          "仕切り付き 収納ケース",
+          "引き出し 仕切りケース",
+          "小物 整理トレー 仕切り"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "引き出しレール単品",
+        "取っ手のみ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1d3986ab1ce71bc4f23dac787f10aa326f02697318f49013eb1d6ffa05e2a9e3",
+      "query_text": "サーキュレーターの運転音がうるさい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-circulator-fan",
+      "ideal_answer": "運転音が静かなサーキュレーター・扇風機",
+      "search_terms": {
+        "ja": [
+          "静音 サーキュレーター",
+          "静音 扇風機",
+          "音が静か サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "リモコンのみ",
+        "羽根のみ",
+        "交換用フィルター"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c47be56cf9d79e0de7c873653594ebe660371455517d2abcd98052262222ec8b",
+      "query_text": "扇風機の運転音が気になって夜使えない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-circulator-fan",
+      "ideal_answer": "運転音が静かなサーキュレーター・扇風機",
+      "search_terms": {
+        "ja": [
+          "静音 サーキュレーター",
+          "静音 扇風機",
+          "音が静か サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "リモコンのみ",
+        "羽根のみ",
+        "交換用フィルター"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "073999ab785490edc6976fa63ab284e955e97211dee2fac3a6b43b7f21f1f814",
+      "query_text": "寝るときに扇風機の音が気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-circulator-fan",
+      "ideal_answer": "運転音が静かなサーキュレーター・扇風機",
+      "search_terms": {
+        "ja": [
+          "静音 サーキュレーター",
+          "静音 扇風機",
+          "音が静か サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "リモコンのみ",
+        "羽根のみ",
+        "交換用フィルター"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "30496d0a6988ba2ac16f649d6a065bcbac8ee3b0549410fa968fb1ed318d0bf0",
+      "query_text": "首元が伸びてしまうTシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neckline-keep-tshirt",
+      "ideal_answer": "リブ編みなどで首元が伸びにくく型崩れしにくいTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "リブ編み 型崩れしにくい Tシャツ",
+          "首元が伸びない Tシャツ",
+          "型崩れしにくい カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インナーのみ",
+        "タンクトップ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1aeea075fd6207dfe18c4dff644f7cf7c311b016581b0b3f603119b87569f947",
+      "query_text": "Tシャツの首元がだるんとなるのが嫌",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neckline-keep-tshirt",
+      "ideal_answer": "リブ編みなどで首元が伸びにくく型崩れしにくいTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "リブ編み 型崩れしにくい Tシャツ",
+          "首元が伸びない Tシャツ",
+          "型崩れしにくい カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インナーのみ",
+        "タンクトップ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ce2fb7bcc81d09c5792d3432d4a604ea70937a0f03c7ad5ebab8f6fa43a55e05",
+      "query_text": "洗濯するとカットソーが型崩れしやすい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neckline-keep-tshirt",
+      "ideal_answer": "リブ編みなどで首元が伸びにくく型崩れしにくいTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "リブ編み 型崩れしにくい Tシャツ",
+          "首元が伸びない Tシャツ",
+          "型崩れしにくい カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インナーのみ",
+        "タンクトップ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8cdb112d619cfee6737f35389cfdbc9ceaccf6c7daab7bb96f3e499cb25ddeb5",
+      "query_text": "熱さまシートがすぐ外れてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-slip-cooling-gel-sheet",
+      "ideal_answer": "寝相が変わっても外れにくい・ズレにくい冷却シート(熱さまシート)",
+      "search_terms": {
+        "ja": [
+          "ズレない 冷却シート",
+          "貼ってズレない 熱さまシート",
+          "密着 冷却シート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "保冷剤のみ",
+        "氷のう"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "dd6c2fbac06fdbf5f7ca864f5899569fa70bb2cbf20462d74ddf7a9b488055d0",
+      "query_text": "寝ている間に冷却シートがズレてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-slip-cooling-gel-sheet",
+      "ideal_answer": "寝相が変わっても外れにくい・ズレにくい冷却シート(熱さまシート)",
+      "search_terms": {
+        "ja": [
+          "ズレない 冷却シート",
+          "貼ってズレない 熱さまシート",
+          "密着 冷却シート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "保冷剤のみ",
+        "氷のう"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f03768bff969282e3cb06e308fd1eca51407f32a4ed9a4a535f6f399e8a949f8",
+      "query_text": "寝返りで熱さまシートがすぐ取れてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-slip-cooling-gel-sheet",
+      "ideal_answer": "寝相が変わっても外れにくい・ズレにくい冷却シート(熱さまシート)",
+      "search_terms": {
+        "ja": [
+          "ズレない 冷却シート",
+          "貼ってズレない 熱さまシート",
+          "密着 冷却シート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "保冷剤のみ",
+        "氷のう"
       ],
       "confidence": 0.75,
       "source_file": "2026-09-05-claude-batch-019.json"
