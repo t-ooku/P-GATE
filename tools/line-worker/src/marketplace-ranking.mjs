@@ -40,8 +40,9 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
   { id: 'mens_fashion', label: 'メンズファッション', genre_id: '551177', patterns: [/^メンズファッション$/u] },
   // 「靴」だけの検索は従来どおり小分類を聞き返す（広い順位で答えない）ため、ラベルは「靴（総合）」にする。
   { id: 'shoes', label: '靴（総合）', genre_id: '558885', patterns: [/^靴（総合）$/u] },
-  { id: 'face_wash', label: '洗顔料', genre_id: '216301', patterns: [/^洗顔料$/u] },
-  { id: 'smartphone', label: 'スマートフォン・タブレット', genre_id: '562637', patterns: [/^スマートフォン・タブレット$/u] }
+  { id: 'face_wash', label: '洗顔料', genre_id: '216301', patterns: [/^洗顔料$/u] }
+  // スマホ関連の棚は固定 ID を持たない（2026-10-07 本番で 562637 が家電を返したため）。BUZZ 側で
+  // 「スマホケース」の実商品から楽天の公式小分類を見つけて使う（discoverRakutenRankingCategories）。
 ]);
 
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([
@@ -361,6 +362,12 @@ export async function writeRankingCache(env, marketplaceId, categoryId, rankingT
 
 async function resolveSelectedRankingCategory(env, selection, fetcher) {
   if (!selection) return null;
+  // BUZZ 内部用: Genre API で確認済みの分類（discoverRakutenRankingCategories の結果）は取り直さない。
+  // 利用者の入力からはこの欄を作れない（index.mjs が genre_id・id・label・source の 4 項目だけで組み直す）。
+  const verified = selection.verified_genre;
+  if (verified && /^\d{3,12}$/u.test(String(verified.genre_id)) && String(verified.genre_id) === String(selection.genre_id) && String(verified.label || '').trim()) {
+    return { id: `rakuten_${verified.genre_id}`, label: String(verified.label).trim(), genre_id: String(verified.genre_id), source: 'RAKUTEN_GENRE_API' };
+  }
   const staticCategory = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === selection.id || entry.genre_id === String(selection.genre_id));
   if (staticCategory) return { id: staticCategory.id, label: staticCategory.label, genre_id: staticCategory.genre_id, source: 'STATIC_REGISTRY' };
   const genre = await fetchRakutenGenre(env, selection.genre_id, fetcher);

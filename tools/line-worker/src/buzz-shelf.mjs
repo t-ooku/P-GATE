@@ -24,7 +24,7 @@
 //   未適用・履歴不足なら棚ごと出さない (架空の急上昇を作らない)。
 
 import { recordPriceObservations } from './price-observations.mjs';
-import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, discoverRakutenRankingCategories, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
 
 // 2026-09-20 大隆さん指示「ホシルバズ バージョンアップ」: ジャンルを増やし、同時に出すランキングも増やす。
 // 主婦層（25〜40代）向けの公式ジャンル棚。順位は楽天公式ランキング API のまま（創作しない）。
@@ -41,7 +41,8 @@ export const BUZZ_TREND_GENRES = Object.freeze([
   Object.freeze({ id: 'shoes', label: '靴・スニーカー', emoji: '👟', search: 'スニーカー' }),
   Object.freeze({ id: 'beauty_cosme', label: 'コスメ', emoji: '💄', search: 'コスメ' }),
   Object.freeze({ id: 'face_wash', label: '洗顔', emoji: '🫧', search: '洗顔料' }),
-  Object.freeze({ id: 'smartphone', label: 'スマホまわり', emoji: '📱', search: 'スマホケース' })
+  // スマホ関連は固定 ID を持たず、「スマホケース」の実商品から楽天の公式小分類を見つけて使う（24 時間キャッシュ）。
+  Object.freeze({ id: 'smartphone', label: 'スマホケース', emoji: '📱', search: 'スマホケース', discover: 'スマホケース' })
 ]);
 export const BUZZ_GENRE_EMOJI = Object.freeze({
   kids_baby: '🧸', food: '🍱', sweets: '🍰', daily_goods: '🧴', kitchen: '🍳', interior: '🛋️', beauty_cosme: '💄', skincare: '🧖',
@@ -160,7 +161,7 @@ function byOfficialRank(left, right) {
 
 async function buildShelf(env, category, fetcher) {
   const result = await marketplaceRankingResult(env, category.label, 'RAKUTEN_JP', fetcher, {
-    id: category.id, genre_id: category.genre_id
+    id: category.id, genre_id: category.genre_id, verified_genre: category.verified_genre
   });
   if (result.mode === 'clarification') return null;
   // 楽天へ実際に行った時だけ、BUZZ 用に長めの TTL で書き直す（内容は同じ公式データ）。
@@ -255,9 +256,21 @@ export async function buildHomeGenreShelves(env, fetcher = fetch) {
 
 // 2026-10-07: トレンド先取り棚（先頭）。中身は公式ランキングのまま、ラベルと絵文字だけ短くする。
 export async function buildTrendShelves(env, fetcher = fetch) {
-  const categories = BUZZ_TREND_GENRES
-    .map((trend) => RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === trend.id))
-    .filter(Boolean);
+  const categories = [];
+  for (const trend of BUZZ_TREND_GENRES) {
+    const registered = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === trend.id);
+    if (registered) { categories.push(registered); continue; }
+    if (!trend.discover) continue;
+    try {
+      // 楽天の実商品上位 30 件の genreId を集計し、Genre API で公式名を確かめた小分類（作らない）。
+      const [found] = await discoverRakutenRankingCategories(env, trend.discover, fetcher);
+      if (found?.genre_id) {
+        categories.push({ id: trend.id, label: trend.label, genre_id: String(found.genre_id), verified_genre: { genre_id: String(found.genre_id), label: String(found.label || found.query || trend.label) } });
+      }
+    } catch {
+      // 見つからない時は棚を出さない。
+    }
+  }
   const shelves = await buildShelvesThrottled(env, categories, fetcher);
   return shelves.map((shelf) => {
     const trend = BUZZ_TREND_GENRES.find((entry) => entry.id === shelf.shelf_id) || {};

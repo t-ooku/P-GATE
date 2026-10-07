@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS, BUZZ_HOME_GENRE_IDS, BUZZ_HOME_GENRE_ITEM_LIMIT, BUZZ_GENRE_EMOJI,
   buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots,
-  BUZZ_RESULT_CACHE_TTL_MS, BUZZ_TREND_GENRES, cachedBuzzShelfResult, warmBuzzShelves
+  BUZZ_RESULT_CACHE_TTL_MS, BUZZ_TREND_GENRES, buildTrendShelves, cachedBuzzShelfResult, warmBuzzShelves
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 import { hasVersionedAsset } from './helpers/asset-version.mjs';
@@ -112,7 +112,8 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
     result.shelves.map((shelf) => shelf.shelf_id),
     // 2026-10-07 大隆さん指示: 先頭はトレンド先取り（若者向けアパレル・靴・コスメ・洗顔・スマホ）、その下に従来のバズ。
     // 主婦層ジャンル棚のうちトレンドと同じジャンル（レディースファッション・美容コスメ）は中身が同じなので重ねない。
-    [...BUZZ_TREND_GENRES.map((trend) => trend.id), 'korean_beauty', ...buzzThemeFor(now).category_ids,
+    // スマホケース棚は実商品から分類を見つける方式なので、検索 API を返さないこの fetcher では出ない（下の専用テストで確認）。
+    [...BUZZ_TREND_GENRES.filter((trend) => !trend.discover).map((trend) => trend.id), 'korean_beauty', ...buzzThemeFor(now).category_ids,
       ...BUZZ_HOME_GENRE_IDS.filter((id) => !BUZZ_TREND_GENRES.some((trend) => trend.id === id)),
       ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
   );
@@ -692,4 +693,38 @@ test('BUZZ: 商品が 1 件も無い結果は置かない（空の棚を 20 分�
   const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, failing, Date.parse('2026-10-05T20:15:00+09:00'));
   assert.equal(warmed.stored, false);
   assert.equal(db.rows.has('HOSHILU|buzz_shelf_result|RESULT'), false);
+});
+
+
+// 2026-10-07: スマホ関連は固定 ID を使わず（本番で 562637 が家電を返した）、「スマホケース」の実商品から公式小分類を見つける。
+test('BUZZ: スマホケース棚は実商品から見つけた楽天の公式小分類のランキングで、名前が合わなければ出さない', async () => {
+  const calls = [];
+  const fetcher = (names) => async (input) => {
+    const url = new URL(String(input));
+    calls.push(url.pathname);
+    if (url.pathname.includes('/IchibaItem/Search/')) {
+      return Response.json({ Items: Array.from({ length: 30 }, () => ({ Item: { genreId: '999001', itemName: 'iPhone ケース' } })) });
+    }
+    if (url.pathname.includes('/IchibaGenre/Search/')) {
+      return Response.json({ current: { genreId: '999001', genreName: 'iPhone用ケース', genreLevel: 3 }, parents: [] });
+    }
+    if (url.pathname.includes('/IchibaItem/Ranking/')) {
+      const genreId = url.searchParams.get('genreId');
+      if (genreId === '999001') return Response.json({ Items: Array.from({ length: 10 }, (_, i) => ({ ...rankingItem(i + 1, names(i)), itemUrl: `https://item.rakuten.co.jp/case/item${i + 1}/` })) });
+      return rankingFetcher()(input);
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const ok = await buildTrendShelves({ ...env, PRODUCT_DB: memoryRankingCacheDb() }, fetcher((i) => `iPhone15 スマホケース 手帳型 ${i + 1}`));
+  const phone = ok.find((shelf) => shelf.shelf_id === 'smartphone');
+  assert.ok(phone, 'スマホケース棚が出る');
+  assert.equal(phone.label, 'スマホケース');
+  assert.equal(phone.search_keyword, 'スマホケース');
+  assert.equal(phone.items.length, 10);
+  assert.match(phone.items[0].name, /スマホケース/u);
+  // ランキングの商品名がスマホ関連でなければ（家電など）、棚ごと出さない。
+  const wrong = await buildTrendShelves({ ...env, PRODUCT_DB: memoryRankingCacheDb() }, fetcher((i) => `コードレス掃除機 ${i + 1}`));
+  assert.equal(wrong.find((shelf) => shelf.shelf_id === 'smartphone'), undefined);
+  // 固定の 562637（家電）は使わない。
+  assert.ok(!RAKUTEN_RANKING_CATEGORIES.some((entry) => entry.genre_id === '562637'));
 });
