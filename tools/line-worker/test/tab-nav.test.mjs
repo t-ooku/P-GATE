@@ -67,6 +67,9 @@ test('気になる商品は「ホシる中」タブに横スクロールで並�
   assert.match(read('buzz-home.css'), /\.buzz-home-keep\.kept\{/);
   // 2026-10-07: 「他のモール（Google）でも探す」はホシルの色（ピンク→紫のグラデーション＋白文字）。
   assert.match(read('buzz-home.css'), /\.buzz-home-google \{[^}]*linear-gradient\(110deg, var\(--pink[^}]*color: #fff;/);
+  assert.match(read('buzz-home.css'), /\.buzz-home-google \{[^}]*white-space: nowrap;[^}]*text-overflow: ellipsis;/);
+  assert.match(read('buzz-home.mjs'), /を他のモールでも探す`/);
+  assert.doesNotMatch(read('buzz-home.mjs'), /他のモール（Google）/);
 });
 
 // 2026-09-17 大隆さん報告: 「値下がり待ち」の「いまの価格を見る」を押しても反応しない。

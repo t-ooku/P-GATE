@@ -21,7 +21,7 @@ const EXPECTED = Object.freeze({
   'growth-analytics.mjs': '16',
   'ai-search-ui.mjs': '16',
   'search-suggest.mjs': '3',
-  'buzz-home.mjs': '13',
+  'buzz-home.mjs': '14',
   'google-mall-results.css': '6',
   'google-mall-results.mjs': '5',
   'usual-barcode.css': '1',

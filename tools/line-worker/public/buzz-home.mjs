@@ -156,7 +156,9 @@ function renderInto({ root, limit, idPrefix, groups, moreToTab }, result) {
     more.href = '/buzz';
     rail.append(more);
     if (shelf.search_keyword) {
-      const google = el('button', 'buzz-home-google', `${text(shelf.search_keyword)} を他のモール（Google）でも探す →`);
+      // 2026-10-07 大隆さん指示「二行になっているのダサい。『○○を他のモールでも探す』でよい」: 短くして 1 行に収める。
+      const google = el('button', 'buzz-home-google', `${text(shelf.search_keyword)}を他のモールでも探す`);
+      google.title = google.textContent;
       google.type = 'button';
       google.addEventListener('click', () => searchOnHoshilu(text(shelf.search_keyword)));
       block.append(head, rail, google);
