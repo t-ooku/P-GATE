@@ -728,3 +728,18 @@ test('BUZZ: スマホケース棚は実商品から見つけた楽天の公式�
   // 固定の 562637（家電）は使わない。
   assert.ok(!RAKUTEN_RANKING_CATEGORIES.some((entry) => entry.genre_id === '562637'));
 });
+
+// 2026-10-07 本番: 名称確認（Genre API）が混雑で失敗した時に「分類なし」を 24 時間覚えてしまい、スマホケース棚が出なかった。
+test('分類探しは名称確認が全部失敗した時に空の結果を覚えない（次の予熱で取り直す）', async () => {
+  const db = memoryRankingCacheDb();
+  const failingGenre = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('/IchibaItem/Search/')) return Response.json({ Items: [{ Item: { genreId: '999001', itemName: 'iPhone ケース' } }] });
+    return new Response('busy', { status: 429 });
+  };
+  const { discoverRakutenRankingCategories, discoverTopRakutenGenre } = await import('../src/marketplace-ranking.mjs');
+  assert.deepEqual(await discoverRakutenRankingCategories({ ...env, PRODUCT_DB: db }, 'スマホケース', failingGenre), []);
+  assert.equal([...db.rows.keys()].some((key) => key.includes('GENRE_DISCOVERY')), false);
+  await assert.rejects(discoverTopRakutenGenre({ ...env, PRODUCT_DB: db }, 'スマホケース', failingGenre, { gapMs: 0 }));
+  assert.equal([...db.rows.keys()].some((key) => key.includes('GENRE_TOP')), false);
+});

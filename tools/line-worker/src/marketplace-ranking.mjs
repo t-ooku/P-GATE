@@ -42,7 +42,7 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
   { id: 'shoes', label: '靴（総合）', genre_id: '558885', patterns: [/^靴（総合）$/u] },
   { id: 'face_wash', label: '洗顔料', genre_id: '216301', patterns: [/^洗顔料$/u] }
   // スマホ関連の棚は固定 ID を持たない（2026-10-07 本番で 562637 が家電を返したため）。BUZZ 側で
-  // 「スマホケース」の実商品から楽天の公式小分類を見つけて使う（discoverRakutenRankingCategories）。
+  // 「スマホケース」の実商品から楽天の公式小分類を見つけて使う（discoverTopRakutenGenre）。
 ]);
 
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([
@@ -176,8 +176,42 @@ export async function discoverRakutenRankingCategories(env, rawQuery, fetcher = 
       official_category: true
     };
   });
-  await writeRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_DISCOVERY', categories, Date.now(), 24 * 60 * 60 * 1000);
+  // 2026-10-07: 分類は見つかったのに名称の確認（Genre API）が全部失敗した時（混雑など）は、空の結果を 24 時間覚えない。
+  if (categories.length || !ids.length) {
+    await writeRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_DISCOVERY', categories, Date.now(), 24 * 60 * 60 * 1000);
+  }
   return categories;
+}
+
+// 2026-10-07 ホシルバズ「スマホケース」棚: 実商品上位 30 件で最も多い genreId を 1 つだけ選び、Genre API で公式名を確かめる。
+// 楽天 API の 1 秒 1 リクエストを守るため、検索と名称確認の間を空ける（BUZZ の予熱は他の棚と続けて呼ぶ）。成功した時だけ 24 時間覚える。
+export async function discoverTopRakutenGenre(env, keyword, fetcher = fetch, { gapMs = 1000 } = {}) {
+  const query = truncateUtf8(String(keyword || '').normalize('NFKC').replace(/\s+/gu, ' ').trim());
+  if (query.length < 2) return null;
+  const cacheKey = `buzz_${(await discoveryCacheKey(query)).slice('discovery_'.length)}`;
+  const cached = await readRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_TOP');
+  if (cached?.[0]?.genre_id) return cached[0];
+  const wait = () => (gapMs > 0 ? new Promise((resolve) => setTimeout(resolve, gapMs)) : Promise.resolve());
+  await wait();
+  const url = rakutenApiUrl(RAKUTEN_ITEM_SEARCH_API, env);
+  url.searchParams.set('keyword', query);
+  url.searchParams.set('hits', '30');
+  url.searchParams.set('field', '0');
+  url.searchParams.set('elements', 'genreId,itemName');
+  const response = await fetcher(url.toString(), rakutenRequestOptions(4500));
+  if (!response.ok) return null;
+  const scores = new Map();
+  arrayOfItems(await response.json()).slice(0, 30).forEach((value, index) => {
+    const genreId = String(itemOf(value).genreId || '').trim();
+    if (/^\d{3,12}$/u.test(genreId)) scores.set(genreId, (scores.get(genreId) || 0) + Math.max(1, 30 - index));
+  });
+  const [top] = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+  if (!top) return null;
+  await wait();
+  const genre = await fetchRakutenGenre(env, top[0], fetcher);
+  const found = { genre_id: genre.genre_id, label: genre.path.slice(-2).join(' › '), source: 'RAKUTEN_GENRE_API' };
+  await writeRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_TOP', [found], Date.now(), 24 * 60 * 60 * 1000);
+  return found;
 }
 
 function parseAiCategoryIds(payload, allowedIds) {
@@ -362,7 +396,7 @@ export async function writeRankingCache(env, marketplaceId, categoryId, rankingT
 
 async function resolveSelectedRankingCategory(env, selection, fetcher) {
   if (!selection) return null;
-  // BUZZ 内部用: Genre API で確認済みの分類（discoverRakutenRankingCategories の結果）は取り直さない。
+  // BUZZ 内部用: Genre API で確認済みの分類（discoverTopRakutenGenre の結果）は取り直さない。
   // 利用者の入力からはこの欄を作れない（index.mjs が genre_id・id・label・source の 4 項目だけで組み直す）。
   const verified = selection.verified_genre;
   if (verified && /^\d{3,12}$/u.test(String(verified.genre_id)) && String(verified.genre_id) === String(selection.genre_id) && String(verified.label || '').trim()) {

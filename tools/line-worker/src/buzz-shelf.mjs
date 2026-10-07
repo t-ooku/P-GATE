@@ -24,7 +24,7 @@
 //   未適用・履歴不足なら棚ごと出さない (架空の急上昇を作らない)。
 
 import { recordPriceObservations } from './price-observations.mjs';
-import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, discoverRakutenRankingCategories, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, discoverTopRakutenGenre, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
 
 // 2026-09-20 大隆さん指示「ホシルバズ バージョンアップ」: ジャンルを増やし、同時に出すランキングも増やす。
 // 主婦層（25〜40代）向けの公式ジャンル棚。順位は楽天公式ランキング API のまま（創作しない）。
@@ -263,9 +263,12 @@ export async function buildTrendShelves(env, fetcher = fetch) {
     if (!trend.discover) continue;
     try {
       // 楽天の実商品上位 30 件の genreId を集計し、Genre API で公式名を確かめた小分類（作らない）。
-      const [found] = await discoverRakutenRankingCategories(env, trend.discover, fetcher);
+      const gapMs = Math.max(0, Number(env.BUZZ_FETCH_GAP_MS ?? 1000) || 0);
+      const found = await discoverTopRakutenGenre(env, trend.discover, fetcher, { gapMs });
       if (found?.genre_id) {
-        categories.push({ id: trend.id, label: trend.label, genre_id: String(found.genre_id), verified_genre: { genre_id: String(found.genre_id), label: String(found.label || found.query || trend.label) } });
+        categories.push({ id: trend.id, label: trend.label, genre_id: String(found.genre_id), verified_genre: { genre_id: String(found.genre_id), label: String(found.label || trend.label) } });
+        // 名称確認の直後にランキングを呼ぶので 1 回分空ける。
+        if (gapMs > 0) await new Promise((resolve) => setTimeout(resolve, gapMs));
       }
     } catch {
       // 見つからない時は棚を出さない。
