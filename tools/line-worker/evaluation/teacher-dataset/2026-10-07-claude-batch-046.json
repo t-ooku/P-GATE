@@ -1,0 +1,1322 @@
+[
+  {
+    "query_text": "つけるだけで涼しくなるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。ネッククーラー・冷却シート・携帯ファンなど装着型の涼感グッズのいずれも候補",
+    "ideal_answer": "どこに「つける」ものですか？首にかけるタイプ(ネッククーラー)、肌に貼るタイプ(冷却シート)、持ち歩く小型ファンのどれが近いですか？",
+    "reason": "装着部位・方式(冷却シート/ネッククーラー/ファン)が特定できないultra_ambiguous例。断定回答は誤答リスクが高い。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "はさんで止めるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。クリップ・ヘアピン・洗濯ばさみ・ケーブルクリップなど挟んで固定する器具のいずれも候補",
+    "ideal_answer": "何を留めたいですか？紙類(クリップ)、髪(ヘアピン)、洗濯物、配線(ケーブルクリップ)のどれに近いですか？",
+    "reason": "対象物が不明で製品カテゴリが一意に決まらないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "音が静かになるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。耳栓・防音シート・消音マット・サイレンサーグッズのいずれも候補",
+    "ideal_answer": "何の音を静かにしたいですか？周囲の音を防ぎたい(耳栓)、物が出す音を抑えたい(防音シート・消音マット)のどちらですか？",
+    "reason": "目的(遮音/防音/消音)が不明なためカテゴリを断定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "運転中にスマホを充電できるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内でスマホなどを充電したい。シガーソケット充電器を探している",
+    "ideal_answer": "車載用USB充電器(シガーソケット充電器)",
+    "reason": "「車の中」「充電する」からシガーソケット充電器にほぼ一意に絞れるrich例。",
+    "category": "car-charger",
+    "search_terms": {
+      "ja": [
+        "車 充電器 シガーソケット",
+        "カーチャージャー usb"
+      ],
+      "en": [
+        "car usb charger"
+      ],
+      "ko": [
+        "차량용 usb 충전기"
+      ],
+      "zh": [
+        "车载usb充电器"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "動かないように固定するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。家具転倒防止グッズ・滑り止めシート・耐震ジェルのいずれも候補",
+    "ideal_answer": "何を固定したいですか？家具の転倒防止、マットやラグの滑り止め、それとも地震対策のどれに近いですか？",
+    "reason": "固定対象(家具/マット/地震対策)が不明なためultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "丸めてしまうやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。ヨガマット・ラグ・寝袋・ポスターなど丸めて収納する商品のいずれも候補",
+    "ideal_answer": "何を丸めて収納したいですか？運動用マット(ヨガマット)、床に敷くラグ、寝袋、ポスターのどれに近いですか？",
+    "reason": "収納対象(マット/ラグ/寝袋/ポスター)が特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "挟んで運ぶやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "荷物をまとめて運びたい。手押しのキャリーカート(台車)を想定",
+    "ideal_answer": "荷物をまとめて運ぶ折りたたみキャリーカート(台車)",
+    "reason": "「運ぶ」という文脈から持ち運び器具、特に荷物をまとめるカートに絞れる中程度confidence例。",
+    "category": "carry-cart",
+    "search_terms": {
+      "ja": [
+        "折りたたみ キャリーカート",
+        "買い物 台車"
+      ],
+      "en": [
+        "folding utility cart"
+      ],
+      "ko": [
+        "접이식 손수레"
+      ],
+      "zh": [
+        "折叠手推车"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "夜につけて眠るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。アイマスク・マウスピース・耳栓・ネックウォーマーなど就寝時装着グッズのいずれも候補",
+    "ideal_answer": "就寝時に何のために着けますか？光を遮りたい(アイマスク)、音を防ぎたい(耳栓)、歯のため(マウスピース)のどれに近いですか？",
+    "reason": "装着目的が不明でカテゴリを断定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "置いておくと涼しいやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。保冷剤・冷感マット・サーキュレーターなど置き型の涼感グッズのいずれも候補",
+    "ideal_answer": "どこに置きますか？寝具の上に敷きたい(冷感マット)、飲食物を冷やしたい(保冷剤)、部屋全体を涼しくしたい(サーキュレーター)のどれですか？",
+    "reason": "設置場所・用途が不明なためultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ぐーんと伸びるゴムのやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "トレーニング用の伸縮性ゴムバンド(ストレッチ・筋トレ用)を探している",
+    "ideal_answer": "伸縮性のあるトレーニングチューブ・ストレッチバンド",
+    "reason": "「引っ張ると伸びる」という動作説明からフィットネス用ゴムバンドに絞れる中程度confidence例。",
+    "category": "fitness-band",
+    "search_terms": {
+      "ja": [
+        "トレーニングチューブ",
+        "ストレッチバンド"
+      ],
+      "en": [
+        "resistance band"
+      ],
+      "ko": [
+        "저항 밴드"
+      ],
+      "zh": [
+        "弹力带"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "お皿を洗うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食器を自動で洗ってくれる家電(卓上食器洗い乾燥機)を探している",
+    "ideal_answer": "卓上サイズの食器洗い乾燥機",
+    "reason": "「お皿を洗う」から食器洗い機にほぼ絞れるが、設置場所の制約(卓上/据え置き)は未確認のため中程度confidence。",
+    "category": "dishwasher",
+    "search_terms": {
+      "ja": [
+        "卓上 食器洗い乾燥機",
+        "コンパクト食洗機"
+      ],
+      "en": [
+        "countertop dishwasher"
+      ],
+      "ko": [
+        "소형 식기세척기"
+      ],
+      "zh": [
+        "台式洗碗机"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ゴミをまとめるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ゴミ袋をセットして使う、フタ付きのゴミ箱を探している",
+    "ideal_answer": "ゴミ袋をセットして使うフタ付きゴミ箱",
+    "reason": "「ゴミをまとめる」からゴミ箱・ゴミ袋ホルダー系に絞れる例。サイズや分別数は未確認。",
+    "category": "trash-can",
+    "search_terms": {
+      "ja": [
+        "フタ付き ゴミ箱",
+        "ゴミ袋ホルダー"
+      ],
+      "en": [
+        "trash can with lid"
+      ],
+      "ko": [
+        "쓰레기통 뚜껑"
+      ],
+      "zh": [
+        "带盖垃圾桶"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "服にアイロンかけなくていいやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アイロン台を使わずにシワを取れる、衣類スチーマー(ハンディスチーマー)を探している",
+    "ideal_answer": "ハンディタイプの衣類スチーマー",
+    "reason": "「アイロンかけなくていい」から衣類スチーマーに絞れるrich例。",
+    "category": "garment-steamer",
+    "search_terms": {
+      "ja": [
+        "衣類スチーマー",
+        "ハンディスチーマー"
+      ],
+      "en": [
+        "garment steamer"
+      ],
+      "ko": [
+        "의류 스티머"
+      ],
+      "zh": [
+        "挂烫机"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "水を入れたらすぐ使えるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "給水してすぐ稼働する卓上加湿器を探している",
+    "ideal_answer": "給水してすぐ使える卓上加湿器",
+    "reason": "「水を入れたらすぐ」から加湿器系に絞れるが、超音波式/卓上据え置きの区別は未確認のため中程度confidence。",
+    "category": "humidifier",
+    "search_terms": {
+      "ja": [
+        "卓上 加湿器",
+        "すぐ使える加湿器"
+      ],
+      "en": [
+        "desktop humidifier"
+      ],
+      "ko": [
+        "탁상용 가습기"
+      ],
+      "zh": [
+        "桌面加湿器"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "外で座るときに使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アウトドアで使うコンパクトな折りたたみ椅子を探している",
+    "ideal_answer": "アウトドア用の折りたたみコンパクトチェア",
+    "reason": "「外で座る」からアウトドアチェアに絞れる例。キャンプ用/花火観覧用などの細かい用途は未確認。",
+    "category": "outdoor-chair",
+    "search_terms": {
+      "ja": [
+        "折りたたみ チェア アウトドア",
+        "コンパクト 椅子"
+      ],
+      "en": [
+        "folding camping chair"
+      ],
+      "ko": [
+        "접이식 캠핑 의자"
+      ],
+      "zh": [
+        "折叠露营椅"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ぎゅってするぬいぐるみ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "抱きしめて使う、クッション性のある大きめぬいぐるみ(抱き枕タイプ)を探している",
+    "ideal_answer": "抱きしめやすい抱き枕タイプのぬいぐるみ",
+    "reason": "「ぎゅって」は子ども特有の抱擁動作の言い換え。クッション性のある抱き枕ぬいぐるみに絞れる。",
+    "category": "plush-toy",
+    "search_terms": {
+      "ja": [
+        "抱き枕 ぬいぐるみ",
+        "大きい ぬいぐるみ"
+      ],
+      "en": [
+        "huggable plush pillow"
+      ],
+      "ko": [
+        "안는 인형"
+      ],
+      "zh": [
+        "抱枕毛绒玩具"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "かかとがピカピカ光るスニーカー",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "歩くとかかと部分が光るタイプの子供用スニーカーを探している",
+    "ideal_answer": "かかとが光るLEDライト付き子供用スニーカー",
+    "reason": "子ども特有の「光る靴」表現が「かかと」部位まで明確になっているrich例。",
+    "category": "kids-shoes",
+    "search_terms": {
+      "ja": [
+        "光る スニーカー 子供",
+        "led シューズ キッズ"
+      ],
+      "en": [
+        "light up kids sneakers"
+      ],
+      "ko": [
+        "아이 라이트 운동화"
+      ],
+      "zh": [
+        "儿童发光运动鞋"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "キラキラするすべすべの下敷き",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ラメ入りで表面が滑らかな文房具用下敷きを探している",
+    "ideal_answer": "ラメ入りのキラキラ下敷き",
+    "reason": "「キラキラ」「すべすべ」から質感・見た目を伴う下敷きに絞れるrich例。",
+    "category": "stationery",
+    "search_terms": {
+      "ja": [
+        "ラメ 下敷き",
+        "キラキラ 下敷き"
+      ],
+      "en": [
+        "glitter desk pad"
+      ],
+      "ko": [
+        "반짝이 책받침"
+      ],
+      "zh": [
+        "闪粉文具垫板"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "おなまえ書くやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "持ち物に名前を書くための、お名前スタンプまたは名前シールを探している",
+    "ideal_answer": "持ち物用のお名前スタンプ・お名前シール",
+    "reason": "「おなまえ書く」から名前付けグッズに絞れるが、スタンプ/シールどちらかは未確定のため中程度confidence。",
+    "category": "name-stamp",
+    "search_terms": {
+      "ja": [
+        "お名前スタンプ",
+        "お名前シール"
+      ],
+      "en": [
+        "name stamp for kids"
+      ],
+      "ko": [
+        "이름 스탬프"
+      ],
+      "zh": [
+        "姓名印章"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "がっこうのつくえにつけるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。学校の机に取り付けるフック、ランドセル掛け、収納ポケットなどのいずれも候補",
+    "ideal_answer": "机に何を取り付けたいですか？ランドセルを掛けるフック、体操着などを入れるポケット、そのどちらに近いですか？",
+    "reason": "子ども特有の口語表現で、机に取り付ける対象物(フック/ポケット)が特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ランドセルの中で迷子にならないやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。ランドセル内を仕切るポーチ、ペンケース、仕切りケースなどのいずれも候補",
+    "ideal_answer": "ランドセルの中で何を整理したいですか？プリント類、文房具、給食袋などのうち、どれを「迷子」にしたくないですか？",
+    "reason": "整理対象(文房具/プリント/給食袋等)が不明で、仕切りケース・ポーチ・クリアファイルのどれが適切か断定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "小さい文字を大きくして見るやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "小さい文字を拡大して見るための卓上ルーペ(拡大鏡)を探している",
+    "ideal_answer": "卓上スタンド式の拡大鏡(ルーペ)",
+    "reason": "「文字を大きくして見る」から拡大鏡にほぼ絞れるrich例。",
+    "category": "magnifier",
+    "search_terms": {
+      "ja": [
+        "卓上 拡大鏡",
+        "老眼 ルーペ"
+      ],
+      "en": [
+        "desktop magnifier"
+      ],
+      "ko": [
+        "탁상용 확대경"
+      ],
+      "zh": [
+        "台式放大镜"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "固い瓶のふたを楽に開けるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "固い瓶のふたを少ない力で開けられる補助器具(瓶オープナー)を探している",
+    "ideal_answer": "滑り止め付きの瓶・ペットボトルオープナー",
+    "reason": "「瓶のふた」「楽に開ける」から瓶オープナーに一意に絞れるrich例。",
+    "category": "kitchen-tool",
+    "search_terms": {
+      "ja": [
+        "瓶 オープナー",
+        "ふた開け 補助"
+      ],
+      "en": [
+        "jar opener gripper"
+      ],
+      "ko": [
+        "병따개 보조기구"
+      ],
+      "zh": [
+        "开瓶器辅助工具"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "足がしびれない床に座る椅子",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "床に座る際、脚への負担が少ない座椅子(ロータイプ)を探している",
+    "ideal_answer": "脚が楽な座椅子(ロータイプ、背もたれ付き)",
+    "reason": "「足がしびれない」「床に座る」から床座り用の座椅子に絞れる例。リクライニング有無などは未確認。",
+    "category": "floor-chair",
+    "search_terms": {
+      "ja": [
+        "座椅子 楽",
+        "脚が楽 座椅子"
+      ],
+      "en": [
+        "floor chair with back support"
+      ],
+      "ko": [
+        "좌의자"
+      ],
+      "zh": [
+        "懒人椅"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "リモコンの字が見えないので大きい音が出るやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "不明。リモコンの文字を見やすくする拡大シール、音声で操作できるアシスト機器、音量を大きくするテレビスピーカーのいずれも候補",
+    "ideal_answer": "お困りなのはリモコンの文字(見やすくするシールや音声操作)、それともテレビの音量自体(スピーカー)のどちらですか？",
+    "reason": "「見えない」(視力)と「大きい音」(聴力・音量)の2つの課題が混在しており、対応すべき製品カテゴリが一意に決まらないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "杖を置く場所に困らないやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "杖を壁やテーブルに掛けて自立させる杖ホルダーを探している",
+    "ideal_answer": "壁掛け・テーブル掛けタイプの杖ホルダー",
+    "reason": "「杖を置く場所」から杖ホルダー(自立スタンド)に絞れるrich例。",
+    "category": "cane-holder",
+    "search_terms": {
+      "ja": [
+        "杖ホルダー",
+        "杖 自立 スタンド"
+      ],
+      "en": [
+        "cane holder stand"
+      ],
+      "ko": [
+        "지팡이 거치대"
+      ],
+      "zh": [
+        "拐杖支架"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "階段で足元が滑らないようにするシート",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "階段での転倒防止のため、滑り止めテープやノンスリップシートを探している",
+    "ideal_answer": "階段用の滑り止めテープ・ノンスリップシート",
+    "reason": "「階段」「足元が滑らない」から滑り止めグッズに絞れるrich例。",
+    "category": "safety-tape",
+    "search_terms": {
+      "ja": [
+        "階段 滑り止め テープ",
+        "ノンスリップシート"
+      ],
+      "en": [
+        "stair non slip tape"
+      ],
+      "ko": [
+        "계단 미끄럼 방지"
+      ],
+      "zh": [
+        "楼梯防滑条"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "강아지 산책용 가슴줄 추천",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "犬の散歩用の胸あてタイプハーネス(가슴줄)を探している",
+    "ideal_answer": "犬用お散歩ハーネス(胸あてタイプ)",
+    "reason": "韓国語母語話者の検索例。対象(犬)・用途(散歩)・形状(胸あて)が明確なrich例。",
+    "category": "pet-harness",
+    "search_terms": {
+      "ja": [
+        "犬 ハーネス 胸あて",
+        "お散歩 ハーネス"
+      ],
+      "en": [
+        "dog harness no-pull"
+      ],
+      "ko": [
+        "강아지 가슴줄"
+      ],
+      "zh": [
+        "狗狗胸背带"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "접이식 우산 작은 거",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "小さく折りたためる軽量タイプの折りたたみ傘を探している",
+    "ideal_answer": "軽量コンパクトな折りたたみ傘",
+    "reason": "韓国語で「折りたたみ」「小さいもの」と明示されたrich例。",
+    "category": "umbrella",
+    "search_terms": {
+      "ja": [
+        "軽量 折りたたみ傘",
+        "コンパクト 傘"
+      ],
+      "en": [
+        "compact folding umbrella"
+      ],
+      "ko": [
+        "초경량 접이식 우산"
+      ],
+      "zh": [
+        "轻量折叠雨伞"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "손난로 충전식",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "電池交換不要の充電式ハンドウォーマー(カイロ)を探している",
+    "ideal_answer": "充電式カイロ(電気ハンドウォーマー)",
+    "reason": "「충전식(充電式)」「손난로(カイロ)」が明確でrich例。",
+    "category": "hand-warmer",
+    "search_terms": {
+      "ja": [
+        "充電式 カイロ",
+        "電気 ハンドウォーマー"
+      ],
+      "en": [
+        "rechargeable hand warmer"
+      ],
+      "ko": [
+        "충전식 손난로"
+      ],
+      "zh": [
+        "充电暖手宝"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "아기 식탁 의자 높이조절",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "高さを調整できるベビー用ハイチェアを探している",
+    "ideal_answer": "高さ調節機能付きベビー用ハイチェア",
+    "reason": "「아기(赤ちゃん)」「높이조절(高さ調節)」から対象・機能が明確なrich例。",
+    "category": "baby-chair",
+    "search_terms": {
+      "ja": [
+        "ベビーチェア 高さ調節",
+        "ハイチェア 赤ちゃん"
+      ],
+      "en": [
+        "adjustable baby high chair"
+      ],
+      "ko": [
+        "아기 하이체어"
+      ],
+      "zh": [
+        "婴儿高脚椅可调节"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "可折叠行李箱秤",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "旅行時にスーツケースの重さを測る、折りたたみ式のデジタルスケールを探している",
+    "ideal_answer": "折りたたみ式スーツケース用デジタル重量計",
+    "reason": "「行李箱秤(スーツケース用はかり)」「可折叠(折りたたみ)」が明確なrich例。",
+    "category": "travel-scale",
+    "search_terms": {
+      "ja": [
+        "スーツケース 重さ 測る",
+        "旅行用 デジタルスケール"
+      ],
+      "en": [
+        "luggage scale digital"
+      ],
+      "ko": [
+        "여행용 수화물 저울"
+      ],
+      "zh": [
+        "行李箱电子秤"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "静音电风扇",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "動作音が静かなリビング用の電気ファンを探している",
+    "ideal_answer": "静音設計のリビング用電気ファン",
+    "reason": "「静音(静か)」「电风扇(電気ファン)」から属性・カテゴリともに明確なrich例。",
+    "category": "fan",
+    "search_terms": {
+      "ja": [
+        "静音 電気ファン",
+        "静かな 扇風機"
+      ],
+      "en": [
+        "quiet electric fan"
+      ],
+      "ko": [
+        "조용한 선풍기"
+      ],
+      "zh": [
+        "静音风扇"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "厨房油烟过滤网",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "キッチンの換気扇に取り付ける油煙フィルターネットを探している",
+    "ideal_answer": "キッチン換気扇用の油煙フィルターネット",
+    "reason": "「厨房(キッチン)」「油烟过滤网(油煙フィルターネット)」が明確なrich例。",
+    "category": "kitchen-filter",
+    "search_terms": {
+      "ja": [
+        "換気扇 油煙フィルター",
+        "レンジフード フィルター"
+      ],
+      "en": [
+        "range hood filter net"
+      ],
+      "ko": [
+        "주방 후드 필터"
+      ],
+      "zh": [
+        "厨房油烟过滤网"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "儿童防走失手环",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "子供が迷子にならないよう、連絡先を記入できる迷子防止リストバンドを探している",
+    "ideal_answer": "子供用迷子防止リストバンド(連絡先記入タイプ)",
+    "reason": "「儿童(子供)」「防走失手环(迷子防止リストバンド)」が明確なrich例。GPS機能の有無は未確認のため断定しない。",
+    "category": "child-safety",
+    "search_terms": {
+      "ja": [
+        "迷子防止 リストバンド キッズ",
+        "子供 迷子防止"
+      ],
+      "en": [
+        "child anti-lost wristband"
+      ],
+      "ko": [
+        "아동 미아방지 손목밴드"
+      ],
+      "zh": [
+        "儿童防走失手环"
+      ]
+    },
+    "excluded_conditions": [
+      "GPS機能の保証"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "collapsible water bottle for hiking",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ハイキング時に携帯しやすい、折りたたみ式のシリコン水筒を探している",
+    "ideal_answer": "シリコン製の折りたたみ水筒(アウトドア用)",
+    "reason": "英語での検索例。用途(hiking)・形状(collapsible)が明確なrich例。",
+    "category": "water-bottle",
+    "search_terms": {
+      "ja": [
+        "折りたたみ 水筒 シリコン",
+        "アウトドア 水筒"
+      ],
+      "en": [
+        "collapsible silicone water bottle"
+      ],
+      "ko": [
+        "접이식 실리콘 물병"
+      ],
+      "zh": [
+        "硅胶折叠水壶"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "laptop stand for bed",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ベッドの上で使えるノートパソコン用スタンド(台)を探している",
+    "ideal_answer": "ベッドで使えるノートPCスタンド(台タイプ)",
+    "reason": "英語での検索例。使用場所(bed)・用途(laptop stand)が明確なrich例。",
+    "category": "laptop-stand",
+    "search_terms": {
+      "ja": [
+        "ベッド用 ノートPCスタンド",
+        "ベッドテーブル パソコン"
+      ],
+      "en": [
+        "laptop bed table stand"
+      ],
+      "ko": [
+        "침대 노트북 받침대"
+      ],
+      "zh": [
+        "床上笔记本支架"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "anti slip shower mat for seniors",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "高齢者が浴室で滑らないよう、吸着タイプの滑り止めバスマットを探している",
+    "ideal_answer": "吸着タイプの滑り止め浴室マット",
+    "reason": "英語での検索例。使用者(elderly)・機能(non slip)・場所(bath)が明確なrich例。",
+    "category": "bath-mat",
+    "search_terms": {
+      "ja": [
+        "浴室 滑り止めマット",
+        "吸着 バスマット"
+      ],
+      "en": [
+        "non slip bath mat suction"
+      ],
+      "ko": [
+        "욕실 미끄럼방지 매트"
+      ],
+      "zh": [
+        "浴室防滑垫吸盘"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "furatto suwareru cushion zabuton",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "ローマ字表記の「ぺたんと座れるクッション座布団」。低反発タイプの座布団を探している",
+    "ideal_answer": "低反発素材のぺたんこ座布団クッション",
+    "reason": "ローマ字と日本語が混在した表記。日本語入力に不慣れな利用者を想定したmixed例。",
+    "category": "cushion",
+    "search_terms": {
+      "ja": [
+        "低反発 座布団",
+        "ぺたんこ クッション"
+      ],
+      "en": [
+        "low rebound floor cushion"
+      ],
+      "ko": [
+        "저반발 방석"
+      ],
+      "zh": [
+        "低反弹坐垫"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "トレカしまう透明のケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "推し活用語。トレーディングカードを収納する透明なスリーブ・バインダーを探している",
+    "ideal_answer": "トレーディングカード用の透明スリーブ・バインダー",
+    "reason": "「トレカ」は若者のトレーディングカード略語。推し活グッズとして近年需要増加中の語彙。",
+    "category": "trading-card-storage",
+    "search_terms": {
+      "ja": [
+        "トレカ スリーブ",
+        "トレカ バインダー 透明"
+      ],
+      "en": [
+        "trading card sleeve clear"
+      ],
+      "ko": [
+        "포토카드 슬리브"
+      ],
+      "zh": [
+        "卡套 透明"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ぬい用のお布団",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ぬい活用語。お気に入りのぬいぐるみ用の小さな布団セットを探している",
+    "ideal_answer": "ぬいぐるみ用ミニ布団セット",
+    "reason": "「ぬい」はぬいぐるみの若者略語。ぬい活グッズとして確立したカテゴリ。",
+    "category": "plush-accessory",
+    "search_terms": {
+      "ja": [
+        "ぬい 布団",
+        "ぬいぐるみ用 布団セット"
+      ],
+      "en": [
+        "plush doll mini bedding set"
+      ],
+      "ko": [
+        "인형 이불 세트"
+      ],
+      "zh": [
+        "玩偶迷你被子"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "韓国っぽいグロスの保存ケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "韓国コスメ系のリップグロス・ミニボトルをまとめて収納するコスメケースを探している",
+    "ideal_answer": "コスメ収納ケース(リップグロス・ミニボトル用)",
+    "reason": "韓国コスメブーム由来の若者語彙。収納対象(グロス)からコスメ収納ケースに絞れる。",
+    "category": "cosmetic-storage",
+    "search_terms": {
+      "ja": [
+        "コスメ収納ケース",
+        "リップグロス 収納"
+      ],
+      "en": [
+        "cosmetic storage case for lip gloss"
+      ],
+      "ko": [
+        "화장품 정리함"
+      ],
+      "zh": [
+        "化妆品收纳盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "スマホスタンドで映えるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "SNS用の動画・写真撮影に使える、角度調整可能なスマホスタンドを探している",
+    "ideal_answer": "角度調整できる撮影用スマホスタンド",
+    "reason": "「映える」はSNS由来の若者語彙。撮影用途のスマホスタンドに絞れる例。",
+    "category": "phone-stand",
+    "search_terms": {
+      "ja": [
+        "スマホスタンド 撮影用",
+        "角度調整 スマホスタンド"
+      ],
+      "en": [
+        "adjustable phone stand for video"
+      ],
+      "ko": [
+        "촬영용 휴대폰 스탠드"
+      ],
+      "zh": [
+        "拍摄手机支架"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ラントレのポーチ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ランニングトレーニング用語。スマホを収納できるランニング用ウエストポーチを探している",
+    "ideal_answer": "スマホ収納対応のランニング用ウエストポーチ",
+    "reason": "「ラントレ」はランニングトレーニングの若者略語。用途からウエストポーチに絞れる例。",
+    "category": "running-pouch",
+    "search_terms": {
+      "ja": [
+        "ランニング ウエストポーチ",
+        "ラントレ ポーチ"
+      ],
+      "en": [
+        "running waist pouch for phone"
+      ],
+      "ko": [
+        "러닝 허리 파우치"
+      ],
+      "zh": [
+        "跑步腰包"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "寝つきが良くなるアイマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "リラックスして眠りたい人向けの遮光・温感タイプのアイマスクを探している。睡眠改善効果を断定すべきではない",
+    "ideal_answer": "遮光・温感タイプのリラックス用アイマスク(睡眠への効果は個人差があり、医学的な改善効果を保証するものではありません)",
+    "reason": "「寝つきが良くなる」は健康効果に関する断定表現のため、商品カテゴリの提示と注意書きに留める。",
+    "category": "eye-mask",
+    "search_terms": {
+      "ja": [
+        "遮光 アイマスク",
+        "温感 アイマスク"
+      ],
+      "en": [
+        "sleep eye mask warming"
+      ],
+      "ko": [
+        "수면 안대"
+      ],
+      "zh": [
+        "睡眠眼罩"
+      ]
+    },
+    "excluded_conditions": [
+      "必ず眠れる",
+      "医学的効果の保証",
+      "不眠症の治療目的"
+    ],
+    "confidence": 0.5,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "疲れた足に良いマッサージ器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "脚のリラックス目的でマッサージ器を探している。治療・効能を断定すべきではない",
+    "ideal_answer": "脚用マッサージ器(リラックス用。効果・効能には個人差があり、医学的な治療効果を保証するものではありません。持病がある方は医師にご相談ください)",
+    "reason": "「良い」は効能を断定する健康表現のため、ideal_answerでは商品カテゴリの提示と注意書きに留める。",
+    "category": "massager",
+    "search_terms": {
+      "ja": [
+        "足 マッサージ器",
+        "レッグマッサージャー"
+      ],
+      "en": [
+        "leg massager"
+      ],
+      "ko": [
+        "다리 마사지기"
+      ],
+      "zh": [
+        "腿部按摩器"
+      ]
+    },
+    "excluded_conditions": [
+      "必ず効く",
+      "医療機器としての効能保証",
+      "治療目的の断定"
+    ],
+    "confidence": 0.45,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "冷蔵庫の中身を整理するケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷蔵庫内を整理する仕切りケース・収納ボックスを探している",
+    "ideal_answer": "冷蔵庫整理用の仕切りケース",
+    "reason": "「冷蔵庫の中身を整理する」から収納整理グッズに絞れるrich例。",
+    "category": "fridge-organizer",
+    "search_terms": {
+      "ja": [
+        "冷蔵庫 仕切りケース",
+        "冷蔵庫収納ボックス"
+      ],
+      "en": [
+        "fridge organizer bin"
+      ],
+      "ko": [
+        "냉장고 정리함"
+      ],
+      "zh": [
+        "冰箱收纳盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "自転車のかごにつける雨カバー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "自転車の前カゴ用レインカバーを探している",
+    "ideal_answer": "自転車のかご用レインカバー",
+    "reason": "対象(自転車のかご)・目的(雨対策)が明確なrich例。",
+    "category": "bike-accessory",
+    "search_terms": {
+      "ja": [
+        "自転車 かごカバー 雨",
+        "自転車 前カゴ レインカバー"
+      ],
+      "en": [
+        "bicycle basket rain cover"
+      ],
+      "ko": [
+        "자전거 바구니 비닐커버"
+      ],
+      "zh": [
+        "自行车车篮雨罩"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "テレビ台の配線をまとめるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "テレビ周りのケーブルを整理するケーブル収納ボックスを探している",
+    "ideal_answer": "配線整理用のケーブル収納ボックス",
+    "reason": "「テレビ台の配線をまとめる」からケーブル収納ボックスに絞れるrich例。",
+    "category": "cable-organizer",
+    "search_terms": {
+      "ja": [
+        "ケーブル収納ボックス",
+        "配線整理 ボックス"
+      ],
+      "en": [
+        "cable management box"
+      ],
+      "ko": [
+        "케이블 정리함"
+      ],
+      "zh": [
+        "理线收纳盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  },
+  {
+    "query_text": "ベランダの手すりに干すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベランダの手すりに掛けられる物干しハンガーを探している",
+    "ideal_answer": "ベランダの手すりに掛けられる物干しハンガー",
+    "reason": "「ベランダの手すりに干す」から物干しハンガーに絞れるrich例。",
+    "category": "laundry-accessory",
+    "search_terms": {
+      "ja": [
+        "ベランダ 物干し 手すり",
+        "物干しハンガー 手すり掛け"
+      ],
+      "en": [
+        "balcony railing drying hanger"
+      ],
+      "ko": [
+        "베란다 난간 건조대"
+      ],
+      "zh": [
+        "阳台栏杆晾衣架"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-10-07",
+    "authored_updated_date": "2026-10-07"
+  }
+]
