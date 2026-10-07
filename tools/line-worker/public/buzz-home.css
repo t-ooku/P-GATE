@@ -164,8 +164,11 @@
 .buzz-home-genre-chip { flex: 0 0 auto; padding: 7px 12px; border: 1px solid #ded7ff; border-radius: 999px; background: #fff; color: #5140ba; font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; }
 .buzz-home-genre-chip:hover { background: var(--soft, #f4f0ff); }
 .buzz-home-shelf { scroll-margin-top: calc(var(--topbar-height, 74px) + 12px); }
-.buzz-home-google { margin: 6px 0 2px; padding: 8px 12px; border: 1px dashed #cfc6ff; border-radius: 12px; background: #fff; color: var(--violet, #7357ff); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; }
-.buzz-home-google:hover { background: var(--soft, #f4f0ff); }
+/* 2026-10-07 大隆さん指示「他のモール（Google）でも探す→ のボタンは、ホシルのポートレートカラーにして」:
+   主ボタンと同じピンク→紫のグラデーション＋白文字（instagram-look.css の主ボタンと同じ色）。 */
+.buzz-home-google { margin: 6px 0 2px; padding: 10px 14px; border: 0; border-radius: 12px; background: linear-gradient(110deg, var(--pink, #ff3ca5), var(--violet, #7357ff)); color: #fff; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; box-shadow: 0 8px 20px #7357ff2e; }
+.buzz-home-google:hover { filter: brightness(1.06); }
+.buzz-home-google:focus-visible { outline: 2px solid #23b8ff; outline-offset: 2px; }
 /* 2026-09-20 大隆さん指示: 「今、みんながホシってる。」は 1 行。スマホでは見出しの下に「すべて見る」を置く */
 .buzz-home-heading h2 { white-space: nowrap; }
 @media (max-width: 760px) {
