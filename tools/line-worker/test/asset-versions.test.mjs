@@ -16,7 +16,7 @@ const EXPECTED = Object.freeze({
   'assets-v126/ai-search-layout-fix.css': '135',
   'mywatch.css': '12',
   'tab-nav.css': '5',
-  'tab-nav.mjs': '15',
+  'tab-nav.mjs': '16',
   'site-i18n.js': '9',
   'growth-analytics.mjs': '16',
   'ai-search-ui.mjs': '16',

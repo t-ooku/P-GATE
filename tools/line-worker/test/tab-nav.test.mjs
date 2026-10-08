@@ -10,7 +10,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、4 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=5">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=15"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=16"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
@@ -18,7 +18,8 @@ test('トップは tab-nav を読み込み、4 タブと節の割り当てを持
   // 2026-10-07 大隆さん指示「やはり、ホシルバズのページを設けよう。探すページにも残しつつ」: ホシルバズタブを戻す（ショップは隠したまま）。
   for (const label of ['探す', 'ショップ', 'ホシる中', 'ホシルバズ', 'マイアカウント']) assert.ok(nav.includes(`label: '${label}'`), label);
   assert.match(nav, /\['#buzzTab', 'buzz'\]/);
-  assert.ok(nav.indexOf("id: 'hoshiru'") < nav.indexOf("id: 'buzz'") && nav.indexOf("id: 'buzz'") < nav.indexOf("id: 'account'"));
+  // 2026-10-08 大隆さん指示: ホシルバズは左から2番目（探す → ホシルバズ → ホシる中 → マイアカウント）。
+  assert.ok(nav.indexOf("id: 'search'") < nav.indexOf("id: 'buzz'") && nav.indexOf("id: 'buzz'") < nav.indexOf("id: 'hoshiru'") && nav.indexOf("id: 'hoshiru'") < nav.indexOf("id: 'account'"));
   assert.match(html, /<section id="buzzTab" class="buzz-home buzz-tab"/);
   assert.match(html, /<div id="buzzTabShelves" class="buzz-home-shelves"/);
   assert.match(nav, /\['#insight', 'hoshiru'\]/);
