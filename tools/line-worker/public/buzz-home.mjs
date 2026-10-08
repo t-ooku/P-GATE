@@ -86,7 +86,8 @@ function itemCard(item) {
   actions.append(heart);
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§10: BUZZ から「今いくら？」（商品詳細）へ。
   if (/^(?:RAKUTEN:|YAHOO:|JAN:)/u.test(text(item.record_key)) && !/^(?:RAKUTEN|YAHOO):https?:/iu.test(text(item.record_key))) {
-    const detail = el('a', 'buzz-home-detail', '今いくら？ 過去の価格と比べる');
+    // 2026-10-08 大隆さん指示「価格推移のリンクは、ボタン枠を目立つ様にして『過去の価格と比べる』に。ボタンの色もオシャレに」。
+    const detail = el('a', 'buzz-home-detail', '過去の価格と比べる');
     detail.href = `/product?key=${encodeURIComponent(text(item.record_key))}&from=buzz`;
     wrap.append(detail);
   }

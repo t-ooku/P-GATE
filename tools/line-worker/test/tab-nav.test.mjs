@@ -70,6 +70,11 @@ test('気になる商品は「ホシる中」タブに横スクロールで並�
   assert.match(read('buzz-home.css'), /\.buzz-home-google \{[^}]*white-space: nowrap;[^}]*text-overflow: ellipsis;/);
   assert.match(read('buzz-home.mjs'), /を他のモールでも探す`/);
   assert.doesNotMatch(read('buzz-home.mjs'), /他のモール（Google）/);
+  // 2026-10-08: 価格推移の導線は「過去の価格と比べる」のグラデーション枠ボタン（ホシルバズ・検索結果とも）。
+  assert.match(read('buzz-home.mjs'), /'buzz-home-detail', '過去の価格と比べる'/);
+  assert.match(read('buzz-home.css'), /\.buzz-home-detail\{[^}]*border:1\.5px solid transparent;[^}]*linear-gradient\(110deg,#ff4f9a,#7357ff 55%,#23b8ff\) border-box/);
+  assert.match(read('unified-results-ui.mjs'), /detail: '過去の価格と比べる'/);
+  assert.match(read('unified-results-ui.css'), /\.unified-card-detail\{[^}]*border-radius:999px;[^}]*border-box/);
 });
 
 // 2026-09-17 大隆さん報告: 「値下がり待ち」の「いまの価格を見る」を押しても反応しない。

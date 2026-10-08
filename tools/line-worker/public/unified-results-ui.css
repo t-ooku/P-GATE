@@ -243,4 +243,7 @@
 }
 .unified-card-full .keep-product-note.hidden{display:none}
 
-.unified-card-detail{display:block;margin:6px 0 0;color:#5140ba;font-size:11px;font-weight:850;text-decoration:none}.unified-card-detail:hover{text-decoration:underline}
+/* 2026-10-08 大隆さん指示: 「過去の価格と比べる」はグラデーション枠のボタン（ホシルバズと同じ見た目）。 */
+.unified-card-detail{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:7px 10px;border:1.5px solid transparent;border-radius:999px;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) border-box;color:#5140ba;font-size:11px;font-weight:900;letter-spacing:.02em;line-height:1.3;text-align:center;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 12px #7357ff24;transition:background .15s,color .15s}
+.unified-card-detail:hover,.unified-card-detail:active,.unified-card-detail:focus-visible{background:linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) padding-box,linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) border-box;color:#fff;text-decoration:none}
+.unified-card-detail:focus-visible{outline:2px solid #23b8ff;outline-offset:2px}

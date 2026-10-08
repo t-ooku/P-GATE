@@ -27,7 +27,8 @@ const COPY = {
   keep: '♡ ホシっとく',
   kept: '♥ ホシっとく済み',
   listing: '一覧ページ',
-  detail: '今いくら？ 過去の価格と比べる',
+  // 2026-10-08 大隆さん指示: 文言は「過去の価格と比べる」、見た目はボタン（unified-results-ui.css）。
+  detail: '過去の価格と比べる',
   openListing: 'このモールの一覧を見る',
   badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' },
   sortLabel: '並び順',
