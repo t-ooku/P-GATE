@@ -121,7 +121,10 @@ test('検索枠に「検索方法」の見出しが無く、フォームが枠�
 // 2026-09-17 大隆さん指示: 主 CTA は「AIで探す」。検索欄の長方形枠は縦を縮めて上に寄せる。
 test('主 CTA は「探す」1つ、検索欄の枠は縦を詰めて上に寄せる', () => {
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9
-  assert.match(read('index.html'), /<div class="search-mode-actions search-mode-single"><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">探す<\/span>/);
+  assert.match(read('index.html'), /<div class="search-mode-actions search-mode-single"><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">検索<\/span>/);
+  // 2026-10-08 大隆さん指示「『検索』に変更しよう。矢印不要」。
+  assert.match(read('index.html'), /<span id="submitText">検索<\/span><\/button>/);
+  for (const app of ['app.js', 'assets-v147/app.js']) assert.match(read(app), /directSubmit:'検索'/);
   assert.match(read('index.html'), /<button id="askAiButton" class="ask-ai-button search-secondary-button" type="button">AIに相談して探す<\/button>/);
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
     const text = read(css);

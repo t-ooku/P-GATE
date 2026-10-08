@@ -113,10 +113,10 @@ test('第一画面は「欲しい値段を、先に決めておく。」と補�
     assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /html:lang\(ja\) \.hero-sub-sentence\{white-space:nowrap\}/);
   }
   // 2026-09-17 大隆さん決定: 主 CTA の文言は「AIで探す」（「ホシっとく」から変更）。直下に「見つからなければ、そのまま探し続けます。」
-  assert.match(html, /<button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">探す<\/span>/);
+  assert.match(html, /<button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">検索<\/span>/);
   // 2026-09-22 大隆さん指示で、検索ボタン下の2行（探し続けます／この価格になったら教えて）は削除した。
   assert.ok(!html.includes('id="hoshittokuHint"'), '検索ボタン下の補足は出さない');
-  assert.match(app, /identifySubmit:'AIに相談して探す',directSubmit:'探す'/);
+  assert.match(app, /identifySubmit:'AIに相談して探す',directSubmit:'検索'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
   assert.ok(app.includes(String.raw`hero:'欲しいもの、|今いくら？'`));
   assert.ok(app.includes(String.raw`heroSub:'スクショでも、一言でも。\n商品を見つけて。今と過去の値段を比べて、買う。'`));

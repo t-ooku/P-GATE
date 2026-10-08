@@ -74,7 +74,7 @@ const navigationCopy = {
 };
 const searchModeCopy={
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」1つ。AI相談は補助導線。
-  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'探す',identifySubmit:'AIに相談して探す',directSubmit:'探す'},
+  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'探す',identifySubmit:'AIに相談して探す',directSubmit:'検索'},
   EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search',identifySubmit:'Ask AI first',directSubmit:'Search'},
   ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'搜索',identifySubmit:'先问 AI',directSubmit:'搜索'},
   KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'검색',identifySubmit:'AI에게 먼저 묻기',directSubmit:'검색'}

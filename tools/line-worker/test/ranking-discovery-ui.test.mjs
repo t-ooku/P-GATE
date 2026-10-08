@@ -36,7 +36,7 @@ test('曖昧検索向けの従来2モードはランキング導線と分離し�
   const app = await readFile(new URL('app.js', root), 'utf8');
   // 2026-09-05: 上部切替は撤去。常設ボタン「AIに商品を聞く」「すぐ検索」→ その下に「ランキングで探す」
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9: 主ボタンは「探す」。AI相談とランキングは補助導線に並ぶ。
-  assert.match(html, /id="submitButton"[^>]*><span id="submitText">探す</);
+  assert.match(html, /id="submitButton"[^>]*><span id="submitText">検索</);
   assert.match(html, /id="askAiButton"[^>]*>AIに相談して探す</);
   assert.match(html, /id="askAiButton"[\s\S]{0,400}id="rankingSearchButton"/);
   assert.match(app, /const identifyRequested=currentSearchMode\(\)==='identify';requestedSearchMode='direct';/);
