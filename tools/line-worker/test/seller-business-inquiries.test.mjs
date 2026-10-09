@@ -278,7 +278,7 @@ test('料金欄は角丸。折り返しても文字の左端がそろう', () =>
   assert.ok(!rule.includes('border-radius:999px'), '錠剤の形にしない');
   assert.match(rule, /border-radius:18px/u);
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /for-sellers-pricing\.css\?v=10/u);
+  assert.match(html, /for-sellers-pricing\.css\?v=11/u);
 });
 
 
