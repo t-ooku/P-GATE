@@ -18,7 +18,9 @@ export const PROMO_LP_MARKERS = Object.freeze({
   faq: '<!--SELLER_PROMO_FAQ-->'
 });
 
-export const PROMO_LP_HERO = `<section class="hero promo-hero"><style>.promo-hero h1,.promo-hero h1 span{white-space:normal}.promo-section p{max-width:760px;line-height:1.85}.promo-section ul{margin:0;padding-left:1.2em;line-height:1.9}</style><p class="eyebrow">HOSHILU SELLER</p><h1>後回しになっていた「モールの外」の販促を、<br><span>毎週かわりに。</span></h1><p class="lead">受注・発送・問い合わせで一日が終わり、ブログや SNS は止まったまま——そんなお店のための、AI の販促担当です。毎週月曜に、Google 検索向けの記事・SNS の投稿文と画像・商品ページの直し案が届きます。お店は中身を確かめて「承認」を押すだけ。</p><p class="hero-price">AI販促担当 <strong>Light 月額${LIGHT}・Standard 月額${STANDARD}（税込）</strong><br>HOSHILU 内の掲載だけなら月額1,980円（税込）<br><small>初回公開から30日間無料（開始前にカード登録と自動更新への同意が必要です）。相談フォーム送信だけでは課金されません。</small></p><div class="hero-actions"><a class="primary" href="#businessForm" data-seller-cta="hero-inquiry">AI販促担当を相談する</a><a class="ghost" href="#pricing" data-seller-cta="hero-pricing">料金を見る</a></div></section>`;
+// 2026-10-09 大隆さん指示「もっと1980円のshop掲載ページを充実させて。陰に隠れてるけど、まず入り口は1980円でもあるよね」:
+// 第一画面の主役を AI販促担当から「掲載プラン 月額1,980円」へ。AI販促担当は「販促まで任せるなら」の次の一歩として残す。
+export const PROMO_LP_HERO = `<section class="hero promo-hero"><style>.promo-hero h1,.promo-hero h1 span{white-space:normal}.promo-section p{max-width:760px;line-height:1.85}.promo-section ul{margin:0;padding-left:1.2em;line-height:1.9}</style><p class="eyebrow">HOSHILU SELLER</p><h1>まずは月額1,980円で、<br><span>探している人の目の前へ。</span></h1><p class="lead">Amazonや楽天市場の出店はそのまま。検索語の条件にすべて合うときは、HOSHILUの検索結果の一番上にある「PR」枠に、お店の商品を表示します（最大2件）。HOSHILUで何が探されていて、何が見つからなかったかも、契約者画面で見られます。<br>まずは、商品3点の掲載見本をご相談ください。公開は店舗様の確認・承認後です。</p><p class="hero-price">掲載プラン <strong>月額1,980円（税込）</strong><br><small>新規は商品公開から30日間無料（開始前にカード登録と自動更新への同意が必要です。期限までに解約しない場合、31日目から自動課金・毎月更新）。相談フォーム送信だけでは課金されません。</small><br><small>販促まで任せるなら、AI販促担当 Light 月額${LIGHT}・Standard 月額${STANDARD}（税込）</small></p><div class="hero-actions"><a class="primary" href="#businessForm" data-seller-cta="hero-inquiry">1,980円の掲載を相談する</a><a class="ghost" href="#included" data-seller-cta="hero-included">1,980円でできることを見る</a></div></section>`;
 
 export const PROMO_LP_SECTIONS = `<section class="promo-section" id="why-outside"><p class="eyebrow">WHY OUTSIDE THE MALL</p><h2>なぜ「モールの外」なのか</h2>
     <p>お客さまの多くは、買う前に Google や Instagram で「選び方」や「使い方」を調べています。モールの中の対策だけでは、その人たちにお店の名前は届きません。</p>
@@ -26,7 +28,7 @@ export const PROMO_LP_SECTIONS = `<section class="promo-section" id="why-outside
     <p>大切だと分かっていても後回しになりがちなこの仕事を、毎週止めずに続けるのが HOSHILU の役目です。</p>
   </section>
   <section class="promo-section" id="inside-outside"><p class="eyebrow">INSIDE &amp; OUTSIDE</p><h2>HOSHILU の中と外、両方で</h2>
-    <p><strong>HOSHILU の中:</strong> お店のショップページと商品掲載。「これを探している」人がいれば、お店にお知らせします。</p>
+    <p><strong>HOSHILU の中（掲載プラン 1,980円から）:</strong> 検索結果の「PR」枠への優先出品と商品掲載。「これを探している」人がいれば、お店にお知らせします。</p>
     <p><strong>HOSHILU の外:</strong> Google 検索向けの記事、Instagram／X／Threads の投稿文と画像、お店のサイト（WordPress）や楽天GOLD への公開。</p>
   </section>
   <section class="promo-section" id="weekly"><p class="eyebrow">EVERY WEEK</p><h2>毎週届くもの</h2>
@@ -35,7 +37,7 @@ export const PROMO_LP_SECTIONS = `<section class="promo-section" id="why-outside
     <p>お店が中身を確かめて承認したものだけを公開します。お店の商品情報に根拠の無い表現は「要確認」としてお知らせし、自動では公開しません。</p>
   </section>`;
 
-export const PROMO_LP_PRICING_HEAD = '<style>#pricing{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}#pricing .pricing-head{grid-column:1/-1}#pricing .pricing-head h2,#pricing .pricing-head h2 span{white-space:normal}#pricing .price strong{font-size:clamp(40px,4.2vw,56px)}@media(max-width:860px){#pricing{grid-template-columns:minmax(0,1fr)}}</style><div class="pricing-head"><p class="eyebrow">THREE PLANS</p><h2>掲載だけなら1,980円。<br><span>販促まで任せるなら、AI販促担当。</span></h2><p>1法人単位ではなく、1事業者アカウント単位。担当者は複数人で利用できます。初期費用・解約金は0円です。どのプランもクリックによる追加料金はありません。</p></div>';
+export const PROMO_LP_PRICING_HEAD = '<style>#pricing{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}#pricing .pricing-head{grid-column:1/-1}#pricing .pricing-head h2,#pricing .pricing-head h2 span{white-space:normal}#pricing .price strong{font-size:clamp(40px,4.2vw,56px)}@media(max-width:860px){#pricing{grid-template-columns:minmax(0,1fr)}}</style><div class="pricing-head"><p class="eyebrow">THREE PLANS</p><h2>まずは掲載プラン1,980円から。<br><span>販促まで任せるなら、AI販促担当。</span></h2><p>1法人単位ではなく、1事業者アカウント単位。担当者は複数人で利用できます。初期費用・解約金は0円です。どのプランもクリックによる追加料金はありません。</p></div>';
 
 export const PROMO_LP_PRICING = `<article class="price-card" id="promo-light"><p class="price-label">AI販促担当 Light</p><p class="price"><strong>¥${PROMO_PAID_PLANS.LIGHT.unit_amount.toLocaleString('en-US')}</strong><span>/ 月・税込</span></p><p class="campaign">${trialCopy(LIGHT)}</p><ul><li>毎週月曜に、記事1本・SNS投稿文2本と画像・商品ページの直し案1件が届きます</li><li>月に1回、作ったもの・公開したもの・数字のレポート</li><li>公開はお店が行います</li></ul><a class="primary" href="#businessForm" data-seller-cta="pricing-light">AI販促担当を相談する</a></article>
     <article class="price-card" id="promo-standard"><p class="price-label">AI販促担当 Standard</p><p class="price"><strong>¥${PROMO_PAID_PLANS.STANDARD.unit_amount.toLocaleString('en-US')}</strong><span>/ 月・税込</span></p><p class="campaign">${trialCopy(STANDARD)}</p><ul><li>Light の内容に加えて</li><li>お店のサイト（WordPress）への公開</li><li>楽天GOLD 用の HTML</li><li>任意の声フォーム、需要への再案内</li></ul><a class="primary" href="#businessForm" data-seller-cta="pricing-standard">AI販促担当を相談する</a></article>`;
@@ -52,10 +54,10 @@ const PLAN_PRICES = `掲載プラン1,980円・AI販促担当 Light ${LIGHT}・S
 export const PROMO_LP_REPLACEMENTS = Object.freeze([
   ['増えません。料金は月額1,980円だけです。', `増えません。料金は選んだプランの月額（${PLAN_PRICES}）だけです。`],
   ['増えません。料金は月額1,980円だけで、従量課金はありません。', '増えません。料金は選んだプランの月額だけで、従量課金はありません。'],
-  ['月額1,980円の掲載プランには含みません。掲載プランは、HOSHILU 内のショップページ・商品掲載・探されている需要の通知です。',
+  ['月額1,980円の掲載プランには含みません。掲載プランは、検索結果の「PR」枠への優先出品・商品掲載・探されている需要の通知です。',
     `月額1,980円の掲載プランには含みません。AI販促担当（Light 月額${LIGHT}・Standard 月額${STANDARD}、税込）で、毎週の記事・SNS投稿文と画像・商品ページの直し案をお届けします。`],
   ['月額1,980円（税込）はHOSHILUの利用料です。', `月額料金（${PLAN_PRICES}）はHOSHILUの利用料です。`],
-  ['<p class="price-label">HOSHILU SELLER</p>', '<p class="price-label">掲載プラン（HOSHILU 内の掲載のみ）</p>'],
+  ['<p class="price-label">HOSHILU SELLER</p>', '<p class="price-label">掲載プラン（まずはここから）</p>'],
   ['通常料金は月額1,980円（税込）。', `掲載プランは月額1,980円、AI販促担当は Light 月額${LIGHT}・Standard 月額${STANDARD}（いずれも税込）。`]
 ]);
 

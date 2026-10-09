@@ -94,3 +94,14 @@
 /* 2026-09-27 320px幅で「仕入れのヒントに。」が折り返せず横にはみ出していた。 */
 .demand-value>*{min-width:0}
 @media(max-width:340px){.demand-copy h2 span{white-space:normal}}
+/* 2026-10-09 大隆さん指示「1980円の掲載ページを充実」: 第一画面直後の「1,980円でできること」と、相談フォーム横の要約 */
+#included .expose-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.included-cta{margin:22px 0 0;text-align:center}
+.included-cta .primary{display:inline-block}
+.entry-summary{display:grid;gap:10px;margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.entry-summary strong{font-size:14px}
+.entry-summary ul{margin:0;padding-left:1.2em;color:var(--muted);font-size:13px;line-height:1.8}
+.entry-summary ol{display:grid;gap:8px;margin:4px 0 0;padding:0;list-style:none;font-size:13px}
+.entry-summary ol li{display:flex;align-items:center;gap:8px}
+.entry-summary ol span{display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px;height:22px;border-radius:50%;background:linear-gradient(100deg,var(--pink),var(--violet));color:#fff;font-size:11px;font-weight:900}
+@media(max-width:760px){#included .expose-grid{grid-template-columns:1fr}}

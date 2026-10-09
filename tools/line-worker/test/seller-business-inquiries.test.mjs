@@ -75,7 +75,9 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /data-seller-trial-copy/u);
   assert.match(html, /追加料金 <strong>なし<\/strong>/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
-  assert.match(html, /月額に含まれるもの: HOSHILU SHOP掲載、全ショップ横断検索への露出、商品クリック/u);
+  // 2026-10-09 大隆さん指示: ショップ専用ページは掲載店が集まってから。今は「PR」枠への優先出品を謳う。
+  assert.match(html, /月額に含まれるもの: 検索結果の「PR」枠への優先出品（条件にすべて合う検索で最大2件）、商品掲載/u);
+  assert.doesNotMatch(html, /HOSHILU SHOP掲載|全ショップ横断検索への露出|id="shop"|SHOP PAGE/u);
   assert.match(html, /従量課金はありません/u);
   // 値段として 50円 を掲げない（廃止の説明としてだけ出てよい）
   assert.ok(!/1有効クリック 50円/u.test(html), '廃止した単価を値段として出さない');
@@ -251,10 +253,15 @@ test('掲載見本の相談を主導線にし、未承認の体験条件・保�
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
   // 2026-09-27 大隆さん「モールの月額に1,980円足すだけで HOSHILU を通して需要が分かる、と謳って」。
   // 見えるのは HOSHILU 内の匿名集計なので「世の需要」「市場全体」とは書かない。
-  assert.match(html, /<h1>モールの出店は、そのまま。<br><span>探されている需要が見える。<\/span><\/h1>/u);
+  // 2026-10-09 大隆さん指示「まず入り口は1980円」: 第一画面は掲載プラン 月額1,980円が主役。
+  assert.match(html, /<h1>まずは月額1,980円で、<br><span>探している人の目の前へ。<\/span><\/h1>/u);
+  assert.match(html, /検索語の条件にすべて合うときは、HOSHILUの検索結果の一番上にある「PR」枠/u);
   assert.match(html, /HOSHILUで何が探されていて、何が見つからなかったか/u);
   assert.doesNotMatch(html, /世の需要|世の中の需要|市場全体の需要/u);
-  assert.match(html, /data-seller-cta="hero-inquiry">自店の掲載見本を相談する</u);
+  assert.match(html, /data-seller-cta="hero-inquiry">1,980円の掲載を相談する</u);
+  assert.ok(html.indexOf('id="included"') < html.indexOf('id="how"'), '「1,980円でできること」は第一画面の直後');
+  assert.match(html, /<summary>優先出品（「PR」枠）とは？<\/summary>/u);
+  assert.match(html, /掲載順位や表示回数は保証しません/u);
   assert.match(html, /非公開の見本/u);
   assert.match(html, /店舗様ご本人/u);
   assert.doesNotMatch(html, /クリック50円|今月の利用額|予算上限の設定|自動課金なし|支払い登録不要の3か月/u);
@@ -271,7 +278,7 @@ test('料金欄は角丸。折り返しても文字の左端がそろう', () =>
   assert.ok(!rule.includes('border-radius:999px'), '錠剤の形にしない');
   assert.match(rule, /border-radius:18px/u);
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /for-sellers-pricing\.css\?v=9/u);
+  assert.match(html, /for-sellers-pricing\.css\?v=10/u);
 });
 
 

@@ -160,10 +160,13 @@ test('公開 LP: 販売 ON で「モールの外」の訴求と 3 段の料金�
   for (const marker of Object.values(PROMO_LP_MARKERS)) assert.equal(raw.split(marker).length - 1, 1, marker);
   const html = applyPromoPlansToPublicPage('/for-sellers', raw);
   const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<style>[\s\S]*?<\/style>/gu, '').replace(/<!--[\s\S]*?-->/gu, '').replace(/<[^>]+>/gu, ' ').replace(/&amp;/gu, '&');
-  assert.match(text, /後回しになっていた「モールの外」の販促を、\s*毎週かわりに。/u);
+  // 2026-10-09 大隆さん指示「まず入り口は1980円」: 第一画面の主役は掲載プラン 月額1,980円。AI販促担当は次の一歩として第一画面に添える。
+  assert.match(text, /まずは月額1,980円で、\s*探している人の目の前へ。/u);
+  assert.match(text, /販促まで任せるなら、AI販促担当 Light 月額9,800円・Standard 月額19,800円（税込）/u);
+  assert.ok(text.indexOf('START WITH ¥1,980') !== -1 && text.indexOf('START WITH ¥1,980') < text.indexOf('なぜ「モールの外」なのか'), '1,980円の説明が AI販促担当の説明より先');
   assert.doesNotMatch(text, /モールの出店は、そのまま。/u, '第一画面は差し替える');
   for (const heading of ['なぜ「モールの外」なのか', 'HOSHILU の中と外、両方で', '毎週届くもの']) {
-    assert.ok(text.indexOf(heading) !== -1 && text.indexOf(heading) < text.indexOf('掲載だけなら1,980円。'), `${heading} は料金の前`);
+    assert.ok(text.indexOf(heading) !== -1 && text.indexOf(heading) < text.indexOf('まずは掲載プラン1,980円から。'), `${heading} は料金の前`);
   }
   assert.match(text, /¥1,980/u);
   assert.match(text, /AI販促担当 Light\s*¥9,800/u);
