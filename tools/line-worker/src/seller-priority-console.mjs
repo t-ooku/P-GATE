@@ -201,6 +201,7 @@ export async function sellerPriorityContext(env, candidates = []) {
       const monthPlaceholder = `?${batch.length + 1}`;
       const result = await env.PRODUCT_DB.prepare(`SELECT m.tenant,m.seller_id,r.scope_type,
         r.scope_value,r.priority_started_at,w.status AS wallet_status,
+        a.plan AS account_plan,a.status AS account_status,
         COALESCE(w.balance_micros_jpy,0)-COALESCE(w.reserved_micros_jpy,0) AS available_micros_jpy,
         CASE WHEN a.plan='BUSINESS' AND a.status='ACTIVE'
           THEN COALESCE(al.granted_micros_jpy,5000000000)-COALESCE(al.consumed_micros_jpy,0) ELSE 0 END AS allowance_remaining_micros_jpy
@@ -234,9 +235,13 @@ export function applySellerPriority(candidate = {}, offers = [], context = new M
     const fallback = fallbackGroups.length === 1 ? fallbackGroups[0][1] : [];
     const rules = exact.length ? exact : fallback;
     if (!rules.length) return offer;
+    // 2026-10-09 大隆さん決定「月額契約中のお店なら優先に揃える」: 月額（BUSINESS）の契約が有効
+    //（無料期間中を含む。未払いで止まった・解約したものは除く）なら、前払い残高が無くても優先する。
+    // 前払い残高の条件は、旧料金で残高を持つお店のためにそのまま残す。
     const walletReady = rules.some((rule) =>
-      rule.wallet_status === 'ACTIVE'
-        && (Number(rule.available_micros_jpy || 0) > 0 || Number(rule.allowance_remaining_micros_jpy || 0) > 0)
+      (rule.account_plan === 'BUSINESS' && rule.account_status === 'ACTIVE')
+      || (rule.wallet_status === 'ACTIVE'
+        && (Number(rule.available_micros_jpy || 0) > 0 || Number(rule.allowance_remaining_micros_jpy || 0) > 0))
     );
     if (!walletReady) return offer;
     const minimumStock = rules

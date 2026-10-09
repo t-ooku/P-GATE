@@ -263,6 +263,13 @@ test('優先出品は Business の無料枠が残っていれば残高0でも出
   assert.equal(applySellerPriority(candidate, offers, empty)[0].priority_listing, undefined);
   const paused = new Map([['itg\nA', [{ ...rule, wallet_status: 'PAUSED', available_micros_jpy: 9_000_000, allowance_remaining_micros_jpy: 5_000_000_000 }]]]);
   assert.equal(applySellerPriority(candidate, offers, paused)[0].priority_listing, undefined);
+  // 2026-10-09: 月額契約（BUSINESS）が有効なら、前払い残高・無料枠が無くても優先する。止まった・無料プランは優先しない。
+  const monthly = new Map([['itg\nA', [{ ...rule, wallet_status: 'UNFUNDED', available_micros_jpy: 0, allowance_remaining_micros_jpy: 0, account_plan: 'BUSINESS', account_status: 'ACTIVE' }]]]);
+  assert.equal(applySellerPriority(candidate, offers, monthly)[0].priority_listing, true);
+  for (const [account_plan, account_status] of [['BUSINESS', 'SUSPENDED_UNPAID'], ['BUSINESS', 'CANCELLED'], ['SELLER', 'ACTIVE']]) {
+    const stopped = new Map([['itg\nA', [{ ...rule, wallet_status: 'UNFUNDED', available_micros_jpy: 0, allowance_remaining_micros_jpy: 0, account_plan, account_status }]]]);
+    assert.equal(applySellerPriority(candidate, offers, stopped)[0].priority_listing, undefined, `${account_plan}/${account_status}`);
+  }
 });
 
 // 2026-09-04 Stripe API 2026-07-29（サンドボックスの既定）では invoice.subscription が

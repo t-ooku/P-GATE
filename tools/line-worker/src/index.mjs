@@ -1,6 +1,7 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { recordPriceObservations } from './price-observations.mjs';
 import { handleProductDetailRoutes } from './product-detail.mjs';
+import { searchPrItems } from './search-pr.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { runIndexNowSubmission } from './indexnow.mjs';
@@ -1884,6 +1885,8 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     env, origin, sessionHash, seed, category: demandCategory,
     trafficClass: result.traffic_class || 'UNATTRIBUTED'
   });
+  // 2026-10-09 大隆さん決定「一番上にPR枠を最大2件」: 月額契約店の商品で、検索語の条件をすべて満たすものだけ。
+  const searchPr = await searchPrItems(env, query);
   return {
     ...result,
     candidates,
@@ -1901,7 +1904,8 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     unified_results: unifyResults({
       candidates,
       googleItems: googleMallResults?.items || [],
-      query
+      query,
+      sponsored: searchPr
     })
   };
 }

@@ -66,6 +66,68 @@ const el = (tag, className, text) => {
   return node;
 };
 
+// 2026-10-09 大隆さん決定「一番上にPR枠を最大2件」（HOSHILU Seller 月額1,980円の優先出品）。
+// サーバー（src/search-pr.mjs）が、検索語の条件をすべて満たす月額契約店の商品だけを unified.sponsored で渡す。
+// お金をもらって上に出す枠なので、必ず「PR」と書き、通常の列（unified-list）とは別の箱に入れる（混ぜない）。
+// 押されたら掲載店の計測（source=seller_pilot・campaign=掲載ID）に販売先への移動として1件残す。
+const PR_COPY = {
+  head: 'HOSHILU Seller の掲載商品',
+  aria: 'PR：HOSHILU Seller の掲載商品',
+  priceUnknown: '価格はリンク先で確認',
+  open: (mall) => `${mall}で見る`
+};
+function prPriceText(item) {
+  const price = Number(item?.price_jpy);
+  if (!Number.isFinite(price) || price <= 0) return '';
+  const match = /^\d{4}-(\d{2})-(\d{2})$/u.exec(String(item?.price_verified_at || ''));
+  if (!match) return '';
+  return `¥${price.toLocaleString('ja-JP')}（${Number(match[1])}/${Number(match[2])}確認）`;
+}
+function recordPrClick(item) {
+  import('./growth-identity.mjs').then(({ growthVisitorId, growthSessionId }) => fetch('/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, keepalive: true,
+    body: JSON.stringify({ event_type: 'marketplace_click', visitor_id: growthVisitorId(), session_id: growthSessionId(),
+      source: 'seller_pilot', medium: 'search_pr', campaign: String(item.pilot_id || ''), content: String(item.product_id || '') })
+  })).catch(() => {});
+}
+export function prBlock(sponsored) {
+  const items = (Array.isArray(sponsored) ? sponsored : [])
+    .filter((item) => /^https:\/\//u.test(String(item?.url || '')) && item?.product_name && item?.label === 'PR')
+    .slice(0, 2);
+  if (!items.length) return null;
+  const box = el('section', 'unified-pr');
+  box.setAttribute('aria-label', PR_COPY.aria);
+  const head = el('p', 'unified-pr-head');
+  head.append(el('span', 'unified-pr-badge', 'PR'), document.createTextNode(PR_COPY.head));
+  box.append(head);
+  const list = el('div', 'unified-pr-list');
+  for (const item of items) {
+    const link = el('a', 'unified-pr-card');
+    link.href = item.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer sponsored';
+    const figure = el('div', 'unified-pr-image');
+    if (/^https:\/\//u.test(String(item.image_url || ''))) {
+      const img = document.createElement('img');
+      img.src = item.image_url; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async'; img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => img.remove(), { once: true });
+      figure.append(img);
+    }
+    figure.append(el('span', 'unified-pr-badge unified-pr-badge-on-image', 'PR'));
+    const body = el('div', 'unified-pr-body');
+    body.append(el('strong', 'unified-pr-name', item.product_name));
+    body.append(el('span', 'unified-pr-shop', [item.shop_name, item.marketplace_label].filter(Boolean).join('・')));
+    const price = prPriceText(item);
+    body.append(el('span', price ? 'unified-pr-price' : 'unified-pr-price unified-pr-price-unknown', price || PR_COPY.priceUnknown));
+    body.append(el('span', 'unified-pr-open', PR_COPY.open(item.marketplace_label || '販売先')));
+    link.append(figure, body);
+    link.addEventListener('click', () => recordPrClick(item));
+    list.append(link);
+  }
+  box.append(list);
+  return box;
+}
+
 let state = { items: [], shown: 0, candidates: [], orders: null };
 // 選んだ並び順は、このページを開いている間だけ覚えておく（次の検索でも同じ順で出す）。端末には保存しない。
 let sortMode = 'recommended';
@@ -336,9 +398,11 @@ export function render(unified, candidates = []) {
   // あちらは条件で絞っていないので関係のない商品が並ぶ。
   // 見つからなかったことは、この列の中で正直に1行書く。
   host.hidden = false;
+  const pr = prBlock(unified?.sponsored);
   if (!items.length) {
     foldLegacySections(true);
     host.replaceChildren(el('p', 'unified-note', COPY.none));
+    if (pr) host.append(pr);
     return;
   }
   foldLegacySections(true);
@@ -349,6 +413,8 @@ export function render(unified, candidates = []) {
   const count = unified.truncated ? COPY.capped(items.length) : COPY.found(items.length);
   head.append(el('span', 'unified-count', count));
   host.append(head);
+  // PR枠は件数の下・通常の列の上。件数（◯件見つかりました）には数えない。
+  if (pr) host.append(pr);
 
   const list = el('div', 'unified-list');
   list.setAttribute('role', 'list');

@@ -247,3 +247,22 @@
 .unified-card-detail{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:7px 10px;border:1.5px solid transparent;border-radius:999px;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) border-box;color:#5140ba;font-size:11px;font-weight:900;letter-spacing:.02em;line-height:1.3;text-align:center;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 12px #7357ff24;transition:background .15s,color .15s}
 .unified-card-detail:hover,.unified-card-detail:active,.unified-card-detail:focus-visible{background:linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) padding-box,linear-gradient(110deg,#ff4f9a,#7357ff 55%,#23b8ff) border-box;color:#fff;text-decoration:none}
 .unified-card-detail:focus-visible{outline:2px solid #23b8ff;outline-offset:2px}
+
+/* 2026-10-09 大隆さん決定「一番上にPR枠を最大2件」: HOSHILU Seller の優先出品。通常の列とは別の箱で、必ず「PR」と出す。 */
+.unified-pr{margin:4px 0 14px;padding:10px;border:1px solid #e6defc;border-radius:16px;background:linear-gradient(135deg,#fff 0%,#faf7ff 100%)}
+.unified-pr-head{display:flex;align-items:center;gap:6px;margin:0 0 8px;color:#6b6790;font-size:11px;font-weight:800}
+.unified-pr-badge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:18px;padding:0 6px;border-radius:6px;background:#2b2a44;color:#fff;font-size:10px;font-weight:900;letter-spacing:.06em}
+.unified-pr-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.unified-pr-card{display:flex;gap:10px;min-width:0;padding:8px;border:1px solid #ece6ff;border-radius:12px;background:#fff;color:inherit;text-decoration:none}
+.unified-pr-card:hover,.unified-pr-card:focus-visible{border-color:#b9a8ff;box-shadow:0 6px 16px #7357ff1f}
+.unified-pr-card:focus-visible{outline:2px solid #23b8ff;outline-offset:2px}
+.unified-pr-image{position:relative;flex:0 0 84px;width:84px;height:84px;border-radius:10px;overflow:hidden;background:#f1ecff}
+.unified-pr-image img{width:100%;height:100%;object-fit:cover;display:block}
+.unified-pr-badge-on-image{position:absolute;left:4px;top:4px}
+.unified-pr-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.unified-pr-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;font-weight:800;line-height:1.35;color:#1f1d33}
+.unified-pr-shop{font-size:10.5px;color:#6b6790;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unified-pr-price{font-size:13px;font-weight:900;color:#c4142f}
+.unified-pr-price-unknown{font-size:11px;font-weight:700;color:#6b6790}
+.unified-pr-open{margin-top:auto;font-size:11px;font-weight:900;color:#5140ba}
+@media (max-width:640px){.unified-pr-list{grid-template-columns:1fr}.unified-pr-image{flex-basis:72px;width:72px;height:72px}}

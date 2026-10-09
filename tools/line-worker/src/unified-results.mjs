@@ -340,7 +340,7 @@ export function priceOrder(items) {
     .map((entry) => entry.position);
 }
 
-export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT } = {}) {
+export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT, sponsored = [] } = {}) {
   const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
   // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して。Googleの直検索なら出るよ」。
   // 「ダイエット サプリ 燃焼系」のような広い言葉では、Google が返すのはモールの
@@ -370,6 +370,9 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
   }));
   return {
     items,
+    // 2026-10-09 大隆さん決定「一番上にPR枠を最大2件」: 月額契約店の優先出品（search-pr.mjs）。
+    // 通常の並び（items）には混ぜず、別の配列で渡す。画面は必ず「PR」と書いて items の上に出す。
+    sponsored: (Array.isArray(sponsored) ? sponsored : []).slice(0, 2),
     // 2026-09-24 大隆さん決定「２のように順もユーザーが変えられる」。
     //「安い順」の並びもここで作って渡す（画面では並べ替えない §28）。position の並びで持つ。
     // 価格は確認済みの価格でも Web の参考価格でも同じ物差しで比べる（どちらも画面ではそう断って出る）。
