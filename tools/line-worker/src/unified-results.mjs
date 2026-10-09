@@ -137,7 +137,11 @@ function fromCandidate(candidate, index) {
     shop_name: text(shop?.name || shop?.shop_name || offer?.marketplace_label, 60),
     marketplace: text(offer?.marketplace, 32),
     // 2026-10-02 商品詳細（/product）への入口。楽天・Yahoo! の商品IDがあるものだけ。
-    record_key: text(candidate?.record_key, 160),
+    // 2026-10-09 大隆さん報告「PC版、旧仕様じゃない？価格履歴もないし」: 検索 API の公開候補は record_key を
+    // 持たない（sanitizePublicCandidate が落とし、同じ値を target_product_key として出す）ため、検索結果に
+    // 「過去の価格と比べる」が一度も出ていなかった。公開済みの target_product_key を使う
+    //（targetPriceProductKey で形式を確認済み。ASIN は商品詳細が無いので入れない）。
+    record_key: text(candidate?.record_key || (/^(?:RAKUTEN|YAHOO|JAN):/u.test(String(candidate?.target_product_key || '')) ? candidate.target_product_key : ''), 160),
     asin: text(candidate?.asin, 20),
     // HOSHILU 商品だけ価格を出す。確認できた金額が無ければ出さない（0 と書かない）。
     price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null,

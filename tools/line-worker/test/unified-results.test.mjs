@@ -471,3 +471,21 @@ test('Google 側の結果をモール単位で捨てない', () => {
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(index, /excludeMarketplaces: \[\]/u);
 });
+
+// 2026-10-09 大隆さん報告「PC版、旧仕様じゃない？価格履歴もないし」: 検索 API が record_key を落としていたため、
+// 統合結果に「過去の価格と比べる」が出ていなかった。公開用に整えた候補（sanitizePublicCandidate）を通しても残ることを固定する。
+test('検索結果の楽天商品は record_key を持ち、商品詳細（過去の価格と比べる）へつながる', async () => {
+  const { sanitizePublicCandidate } = await import('../src/index.mjs');
+  // 公開候補は record_key を持たず、同じ値を target_product_key で持つ（member-wish-insight のテストで固定）。
+  const raw = candidate(1, { record_key: 'RAKUTEN:shop-a:10239418', offers: [{ total_cost: 12800, price: 12800, marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop-a/10239418/' }] });
+  const pub = { ...sanitizePublicCandidate(raw), tracking_url: 'https://hoshilu.app/go?token=h1' };
+  pub.offers = pub.offers.map((offer) => ({ ...offer, tracking_url: 'https://hoshilu.app/go?token=h1' }));
+  const result = unifyResults({ candidates: [pub], googleItems: [], query: QUERY });
+  assert.equal(result.items[0].source, 'HOSHILU');
+  assert.equal('record_key' in pub, false);
+  assert.equal(result.items[0].record_key, 'RAKUTEN:shop-a:10239418');
+  // 内部キーは公開しない（従来どおり）。
+  const hidden = { ...sanitizePublicCandidate(candidate(2, { record_key: 'TENANT:private-sku' })), tracking_url: 'https://hoshilu.app/go?token=h2' };
+  hidden.offers = hidden.offers.map((offer) => ({ ...offer, tracking_url: 'https://hoshilu.app/go?token=h2' }));
+  assert.equal(unifyResults({ candidates: [hidden], googleItems: [], query: QUERY }).items[0].record_key, '');
+});
