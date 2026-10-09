@@ -21,3 +21,7 @@
 .product-buy{display:inline-block;padding:9px 12px;border-radius:10px;background:var(--ink);color:#fff;text-decoration:none;font-weight:850;font-size:12px;white-space:nowrap}
 .product-later-link{display:block;padding:12px;border:1px solid #ded7ff;border-radius:12px;background:var(--soft);color:#5140ba;text-decoration:none;font-weight:850;font-size:13px;text-align:center}
 @media(max-width:480px){.product-offer-table thead{display:none}.product-offer-table tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}.product-offer-table td{padding:0;border:0}.product-offer-table td[data-label]:not(:first-child)::before{content:attr(data-label) ' ';color:var(--muted);font-size:10px}.product-offer-table td:first-child{grid-column:1/-1;font-weight:800}.product-offer-table td:last-child{grid-column:1/-1;margin-top:4px}.product-buy{display:block;text-align:center}}
+/* 2026-10-09 大隆さん報告「グラフが表示されてないよ」: 記録1日分でも枠と今日の点を出す */
+.product-chart-guide{stroke:#d9d2f5;stroke-width:1;stroke-dasharray:4 4}
+.product-chart-single .product-chart-dot{fill:var(--violet)}
+.product-chart-note{margin:6px 0 0;color:var(--muted);font-size:12px}

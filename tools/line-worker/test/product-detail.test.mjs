@@ -71,7 +71,7 @@ test('/product は noindex の HTML、/api/product は不正キーを 400 にす
   assert.equal(page.headers.get('x-robots-tag'), 'noindex');
   const html = await page.text();
   assert.match(html, /data-key="RAKUTEN:shop-a:item-1"/u);
-  assert.match(html, /product-detail\.mjs\?v=2/u);
+  assert.match(html, /product-detail\.mjs\?v=3/u);
   const bad = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=AMAZON:B000'), rakutenEnv, {}, {});
   assert.equal(bad.status, 400);
   assert.equal((await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {})).status, 404);
@@ -85,6 +85,10 @@ test('画面は順序固定で、買い時を予言しない（§6）', () => {
   for (const marker of order) { const at = ui.indexOf(`'${marker}'`); assert.ok(at > last, marker); last = at; }
   for (const banned of ['今が底値', '来週', '今買うべき', '下がります']) assert.ok(!ui.includes(banned), banned);
   assert.match(ui, /HOSHILUでの価格記録開始/u);
+  // 2026-10-09 大隆さん報告「グラフが表示されてないよ」: 記録1日分でもグラフ枠と今日の点を出す。
+  assert.match(ui, /if \(!points\.length\) return null;/u);
+  assert.match(ui, /product-chart-single/u);
+  assert.match(ui, /記録1日目です。明日以降の記録と線でつながります。/u);
   assert.match(ui, /send\('product_detail_view', \{ content: /u);
   assert.match(ui, /send\('marketplace_click', \{ marketplace: offer\.marketplace, content: 'product_detail' \}\)/u);
   assert.equal(normalizeGrowthEvent({ event_type: 'product_detail_view' }).event_type, 'product_detail_view');

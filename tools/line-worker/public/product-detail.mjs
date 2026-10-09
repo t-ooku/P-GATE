@@ -55,8 +55,33 @@ function comparisonLines(history, current) {
 // 価格推移: 単一系列の折れ線（inline SVG）。記録が無い日は線を引かない（点を結ばない）。
 function chart(series) {
   const points = series.filter((p) => Number(p.price) > 0);
-  if (points.length < 2) return null;
+  if (!points.length) return null;
   const W = 320; const H = 120; const padX = 8; const padY = 14;
+  // 2026-10-09 大隆さん報告「グラフが表示されてないよ」: 記録が1日分だと線が引けず、グラフごと出していなかった。
+  // 1日分でも枠を出し、今日の点を1つ打つ（線は2日目から。取っていない日を埋めない）。
+  if (points.length === 1) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('class', 'product-chart product-chart-single');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `価格推移 ${points[0].date} の記録1日分。${yen(points[0].price)}。`);
+    const guide = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    guide.setAttribute('x1', padX); guide.setAttribute('x2', W - padX); guide.setAttribute('y1', H / 2); guide.setAttribute('y2', H / 2);
+    guide.setAttribute('class', 'product-chart-guide');
+    svg.append(guide);
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', W - padX - 6); dot.setAttribute('cy', H / 2); dot.setAttribute('r', '4');
+    dot.setAttribute('class', 'product-chart-dot');
+    svg.append(dot);
+    const text = (value, px, py, anchor) => {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', px); t.setAttribute('y', py); t.setAttribute('text-anchor', anchor); t.setAttribute('class', 'product-chart-label');
+      t.textContent = value; svg.append(t);
+    };
+    text(yen(points[0].price), W - padX, H / 2 - 12, 'end');
+    text(String(points[0].date).slice(5).replace('-', '/').replace(/^0/u, ''), W - padX, H / 2 + 20, 'end');
+    return svg;
+  }
   const dates = points.map((p) => Date.parse(p.date));
   const prices = points.map((p) => p.price);
   const minD = Math.min(...dates); const maxD = Math.max(...dates) || minD + 1;
@@ -140,6 +165,9 @@ function render(data) {
     // 4 価格推移
     const svg = chart(history.series);
     if (svg) past.append(svg);
+    if (history.series.filter((p) => Number(p.price) > 0).length === 1) {
+      past.append(el('p', 'product-chart-note', '記録1日目です。明日以降の記録と線でつながります。'));
+    }
   } else {
     past.append(el('p', 'product-history-none', 'この商品の価格記録は、今日から始まります。明日以降に過去との比較が出ます。'));
   }
