@@ -299,18 +299,20 @@ export function d1Rows(json) {
   return (Array.isArray(data) ? data : [data]).flatMap((x) => x?.results || x?.result?.results || []);
 }
 
-export function buildApprovalSql({ jobId, postId, storageKey, sizeBytes, sha256, publishAt, evidence, now }) {
+// xEnabled=false（2026-10-10 大隆さん決定で X 停止中）は X 行を作らない。後で X を再開した時に古い行が遅れて出るのを防ぐ。
+export function buildApprovalSql({ jobId, postId, storageKey, sizeBytes, sha256, publishAt, evidence, now, xEnabled = true }) {
   const ts = now.toISOString();
   const detail = JSON.stringify({
     checks: REQUIRED_QA_CHECKS, candidate_sha256: sha256, scheduled_at: publishAt.toISOString(),
     reviewed_by_owner_in_chat: false, automated: true, evidence
   });
-  return [
+  const statements = [
     `UPDATE runway_generation_jobs SET storage_key=${sqlText(storageKey)},storage_etag=NULL,storage_size_bytes=${Number(sizeBytes)},storage_content_type='video/mp4',status='APPROVED_FOR_POST',qa_status='PASSED',updated_at=${sqlText(ts)} WHERE job_id=${sqlText(jobId)} AND status IN ('GENERATED_REVIEW_REQUIRED','APPROVED_FOR_POST') AND rights_confirmed=1 AND ai_disclosure_confirmed=1;`,
     `INSERT OR IGNORE INTO runway_audit_log (audit_id,job_id,attempt_id,event,detail,created_at) VALUES (${sqlText(`qa-approved-${jobId}-${sha256}`)},${sqlText(jobId)},'','QA_APPROVED_FOR_POST',${sqlText(detail)},${sqlText(ts)});`,
     `UPDATE social_post_queue SET status='APPROVED',scheduled_at=${sqlText(publishAt.toISOString())},approved_at=${sqlText(ts)},last_error='',updated_at=${sqlText(ts)} WHERE post_id=${sqlText(postId)} AND platform='INSTAGRAM' AND status='REVIEW_REQUIRED' AND external_post_id='' AND platform_job_id='' AND published_at='' AND EXISTS (SELECT 1 FROM runway_generation_jobs WHERE job_id=${sqlText(jobId)} AND post_id=${sqlText(postId)} AND status='APPROVED_FOR_POST' AND qa_status='PASSED' AND storage_key=${sqlText(storageKey)});`,
     `INSERT INTO social_post_queue (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,created_at,updated_at,approved_at) SELECT ${sqlText(`${postId}-x`)},'X',campaign_id,content_id,caption,link,media_url,${sqlText(publishAt.toISOString())},'APPROVED',affiliate,${sqlText(ts)},${sqlText(ts)},${sqlText(ts)} FROM social_post_queue WHERE post_id=${sqlText(postId)} AND status='APPROVED' AND NOT EXISTS (SELECT 1 FROM social_post_queue x WHERE x.post_id=${sqlText(`${postId}-x`)} OR (x.platform='X' AND x.content_id=${sqlText(jobId)} AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>'')));`
-  ].join('\n');
+  ];
+  return (xEnabled ? statements : statements.slice(0, 3)).join('\n');
 }
 
 export function buildRejectSql({ jobId, postId, reason, now }) {

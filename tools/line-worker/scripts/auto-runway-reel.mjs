@@ -342,7 +342,8 @@ function approve(jobId, postId, out, evidence) {
     log('daily reel rows cancelled (replaced by Runway reel)', { post_ids: replaceable });
   }
   const sqlFile = path.join(path.dirname(out), 'approve.sql');
-  writeFileSync(sqlFile, buildApprovalSql({ jobId, postId, storageKey: key, sizeBytes: size, sha256: sha, publishAt: slot.publish_at, evidence, now: new Date() }));
+  writeFileSync(sqlFile, buildApprovalSql({ jobId, postId, storageKey: key, sizeBytes: size, sha256: sha, publishAt: slot.publish_at, evidence, now: new Date(),
+    xEnabled: /"X_PUBLISHING_ENABLED"\s*:\s*"true"/u.test(readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8')) }));
   d1File(sqlFile);
   const state = d1(`SELECT j.status,j.qa_status,j.storage_key,q.status AS queue_status,q.scheduled_at,(SELECT status FROM social_post_queue WHERE post_id='${postId}-x') AS x_status FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id='${postId}' WHERE j.job_id='${jobId}';`)[0] || {};
   if (state.status !== 'APPROVED_FOR_POST' || state.qa_status !== 'PASSED' || state.storage_key !== key || state.queue_status !== 'APPROVED') throw new Error(`AUTO_REEL_APPROVE_STATE:${JSON.stringify(state)}`);

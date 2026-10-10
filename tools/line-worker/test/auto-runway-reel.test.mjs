@@ -113,6 +113,11 @@ test('承認SQLは後処理済みキーへ差し替えてから APPROVED_FOR_POS
   assert.match(statements[2], /^UPDATE social_post_queue SET status='APPROVED',scheduled_at='2026-09-07T11:15:00\.000Z'/u);
   assert.match(statements[2], /status='REVIEW_REQUIRED' AND external_post_id='' AND platform_job_id='' AND published_at=''/u);
   assert.match(statements[3], /^INSERT INTO social_post_queue .*'hoshilu-runway-auto-want-at-price-20260907-x','X'/u);
+  // 2026-10-10 X 停止中は X 行を作らない（Instagram の承認までの3文だけ）。
+  const paused = buildApprovalSql({ jobId: 'runway-auto-want-at-price-20260907', postId: 'hoshilu-runway-auto-want-at-price-20260907', storageKey: `runway/runway-auto-want-at-price-20260907/postprocessed-${sha}.mp4`, sizeBytes: 1234567, sha256: sha, publishAt: new Date('2026-09-07T11:15:00Z'), evidence: {}, now: new Date('2026-09-06T02:00:00Z'), xEnabled: false }).split('\n');
+  assert.equal(paused.length, 3);
+  assert.ok(paused.every((statement) => !/'X'/u.test(statement)));
+  assert.match(readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8'), /xEnabled: \/"X_PUBLISHING_ENABLED"/u);
   const reject = buildRejectSql({ jobId: 'j1', postId: 'p1', reason: "face_check,speech_similarity_0.2 it's", now: new Date() });
   assert.match(reject, /status='FAILED_FINAL',qa_status='FAILED',last_error_code='AUTO_QA_FAILED'/u);
   assert.match(reject, /it''s/u, 'SQL escape');
