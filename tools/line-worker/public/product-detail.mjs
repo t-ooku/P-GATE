@@ -223,7 +223,10 @@ function render(data) {
   const later = el('section', 'product-later');
   later.append(el('h2', '', '今は買わない'));
   const link = el('a', 'product-later-link', 'この価格になったら教えて（希望価格を決める）');
-  link.href = `/?q=${encodeURIComponent(product?.name || '')}&from=product`;
+  // 商品詳細で「希望価格を決める」と選んだ人を、同じ商品の検索結果まで戻して
+  // もう一度価格通知ボタンを探させない。watch=1 は検索完了後に既存の価格入力
+  // ダイアログを1回だけ開く意図フラグで、商品名・価格は引き続き検索/API結果を使う。
+  link.href = `/?q=${encodeURIComponent(product?.name || '')}&from=product&watch=1`;
   later.append(link);
   later.append(el('p', 'product-later-note', '検索結果の商品カードから希望価格を登録すると、その価格以下になったときにお知らせします。'));
   root.append(later);

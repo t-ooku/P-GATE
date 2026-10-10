@@ -71,7 +71,7 @@ test('/product は noindex の HTML、/api/product は不正キーを 400 にす
   assert.equal(page.headers.get('x-robots-tag'), 'noindex');
   const html = await page.text();
   assert.match(html, /data-key="RAKUTEN:shop-a:item-1"/u);
-  assert.match(html, /product-detail\.mjs\?v=3/u);
+  assert.match(html, /product-detail\.mjs\?v=4/u);
   const bad = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=AMAZON:B000'), rakutenEnv, {}, {});
   assert.equal(bad.status, 400);
   assert.equal((await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {})).status, 404);
@@ -95,4 +95,10 @@ test('画面は順序固定で、買い時を予言しない（§6）', () => {
   // 入口: 検索結果カードと BUZZ カード
   assert.match(read('public/unified-results-ui.mjs'), /\/product\?key=\$\{encodeURIComponent\(item\.record_key\)\}&from=search/u);
   assert.match(read('public/buzz-home.mjs'), /\/product\?key=/u);
+  assert.match(ui, /&from=product&watch=1/u);
+  assert.match(read('public/buzz.mjs'), /&from=buzz&watch=1#hoshiluSearch/u);
+  const app = read('public/assets-v147/app.js');
+  assert.match(app, /function openInboundPriceWatch\(\)/u);
+  assert.match(app, /get\('watch'\)!=='1'/u);
+  assert.match(app, /querySelector\('\.watch-settings-button'\)/u);
 });

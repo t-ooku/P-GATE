@@ -48,7 +48,7 @@ function itemCard(item, marketplace) {
   wrap.append(card);
   if (item.price_confirmed && item.name) {
     const watch = el('a', 'ranking-watch-link', 'この価格になったら教えて☑');
-    watch.href = `/?q=${encodeURIComponent(text(item.name).slice(0, 80))}#hoshiluSearch`;
+    watch.href = `/?q=${encodeURIComponent(text(item.name).slice(0, 80))}&from=buzz&watch=1#hoshiluSearch`;
     wrap.append(watch);
   }
   return wrap;

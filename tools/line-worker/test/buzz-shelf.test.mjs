@@ -36,7 +36,7 @@ test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ�
   const homeClient = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   const analytics = fs.readFileSync(path.join(worker, 'public', 'growth-analytics.mjs'), 'utf8');
   assert.ok(hasVersionedAsset(html, 'growth-analytics.mjs'));
-  assert.match(html, /buzz\.mjs\?v=5/);
+  assert.match(html, /buzz\.mjs\?v=6/);
   assert.match(html, /share-button share-discovery-button/);
   assert.match(client, /utm_campaign: 'hoshilu_buzz'/);
   assert.match(client, /utm_content: content/);

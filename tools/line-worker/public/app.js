@@ -2387,7 +2387,19 @@ function autoRunInboundSearch(query){
       document.dispatchEvent(new CustomEvent('hoshilu:search-inbound-pending',{detail:{hidden}}));},INBOUND_PENDING_REPORT_MS);
   })();
 }
-const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(memberSession&&!inboundCampaign.query&&new URLSearchParams(location.search).get('member')==='logged-in'&&!location.hash){window.HoshiluTabs?.activate('hoshiru',{scroll:false});document.querySelector('#insight')?.scrollIntoView({block:'start'});}if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
+// 商品詳細や専用BUZZページで「この価格になったら教えて」を選んだ場合だけ、
+// 自動検索で同じ商品候補が描画されたあと、既存の価格入力ダイアログを1回開く。
+// 独自の保存処理は増やさず、通常のCTAクリックと同じ計測・認証・保存経路を通す。
+function openInboundPriceWatch(){
+  if(new URLSearchParams(location.search).get('watch')!=='1'||!elements.cards)return;
+  let opened=false;
+  const open=()=>{if(opened)return true;const button=elements.cards.querySelector('.watch-settings-button');if(!button)return false;opened=true;button.click();return true;};
+  if(open())return;
+  const observer=new MutationObserver(()=>{if(open())observer.disconnect();});
+  observer.observe(elements.cards,{childList:true,subtree:true});
+  setTimeout(()=>observer.disconnect(),30000);
+}
+const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(memberSession&&!inboundCampaign.query&&new URLSearchParams(location.search).get('member')==='logged-in'&&!location.hash){window.HoshiluTabs?.activate('hoshiru',{scroll:false});document.querySelector('#insight')?.scrollIntoView({block:'start'});}if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});openInboundPriceWatch();autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
 // 2026-10-03 大隆さん指示「間に合わなかったモールも『さらに見る』で」: 本検索の応答に付いた続きトークンで、
 // 間に合わなかったレーンだけを取り直す。ボット確認は要らない（トークンが本検索の通過を証明する）。
 // 検索文は同じものを送る（サーバーはトークンのハッシュと照合する）。結果は unified-results-ui.mjs が末尾に足す。

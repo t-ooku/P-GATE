@@ -99,7 +99,7 @@ export function renderProductPage(key) {
   <p class="product-detail-loading" id="productStatus" role="status">価格を確認しています…</p>
 </main>
 <footer><span>© HOSHILU</span><span class="associate-disclosure">楽天アフィリエイト、およびバリューコマース（Yahoo!ショッピング等）のリンクから収入を得る場合があります。価格・送料・在庫は取得時点の確認値で、購入前に販売先でご確認ください。</span></footer>
-<script type="module" src="/growth-analytics.mjs?v=16"></script><script type="module" src="/product-detail.mjs?v=3"></script>`;
+<script type="module" src="/growth-analytics.mjs?v=16"></script><script type="module" src="/product-detail.mjs?v=4"></script>`;
   return new Response(`${PAGE_HEAD}<title>今いくら？｜ホシル</title></head><body>${body}</body></html>`, {
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' }
   });
