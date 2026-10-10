@@ -41,7 +41,18 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - 画像は本番に存在（public/social/carousel/seller1980-30d-autorenew-20260927/…/1〜4.jpg）、本文・画像とも現行条件（1,980円・30日無料・カード登録・自動更新・体験開始準備中）を確認。
 - 「不足」の原因: 在庫監視（scripts/check-social-ai-actress-sla.mjs）がカルーセル画像のパスを1段のフォルダしか認めず、Seller 用の版フォルダ（seller-marketing-guard が要求）を数えていなかった。#610 で修正。素材の再生成・キュー追加はしていない（重複・課金防止）。
 - 本番確認（未）: Instagram は 10/12 20:00 JST・10/17 20:00 JST の公開後に PUBLISHED を確認する（次の巡回で記録）。
-- 止まっているもの: **X は X_MEDIA_FINALIZE_402（X API のクレジット不足）で画像投稿が 10/3 以降すべて FAILED**。10/12・10/17 の X も同じ理由で失敗する見込み。大隆さんの X 開発者アカウントでクレジット追加が必要（本人にしかできない）。
+- 止まっているもの: **X は X_MEDIA_FINALIZE_402（X API のクレジット不足）で画像投稿が 10/3 以降すべて FAILED**。→ 下の「X を停止」で X 分は取り消し済み。
 
 ### 成果指標（D1 実測）
 - Seller 問い合わせ: 累計4件、直近は 9/28 の1件。有料契約: 外部 Seller 0（Codex KPI と同じ）。購入先クリック: Codex 担当範囲のため本書では集計しない。
+
+### 2026-10-10 11:10 JST X を停止（大隆さん決定「今はXを使うのをやめる」）
+- 理由（D1 実測 8/15〜10/10）: X 75投稿 → LP訪問16・検索2・Seller LP 3・購入先クリック0・問い合わせ0。Threads 83投稿 → 訪問238・検索47・Seller LP 11。さらに X API クレジット切れで 10/3〜10/9 の X は全件 402 失敗。
+- キュー反映（済）: 予定済みの X 18件（10/10〜10/22、APPROVED）を CANCELLED（last_error=X_PAUSED_BY_OWNER_2026-10-10）。前後の件数を確認済み。X の APPROVED は 0。
+- 実装（済・本番反映）: Issue #611（head 50217dd、deploy/health success）。
+  - wrangler: X_PUBLISHING_ENABLED / X_EVERGREEN_AUTOPILOT_ENABLED = "false"（投稿・自動投入とも停止）。
+  - Runway: 承認時に X 行を作らない。crosspost-x は 409 X_PUBLISHING_PAUSED。
+  - SLA 監視（production-monitor）: X_PUBLISHING_ENABLED が "true" の時だけ X を要求。停止中は Instagram のみ → X 不足で赤くならない。
+- 本番確認: 反映後の D1 で 10/10 以降の X 行は APPROVED/PUBLISHING/PUBLISHED/FAILED とも 0。Instagram 6件・Threads 63件は予定どおり。
+- 上の「2. SNS」の X 分（10/12・10/17）は取り消し済み。10/12・10/17 は Instagram のみ（20:00 JST 公開を次の巡回で確認）。
+- Codex へ: 朝ブリーフ・監視で X を要求しないでください。X 再開は大隆さんの承認で wrangler の2変数を "true" に戻す（クレジット追加も必要）。SNS は Threads・Instagram に集中。
