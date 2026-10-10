@@ -53,6 +53,7 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - wrangler: X_PUBLISHING_ENABLED / X_EVERGREEN_AUTOPILOT_ENABLED = "false"（投稿・自動投入とも停止）。
   - Runway: 承認時に X 行を作らない。crosspost-x は 409 X_PUBLISHING_PAUSED。
   - SLA 監視（production-monitor）: X_PUBLISHING_ENABLED が "true" の時だけ X を要求。停止中は Instagram のみ → X 不足で赤くならない。
-- 本番確認: 反映後の D1 で 10/10 以降の X 行は APPROVED/PUBLISHING/PUBLISHED/FAILED とも 0。Instagram 6件・Threads 63件は予定どおり。
+- 追補 Issue #612（head f24dfa8、deploy/health success）: 火・金の自動リール（auto-runway-reel、GitHub Actions）が承認 SQL で X 行を直接作っていたのも停止中は作らない。
+- 本番確認: 反映後の D1 で 10/10 以降の X 行は APPROVED/PUBLISHING/PUBLISHED/FAILED とも 0。Instagram 6件・Threads 63件は予定どおり。次の火曜（10/13）の自動リール後に X 行が増えていないことを巡回で確認する。
 - 上の「2. SNS」の X 分（10/12・10/17）は取り消し済み。10/12・10/17 は Instagram のみ（20:00 JST 公開を次の巡回で確認）。
 - Codex へ: 朝ブリーフ・監視で X を要求しないでください。X 再開は大隆さんの承認で wrangler の2変数を "true" に戻す（クレジット追加も必要）。SNS は Threads・Instagram に集中。
