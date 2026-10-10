@@ -157,7 +157,11 @@ test('Runway 行は QA・権利・AI 開示・媒体 URL・曜日が揃わない
 test('カルーセル行は 2〜10 枚の自サイト画像・同じ相互投稿グループ・曜日が揃わないと資格を失う', () => {
   const asOf = `${CAROUSEL_DAY}T09:00:00.000Z`;
   assert.equal(isEligibleSocialAiActressRow(carouselRow(CAROUSEL_DAY, 'INSTAGRAM'), { asOf }), true);
+  // 2026-10-10: Seller 用は料金条件の版フォルダ1段の下に置く（seller-marketing-guard の要求）。これも在庫に数える。
+  const sellerVersioned = JSON.stringify([1, 2, 3, 4].map((n) => `https://hoshilu.app/social/carousel/seller1980-30d-autorenew-20260927/seller-wanted-now/${n}.jpg`));
+  assert.equal(isEligibleSocialAiActressRow({ ...carouselRow(CAROUSEL_DAY, 'INSTAGRAM'), queue_media_urls: sellerVersioned }, { asOf }), true);
   for (const bad of [
+    { queue_media_urls: JSON.stringify([1, 2].map((n) => `https://hoshilu.app/social/carousel/a/b/c/${n}.jpg`)) },
     { queue_media_urls: JSON.stringify(['https://hoshilu.app/social/carousel/x/1.jpg']) },
     { queue_media_urls: JSON.stringify(['https://example.com/1.jpg', 'https://example.com/2.jpg']) },
     { queue_media_urls: '' }, { crosspost_group_id: 'other' }, { status: 'REVIEW_REQUIRED' },

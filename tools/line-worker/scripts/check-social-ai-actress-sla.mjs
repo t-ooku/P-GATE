@@ -192,7 +192,10 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
       && validJstDate(rowDate)
       && rowDate === scheduledDate
       && Array.isArray(urls) && urls.length >= 2 && urls.length <= 10
-      && urls.every((url) => validHttpsUrl(url) && /^\/social\/carousel\/[a-z0-9-]+\/\d+\.jpg$/u.test(new URL(url).pathname));
+      // 2026-10-10: Seller 用カルーセルは料金条件の版ごとのフォルダ（seller1980-30d-autorenew-20260927/<題材>/n.jpg）に置く
+      //（seller-marketing-guard がこのフォルダを要求する）。1段のフォルダしか認めず、10/12・10/17 の承認済み投稿を
+      // 「在庫不足」と誤判定していた。版フォルダを1段だけ許す。
+      && urls.every((url) => validHttpsUrl(url) && /^\/social\/carousel\/(?:[a-z0-9-]+\/)?[a-z0-9-]+\/\d+\.jpg$/u.test(new URL(url).pathname));
   }
   if (rowDate >= POLICY_V3_START && !runway) return false;
   if (runway) {

@@ -16,6 +16,8 @@ function browser(fetcher) {
     FormData: class { get(key) { return fields.get(key); } getAll() { return []; } },
     turnstileToken: 'valid-test-token', turnstileFailure: '', turnstileWidget: 0,
     window: { turnstile: { reset() {} } }, fetch: fetcher,
+    // 2026-10-10: 送信処理が呼ぶ計測・URL整形（ファイルの別の場所で定義）。ここでは何もしない。
+    sendSellerEvent() {}, sendFormFailure() {}, tidyStorefront() {}, submitAfterTurnstile: false,
     setTimeout(fn, delay) { timer = { fn, delay, cleared: false }; return timer; }, clearTimeout(value) { value.cleared = true; }
   };
   runInNewContext(submitScript, context);

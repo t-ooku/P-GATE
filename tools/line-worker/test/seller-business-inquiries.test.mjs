@@ -102,6 +102,14 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   const script = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
   assert.match(script, /sendSellerEvent\('seller_landing_view'/u);
   assert.match(script, /sendSellerEvent\('seller_cta_clicked'/u);
+  // 2026-10-10 Seller LP の離脱改善: フォームの段階（入力開始・送信を押した・失敗の理由・受付）を数える。入力内容は送らない。
+  for (const type of ['seller_form_started', 'seller_form_submit_attempt']) assert.match(script, new RegExp(`sendSellerEvent\\('${type}'`, 'u'));
+  // 受付できた件数はブラウザから送らない（正本は seller_business_inquiries）。
+  assert.doesNotMatch(script, /seller_inquiry_submitted/u);
+  assert.match(script, /sendSellerEvent\('seller_form_failed', \{ content: code \}\)/u);
+  assert.doesNotMatch(script, /seller_form_failed', \{ content: (?:payload|data|storefront)/u);
+  // 確認欄が自動確認中に押された時は、確認が済み次第そのまま送る。
+  assert.match(script, /if \(submitAfterTurnstile\) \{ submitAfterTurnstile = false; form\?\.requestSubmit\?\.\(\); \}/u);
 });
 
 test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮する', () => {
@@ -357,4 +365,20 @@ test('店からの返信メールで管理者が相談を作れる（Cowork 依�
   const missing = await post({ ...reply, evidence_message_id: '', evidence_received_at: 'not-a-date', contact_email: 'bad' });
   assert.equal(missing.status, 400);
   assert.deepEqual((await missing.json()).fields, ['CONTACT_EMAIL_INVALID', 'EVIDENCE_MESSAGE_ID_REQUIRED', 'EVIDENCE_RECEIVED_AT_INVALID']);
+});
+
+// 2026-10-10: ブラウザの URL 欄は http:// を通すのに、サーバは https だけを受けるため相談が止まっていた。
+// サーバの規則（https のみ）は変えず、送る前にブラウザで https:// に整える。
+test('ショップURLは https:// 付け忘れ・http:// をブラウザで https:// に整えてから送る', async () => {
+  const { normalizeSellerBusinessInquiry } = await import('../src/seller-business-inquiries.mjs');
+  const base = { inquiry_type: 'CONSULTATION', organization_type: 'SELLER', organization_name: 'テスト店', contact_email: 'a@example.com', privacy_consent: true };
+  assert.ok(normalizeSellerBusinessInquiry({ ...base, storefront_url: 'http://shop.example.jp/a' }).errors.includes('STOREFRONT_URL_INVALID'), 'サーバは https のみのまま');
+  const script = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
+  const fn = script.slice(script.indexOf('export function normalizeStorefrontUrl'), script.indexOf('function tidyStorefront'));
+  const normalizeStorefrontUrl = new Function(`${fn.replace('export ', '')}; return normalizeStorefrontUrl;`)();
+  for (const [input, expected] of [['www.rakuten.co.jp/shop', 'https://www.rakuten.co.jp/shop'], ['http://example.jp', 'https://example.jp'], [' https://example.jp ', 'https://example.jp'], ['ショップ名だけ', 'ショップ名だけ'], ['mailto:a@example.com', 'mailto:a@example.com']]) {
+    assert.equal(normalizeStorefrontUrl(input), expected, input);
+  }
+  assert.equal(normalizeSellerBusinessInquiry({ ...base, storefront_url: normalizeStorefrontUrl('http://shop.example.jp/a') }).value.storefront_url, 'https://shop.example.jp/a');
+  assert.match(script, /tidyStorefront\(\);\n  sendSellerEvent\('seller_form_submit_attempt'/u);
 });

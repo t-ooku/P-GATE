@@ -705,6 +705,8 @@ const TAB_EVENT_TYPES = Object.freeze([
   'result_confirmed', 'result_rejected', 'wish_saved', 'continuous_search_saved', 'target_price_watch_set', 'notification_opened',
   'shop_search_completed', 'shop_demand_saved', 'shop_demand_matched',
   'shop_viewed', 'shop_followed', 'shop_unfollowed', 'coupon_clicked', 'seller_landing_view', 'seller_cta_clicked',
+  // 2026-10-10: Seller 相談フォームの段階（入力開始・送信を押した・失敗）。受付件数は seller_business_inquiries が正本。
+  'seller_form_started', 'seller_form_submit_attempt', 'seller_form_failed',
   // 2026-09-18 大隆さん指示 P1（SHOP 強化と KPI の接続）: 横断検索開始率の分母
   'landing_view',
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 購入導線（検索→商品詳細→購入先クリック）
@@ -762,6 +764,8 @@ function shopSellerPeriod(counts) {
     shop_viewed: c.shop_viewed || 0, shop_followed: c.shop_followed || 0, shop_unfollowed: c.shop_unfollowed || 0, coupon_clicked: c.coupon_clicked || 0,
     seller_landing_view: c.seller_landing_view || 0, seller_cta_clicked: c.seller_cta_clicked || 0,
     seller_cta_rate: percentage(c.seller_cta_clicked || 0, c.seller_landing_view || 0),
+    seller_form_started: c.seller_form_started || 0, seller_form_submit_attempt: c.seller_form_submit_attempt || 0,
+    seller_form_failed: c.seller_form_failed || 0,
     // 2026-09-18 大隆さん指示 P1: 追加 KPI（計測できる範囲だけ。推定値は出さない）
     //   横断検索開始率 = SHOP 横断検索 ÷ 着地（landing_view、クローラ除外は着地側の判定に従う）
     //   完全一致率・近似商品率 = 横断検索のうち EXACT / NEAR

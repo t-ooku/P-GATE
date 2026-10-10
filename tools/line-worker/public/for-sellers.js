@@ -32,7 +32,40 @@ document.querySelectorAll('[data-seller-cta]').forEach((link) => link.addEventLi
   sendSellerEvent('seller_cta_clicked', { content: link.dataset.sellerCta || 'unknown' });
 }));
 
+// 2026-10-10 Seller LP の離脱改善: CTA の先（フォーム）の段階を数える。入力内容は送らない（理由コードだけ）。
+let sellerFormStarted = false;
+form?.addEventListener('focusin', () => {
+  if (sellerFormStarted) return;
+  sellerFormStarted = true;
+  sendSellerEvent('seller_form_started', { content: 'consultation' });
+}, { passive: true });
+const failureSent = new Set();
+function sendFormFailure(reason) {
+  const code = String(reason || 'unknown').replace(/[^a-z0-9_:-]/giu, '_').slice(0, 60);
+  if (failureSent.has(code)) return;
+  failureSent.add(code);
+  sendSellerEvent('seller_form_failed', { content: code });
+}
+// ショップURLは「https://」を付け忘れても、http:// でも送れるようにする。ブラウザの URL 欄は http:// を通すが、
+// サーバは https だけを受けるため「入力内容をご確認ください」で止まっていた。送る前に https:// に整える（サーバの規則は変えない）。
+const storefrontInput = form?.querySelector('[name="storefront_url"]');
+export function normalizeStorefrontUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^https:\/\//iu.test(raw)) return raw;
+  if (/^http:\/\//iu.test(raw)) return raw.replace(/^http:\/\//iu, 'https://');
+  if (/^[^\s/@]+\.[^\s/@]+/u.test(raw) && !/^[a-z][a-z0-9+.-]*:/iu.test(raw)) return `https://${raw}`;
+  return raw;
+}
+function tidyStorefront() {
+  if (!storefrontInput) return;
+  const next = normalizeStorefrontUrl(storefrontInput.value);
+  if (next !== storefrontInput.value) storefrontInput.value = next;
+}
+storefrontInput?.addEventListener('blur', tidyStorefront);
+
 let turnstileToken = '';
+let submitAfterTurnstile = false;
 let turnstileWidget = null;
 // 2026-09-03: Turnstileが出ないとフォームは一切送信できず、しかも画面上は
 // 「確認を完了してください」としか出ないため、利用者は何を押せばいいのか
@@ -50,6 +83,7 @@ if (turnstileContainer) {
 
 function showTurnstileFailure(reason) {
   turnstileFailure = reason;
+  sendFormFailure('turnstile_unavailable');
   status.className = 'status error';
   // 確認欄が動かない環境でも送信できる。サーバ側で件数を絞って受け付ける。
   status.style.whiteSpace = 'pre-line';
@@ -100,7 +134,11 @@ async function initializeTurnstile() {
     sitekey, theme: 'light', size: 'flexible',
     retry: 'auto', 'retry-interval': 3000,
     'refresh-expired': 'auto', 'refresh-timeout': 'auto',
-    callback: token => { turnstileToken = token; turnstileFailure = ''; },
+    callback: token => {
+      turnstileToken = token; turnstileFailure = '';
+      // 自動確認の途中で「送信」を押していた人は、確認が済んだらそのまま送る（もう一度押させない）。
+      if (submitAfterTurnstile) { submitAfterTurnstile = false; form?.requestSubmit?.(); }
+    },
     'expired-callback': () => { turnstileToken = ''; },
     'timeout-callback': () => { turnstileToken = ''; },
     'unsupported-callback': () => {
@@ -122,14 +160,25 @@ let inquiryRequestId = crypto.randomUUID();
 let inquirySubmitting = false;
 form?.addEventListener('submit', async event => {
   event.preventDefault();
-  if (inquirySubmitting || !form.reportValidity()) return;
+  if (inquirySubmitting) return;
+  tidyStorefront();
+  sendSellerEvent('seller_form_submit_attempt', { content: 'consultation' });
+  if (!form.reportValidity()) {
+    const invalid = form.querySelector(':invalid');
+    sendFormFailure(`browser_validation:${invalid?.name || 'unknown'}`);
+    return;
+  }
   status.className = 'status';
   // 確認欄が読み込めていない環境では、トークン無しのまま送る。サーバ側で
   // 件数を絞って受け付けるので、問い合わせ口が完全に塞がることはない。
   if (!turnstileToken && !turnstileFailure) {
     status.textContent = '不正送信防止の確認を完了してください。';
+    // 2026-10-10: 確認欄が裏で自動確認している最中に押した時は、確認が済み次第そのまま送る。
+    submitAfterTurnstile = true;
+    sendFormFailure('turnstile_pending');
     return;
   }
+  submitAfterTurnstile = false;
   const button = form.querySelector('button[type="submit"]');
   const data = new FormData(form);
   const payload = {
@@ -155,6 +204,7 @@ form?.addEventListener('submit', async event => {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) {
+      sendFormFailure(result.error ? String(result.error).toLowerCase() : `http_${response.status}`);
       let message = '受付結果を確認できませんでした。入力内容を残しています。同じ画面でもう一度送信してください。';
       if (result.error === 'TURNSTILE_FAILED') message = '不正送信防止の確認をやり直して、もう一度送信してください。入力内容は残っています。';
       else if (result.error === 'VALIDATION_FAILED') message = '入力内容と必須の同意欄をご確認ください。入力内容は残っています。';
@@ -170,6 +220,7 @@ form?.addEventListener('submit', async event => {
     status.className = 'status success';
     status.textContent = `受付しました。受付番号：${result.inquiry_id || '確認待ち'}。内容を確認後、担当者からご連絡します。`;
   } catch (error) {
+    sendFormFailure(error?.name === 'AbortError' ? 'timeout' : 'network');
     status.className = 'status error';
     status.textContent = '受付結果を確認できませんでした。入力内容を残しています。通信環境を確認し、同じ画面でもう一度送信してください。';
   } finally {

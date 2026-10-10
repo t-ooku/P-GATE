@@ -4,6 +4,12 @@ const EVENTS = new Set([
   // seller_business_inquiries をサーバ側の正本として別集計する。
   'seller_landing_view',
   'seller_cta_clicked',
+  // 2026-10-10 大隆さん決定（Claude 担当: Seller LP から問い合わせまでの離脱改善）: CTA の先が見えていなかった。
+  // フォームの段階（入力開始→送信を押した→失敗の理由→受付できた）を数える。入力内容・URL・連絡先は送らない。
+  // 受付できた件数はブラウザ値を信用せず、引き続き seller_business_inquiries だけを正本にする（受付イベントは作らない）。
+  'seller_form_started',
+  'seller_form_submit_attempt',
+  'seller_form_failed',
   'target_price_watch_started',
   // 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」: 第一画面の入力→検索実行を数える（検索文は送らない）
   'hero_price_watch_submitted',
