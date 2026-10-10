@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_BASE_URL = 'https://hoshilu.app/';
@@ -9,6 +10,17 @@ const APPROVAL_GATE_MINUTES = 18 * 60;
 const PUBLICATION_GATE_MINUTES = 20 * 60 + 30;
 const FUTURE_DAYS = 7;
 const PLATFORMS = Object.freeze(['X', 'INSTAGRAM']);
+// 2026-10-10 大隆さん決定「今はXを使うのをやめる」。wrangler.jsonc の X_PUBLISHING_ENABLED が "true" の時だけ X を要求する。
+export function requiredSlaPlatforms(wranglerText = '') {
+  return /"X_PUBLISHING_ENABLED"\s*:\s*"true"/u.test(String(wranglerText)) ? PLATFORMS : Object.freeze(['INSTAGRAM']);
+}
+function requiredPlatformsFromRepo() {
+  try {
+    return requiredSlaPlatforms(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
+  } catch {
+    return PLATFORMS;
+  }
+}
 const READY_STATUSES = new Set(['APPROVED', 'PUBLISHING', 'PUBLISHED']);
 const POLICY = 'DAILY_AI_ACTRESS_22';
 const PERSONA_ID = 'hoshilu-approved-model-reference-v2';
@@ -305,13 +317,16 @@ function validPublicAudit(entry, row, platform) {
       .test(String(payload.public_url || ''));
 }
 
-export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = new Date() } = {}) {
+export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = new Date(), platforms = PLATFORMS } = {}) {
+  const required = platforms.filter((platform) => PLATFORMS.includes(platform));
+  assert(required.length > 0, 'SOCIAL_AI_ACTRESS_PLATFORMS_INVALID');
+  const pairRequired = required.includes('X') && required.includes('INSTAGRAM');
   assert(Array.isArray(rows), 'SOCIAL_AI_ACTRESS_ROWS_INVALID');
   const clock = socialAiActressJstClock(now);
   const todayRequired = Boolean(expectedFormatForDate(clock.date));
   const approvalRequired = todayRequired && clock.minutes >= APPROVAL_GATE_MINUTES;
   const publicationRequired = todayRequired && clock.minutes >= PUBLICATION_GATE_MINUTES;
-  const todayStates = Object.fromEntries(PLATFORMS.map((platform) => [
+  const todayStates = Object.fromEntries(required.map((platform) => [
     platform, safePlatformState(rows, clock.date, platform, clock.timestamp)
   ]));
   const duplicateKeys = [];
@@ -326,42 +341,43 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
     if (expectedFormatForDate(date) !== 'CAROUSEL') continue;
     const xRows = rowsFor(rows, date, 'X', clock.timestamp);
     const instagramRows = rowsFor(rows, date, 'INSTAGRAM', clock.timestamp);
-    for (const [platform, eligible] of [['X', xRows], ['INSTAGRAM', instagramRows]]) {
+    const byPlatform = { X: xRows, INSTAGRAM: instagramRows };
+    for (const [platform, eligible] of required.map((name) => [name, byPlatform[name]])) {
       futureReady += eligible.length === 1 ? 1 : 0;
       if (eligible.length === 0) futureMissing.push(`${date}:${platform}`);
       if (eligible.length > 1) duplicateKeys.push(`${date}:${platform}`);
     }
-    if (xRows.length === 1 && instagramRows.length === 1
+    if (pairRequired && xRows.length === 1 && instagramRows.length === 1
       && !pairIsConsistent(xRows, instagramRows)) futurePairMismatch.push(date);
   }
 
-  const todayRows = Object.fromEntries(PLATFORMS.map((platform) => [
+  const todayRows = Object.fromEntries(required.map((platform) => [
     platform, rowsFor(rows, clock.date, platform, clock.timestamp)
   ]));
   if (approvalRequired) {
-    for (const platform of PLATFORMS) {
+    for (const platform of required) {
       if (todayRows[platform].length > 1) duplicateKeys.push(`${clock.date}:${platform}`);
     }
   }
-  const todayPairMismatch = approvalRequired
+  const todayPairMismatch = approvalRequired && pairRequired
     && todayRows.X.length === 1
     && todayRows.INSTAGRAM.length === 1
     && !pairIsConsistent(todayRows.X, todayRows.INSTAGRAM);
 
   const todayApprovalPassed = !approvalRequired || (
-    PLATFORMS.every((platform) => todayRows[platform].length === 1) && !todayPairMismatch
+    required.every((platform) => todayRows[platform].length === 1) && !todayPairMismatch
   );
   let todayPublicationPassed = !publicationRequired;
   let publicAuditPassed = !publicationRequired;
   if (publicationRequired && todayApprovalPassed) {
-    todayPublicationPassed = PLATFORMS.every((platform) => {
+    todayPublicationPassed = required.every((platform) => {
       const row = todayRows[platform][0];
       return row?.status === 'PUBLISHED'
         && nonEmpty(row.external_post_id)
         && timestampAtOrBefore(row.published_at, clock.timestamp);
     });
     if (todayPublicationPassed) {
-      publicAuditPassed = PLATFORMS.every((platform) => {
+      publicAuditPassed = required.every((platform) => {
         const valid = validPublicAudit(publicAuditEntry(publicPosts, platform), todayRows[platform][0], platform);
         todayStates[platform].public_verified = valid;
         return valid;
@@ -391,12 +407,12 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
   ];
   if (todayPairMismatch) violations.push(`TODAY_CROSSPOST_MISMATCH:${clock.date}`);
   if (approvalRequired && !todayApprovalPassed) {
-    for (const platform of PLATFORMS) {
+    for (const platform of required) {
       if (todayRows[platform].length !== 1) violations.push(`TODAY_NOT_APPROVED:${platform}`);
     }
   }
   if (publicationRequired && todayApprovalPassed && !todayPublicationPassed) {
-    for (const platform of PLATFORMS) {
+    for (const platform of required) {
       if (todayRows[platform][0]?.status !== 'PUBLISHED'
         || !nonEmpty(todayRows[platform][0]?.external_post_id)
         || !timestampAtOrBefore(todayRows[platform][0]?.published_at, clock.timestamp)) {
@@ -405,7 +421,7 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
     }
   }
   if (publicationRequired && todayPublicationPassed && !publicAuditPassed) {
-    for (const platform of PLATFORMS) {
+    for (const platform of required) {
       if (!todayStates[platform].public_verified) violations.push(`PUBLIC_AUDIT_FAILED:${platform}`);
     }
   }
@@ -426,7 +442,7 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
       from: addUtcDays(clock.date, 1),
       to: addUtcDays(clock.date, FUTURE_DAYS),
       required: Array.from({ length: FUTURE_DAYS }, (_, i) => addUtcDays(clock.date, i + 1))
-        .filter((date) => expectedFormatForDate(date) === 'CAROUSEL').length * PLATFORMS.length,
+        .filter((date) => expectedFormatForDate(date) === 'CAROUSEL').length * required.length,
       expected_today: todayFormat || 'NONE',
       ready: futureReady,
       status: futurePassed ? 'PASS' : 'FAIL'
@@ -474,7 +490,8 @@ export async function inspectSocialAiActressSla({
   baseUrl = DEFAULT_BASE_URL,
   fetcher = fetch,
   now = new Date(),
-  requestTimeoutMs = 10000
+  requestTimeoutMs = 10000,
+  platforms = requiredPlatformsFromRepo()
 } = {}) {
   assert(nonEmpty(accountId), 'CLOUDFLARE_ACCOUNT_ID_MISSING');
   assert(nonEmpty(apiToken), 'CLOUDFLARE_API_TOKEN_MISSING');
@@ -487,7 +504,7 @@ export async function inspectSocialAiActressSla({
   );
   const publicPosts = {};
   if (clock.minutes >= PUBLICATION_GATE_MINUTES) {
-    const audits = await Promise.all(PLATFORMS.map(async (platform) => {
+    const audits = await Promise.all(platforms.map(async (platform) => {
       const eligible = rowsFor(rows, clock.date, platform, clock.timestamp);
       if (eligible.length === 1) {
         return [platform, await fetchPublicAudit(fetcher, baseUrl, eligible[0].post_id, timeout)];
@@ -498,7 +515,7 @@ export async function inspectSocialAiActressSla({
       if (audit) publicPosts[platform] = audit;
     }
   }
-  return evaluateSocialAiActressSla({ rows, publicPosts, now: clock.timestamp });
+  return evaluateSocialAiActressSla({ rows, publicPosts, now: clock.timestamp, platforms });
 }
 
 export async function runSocialAiActressSla(options = {}) {
@@ -537,7 +554,7 @@ function cliOptions(argv) {
 }
 
 function summaryFor(result) {
-  const platformLines = PLATFORMS.map((platform) => {
+  const platformLines = Object.keys(result.today.platforms).map((platform) => {
     const state = result.today.platforms[platform];
     return `- ${platform}: eligible=${state.eligible_count}, status=${state.status || 'none'}, public=${state.public_verified ? 'verified' : 'not-required-or-unverified'}`;
   });

@@ -670,10 +670,12 @@ export async function handleRunwayGenerationRoutes(request, env) {
         (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
          affiliate,created_at,updated_at,approved_at)
         SELECT ?2,'X',campaign_id,content_id,caption,link,media_url,?3,'APPROVED',affiliate,?4,?4,?4
-        FROM social_post_queue WHERE post_id=?1
+        FROM social_post_queue WHERE post_id=?1 AND ?6=1
         AND NOT EXISTS (SELECT 1 FROM social_post_queue x WHERE x.platform='X'
           AND x.content_id=?5 AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>''))`)
-        .bind(job.post_id, `${job.post_id}-x`, new Date(scheduledAt).toISOString(), timestamp, jobId),
+        // X 停止中（X_PUBLISHING_ENABLED が true 以外）は X 行を作らない（2026-10-10 大隆さん決定）。
+        .bind(job.post_id, `${job.post_id}-x`, new Date(scheduledAt).toISOString(), timestamp, jobId,
+          env.X_PUBLISHING_ENABLED === 'true' ? 1 : 0),
       auditStatement(env, 'QA_APPROVED_FOR_POST', jobId, {
         checks: requiredChecks,
         scheduled_at: new Date(scheduledAt).toISOString()
@@ -695,6 +697,9 @@ export async function handleRunwayGenerationRoutes(request, env) {
     const jobId = clean(input?.job_id, 120);
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(jobId)) {
       return Response.json({ ok: false, error: 'RUNWAY_CROSSPOST_INVALID' }, { status: 400 });
+    }
+    if (env.X_PUBLISHING_ENABLED !== 'true') {
+      return Response.json({ ok: false, error: 'X_PUBLISHING_PAUSED' }, { status: 409 });
     }
     const timestamp = new Date().toISOString();
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue

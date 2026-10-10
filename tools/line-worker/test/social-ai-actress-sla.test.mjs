@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   evaluateSocialAiActressSla,
   expectedFormatForDate,
@@ -237,7 +238,7 @@ test('inspector verifies both public audit endpoints after publication gate', as
     const platform = url.includes('-instagram-') ? 'INSTAGRAM' : 'X';
     return Response.json(audits[platform].payload);
   };
-  const result = await inspectSocialAiActressSla({ accountId: 'account', apiToken: 'secret', fetcher, now: `${CAROUSEL_DAY}T11:30:00.000Z` });
+  const result = await inspectSocialAiActressSla({ accountId: 'account', apiToken: 'secret', fetcher, now: `${CAROUSEL_DAY}T11:30:00.000Z`, platforms: ['X', 'INSTAGRAM'] });
   assert.equal(result.status, 'PASS', JSON.stringify(result.violations));
   assert.equal(calls.length, 3);
   assert.equal(calls.filter((url) => url.includes('/api/social/posts/')).length, 2);
@@ -251,7 +252,23 @@ test('runner retries a transient incomplete observation and returns recovered st
     const rows = calls === 1 ? complete.slice(1) : complete;
     return Response.json({ success: true, result: [{ success: true, results: rows }] });
   };
-  const result = await runSocialAiActressSla({ accountId: 'account', apiToken: 'secret', fetcher, now: `${CAROUSEL_DAY}T08:00:00.000Z`, attempts: 2, retryMs: 100 });
+  const result = await runSocialAiActressSla({ accountId: 'account', apiToken: 'secret', fetcher, now: `${CAROUSEL_DAY}T08:00:00.000Z`, attempts: 2, retryMs: 100, platforms: ['X', 'INSTAGRAM'] });
   assert.equal(calls, 2);
   assert.equal(result.status, 'PASS');
+});
+
+test('X paused (2026-10-10): only Instagram is required and X rows are not demanded', async () => {
+  const { requiredSlaPlatforms } = await import('../scripts/check-social-ai-actress-sla.mjs');
+  assert.deepEqual([...requiredSlaPlatforms('"X_PUBLISHING_ENABLED": "false"')], ['INSTAGRAM']);
+  assert.deepEqual([...requiredSlaPlatforms('"X_PUBLISHING_ENABLED": "true"')], ['X', 'INSTAGRAM']);
+  const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+  assert.deepEqual([...requiredSlaPlatforms(wrangler)], ['INSTAGRAM']);
+  const instagramOnly = [...carouselRows(CAROUSEL_DAY), ...futureCarouselRows(CAROUSEL_DAY)]
+    .filter((row) => row.platform === 'INSTAGRAM');
+  const paused = evaluateSocialAiActressSla({ rows: instagramOnly, now: `${CAROUSEL_DAY}T09:30:00.000Z`, platforms: ['INSTAGRAM'] });
+  assert.equal(paused.status, 'PASS', JSON.stringify(paused.violations));
+  assert.deepEqual(Object.keys(paused.today.platforms), ['INSTAGRAM']);
+  const both = evaluateSocialAiActressSla({ rows: instagramOnly, now: `${CAROUSEL_DAY}T09:30:00.000Z`, platforms: ['X', 'INSTAGRAM'] });
+  assert.equal(both.status, 'FAIL');
+  assert.ok(both.violations.includes('TODAY_NOT_APPROVED:X'));
 });

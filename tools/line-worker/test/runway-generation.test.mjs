@@ -300,6 +300,19 @@ test('承認済み1件だけを生成し、R2保存後はREVIEW_REQUIREDで停�
   assert.equal(database.prepare('SELECT initial_test_completed FROM runway_budget_policy').get().initial_test_completed, 1);
   assert.equal(database.prepare('SELECT media_url FROM social_post_queue').get().media_url,
     'https://hoshilu.app/api/social/media/runway/runway-test-20260813-v1.mp4');
+  // 2026-10-10 X 停止中（X_PUBLISHING_ENABLED が true 以外）は承認しても X 行を作らず、手動の X 相互投稿も断る。
+  assert.equal(env.X_PUBLISHING_ENABLED === 'true', false);
+  assert.equal(database.prepare("SELECT COUNT(*) AS total FROM social_post_queue WHERE platform='X'").get().total, 0);
+  const crosspost = await handleRunwayGenerationRoutes(new Request(
+    'https://hoshilu.app/api/internal/runway/crosspost-x', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${'s'.repeat(32)}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ job_id: 'runway-test-20260813-v1' })
+    }
+  ), env);
+  assert.equal(crosspost.status, 409);
+  assert.equal((await crosspost.json()).error, 'X_PUBLISHING_PAUSED');
+  assert.equal(database.prepare("SELECT COUNT(*) AS total FROM social_post_queue WHERE platform='X'").get().total, 0);
 });
 
 test('Runway報告使用量が初回上限を超える生成はAPI送信前に止める', async () => {

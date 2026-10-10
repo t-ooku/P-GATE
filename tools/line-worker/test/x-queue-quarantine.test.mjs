@@ -124,12 +124,13 @@ test('time-travel recovery evidence requires a non-empty nested bookmark', () =>
   );
 });
 
-test('completed quarantine workflow stays removed when explicitly approved X autopilot is enabled', () => {
+test('completed quarantine workflow stays removed and X stays paused by owner decision (2026-10-10)', () => {
   const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
   assert.doesNotMatch(workflow, /setup-x-oauth-quarantine-approved/);
   assert.doesNotMatch(workflow, /x-oauth-infra-and-queue-quarantine/);
-  assert.match(wrangler, /"X_PUBLISHING_ENABLED": "true"/);
-  assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "true"/);
+  // 2026-10-10 大隆さん決定「今はXを使うのをやめる」（X API のクレジット切れ・送客ほぼゼロ）。再開は大隆さんの承認で true に戻す。
+  assert.match(wrangler, /"X_PUBLISHING_ENABLED": "false"/);
+  assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "false"/);
   assert.match(wrangler, /"X_EXPECTED_USERNAME": "hoshilu_app"/);
 });
