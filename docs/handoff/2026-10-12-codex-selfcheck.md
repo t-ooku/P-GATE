@@ -86,3 +86,11 @@
 ## 今月対象外
 
 - 毎月1日ではないためAmazonアソシエイト180日期限確認は対象外。
+
+
+## 08:53 JST 追加実行
+
+- 希望価格の入力後を、`target_price_watch_save_clicked`、`target_price_notification_registration_started`、`target_price_auth_completed`、保存API失敗の固定理由イベントに分離した。ブラウザから検索文・商品名・金額・連絡先は送らず、保存完了はサーバー正本 `target_price_watch_set` のみ。
+- commit `300a946`の初回CI #2373はアセット版番号の固定テスト2件のみ失敗し、deployはskipped。全ページ参照と固定テストを`growth-analytics.mjs?v=17`へ揃えたcommit `ba6f142`で修正。
+- [CI / deploy #2374](https://github.com/t-ooku/P-GATE/actions/runs/38185806987) は全回帰2,999件成功 / 0失敗、Worker deploy、production health、KPI接続が成功。Cloudflare Version IDは`0441b1ad-01c7-4134-8328-a7fc7654777d`。
+- この時点では新イベントの一般利用者実数はまだ発生・取得していないため、Watch Set改善完了とは判定しない。料金・注意書き・D1・SNSキュー・外部送信は変更していない。
