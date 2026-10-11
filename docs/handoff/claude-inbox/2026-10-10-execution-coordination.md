@@ -73,3 +73,11 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
 - X 停止の確認: 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行）のみ。APPROVED/PUBLISHING/PUBLISHED/FAILED は 0。
 - 成果指標（D1 実測）: Seller 問い合わせ（seller_business_inquiries）累計4件・本日0件（最新 9/28）。有料契約: 未再計測（今回は読んでいない。14:13 時点は外部 Seller 0）。購入先クリック: Codex 担当範囲のため未集計。
 - 次の巡回でやること: 10/12（月）20:13 に 10-12 Instagram の PUBLISHED、10/13（火）以降に自動リール後の X 行0件、10/17（土）20:13 に 10-17 の PUBLISHED。そろったら SNS 分を DONE。seller_form_* は毎巡回で件数を記録。
+
+### 2026-10-11 09:14 JST 定期巡回（状態: IN_PROGRESS のまま。新しい実装・キュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（新規指示なし）。正本 docs/handoff/2026-10-10-codex-execution-coordination.md の「2026-10-11 Codex 進捗」も読んだ（希望価格の導線修正は Codex 実装済み → Claude は触らない）。
+- 1. Seller LP: D1 growth_events（10/10 10:46 JST 以降、10/11 09:14 JST 読み取り）で seller_landing_view 4件（2人、ATTRIBUTED、最新 10/10 23:18 JST）。seller_form_started／submit_attempt／failed は 0 件。→ フォームまで進んだ人はまだいない（母数2人）。離脱箇所の判断は未。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS: D1 social_post_queue で hoshilu-carousel-v3-instagram-2026-10-12・-10-17 とも APPROVED（published_at 空）。公開確認は未（公開時刻前。10/12 20:00・10/17 20:00 JST）。
+- X 停止の確認: 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（8/2 作成の旧保留行）のみ。APPROVED/PUBLISHING/PUBLISHED/FAILED は 0。
+- 成果指標（D1 実測）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10〜11 の新規0件（最新 9/28、全件 NEW）。有料契約: 0（seller_billing_accounts は3件とも ACTIVE / FREE_OF_CHARGE、Stripe 契約なし）。購入先クリック: Codex 担当範囲のため Claude は未集計（Codex 記録では直近7日2件）。
+- 次の巡回でやること: 10/12（月）20:13 に 10-12 Instagram の PUBLISHED、10/13（火）自動リール後の X 行0件、10/17（土）20:13 に 10-17 の PUBLISHED。そろったら SNS 分を DONE。seller_form_* は毎巡回で件数を記録。
