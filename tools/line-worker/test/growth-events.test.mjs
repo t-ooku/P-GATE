@@ -524,3 +524,30 @@ test('result_confirmed / result_rejected are accepted fixed events', async () =>
   assert.match(analytics, /\.ai-chat-confirm-yes,\.ai-chat-confirm-no/);
   assert.match(analytics, /'result_rejected' : 'result_confirmed'/);
 });
+
+test('希望価格ファネルの匿名固定イベントを受け付け、入力内容は保存しない', () => {
+  const eventTypes = [
+  "target_price_watch_save_clicked",
+  "target_price_notification_registration_started",
+  "target_price_auth_completed",
+  "target_price_watch_save_failed_auth",
+  "target_price_watch_save_failed_validation",
+  "target_price_watch_save_failed_limit",
+  "target_price_watch_save_failed_rate_limited",
+  "target_price_watch_save_failed_server",
+  "target_price_watch_save_failed_rejected",
+  "target_price_watch_save_failed_network"
+];
+  for (const event_type of eventTypes) {
+    const normalized = normalizeGrowthEvent({
+      event_type,
+      query: '保存禁止の商品名',
+      target_price_jpy: 1980,
+      email: 'do-not-store@example.com'
+    });
+    assert.equal(normalized.event_type, event_type);
+    assert.equal('query' in normalized, false);
+    assert.equal('target_price_jpy' in normalized, false);
+    assert.equal('email' in normalized, false);
+  }
+});

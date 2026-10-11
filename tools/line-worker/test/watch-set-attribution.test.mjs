@@ -81,3 +81,15 @@ test('配線と集計（保存時に記録し、流入元別と訪問→Watch Se
   const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
   assert.match(analytics, /window\.HoshiluGrowthIdentity = Object\.freeze/u);
 });
+
+test('希望価格の入力後ファネルは固定段階だけを匿名計測し、保存完了はサーバー正本のまま', () => {
+  const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(analytics, /target_price_watch_save_clicked/u);
+  assert.match(analytics, /target_price_notification_registration_started/u);
+  assert.match(analytics, /target_price_auth_completed/u);
+  assert.match(analytics, /target_price_watch_save_failed_network/u);
+  assert.match(analytics, /Number\(body\?\.target_price_jpy\) >= 100/u);
+  const allowlist = readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
+  assert.match(allowlist, /target_price_watch_save_failed_limit/u);
+  assert.doesNotMatch(analytics, /body\?\.query|body\?\.email/u);
+});

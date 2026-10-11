@@ -128,6 +128,43 @@ const send = (event_type, extra = {}) => {
   }
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 };
+
+// 2026-10-12: 希望価格の「開始2件・保存0件」を、入力内容を送らず固定段階だけで切り分ける。
+// 保存完了は引き続きサーバー正本 target_price_watch_set だけを成果にする。
+const targetPriceFetch = window.fetch.bind(window);
+const targetPriceFailureEvent = (status) => {
+  if (status === 401 || status === 403) return 'target_price_watch_save_failed_auth';
+  if (status === 400 || status === 422) return 'target_price_watch_save_failed_validation';
+  if (status === 409) return 'target_price_watch_save_failed_limit';
+  if (status === 429) return 'target_price_watch_save_failed_rate_limited';
+  if (status >= 500) return 'target_price_watch_save_failed_server';
+  return 'target_price_watch_save_failed_rejected';
+};
+const growthRequestBody = (init) => {
+  if (typeof init?.body !== 'string') return null;
+  try { return JSON.parse(init.body); } catch { return null; }
+};
+window.fetch = async (input, init) => {
+  const rawUrl = String(typeof input === 'string' ? input : input?.url || '');
+  let pathname = '';
+  try { pathname = new URL(rawUrl, location.origin).pathname; } catch {}
+  const method = String(init?.method || input?.method || 'GET').toUpperCase();
+  const body = growthRequestBody(init);
+  const isTargetPriceSave = method === 'POST' && pathname === '/api/member/wishes'
+    && Number(body?.target_price_jpy) >= 100;
+  const isWatchEmailVerify = method === 'POST' && pathname === '/api/member/email/verify'
+    && body?.registration_context?.source === 'watch';
+  try {
+    const response = await targetPriceFetch(input, init);
+    if (isTargetPriceSave && !response.ok) send(targetPriceFailureEvent(response.status));
+    if (isWatchEmailVerify && response.ok) send('target_price_auth_completed');
+    return response;
+  } catch (error) {
+    if (isTargetPriceSave) send('target_price_watch_save_failed_network');
+    throw error;
+  }
+};
+
 const SEARCH_WATCHDOG_MS = 75000;
 const searchWatches = new Map();
 // One enum event is emitted per accepted search execution. The enum contains
@@ -370,7 +407,12 @@ document.addEventListener('click', event => {
 
 // Funnel entry is client-owned; completion remains server-owned.
 document.addEventListener('click', (event) => {
-  if (event.target instanceof Element && event.target.closest('.watch-settings-button')) send('target_price_watch_started');
+  if (!(event.target instanceof Element)) return;
+  if (event.target.closest('.watch-settings-button')) send('target_price_watch_started');
+  if (event.target.closest('.watch-save-button')) send('target_price_watch_save_clicked');
+  if (event.target.closest('.product-watch-dialog .watch-quick-send,.product-watch-dialog .watch-quick-line')) {
+    send('target_price_notification_registration_started');
+  }
 });
 document.addEventListener('notification-destination-opened', (event) => {
   send('notification_opened');
