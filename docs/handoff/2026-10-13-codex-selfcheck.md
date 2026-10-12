@@ -80,3 +80,9 @@
 - 火曜日のため月曜SEO監査は対象外。
 - 毎月1日ではないためAmazonアソシエイト180日期限確認は対象外。
 
+## 08:10 JST 追加実行
+
+- commit [`eb649b06`](https://github.com/t-ooku/P-GATE/commit/eb649b06edf459f8a156454e237f76e7b0745ab9)へ反映。[CI / deploy #2379](https://github.com/t-ooku/P-GATE/actions/runs/38320392969)はtest、Worker deploy、本番health、aggregate-only KPI接続、成果物保存まで成功。Cloudflare Version IDは`6ecc8cbb-e22e-40a5-83ab-4fd9dbd8097a`。
+- 次回成果物から希望価格とSellerフォームの段階別件数を取得できる。今回のCI成果物は接続成功まで確認したが、段階別実数の読取りは未完了のため0としない。
+- 本番D1 migrationはskipped。D1書込み、SNS公開、営業送信、料金・注意書き変更はない。
+
