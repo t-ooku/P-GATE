@@ -38,12 +38,16 @@ function setup() {
     articleClick: at(-48),
     search: at(-47),
     watchStarted: at(-46),
-    watchSet: at(-45),
-    mallClick: at(-44),
-    notificationReturn: at(-43),
-    notificationMallClick: at(-42),
-    qaResult: at(-41),
-    qaTrace: at(-40)
+    watchSaveClicked: at(-45),
+    notificationRegistrationStarted: at(-44),
+    authCompleted: at(-43),
+    watchSaveFailed: at(-42),
+    watchSet: at(-41),
+    mallClick: at(-40),
+    notificationReturn: at(-39),
+    notificationMallClick: at(-38),
+    qaResult: at(-37),
+    qaTrace: at(-36)
   };
   sqlite.testTimes = times;
   sqlite.exec(`
@@ -93,6 +97,10 @@ function setup() {
       ('seo_search_transition','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.articleClick}'),
       ('search_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.search}'),
       ('target_price_watch_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchStarted}'),
+      ('target_price_watch_save_clicked','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchSaveClicked}'),
+      ('target_price_notification_registration_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.notificationRegistrationStarted}'),
+      ('target_price_auth_completed','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.authCompleted}'),
+      ('target_price_watch_save_failed_network','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchSaveFailed}'),
       ('target_price_watch_set','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchSet}'),
       ('marketplace_click','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.mallClick}'),
       ('landing_view','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','${times.notificationReturn}'),
@@ -103,6 +111,11 @@ function setup() {
       ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','${times.watchSet}'),
       ('seller_landing_view','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','for-sellers','${times.article}'),
       ('seller_cta_clicked','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','hero-inquiry','${times.articleClick}'),
+      ('seller_form_started','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','consultation','${times.search}'),
+      ('seller_form_submit_attempt','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','consultation','${times.watchStarted}'),
+      ('seller_form_failed','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','network','${times.watchSaveFailed}'),
+      ('target_price_watch_save_clicked','INTERNAL','seo_article','visitor-internal','internal-session','','','','${times.watchSaveClicked}'),
+      ('seller_form_started','INTERNAL','seller_outreach','visitor-internal','internal-session','email','initial_outreach','consultation','${times.search}'),
       ('shop_viewed','ATTRIBUTED','worker','','','shop','with-care','search','2026-09-10T00:00:00.000Z'),
       ('shop_viewed','ATTRIBUTED','worker','','','shop','find-fun','view','2026-09-14T05:00:00.000Z'),
       ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','${times.qaResult}'),
@@ -148,6 +161,21 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     notification_return_to_mall_click_sessions: 1,
     mall_click_sessions: 2
   }]);
+  assert.deepEqual(result.target_price_funnel_stages_7d.rows.map(row => ({ ...row })), [
+    { event_type: 'target_price_auth_completed', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.authCompleted },
+    { event_type: 'target_price_notification_registration_started', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.notificationRegistrationStarted },
+    { event_type: 'target_price_watch_save_clicked', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchSaveClicked },
+    { event_type: 'target_price_watch_save_failed_network', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchSaveFailed },
+    { event_type: 'target_price_watch_set', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchSet },
+    { event_type: 'target_price_watch_started', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchStarted }
+  ]);
+  assert.deepEqual(result.seller_form_funnel_stages_7d.rows.map(row => ({ ...row })), [
+    { event_type: 'seller_cta_clicked', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.articleClick },
+    { event_type: 'seller_form_failed', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchSaveFailed },
+    { event_type: 'seller_form_started', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.search },
+    { event_type: 'seller_form_submit_attempt', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.watchStarted },
+    { event_type: 'seller_landing_view', count: 1, sessions: 1, observed_visitors: 1, last_observed_at: sqlite.testTimes.article }
+  ]);
   assert.equal(result.general_user_watch_set.rows[0].watches, 1);
   assert.equal(result.general_user_watch_set.rows[0].users, 1);
   assert.equal(result.notifications.rows.length, 1);
@@ -174,7 +202,7 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     seller_landing_views_7d: 1,
     seller_cta_clicks_7d: 1
   }]);
-  assert.equal(result.seller_acquisition.exclusions, 'ITG_SELLER_SHOP_SLUGS_AND_QA_TRAFFIC');
+  assert.equal(result.seller_acquisition.exclusions, 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC');
   assert.equal(result.seller_acquisition.meeting_conversion.status, 'UNAVAILABLE');
   assert.deepEqual(result.migrations.rows.map(row => ({ ...row })), [{
     applied_count: 2,

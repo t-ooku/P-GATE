@@ -205,7 +205,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
   };
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
-    notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
+    targetPriceStages, sellerFormStages, notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
     sellerAcquisition, registrationFunnel, shopViewFloodAudit] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
@@ -253,7 +253,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
         MIN(CASE WHEN event_type='target_price_watch_set' THEN occurred_at END) AS watch_set_at,
         MIN(CASE WHEN event_type='marketplace_click' THEN occurred_at END) AS mall_click_at
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
-      AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
+      AND traffic_class NOT IN ('QA','INTERNAL') AND session_id<>'' GROUP BY session_id
     ) SELECT
       SUM(CASE WHEN article_view_at IS NOT NULL THEN 1 ELSE 0 END) AS article_sessions,
       SUM(CASE WHEN article_search_click_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_search_click_sessions,
@@ -272,7 +272,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
           OR (event_type='landing_view' AND source='price_watch_notification') THEN occurred_at END) AS notification_return_at,
         MIN(CASE WHEN event_type='marketplace_click' THEN occurred_at END) AS mall_click_at
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
-      AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
+      AND traffic_class NOT IN ('QA','INTERNAL') AND session_id<>'' GROUP BY session_id
     ) SELECT
       SUM(CASE WHEN landed_at IS NOT NULL THEN 1 ELSE 0 END) AS landing_sessions,
       SUM(CASE WHEN searched_at>=landed_at THEN 1 ELSE 0 END) AS search_sessions,
@@ -281,6 +281,28 @@ export async function operationalDiagnostics(db, internalIds = []) {
       SUM(CASE WHEN notification_return_at IS NOT NULL THEN 1 ELSE 0 END) AS notification_return_sessions,
       SUM(CASE WHEN mall_click_at>=notification_return_at THEN 1 ELSE 0 END) AS notification_return_to_mall_click_sessions,
       SUM(CASE WHEN mall_click_at IS NOT NULL THEN 1 ELSE 0 END) AS mall_click_sessions FROM sessions`),
+    read(`SELECT event_type,COUNT(*) AS count,
+      COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+      COUNT(DISTINCT NULLIF(visitor_id,'')) AS observed_visitors,
+      MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
+      AND traffic_class NOT IN ('QA','INTERNAL')
+      AND event_type IN ('target_price_watch_started','target_price_watch_save_clicked',
+        'target_price_notification_registration_started','target_price_auth_completed',
+        'target_price_watch_save_failed_auth','target_price_watch_save_failed_validation',
+        'target_price_watch_save_failed_limit','target_price_watch_save_failed_rate_limited',
+        'target_price_watch_save_failed_server','target_price_watch_save_failed_rejected',
+        'target_price_watch_save_failed_network','target_price_watch_set')
+      GROUP BY event_type ORDER BY event_type`),
+    read(`SELECT event_type,COUNT(*) AS count,
+      COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+      COUNT(DISTINCT NULLIF(visitor_id,'')) AS observed_visitors,
+      MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
+      AND traffic_class NOT IN ('QA','INTERNAL')
+      AND event_type IN ('seller_landing_view','seller_cta_clicked','seller_form_started',
+        'seller_form_submit_attempt','seller_form_failed')
+      GROUP BY event_type ORDER BY event_type`),
     internalIds.length ? read(`SELECT channel,status,COUNT(*) AS count,MAX(delivered_at) AS last_delivered_at
       FROM mywatch_notifications WHERE event_type='PRICE_DROP' AND event_key LIKE 'TARGET:%'
       AND member_id NOT IN (${internalPlaceholders}) GROUP BY channel,status`, internalIds)
@@ -336,12 +358,12 @@ export async function operationalDiagnostics(db, internalIds = []) {
         WHERE t.value=p.tenant AND s.slug NOT IN ('with-care','find-fun','tomorrows-smile')
       )) AS external_registered_products,
       (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_landing_view'
-        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_landing_views_7d,
+        AND traffic_class NOT IN ('QA','INTERNAL') AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_landing_views_7d,
       (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_cta_clicked'
-        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_cta_clicks_7d`),
+        AND traffic_class NOT IN ('QA','INTERNAL') AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_cta_clicks_7d`),
     read(`SELECT event_type,COUNT(*) AS count,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
       MAX(occurred_at) AS last_observed_at FROM growth_events
-      WHERE traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-30 days')
+      WHERE traffic_class NOT IN ('QA','INTERNAL') AND datetime(occurred_at)>=datetime('now','-30 days')
       AND event_type IN ('registration_nudge_shown','registration_nudge_clicked','registration_login_viewed',
         'registration_line_started','registration_email_code_requested','member_registered')
       GROUP BY event_type ORDER BY event_type`),
@@ -389,10 +411,13 @@ export async function operationalDiagnostics(db, internalIds = []) {
   return { inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
-      exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_TRAFFIC',
+      exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC',
       meeting_conversion: { status: 'UNAVAILABLE', reason: 'DEDICATED_MEETING_STAGE_NOT_CONNECTED' }
     } : sellerAcquisition,
-    article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
+    article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney,
+    target_price_funnel_stages_7d: targetPriceStages,
+    seller_form_funnel_stages_7d: sellerFormStages,
+    notifications,
     price_cache: priceCache, search_qa: searchQa,
     target_price_providers_24h: watchProviders, registration_funnel_30d: registrationFunnel,
     shop_view_flood_audit: shopViewFloodAudit,

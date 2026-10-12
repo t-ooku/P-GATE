@@ -60,3 +60,10 @@
 - **実行済み・本番確認済み**: 希望価格の保存0件を切り分けるため、匿名固定段階（保存押下／通知先登録開始／メール認証完了／保存API失敗の固定理由）を追加した。検索文・商品名・金額・連絡先はイベントへ送らず、保存完了は引き続きサーバー正本 `target_price_watch_set` だけで成果判定する。
 - 実装commit `300a946`、アセット版同期fix `ba6f142`。初回CIは版番号固定テスト2件のみ失敗しdeployなし。修正後の [CI / deploy #2374](https://github.com/t-ooku/P-GATE/actions/runs/38185806987) は全回帰2,999件成功 / 0失敗、Worker deploy、production health、KPI接続まで成功。Cloudflare Version ID `0441b1ad-01c7-4134-8328-a7fc7654777d`。
 - **未完了**: 新しい段階イベントの一般利用者実数、一般利用者Watch Set、通知再訪。10月12日Instagramは20:00 JST公開待ちで、post ID / published_at / URL未取得。月曜Seller週次記録は08:06 JST時点でrun・成果物なし。手動再実行やSNS公開は行っていない。
+
+## 2026-10-13 Codex 進捗
+
+- **実行済み**: 10月12日Instagramは20:02 JSTにPUBLISHED、external post IDあり。Seller週次Action run #3は10:14 JSTに成功し、週次記録を生成。遅延前の「未計測」は解消したが、Instagram public URLは未確認。
+- **成果指標**: 7日購入先クリック1 / 検索11、Seller LP 31閲覧 / CTA 3、問い合わせ累積4・10月10日以降新規0、外部Seller登録0、外部商品登録0、有料契約0。正しい受信箱が未接続のため返信は未確認。
+- **Codex実装済み・検証中**: 本番で発火済みの希望価格段階とSellerフォーム段階を、読取専用KPI成果物へaggregate-onlyで追加。QA / INTERNAL除外の対象テスト8件・全回帰2,999件は成功。CI / deployと次回実数取得は未完了。
+- **未完了**: 希望価格の停止段階実数、10月13日X新規行なし、10月17日Instagram公開三要素、Seller問い合わせ・有料契約の新規成果。Claude/Coworkへの直接起動接続はなく、大隆さんへの転送・中継依頼は行わない。
