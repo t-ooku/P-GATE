@@ -97,3 +97,13 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
 - X 停止の確認: scheduled_at 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行）のみ。APPROVED/PUBLISHING/PUBLISHED/FAILED は 0。
 - 成果指標（D1 実測）: Seller 問い合わせ（seller_business_inquiries）累計4件・新規0件（最新 9/28、全件 NEW）。有料契約: 0（seller_billing_accounts 3件とも ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため未集計。
 - 次の巡回でやること: 変更なし（10/12 20:13 に 10-12 Instagram の PUBLISHED、10/13 自動リール後の X 行0件、10/17 20:13 に 10-17 の PUBLISHED。seller_form_* は毎巡回で記録）。
+
+### 2026-10-12 09:14 JST 定期巡回（状態: IN_PROGRESS のまま。新しい実装・キュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（新規指示なし）。正本の「2026-10-12 Codex 進捗」「08:53 JST 追加実行」（希望価格の匿名段階計測 300a946／ba6f142）を読んだ。Codex 担当のため Claude は触らない。
+- 1. Seller LP: D1 growth_events（10/10 10:46 JST 以降、10/12 09:14 JST 読み取り、QA除外）で seller_landing_view 6件（visitor 4）、**seller_form_started 2件（visitor 2、10/11 22:34 JST）＝ #610 の新計測が本番で初めて発火**。seller_form_submit_attempt／seller_form_failed は 0件、問い合わせ新規 0件。→ 現時点の停止点は「入力開始 → 送信押下」の間（失敗ではなく、送信まで行っていない）。ただし母数1〜2人で結論は出さない。
+  - 計測上の注意（未確認）: 10/11 22:33〜22:34 JST の landing_view・form_started はいずれも 0.4〜0.5 秒差で2件ずつ、片方は threads/social・片方は流入元なしで visitor_id が別。アプリ内ブラウザ等で同じ人が二重に数えられている可能性がある（10/10 11:38 JST の landing_view 2件も同型）。断定はしない。人数は「1〜2人」と読む。
+  - 実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS: D1 social_post_queue で hoshilu-carousel-v3-instagram-2026-10-12・-10-14・-10-17・-10-19 とも APPROVED（published_at 空、last_error なし）。10-12 の公開確認は未（予定 20:00 JST、公開時刻前）。
+- X 停止の確認: scheduled_at 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行）のみ。APPROVED/PUBLISHING/PUBLISHED/FAILED は 0。
+- 成果指標（D1 実測）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件）。
+- 次の巡回でやること: 10/12 20:13 に 10-12 Instagram の PUBLISHED、10/13（火）自動リール後の X 行0件、10/17 20:13 に 10-17 の PUBLISHED。そろったら SNS 分を DONE。seller_form_* は毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
