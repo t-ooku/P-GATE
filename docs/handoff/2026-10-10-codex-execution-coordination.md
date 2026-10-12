@@ -68,3 +68,13 @@
 - **Codex実装済み・検証中**: 本番で発火済みの希望価格段階とSellerフォーム段階を、読取専用KPI成果物へaggregate-onlyで追加。QA / INTERNAL除外の対象テスト8件・全回帰2,999件は成功。CI / deployと次回実数取得は未完了。
 - **未完了**: 希望価格の停止段階実数、10月13日X新規行なし、10月17日Instagram公開三要素、Seller問い合わせ・有料契約の新規成果。Claude/Coworkへの直接起動接続はなく、大隆さんへの転送・中継依頼は行わない。
 - **本番確認済み**: commit `eb649b06`、CI / deploy #2379は全工程成功。Cloudflare Version ID `6ecc8cbb-e22e-40a5-83ab-4fd9dbd8097a`。KPI接続と成果物保存まで成功したが、新段階の実数確認は次回成果物まで未完了として保持する。
+
+
+### 2026-10-13 08:53 JST 追加確認
+
+- **希望価格の停止点を実数確認**: [CI / deploy #2379](https://github.com/t-ooku/P-GATE/actions/runs/38320392969) の匿名KPI成果物（生成 2026-10-13 08:08 JST）で、直近7日は `target_price_watch_started` 2件 / 2セッション / 2匿名訪問者。保存押下、通知先登録開始、認証完了、保存API失敗はすべて行なし。一般利用者Watch Setも0人 / 0件。したがって現在の観測上の停止点は「設定画面を開く → 保存を押す」の間であり、保存API障害とは判定しない。
+- **Sellerフォームの停止点を実数確認**: 同成果物でLP 31閲覧、CTA 3件、フォーム開始2件 / 2匿名訪問者、送信試行・失敗は行なし。問い合わせ累積4、2026-10-10以降の新規0、外部Seller登録0、有料契約0。停止点は「フォーム開始 → 送信押下」の間だが、母数2人のため料金・文言・注意書きは変更しない。
+- **成果指標**: 7日購入先クリック1 / 検索11（9.1%）。前回2 / 11との差は7日窓の入替であり、当日1件減少とは解釈しない。
+- **SNS**: 10月12日Instagramは20:02 JSTにPUBLISHED、external post ID `18117372193910682`、last_errorなし。公開URLは未取得のため三要素完了にはしない。04:45 JSTと08:08 JSTの匿名成果物でXキュー集計は完全一致（APPROVED 0 / PUBLISHING 0 / PUBLISHED 126 / FAILED 26 / CANCELLED 72 / REVIEW_REQUIRED 20、最終公開10月2日）し、10月13日朝の新規X行・状態遷移は確認されなかった。
+- **監視**: 08:23 JSTのscheduled [production monitor #1137](https://github.com/t-ooku/P-GATE/actions/runs/38321878337) は、外形・health・SNS SLAはPASS、Yahoo! deep canary 2回連続hop timeoutとscheduled heartbeat staleでFAIL。[Issue #369](https://github.com/t-ooku/P-GATE/issues/369)はopen継続。実ユーザーのhard/backend failure証拠はなく、手動rerun・判定緩和は行わない。
+- **体制**: Claude/Coworkを直接起動する接続はない。GitHub指示書だけを受領・実行とは扱わず、大隆さんへの転送・中継依頼も行わない。
