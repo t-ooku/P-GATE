@@ -78,3 +78,12 @@
 - **SNS**: 10月12日Instagramは20:02 JSTにPUBLISHED、external post ID `18117372193910682`、last_errorなし。公開URLは未取得のため三要素完了にはしない。04:45 JSTと08:08 JSTの匿名成果物でXキュー集計は完全一致（APPROVED 0 / PUBLISHING 0 / PUBLISHED 126 / FAILED 26 / CANCELLED 72 / REVIEW_REQUIRED 20、最終公開10月2日）し、10月13日朝の新規X行・状態遷移は確認されなかった。
 - **監視**: 08:23 JSTのscheduled [production monitor #1137](https://github.com/t-ooku/P-GATE/actions/runs/38321878337) は、外形・health・SNS SLAはPASS、Yahoo! deep canary 2回連続hop timeoutとscheduled heartbeat staleでFAIL。[Issue #369](https://github.com/t-ooku/P-GATE/issues/369)はopen継続。実ユーザーのhard/backend failure証拠はなく、手動rerun・判定緩和は行わない。
 - **体制**: Claude/Coworkを直接起動する接続はない。GitHub指示書だけを受領・実行とは扱わず、大隆さんへの転送・中継依頼も行わない。
+
+
+## 2026-10-14 Codex 進捗
+
+- **本番確認済み**: 希望価格・Sellerの匿名段階集計を最新Actions成果物（2026-10-14 07:35 JST）から取得。検索12、購入先クリック1、一般利用者Watch Set 0人/0件。Seller LP 31イベント/28セッション、CTA3イベント/2セッション、フォーム開始2イベント/2セッション、送信試行0。問い合わせ累積4、10月10日以降新規0、有料契約0（10月13日20:14 JSTの既存SELECT）。
+- **要確認（前日所見の限定）**: 希望価格開始2件の最終発火は10月11日08:12 JSTで、保存押下等の新段階計測の本番反映（10月12日08:53 JST）より前。後段イベント行なしは「新計測開始後の観測0」であり、この2人が保存前に離脱した証明ではない。新しい設定開始と保存押下の対を待ち、母数12/20のため大型UI改修は行わない。
+- **本番確認済み**: #613の実時計依存テスト修正、#614のThreads→LP訴求不一致修正と既存自動キューへの反映。10月13日20:14 JSTの既存SELECTで自動リール実行後のX新規行なしを確認。10月17日Instagram、10月21日seller-pr-slotの公開三要素は未完了。CodexはSNS公開やD1書込を行っていない。
+- **不具合あり**: 最新monitor #1144は検索AI一次provider timeoutの反復7件でSLI FAIL。health/SNS SLAはPASS。Issue #369はopen。自動リール#18は10月2日素材のGENERATED_REVIEW_REQUIREDでPIPELINE_BUSY、Issue #616。料金見直し期限切れは別件で、利用者検索そのものの停止とは混同しない。
+- **次の修正と承認境界**: 検索timeoutの匿名campaign別24hと回復時刻を既存監視証跡で追跡する。Geminiの公式単価は再確認済みだが、有料カナリア再開は費用と自動予算記録を伴うため承認依頼に分離し、安全停止を解除していない。未承認リールは再生成・承認しない。Claudeへの直接起動接続はなく、GitHub保存だけを受領扱いにしない。
