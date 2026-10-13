@@ -146,6 +146,11 @@ test('deep canary frequency is 15m marketplaces/1h Gemini/6h backup without a pu
     ['rakuten', 'yahoo']);
 });
 
+// 2026-10-13: 実時計に依存すると料金見直し期限（PRICING_REVIEW_DEADLINE_MS）を過ぎた日に
+// 全テストが落ち、無関係なデプロイまで止まった。課金時刻は予定時刻の1分後に固定する。
+// 期限そのものは本番で CANARY_PRICING_REVIEW_REQUIRED として止まり、下のテストで日付を固定している。
+const FIXED_CLOCK = () => new Date('2026-08-13T01:07:01Z');
+
 test('paid canary pricing is reviewed monthly', () => {
   assert.equal(deepCanaryTest.PRICING_REVISION, '2026-09-13');
   assert.equal(deepCanaryTest.PRICING_REVIEW_DEADLINE_MS,
@@ -518,7 +523,9 @@ test('paid probes atomically reserve, settle from provider usage, and persist no
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
   const { fetcher } = providerHarness();
-  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:07:00Z'), fetcher);
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:07:00Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:07:01Z')
+  });
   assert.equal(result.results.every((row) => row.status === 'PASS'), true);
   assert.equal(result.monthly_micro_usd, 607);
 
@@ -539,7 +546,7 @@ test('primary AI contracts run before marketplace probes so termination cannot s
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
   const { fetcher, calls } = providerHarness();
-  await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher);
+  await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher, { clock: FIXED_CLOCK });
 
   assert.match(calls[0].target, /generativelanguage\.googleapis\.com/u);
   assert.equal(calls[0].body?.generationConfig?.maxOutputTokens, 256);
@@ -558,8 +565,8 @@ test('same paid slot cannot call AI twice even when two cron invocations overlap
   const { fetcher, calls } = providerHarness();
   const slot = new Date('2026-08-13T01:07:00Z');
   await Promise.all([
-    runDeepCanaryCycle(env, slot, fetcher),
-    runDeepCanaryCycle(env, slot, fetcher)
+    runDeepCanaryCycle(env, slot, fetcher, { clock: FIXED_CLOCK }),
+    runDeepCanaryCycle(env, slot, fetcher, { clock: FIXED_CLOCK })
   ]);
   assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 1);
   assert.equal(sqlite.prepare(`SELECT COUNT(*) AS count FROM growth_events
@@ -587,7 +594,7 @@ test('provider failure releases its reservation instead of poisoning the monthly
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
   const { fetcher } = providerHarness({ usage: false });
-  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher);
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher, { clock: FIXED_CLOCK });
   assert.equal(result.results.find((row) => row.component === 'query_structurer')?.code,
     'CANARY_USAGE_MISSING');
   const held = sqlite.prepare(`SELECT campaign,content,marketplace FROM growth_events
@@ -639,7 +646,7 @@ test('AI chat primary canary exercises IDENTIFY rather than the cheaper REFINE c
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
   const { fetcher, calls } = providerHarness();
-  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher);
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher, { clock: FIXED_CLOCK });
   assert.equal(result.results.find((row) => row.component === 'ai_chat_primary')?.status, 'PASS');
   const geminiBodies = callsTo(calls, 'generativelanguage.googleapis.com').map((call) => call.body);
   assert.equal(geminiBodies.length, 2);
