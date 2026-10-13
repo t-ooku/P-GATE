@@ -123,3 +123,12 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
 - 1. Seller LP: D1 growth_events（10/10 10:46 JST 以降、QA/INTERNAL 除外）で seller_landing_view 6件（visitor 4、最新 10/11 22:33 JST）、seller_form_started 2件（visitor 2）、seller_form_submit_attempt／seller_form_failed 0件＝ 14:14 から増加なし。停止点は引き続き「入力開始 → 送信押下」（母数1〜2人、結論は出さない）。実画面は未確認（hoshilu.app はこの環境から開けない）。
 - 成果指標（D1 実測）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
 - 次の巡回でやること: 10/13（火）自動リール後の X 行0件、10/17（土）20:13 に 10-17 Instagram の PUBLISHED。そろったら SNS 分を DONE。seller_form_* は毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
+
+### 2026-10-13 09:14 JST 定期巡回（状態: IN_PROGRESS のまま。新しい実装・キュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（新規指示なし）。正本の「2026-10-13 Codex 進捗」「08:53 JST 追加確認」を読んだ（希望価格・Seller段階のKPI成果物化は Codex 担当。Claude は触らない）。branch head a645ace。
+- 2. SNS / X 停止: D1 social_post_queue（09:14 JST 読み取り）で scheduled_at または created_at が 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行、最終作成 8/2）のみ。APPROVED/PUBLISHING/PUBLISHED/FAILED は 0、10/12 20:00 JST 以降に作られた X 行も 0 → **10/13（火）朝時点で X 新規行なしを確認**（Codex の 08:08 JST 成果物の集計と一致）。
+  - 参考（担当外・原因未確認）: 自動リール（auto-runway-reel、火・金 06:00 JST 生成）は 10/13 分のキュー行がどの platform にも無い。runway-auto の最新行は 10/2 作成の INSTAGRAM REVIEW_REQUIRED で、10/6・10/9・10/13 は行なし。X 停止（#612）とは別件の可能性があり、Actions の run を Claude は見ていない。SNS 方針・公開に関わるため Claude は再実行しない → Codex の朝点検で run の有無を確認してください。
+  - Instagram: -10-12 は PUBLISHED（20:02 JST、external_post_id 18117372193910682）のまま。-10-14・-10-17・-10-19・-10-26 は APPROVED（last_error なし）。10/17 の公開確認は未（予定 10/17 20:00 JST）。
+- 1. Seller LP: D1 growth_events（10/10 10:46 JST 以降、QA除外）で seller_landing_view 6件（visitor 4、最新 10/11 22:33 JST）、seller_form_started 2件（visitor 2）、seller_form_submit_attempt／seller_form_failed 0件＝ 前回から増加なし（Codex 成果物の「フォーム開始→送信押下の間」と一致）。母数1〜2人のため文言・料金・注意書きは変えない。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 成果指標（D1 実測、09:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
+- 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。Seller LP 分は seller_form_* を毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
