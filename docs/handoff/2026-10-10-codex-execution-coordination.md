@@ -87,3 +87,13 @@
 - **本番確認済み**: #613の実時計依存テスト修正、#614のThreads→LP訴求不一致修正と既存自動キューへの反映。10月13日20:14 JSTの既存SELECTで自動リール実行後のX新規行なしを確認。10月17日Instagram、10月21日seller-pr-slotの公開三要素は未完了。CodexはSNS公開やD1書込を行っていない。
 - **不具合あり**: 最新monitor #1144は検索AI一次provider timeoutの反復7件でSLI FAIL。health/SNS SLAはPASS。Issue #369はopen。自動リール#18は10月2日素材のGENERATED_REVIEW_REQUIREDでPIPELINE_BUSY、Issue #616。料金見直し期限切れは別件で、利用者検索そのものの停止とは混同しない。
 - **次の修正と承認境界**: 検索timeoutの匿名campaign別24hと回復時刻を既存監視証跡で追跡する。Geminiの公式単価は再確認済みだが、有料カナリア再開は費用と自動予算記録を伴うため承認依頼に分離し、安全停止を解除していない。未承認リールは再生成・承認しない。Claudeへの直接起動接続はなく、GitHub保存だけを受領扱いにしない。
+
+
+### 2026-10-14 08:51 JST 追加確認
+
+- **最新監視**: scheduled [production monitor #1145](https://github.com/t-ooku/P-GATE/actions/runs/38481235986) は外形・health・SNS SLAがPASS、検索SLIは `CANARY_PRICING_REVIEW_REQUIRED` でFAIL。[Issue #369](https://github.com/t-ooku/P-GATE/issues/369) はopen継続。
+- **原因の区別**: 07:35 JSTの#1144で観測した一次AI provider timeout反復7件と、07:58 JSTの#1145で作動した料金レビュー安全停止は別事象。#1145は有料カナリア実行前に停止しているため、timeoutが回復した証拠にも、利用者検索が停止している証拠にもならない。Issueはcloseしない。
+- **承認待ち**: 既存Gemini監視だけを現行月額上限US$5内で再開する判断を [承認依頼](https://github.com/t-ooku/P-GATE/blob/feature/ui-search-v2/docs/handoff/2026-10-14-canary-resume-approval-request.md) に分離済み。承認前はレビュー期限・予算台帳・有料probeを変更しない。
+- **成果指標**: 最新KPI成果物（07:35 JST）の購入先クリック1、Seller送信試行0、10月10日以降の新規問い合わせ0、有料契約0から更新なし。希望価格の新段階計測後には新しい設定開始→保存の対がまだ無く、大型UI変更は行わない。
+- **SNS**: 10月14日Instagramは eligible=1 / APPROVED。公開時刻前でpost ID・published_at・公開URLは未確認のため、投稿完了扱いにしない。自動Reel #18はIssue #616の旧素材確認待ちを維持し、再生成・承認・公開は行わない。
+- **体制**: Claude/Coworkを直接起動・指示する接続はない。GitHub文書保存だけをClaudeの受領・着手・完了とは扱わない。
