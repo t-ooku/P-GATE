@@ -282,3 +282,31 @@ test('カルーセルに書くモール名は、実際に横断している4つ�
   assert.match(builder, /def search_bar/u);
   assert.match(builder, /def chips/u);
 });
+
+// 2026-10-14: 代替カルーセルが曜日ごとに毎週同じセット（金=ショップ入口・火=大型セール通知）に固定され、
+// 10/13 火（代替）と 10/14 水（通常）で同じセットが連日出た。週ごとに順送りし、前後6日の通常枠と重ねない。
+// ショップページを案内するセットは 10/14 以降使わない（大隆さん決定 10/9「shop専用ページはまだ先」）。
+test('代替カルーセルは週ごとに変わり、前後6日の通常カルーセルと重ならず、ショップ入口セットを使わない', () => {
+  const fallbackDays = ['2026-10-16', '2026-10-20', '2026-10-23', '2026-10-27', '2026-10-30', '2026-11-03', '2026-11-06', '2026-11-10'];
+  const picks = fallbackDays.map((day) => buildReelFallbackPosts(new Date(`${day}T10:40:00.000Z`))[0].content_id);
+  const fridays = picks.filter((_, index) => fallbackDays[index] && new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 5);
+  const tuesdays = picks.filter((_, index) => new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 2);
+  assert.equal(new Set(fridays).size, fridays.length, `金曜が毎週同じ: ${fridays}`);
+  assert.equal(new Set(tuesdays).size, tuesdays.length, `火曜が毎週同じ: ${tuesdays}`);
+  assert.ok(picks.every((id) => id !== 'carousel-seller-shop-entrance'));
+  const regular = new Map(buildCarouselPosts(new Date('2026-10-08T00:00:00.000Z'), 45)
+    .filter((post) => post.platform === 'INSTAGRAM').map((post) => [post.jst_publish_date, post.content_id]));
+  for (const [index, day] of fallbackDays.entries()) {
+    const base = Date.parse(`${day}T00:00:00Z`);
+    for (let offset = -6; offset <= 6; offset += 1) {
+      const near = new Date(base + offset * 86400000).toISOString().slice(0, 10);
+      if (regular.has(near)) assert.notEqual(regular.get(near), picks[index], `${day} と ${near}`);
+    }
+  }
+  // 通常枠: 10/31 はショップ入口の番だが、同じセラー向けの別セットに置き換わる。過去（9/28）の順送りは変えない
+  const after = buildCarouselPosts(new Date('2026-10-20T00:00:00.000Z'), 14).filter((post) => post.jst_publish_date === '2026-10-31');
+  assert.deepEqual([...new Set(after.map((post) => post.content_id))], ['carousel-seller-keep-mall-see-demand']);
+  assert.ok(after.every((post) => !post.media_urls.includes('seller-shop-entrance')));
+  const before = buildCarouselPosts(new Date('2026-09-20T00:00:00.000Z'), 10).filter((post) => post.jst_publish_date === '2026-09-28');
+  assert.equal(before[0].content_id, 'carousel-seller-shop-entrance');
+});

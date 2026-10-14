@@ -35,6 +35,17 @@ export const SOCIAL_PLAN_V3 = Object.freeze({
   fallback_crosspost_prefix: 'hoshilu-carousel-fallback-'
 });
 
+// 2026-10-14: ショップページ（ロゴ・商品一覧・ショップ内検索・クーポン）を案内するセットは使わない。
+// 大隆さん決定（10/9）「shop専用ページはまだ先。それまでは優先出品を謳えばよい」。過去の順送り（テスト・履歴）は
+// 変えず、この日以降の枠だけ同じ対象（セラー向け）の別セットに置き換える。
+export const PAUSED_CAROUSEL_SETS = Object.freeze({
+  'seller-shop-entrance': Object.freeze({ from_jst: '2026-10-14', replacement: 'seller-keep-mall-see-demand' })
+});
+function isPausedSet(id, key) {
+  const paused = PAUSED_CAROUSEL_SETS[id];
+  return Boolean(paused && key >= paused.from_jst);
+}
+
 let cachedSets = null;
 export function loadCarouselSets() {
   if (cachedSets) return cachedSets;
@@ -97,8 +108,8 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
     const parts = jstParts(new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS));
     const slot = carouselSlotIndex(parts, plan);
     if (slot < 0 || !sets.order.length) continue;
-    const set = sets.order[slot % sets.order.length];
     const key = dateKey(parts);
+    const set = regularSetFor(parts, key, plan, sets);
     const when = scheduledAt(parts, plan.carousel_publish_jst);
     if (Date.parse(when) <= now.getTime()) continue;
     for (const platform of plan.platforms) {
@@ -123,6 +134,18 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
 }
 
 // リール日の代替カルーセル。火=ユーザー向けセット、金=セラー向けセットを、日付順で順送りにする。
+function regularSetFor(parts, key, plan, sets) {
+  const slot = carouselSlotIndex(parts, plan);
+  if (slot < 0 || !sets.order.length) return null;
+  const set = sets.order[slot % sets.order.length];
+  if (!isPausedSet(set.id, key)) return set;
+  return sets.order.find((candidate) => candidate.id === PAUSED_CAROUSEL_SETS[set.id].replacement) || set;
+}
+function partsFromDayNumber(dayNumber) {
+  const date = new Date(dayNumber * DAY_MS);
+  return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate(), weekday: date.getUTCDay() };
+}
+
 export function reelFallbackAudience(weekday, plan = SOCIAL_PLAN_V3) {
   return weekday === plan.reel_weekdays[0] ? 'user' : 'seller';
 }
@@ -135,10 +158,22 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
   const when = scheduledAt(parts, plan.reel_publish_jst);
   if (now.getTime() < gate || Date.parse(when) <= now.getTime()) return [];
   const audience = reelFallbackAudience(parts.weekday, plan);
-  const pool = sets.order.filter((set) => set.audience === audience);
+  const pool = sets.order.filter((set, index, all) => set.audience === audience
+    && !isPausedSet(set.id, key) && all.findIndex((other) => other.id === set.id) === index);
   if (!pool.length) return [];
   const dayNumber = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
-  const set = pool[dayNumber % pool.length];
+  // 2026-10-14: 旧式は dayNumber % 7（各対象 7 セット）で、同じ曜日は毎週同じセットになっていた
+  // （金=ショップ入口・火=大型セール通知が固定、10/13 火と 10/14 水で同じセットが連日）。
+  // 週ごとに順送りし、前後 6 日の通常カルーセルと同じセットは避ける。
+  const nearby = new Set();
+  for (let offset = -6; offset <= 6; offset += 1) {
+    const near = partsFromDayNumber(dayNumber + offset);
+    const regular = regularSetFor(near, dateKey(near), plan, sets);
+    if (regular) nearby.add(regular.id);
+  }
+  const week = Math.floor(dayNumber / 7);
+  const rotated = pool.map((_, index) => pool[(week + index) % pool.length]);
+  const set = rotated.find((candidate) => !nearby.has(candidate.id)) || rotated[0];
   return plan.platforms.map((platform) => normalizeSocialPost({
     post_id: `${plan.fallback_post_prefix}-${platform.toLowerCase()}-${key}`,
     content_id: `carousel-${set.id}`,

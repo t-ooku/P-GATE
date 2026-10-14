@@ -98,9 +98,14 @@ test('募集ページと規約ページは報酬・締め支払い・投稿ル�
 test('クリエイター募集: 最新素材（カルーセル 6 セット）・セラー募集・ハッシュタグ 8 個・二次利用の注意書きと規約', () => {
   const html = readFileSync(new URL('../public/for-creators.html', import.meta.url), 'utf8');
   const terms = readFileSync(new URL('../public/creator-terms.html', import.meta.url), 'utf8');
-  for (const set of ['user-hoshittoku-basics', 'user-price-watch', 'user-shop-search', 'seller-demand-visible', 'seller-shop-entrance', 'seller-real-numbers']) {
-    for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set.startsWith('seller-')?'seller30-20260927-r2/':''}${set}/${n}.jpg`), `${set}/${n}`);
+  // 2026-10-14: セラー向け画像は現行料金（1,980円）の版フォルダ。旧フォルダ seller30-20260927-r2 は 4,980円表記。
+  // ショップページ（お店の入口）のセットは掲載しない（大隆さん決定 10/9「shop専用ページはまだ先」）。
+  for (const set of ['user-hoshittoku-basics', 'user-price-watch', 'user-shop-search', 'seller-demand-visible', 'seller-keep-mall-see-demand', 'seller-real-numbers']) {
+    for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set.startsWith('seller-')?'seller1980-30d-autorenew-20260927/':''}${set}/${n}.jpg`), `${set}/${n}`);
   }
+  assert.doesNotMatch(html, /seller30-20260927|seller-shop-entrance|お店の入口/u);
+  assert.doesNotMatch(html + terms, /13モールまとめて/u, '「まとめて検索」は2モール。13モールは個別検索を含む最大数');
+  assert.match(html, /「PR」枠に商品を表示（最大2件）/u);
   assert.match(html, /#hoshilu #Qoo10 #SHEIN #値下がり待ち #ホシっとく #韓国コスメ #amazon #楽天/u);
   assert.match(html, /HOSHILU Seller 月額1,980円（税込）/u);
   assert.match(html, /掲載見本の相談を受け付けています/u);
