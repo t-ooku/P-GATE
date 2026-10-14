@@ -1,6 +1,6 @@
 # 有料AIカナリア再開の承認依頼 — 2026-10-14
 
-状態: 本番確認済み（承認受領・再開設定反映済み、次回定期probe結果は未確認）
+状態: 本番確認済み（承認受領・再開設定反映・既存定期probeのGemini PASSを確認）
 
 ## 求める承認
 
@@ -41,3 +41,5 @@
 - 本番反映済み: commit `073d3b1f`、[CI / deploy](https://github.com/t-ooku/P-GATE/actions/runs/38587496351)成功。対象54件・全回帰3,015件成功。Version ID `2e4edecd-87f3-44cd-97fc-a30f047910c5`、本番health/KPI接続成功。D1 migrationはskipped。
 - 2026-10-15 00:15:47 JSTの既存CI SELECT成果物（UTC当月）: Gemini監視台帳の精算済み合計US$0.288412、予約中0、上限US$5に対する残枠US$4.711588（約94.2%）。無効な金額行0。これは監視専用予算で、通常検索・画像処理・他プロジェクト等を含むGoogle全体の請求額やプリペイド残高ではない。
 - 次の既存定期probeでGemini復帰を確認する。手動有料probeやworkflow再実行は追加していない。OpenAI停止依頼の3経路整合は別の未完了作業として保持し、この再開でOpenAIフラグを有効化していない。
+- **本番確認済み（定期実行）**: [monitor #1155](https://github.com/t-ooku/P-GATE/actions/runs/38645842837)に記録された2026-10-15 07:07:25 JSTのquery_structurer/ai_chat_primaryはPASS/CANARY_OK。手動probeなし。再開設定だけの確認から、実cron成功の確認へ進んだ。
+- 07:11 JST既存KPIの監視台帳は当月精算US$0.295395/予約0、残枠US$4.704605。Google全体の残高ではない。直前Yahoo timeoutとheartbeat遅延でIssue #369はopen継続し、Gemini成功だけで全体の安定復旧とは扱わない。

@@ -57,7 +57,7 @@ test('固定ルールにない検索はAIが理解した別カテゴリへ横展
 test('OpenAI関連カテゴリ通信も認証情報付きリダイレクトを追従しない',async()=>{
   let requestOptions;
   const result=await resolveRelatedProductRecommendationQueries(
-    'アクセサリー収納棚','JA',{OPENAI_API_KEY:'o'.repeat(20)},
+    'アクセサリー収納棚','JA',{OPENAI_API_KEY:'o'.repeat(20),OPENAI_BACKUP_ENABLED:'true'},
     async(url,options)=>{
       assert.equal(String(url),'https://api.openai.com/v1/responses');
       requestOptions=options;

@@ -13,6 +13,7 @@
 
 import { isIntegratedMarketplace } from './marketplace-search-mode.mjs';
 import { matchProductIdentity } from './product-identity-matching.mjs';
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 
 // 2026-08-08 追記: 「AI推定価格です。実際の販売価格・在庫はショップで確認
 // してください。」だけだと、この数字が何をもとにした推定なのかが伝わらない
@@ -226,7 +227,7 @@ async function callOpenAi(context, marketplaces, language, env, fetchImpl) {
 }
 
 export function priceComparisonConfigured(env = {}) {
-  return String(env.GEMINI_API_KEY || '').length >= 20 || String(env.OPENAI_API_KEY || '').length >= 20;
+  return String(env.GEMINI_API_KEY || '').length >= 20 || openAiBackupEnabled(env);
 }
 
 // v4.3 section 9: GeminiとOpenAIを同時実行しない。既存のai-chat-intent.mjs /
@@ -236,7 +237,7 @@ export function priceComparisonConfigured(env = {}) {
 export async function requestAiPriceEstimates(context, marketplaces, env = {}, fetchImpl = fetch) {
   if (!marketplaces.length || !priceComparisonConfigured(env)) return { estimates: [], provider: null };
   const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
-  const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
+  const openAiConfigured = openAiBackupEnabled(env);
   const providers = [geminiConfigured && 'gemini', openAiConfigured && 'openai'].filter(Boolean);
   const language = context.language || 'JA';
 
@@ -278,7 +279,7 @@ export async function requestAiCandidatePriceEstimates(candidates = [], env = {}
     .filter(({ candidate }) => !observedCandidatePrice(candidate)).slice(0, 8);
   if (!targets.length || !priceComparisonConfigured(env)) return { estimates: [], provider: null };
   const prompt = candidatePricePrompt(targets, language);
-  const providers = [String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini', String(env.OPENAI_API_KEY || '').length >= 20 && 'openai'].filter(Boolean);
+  const providers = [String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini', openAiBackupEnabled(env) && 'openai'].filter(Boolean);
   for (const provider of providers) {
     try {
       const response = provider === 'gemini'

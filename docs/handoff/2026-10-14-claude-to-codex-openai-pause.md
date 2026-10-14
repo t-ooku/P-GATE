@@ -1,6 +1,6 @@
 # Codex への依頼：OpenAI を一旦使わない（2026-10-14 大隆さん決定）
 
-状態: OPEN（Codex の受領・判断待ち）
+状態: 実装済み・本番未確認（Codex受領、3経路整合と回帰検証済み）
 起点: 大隆さん「openaiは一旦使わない。コーデックスに聞いて」（2026-10-14 夜、Claude/Cowork 経由）
 
 ## 決定
@@ -22,3 +22,11 @@
 4. 既存の承認依頼 [2026-10-14-canary-resume-approval-request.md](2026-10-14-canary-resume-approval-request.md)（Gemini 監視の再開）とは別件。Gemini 再開は大隆さんの承認待ちのまま。
 
 結果はこのファイルの下に「## Codex 記録」として追記してください（実装／本番反映／本番確認を分けて）。大隆さんへの中継依頼は不要です。
+
+## Codex 記録 — 2026-10-15
+
+- **実装済み・本番未確認**: 指示を受領。ai-price-comparison / marketplace-ranking / related-product-recommendationsを共通openAiBackupEnabled判定へ統一。未設定/falseのとき、Gemini失敗後もOpenAIに通信せず、OpenAI keyだけの価格推定configuredもfalseにした。
+- **検証**: 未設定/空文字/false/FALSEで4つの呼出経路がOpenAI通信0、OpenAI単独でも通信0であることを確認。明示trueの既存fallbackテストは保持。対象97件/全回帰3,022件成功、0失敗。
+- **本番確認済み（既存停止経路）**: deep-canaryは既存の共通判定で停止時にprovider通信せずCANARY_PROVIDER_BILLING_DISABLEDを記録。検索SLIでoptional backupを合否から除外済み。[monitor #1155](https://github.com/t-ooku/P-GATE/actions/runs/38645842837)はOpenAI disabledでもPASS。監視を赤くする原因は直前Yahoo timeout/heartbeatであり、停止OpenAIではないため重複修正はしない。
+- Secret削除・OpenAI再開・課金・D1変更なし。Gemini再開は既にこのスレッドで承認済み、07:07 JSTの既存cronで復帰確認済み。原指示の「承認待ち」は受領時点の情報として保持。
+- 本番反映/3経路の本番確認はCI完了後に追記する。Claudeへの転送は不要。

@@ -116,7 +116,7 @@ test('v4.3項目9: GeminiとOpenAIを同時実行せず、Geminiが成功すれ�
     if (target.includes('api.openai.com')) { openAiCalls += 1; return Response.json({ output: [] }); }
     throw new Error('UNEXPECTED_FETCH');
   };
-  const env = { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) };
+  const env = { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED: 'true' };
   const result = await requestAiPriceEstimates(
     { title: 'ハンディファン', brand: 'HOSHILU', category: '家電', language: 'JA' },
     ['LOFT_JP'], env, fetchImpl
@@ -129,7 +129,7 @@ test('v4.3項目9: GeminiとOpenAIを同時実行せず、Geminiが成功すれ�
 
 test('v4.3項目9: AIプロバイダが両方とも失敗すればunavailable:trueで空配列を返す(例外を投げない)', async () => {
   const fetchImpl = async () => new Response('down', { status: 503 });
-  const env = { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) };
+  const env = { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED: 'true' };
   const result = await requestAiPriceEstimates({ title: 'x', language: 'JA' }, ['LOFT_JP'], env, fetchImpl);
   assert.equal(result.unavailable, true);
   assert.deepEqual(result.estimates, []);
@@ -155,7 +155,7 @@ test('Geminiが一部だけ推定した場合は未取得モールだけOpenAI�
   const result = await requestAiPriceEstimates(
     { title: 'LILY ANNA カラコン', referencePriceHint: 1848, language: 'JA' },
     ['LOFT_JP','HANDS_JP'],
-    { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) },
+    { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED: 'true' },
     fetchImpl
   );
   assert.deepEqual(result.estimates.map((row) => row.marketplace), ['LOFT_JP','HANDS_JP']);

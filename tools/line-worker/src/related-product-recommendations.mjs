@@ -1,4 +1,5 @@
 import { expandSearchQuery } from './query-expansion.mjs';
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 import { relatedProductExpansionQueries } from './related-product-expansion.mjs';
 import {
   containsUnsafeAiOutputContent, sanitizeAiOutputText
@@ -111,7 +112,7 @@ async function providerFetch(fetchImpl, url, requestOptions, control = {}) {
 async function requestAiRelatedQueries(query, language, env, fetchImpl, options = {}) {
   const providers = [
     String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini',
-    String(env.OPENAI_API_KEY || '').length >= 20 && 'openai'
+    openAiBackupEnabled(env) && 'openai'
   ].filter(Boolean);
   const prompt = aiPrompt(query, language);
   for (const provider of providers) {

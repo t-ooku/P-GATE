@@ -1,4 +1,5 @@
 import { expandSearchQuery } from './query-expansion.mjs';
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 import { isRakutenAffiliateProductUrl, isRakutenDirectProductUrl } from './rakuten-url-policy.mjs';
 import { fetchYahooHighRatingRanking, searchYahooShopping } from './yahoo-shopping-api.mjs';
 
@@ -240,7 +241,7 @@ export async function suggestRankingCategoriesWithAi(env, rawQuery, options, fet
   const prompt = `HOSHILUのランキング検索で、広い検索語から近い小分類候補を並べます。\n検索語: ${String(rawQuery || '').slice(0, 200)}\n選択可能: ${options.map((option) => `${option.value}=${option.label}`).join(', ')}\n適切な候補だけを最大3件、JSON {"category_ids":[""]} で返してください。選択肢にない分類は作らず、該当なしなら空配列にしてください。`;
   const providers = [
     String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini',
-    String(env.OPENAI_API_KEY || '').length >= 20 && 'openai'
+    openAiBackupEnabled(env) && 'openai'
   ].filter(Boolean);
   for (const provider of providers) {
     try {

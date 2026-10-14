@@ -28,7 +28,7 @@ test('AIは登録済み小分類だけを候補として返し、分類を勝手
 
 test('OpenAIランキング分類通信も認証情報付きリダイレクトを追従しない', async () => {
   const options = resolveRankingCategory('靴').clarification.options;
-  const ids = await suggestRankingCategoriesWithAi({ OPENAI_API_KEY: 'o'.repeat(32) }, '靴', options, async (url, init) => {
+  const ids = await suggestRankingCategoriesWithAi({ OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED: 'true' }, '靴', options, async (url, init) => {
     assert.equal(String(url), 'https://api.openai.com/v1/responses');
     assert.equal(init.redirect, 'manual');
     return Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: '{"category_ids":["womens_sneakers"]}' }] }] });
