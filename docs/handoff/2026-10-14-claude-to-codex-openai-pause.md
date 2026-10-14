@@ -1,6 +1,6 @@
 # Codex への依頼：OpenAI を一旦使わない（2026-10-14 大隆さん決定）
 
-状態: 実装済み・本番未確認（Codex受領、3経路整合と回帰検証済み）
+状態: 本番確認済み（Codex受領、3経路整合、CI・本番配備・health確認成功）
 起点: 大隆さん「openaiは一旦使わない。コーデックスに聞いて」（2026-10-14 夜、Claude/Cowork 経由）
 
 ## 決定
@@ -30,3 +30,4 @@
 - **本番確認済み（既存停止経路）**: deep-canaryは既存の共通判定で停止時にprovider通信せずCANARY_PROVIDER_BILLING_DISABLEDを記録。検索SLIでoptional backupを合否から除外済み。[monitor #1155](https://github.com/t-ooku/P-GATE/actions/runs/38645842837)はOpenAI disabledでもPASS。監視を赤くする原因は直前Yahoo timeout/heartbeatであり、停止OpenAIではないため重複修正はしない。
 - Secret削除・OpenAI再開・課金・D1変更なし。Gemini再開は既にこのスレッドで承認済み、07:07 JSTの既存cronで復帰確認済み。原指示の「承認待ち」は受領時点の情報として保持。
 - 本番反映/3経路の本番確認はCI完了後に追記する。Claudeへの転送は不要。
+- **本番確認済み**: commit `1b3bcb9b61ed0c0c29963254ef000417e5eb29f7`、[CI / deploy #2409](https://github.com/t-ooku/P-GATE/actions/runs/38651618006)で全回帰・検索品質・本番bundle検証成功。3モジュールを含むcommitを配備、Version ID `2207551c-bfe6-4771-93e8-90f584c84ee9`。08:04 JST health（7 critical integrations）と匿名KPI接続成功。D1 migration/Secret操作/SNS/営業ジョブはskipped。実利用者を使った強制fallback・追加有料probeは実行せず、無効時通信0は回帰試験の証拠と区別する。

@@ -106,3 +106,4 @@
 - **要確認**: 希望価格開始2件は後段計測導入前。後段0だけで保存前離脱を確定せず、新しい開始→保存の対を待つ。フォームの母数4も小さく、料金・注意書き変更なし。
 - **SNS**: 10月14日Instagramは20:02 JST PUBLISHED、external IDあり、URL未取得。X新規行なし。10月17日Instagram/10月21日seller-pr-slotは承認キュー確認済みで公開三要素未完了。未承認リール#616は旧素材レビュー待ちを保持。
 - **体制**: Claude直接起動接続なし。指示書保存を受領扱いにせず、大隆さんへの中継依頼なし。日次9項目は[本日selfcheck](2026-10-15-codex-selfcheck.md)に保存。
+- **本番確認済み（08:05 JST追記）**: OpenAI停止3経路をcommit `1b3bcb9b`で配備。[CI / deploy #2409](https://github.com/t-ooku/P-GATE/actions/runs/38651618006)成功、Version ID `2207551c-bfe6-4771-93e8-90f584c84ee9`、本番health・KPI接続成功。追加有料probeなし。最新08:04 SELECT成果物も検索19/購入先1/一般保存0、Seller開始4/送信試行0のまま。固定QA24hはPASS24/FAIL1（最終07:24 JST）へ更新したが、商品名が無いため意味判定未計測を保持。
