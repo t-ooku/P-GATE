@@ -6,8 +6,11 @@ import { searchYahooShopping } from './yahoo-shopping-api.mjs';
 const EVENT_TYPE = 'deep_canary_result';
 const BUDGET_EVENT_TYPE = 'deep_canary_budget';
 const MONTHLY_LIMIT_MICRO_USD = 5_000_000;
-const PRICING_REVISION = '2026-09-13';
-const PRICING_REVIEW_DEADLINE_MS = Date.parse('2026-10-13T00:00:00.000Z');
+// Owner approved resuming the existing $5/month Gemini probes on 2026-10-15.
+// Google pricing reviewed: https://ai.google.dev/gemini-api/docs/pricing
+// Gemini 3.6's current promotional rates apply through 2026-12-31.
+const PRICING_REVISION = '2026-10-15';
+const PRICING_REVIEW_DEADLINE_MS = Date.parse('2026-11-15T00:00:00.000Z');
 const PRICING = Object.freeze({
   query_structurer: Object.freeze({ model: 'gemini-3.1-flash-lite', reservation: 100_000, input: 0.25, output: 1.5 }),
   ai_chat_primary: Object.freeze({ model: 'gemini-3.6-flash', reservation: 500_000, input: 0.75, output: 3.75 }),

@@ -206,7 +206,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
     targetPriceStages, sellerFormStages, notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
-    sellerAcquisition, registrationFunnel, shopViewFloodAudit] = await Promise.all([
+    sellerAcquisition, registrationFunnel, shopViewFloodAudit, canaryBudget] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
@@ -379,7 +379,17 @@ export async function operationalDiagnostics(db, internalIds = []) {
       COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
       FROM growth_events WHERE event_type='shop_viewed' AND source='worker' AND medium='shop'
       AND datetime(occurred_at)>=datetime('2026-09-08T00:00:00Z')
-      GROUP BY shop,view_kind,period ORDER BY period,shop,view_kind`)
+      GROUP BY shop,view_kind,period ORDER BY period,shop,view_kind`),
+    read(`SELECT medium AS component,campaign AS state,COUNT(*) AS count,
+      SUM(CASE WHEN length(content)=7 AND content NOT GLOB '*[^0-9]*'
+        THEN CAST(content AS INTEGER) ELSE NULL END) AS micro_usd,
+      SUM(CASE WHEN length(content)=7 AND content NOT GLOB '*[^0-9]*'
+        AND campaign IN ('RESERVED','SETTLED','RELEASED') THEN 0 ELSE 1 END) AS invalid_rows
+      FROM growth_events WHERE event_type='deep_canary_budget'
+      AND source='worker' AND traffic_class='QA'
+      AND datetime(occurred_at)>=datetime('now','start of month')
+      AND datetime(occurred_at)<datetime('now','start of month','+1 month')
+      GROUP BY medium,campaign ORDER BY medium,campaign`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
@@ -421,6 +431,8 @@ export async function operationalDiagnostics(db, internalIds = []) {
     price_cache: priceCache, search_qa: searchQa,
     target_price_providers_24h: watchProviders, registration_funnel_30d: registrationFunnel,
     shop_view_flood_audit: shopViewFloodAudit,
+    canary_budget_month_utc: { ...canaryBudget, scope: 'MONITORING_LEDGER_ONLY_NOT_GOOGLE_BILLING',
+      period: 'CURRENT_UTC_MONTH', states_consuming_budget: ['RESERVED','SETTLED'] },
     threads_retry_audit: socialRetries,
     instagram_formats_today: socialFormats,
     general_user_watch_set: { ...generalWatches, classification: 'EXCLUDES_CONFIGURED_INTERNAL_MEMBERS', internal_member_count: internalIds.length },

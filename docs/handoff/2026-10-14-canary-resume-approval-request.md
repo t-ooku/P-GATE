@@ -31,3 +31,10 @@
 - 大隆さん「点検はコーデックスで」→ 作業・本番確認は Codex が行う。Claude はコードを変更していない。
 - OpenAI は別件で「一旦使わない」（[2026-10-14-claude-to-codex-openai-pause.md](2026-10-14-claude-to-codex-openai-pause.md)）。OpenAI backup は再開しない。
 - 結果はこのファイルに「## Codex 記録」として追記してください（実装／本番反映／本番確認を分けて）。
+
+## Codex 記録 — 2026-10-15
+
+- このスレッドで大隆さん「承認する」を受領。Gemini既存監視のみ月額US$5の範囲で再開、予算台帳のresetなし。
+- 実装済み・本番未確認: Google公式料金表を再確認し、PRICING_REVISIONを2026-10-15、次回レビュー期限を2026-11-15へ更新。単価・予約額・月上限・頻度・OpenAI backup無効フラグは変更しない。
+- 匿名KPIへ監視台帳の当月UTC集計を追加。Googleアカウント全体の利用額・プリペイド残高とは別であることを成果物にも明記。既存SELECT成果物から読取り、D1 migration/予算reset/手動有料probeは行わない。
+- Geminiアカウントの残高・請求額は未取得。課金管理への接続がなく、API成功や監視上限US$5だけで「残高に余裕あり」とは判断しない。確認先: https://aistudio.google.com/billing 。

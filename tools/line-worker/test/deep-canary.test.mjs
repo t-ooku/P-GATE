@@ -152,9 +152,9 @@ test('deep canary frequency is 15m marketplaces/1h Gemini/6h backup without a pu
 const FIXED_CLOCK = () => new Date('2026-08-13T01:07:01Z');
 
 test('paid canary pricing is reviewed monthly', () => {
-  assert.equal(deepCanaryTest.PRICING_REVISION, '2026-09-13');
+  assert.equal(deepCanaryTest.PRICING_REVISION, '2026-10-15');
   assert.equal(deepCanaryTest.PRICING_REVIEW_DEADLINE_MS,
-    Date.parse('2026-10-13T00:00:00.000Z'));
+    Date.parse('2026-11-15T00:00:00.000Z'));
 });
 
 test('only transient OpenAI result codes are eligible for the one delayed retry', () => {
@@ -707,6 +707,21 @@ test('a completely new installation runs one explicit all-component bootstrap cy
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
 });
 
+test('approved October review resumes Gemini without enabling OpenAI or resetting spent budget', async (t) => {
+  const { sqlite, env } = sqliteEnvironment({ OPENAI_BACKUP_ENABLED: 'false' });
+  t.after(() => sqlite.close());
+  seedBudget(sqlite, 1_000_000, '2026-10-14T00:00:00.000Z');
+  const { fetcher, calls } = providerHarness();
+  const result = await runDeepCanaryCycle(env,
+    new Date('2026-10-15T00:07:00.000Z'), fetcher,
+    { clock: () => new Date('2026-10-15T00:07:01.000Z') });
+  for (const component of ['query_structurer', 'ai_chat_primary']) {
+    assert.equal(result.results.find(row => row.component === component)?.status, 'PASS');
+  }
+  assert.equal(callsTo(calls, 'api.openai.com').length, 0);
+  assert.equal(result.monthly_micro_usd, 1_000_232);
+});
+
 test('expired pricing revision blocks every paid AI probe while marketplace probes continue', async (t) => {
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
@@ -714,9 +729,9 @@ test('expired pricing revision blocks every paid AI probe while marketplace prob
   const { fetcher, calls } = providerHarness();
   const result = await runDeepCanaryCycle(
     env,
-    new Date('2026-10-13T00:07:00.000Z'),
+    new Date('2026-11-15T00:07:00.000Z'),
     fetcher,
-    { clock: () => new Date('2026-10-13T00:07:01.000Z') }
+    { clock: () => new Date('2026-11-15T00:07:01.000Z') }
   );
   for (const component of ['query_structurer', 'ai_chat_primary', 'openai_backup']) {
     assert.equal(result.results.find((row) => row.component === component)?.code,

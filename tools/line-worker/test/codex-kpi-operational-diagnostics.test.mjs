@@ -264,6 +264,30 @@ test('内部会員IDがない場合は通知・一般利用者ウォッチを0�
   assert.equal(result.general_user_watch_set.reason, 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED');
 });
 
+test('監視予算は当月の匿名台帳だけを出し、Google全体残高と混同しない', async () => {
+  const sqlite = setup();
+  sqlite.exec(`INSERT INTO growth_events(event_type,traffic_class,source,medium,campaign,content,occurred_at) VALUES
+    ('deep_canary_budget','QA','worker','query_structurer','SETTLED','0000063',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('deep_canary_budget','QA','worker','ai_chat_primary','RESERVED','0500000',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('deep_canary_budget','QA','worker','query_structurer','RELEASED','0000000',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('deep_canary_budget','QA','worker','query_structurer','SETTLED','0999999','2000-01-01'),
+    ('deep_canary_budget','ATTRIBUTED','browser','query_structurer','SETTLED','0999999',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result = await operationalDiagnostics(d1(sqlite));
+  const budget = result.canary_budget_month_utc;
+  assert.equal(budget.scope, 'MONITORING_LEDGER_ONLY_NOT_GOOGLE_BILLING');
+  assert.deepEqual(budget.states_consuming_budget, ['RESERVED','SETTLED']);
+  assert.equal(budget.rows.length, 3);
+  assert.equal(budget.rows.filter(r => budget.states_consuming_budget.includes(r.state))
+    .reduce((sum, r) => sum + r.micro_usd, 0), 500063);
+  assert.equal(budget.rows.every(r => r.invalid_rows === 0), true);
+  sqlite.exec(`INSERT INTO growth_events(event_type,traffic_class,source,medium,campaign,content,occurred_at)
+    VALUES ('deep_canary_budget','QA','worker','query_structurer','SETTLED','invalid',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const invalid = await operationalDiagnostics(d1(sqlite));
+  assert.equal(invalid.canary_budget_month_utc.rows.find(r => r.state === 'SETTLED').invalid_rows, 1);
+  const unavailable = await operationalDiagnostics({prepare(){throw Error('unavailable');}});
+  assert.equal(unavailable.canary_budget_month_utc.status, 'UNAVAILABLE');
+});
+
 
 test('KPI読取は一過性タイムアウトだけを有限回再試行する', async () => {
   let calls = 0;
