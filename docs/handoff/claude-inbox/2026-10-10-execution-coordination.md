@@ -182,3 +182,15 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
 - **キュー反映（既存行の変更・大隆さんの「改善して」に基づく）**: hoshilu-carousel-v3-instagram-2026-10-14（APPROVED・未公開）を carousel-user-big-sale-alert → carousel-user-price-watch に差し替え（10/13 代替と同じセットが連日になるため）。caption・link・media_urls は buildCarouselPosts と同じ生成結果。
 - **計測**: 10/14 15〜18 時 JST の流入は instagram/bio 3件＋流入元なし 13件（8人）。creator_id 付きの着地は 0 → トリドリの投稿者ごとの効果は計測できていない。
 - **Codex へ（担当外）**: 有料 canary の料金見直し（CANARY_PRICING_REVIEW_REQUIRED）が 10/13 09:07 JST から未対応で監視が赤のまま。openai_backup は CANARY_PROVIDER_BILLING_DISABLED。自動リール（火・金）は 10/6 以降生成なし。
+
+### 2026-10-14 20:14 JST 定期巡回（状態: IN_PROGRESS のまま。新しい実装・Claude によるキュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（新規指示なし）。branch head 0abfd8b（18:15 の Claude 記録以降コミットなし。正本に変更なし）。
+- 2. SNS / X 停止: D1 social_post_queue（20:14 JST 読み取り）で
+  - **本番確認（キュー）: hoshilu-carousel-v3-instagram-2026-10-14 は PUBLISHED（20:02 JST、external_post_id 17893775343435723、content carousel-user-price-watch＝18:15 の差し替え後の内容）**。投稿画面そのものは未確認（Instagram はこの環境から開けない）。
+  - -10-17（carousel-seller-wanted-now）・-10-19・-10-21・-10-24・-10-26 は APPROVED（last_error なし）。10/17 の公開確認は未（公開時刻前）。
+  - X: scheduled_at または created_at が 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行、最終作成 8/2）のみ → X 新規行なし。
+  - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は content_id=seller-pr-slot・APPROVED・last_error なし（updated_at 10/14 20:12 JST、既存自動投入の再上書き）。公開確認は 10/21 22:30 JST 以降。
+- 1. Seller LP: D1 growth_events（10/10 10:46 JST 以降、QA除外）で seller_landing_view 8件（visitor 6）＝ **14:14 から +1（10/14 15:20 JST、ATTRIBUTED、content=for-sellers、source なし）**。seller_cta_click 0件、seller_form_started 2件（visitor 2、最新 10/11 22:34 JST）、seller_form_submit_attempt／seller_form_failed 0件。インフルエンサー展開中だが、LP 表示→CTA が 0 のまま（母数が小さく結論は出さない）。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 計測: 14:14 JST 以降、creator_id 付きの着地は 0 件（18:15 記録と同じく、トリドリ投稿者ごとの効果は未計測）。
+- 成果指標（D1 実測、20:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28、全件 NEW）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
+- 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の seller_landing_view／seller_form_* を確認。seller_form_* は毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
