@@ -33,7 +33,8 @@ test('方針 v3: 曜日・時刻・半々の順送り・禁止表現なし・画
   // 台帳が追いつかない（2026-09-24 にこれで CI が落ちた）。台帳に載っている分は必ず一致すること、
   // 台帳に無いセットは「これから画像を作る」新しいセットだけであること、の2つを見る。
   const manifest = JSON.parse(readFileSync(new URL('../public/social/carousel/manifest.json', import.meta.url), 'utf8'));
-  const ids = new Set(sets.order.map((set) => set.id));
+  // 2026-10-14: 木曜のオウンドメディア枠（MEDIA_PLAN）のセットは順送りに入れないが画像は作る。
+  const ids = new Set([...sets.order, ...mediaSets()].map((set) => set.id));
   for (const id of Object.keys(manifest.sets)) {
     assert.ok(ids.has(id), `${id} は台帳にあるがセットに無い`);
   }
@@ -321,6 +322,13 @@ test('買い物ノートの紹介は木曜 20:00 JST・2 セット交互・UTM �
   assert.ok(posts.every((post) => post.scheduled_at.endsWith('T11:00:00.000Z')), '20:00 JST');
   assert.deepEqual(instagram.map((post) => post.content_id), ['media-user-media-price-drops', 'media-user-media-ranking-price', 'media-user-media-price-drops']);
   assert.equal(posts.filter((post) => post.platform === 'X').length, 3);
+  // 2026-10-14 大隆さん「スレッズでもオウンドメディアを販促しよう」: Threads は表紙 1 枚＋Threads 用の文＋リンク
+  const threads = posts.filter((post) => post.platform === 'THREADS');
+  assert.equal(threads.length, 3);
+  assert.match(threads[0].media_url, /\/social\/carousel\/user-media-price-drops\/1\.jpg$/u);
+  assert.match(threads[0].link, /utm_source=threads&utm_medium=organic_social&utm_campaign=hoshilu_media_notes/u);
+  assert.doesNotMatch(threads[0].caption, /プロフィールのリンクから/u, 'Threads は本文のリンクを押せる');
+  assert.ok([threads[0].caption, threads[0].link].join('\n').length <= 500, 'Threads の 500 文字に収まる');
   assert.match(instagram[0].link, /^https:\/\/hoshilu\.app\/media\/price-drops\?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_media_notes&utm_content=user-media-price-drops_20261015$/u);
   assert.match(instagram[1].link, /^https:\/\/hoshilu\.app\/media\?utm_source=instagram/u);
   assert.ok(posts.every((post) => post.campaign_id === MEDIA_PLAN.campaign_id && post.status === 'APPROVED'));

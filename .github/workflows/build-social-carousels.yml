@@ -108,7 +108,7 @@ jobs:
       - name: Verify the carousel images are served
         run: |
           set -euo pipefail
-          for f in user-hoshittoku-basics/1.jpg seller-demand-visible/4.jpg; do
+          for f in user-hoshittoku-basics/1.jpg seller-demand-visible/4.jpg user-media-price-drops/1.jpg user-media-ranking-price/1.jpg; do
             code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/carousel/$f")"
             echo "HEAD /social/carousel/$f -> $code"
             test "$code" = "200"

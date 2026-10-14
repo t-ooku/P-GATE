@@ -30,3 +30,4 @@
 - 画像はカルーセルと同じく `build-social-carousels.py` が文字と図形だけで描く（商品写真・他社ロゴは使わない）。カルーセルの順送り（14 セット）には入れない。
 - 投入は `social-autopilot` の `seedMediaQueue`（承認済みで投入、`post_id` 主キーで再実行しても増えない）。開始は 2026-10-15（木）。
 - 止める時は `MEDIA_PLAN`（`src/social-weekly-plan-v3.mjs`）の曜日・開始日を変えるか、Instagram／X の自動投稿の既存スイッチを切る。
+- 2026-10-14 追記（大隆さん「スレッズでもオウンドメディアを販促しよう」）: 同じ木曜 20:00 枠に **Threads** も追加。Threads は 1 投稿に画像 1 枚なので表紙の 1 枚と Threads 用の短い文（`threads_caption`）＋UTM 付きリンク（本文中で押せる）。`THREADS_EVERGREEN_AUTOPILOT_ENABLED=true` の間だけ投入。

@@ -217,7 +217,8 @@ export const MEDIA_PLAN = Object.freeze({
   post_prefix: 'hoshilu-media-notes',
   crosspost_prefix: 'hoshilu-media-',
   utm_campaign: 'hoshilu_media_notes',
-  platforms: Object.freeze(['INSTAGRAM', 'X'])
+  // 2026-10-14 大隆さん「スレッズでもオウンドメディアを販促しよう」: Threads は 1 投稿に画像 1 枚（表紙）、リンクは本文の中で押せる
+  platforms: Object.freeze(['INSTAGRAM', 'X', 'THREADS'])
 });
 
 export function mediaSets(plan = MEDIA_PLAN, doc = carouselDoc) {
@@ -227,7 +228,7 @@ export function mediaSets(plan = MEDIA_PLAN, doc = carouselDoc) {
 
 function mediaLink(platform, set, key, plan = MEDIA_PLAN) {
   const url = new URL(String(set.link_path || '/media'), 'https://hoshilu.app/');
-  url.searchParams.set('utm_source', platform === 'X' ? 'x' : 'instagram');
+  url.searchParams.set('utm_source', platform === 'X' ? 'x' : platform === 'THREADS' ? 'threads' : 'instagram');
   url.searchParams.set('utm_medium', 'organic_social');
   url.searchParams.set('utm_campaign', plan.utm_campaign);
   url.searchParams.set('utm_content', `${set.id}_${key.replace(/-/g, '')}`);
@@ -252,15 +253,16 @@ export function buildMediaPosts(now = new Date(), days = 14, { plan = MEDIA_PLAN
     const week = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS / 7) - epochWeek;
     const set = sets[((week % sets.length) + sets.length) % sets.length];
     for (const platform of plan.platforms) {
+      const threads = platform === 'THREADS';
       posts.push(normalizeSocialPost({
         post_id: `${plan.post_prefix}-${platform.toLowerCase()}-${key}`,
         content_id: `media-${set.id}`,
         campaign_id: plan.campaign_id,
         platform,
-        caption: carouselCaption(set, platform),
+        caption: threads ? String(set.threads_caption || set.title) : carouselCaption(set, platform),
         link: mediaLink(platform, set, key, plan),
-        media_url: '',
-        media_urls: carouselMediaUrls(set),
+        media_url: threads ? carouselMediaUrls(set)[0] : '',
+        media_urls: threads ? '' : carouselMediaUrls(set),
         scheduled_at: when,
         status: 'APPROVED',
         content_format: 'IMAGE',
@@ -278,15 +280,16 @@ export async function seedMediaQueue(env, now = new Date()) {
   const xReady = xPublishingSafetyReadiness(env).ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true';
   const posts = buildMediaPosts(now).filter((post) => readiness[post.platform]
     && (post.platform !== 'INSTAGRAM' || env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true')
-    && (post.platform !== 'X' || xReady));
+    && (post.platform !== 'X' || xReady)
+    && (post.platform !== 'THREADS' || env.THREADS_EVERGREEN_AUTOPILOT_ENABLED === 'true'));
   let inserted = 0;
   for (const post of posts) {
     const ts = now.toISOString();
     const result = await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,media_urls,scheduled_at,status,affiliate,
        content_format,jst_publish_date,ai_generated,crosspost_group_id,approved_at,created_at,updated_at)
-      VALUES (?1,?2,?3,?4,?5,?6,'',?7,?8,'APPROVED',0,'IMAGE',?9,0,?10,?11,?11,?11)`)
-      .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption, post.link, post.media_urls,
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,'APPROVED',0,'IMAGE',?10,0,?11,?12,?12,?12)`)
+      .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption, post.link, post.media_url || '', post.media_urls || '',
         post.scheduled_at, post.jst_publish_date, post.crosspost_group_id, ts).run();
     inserted += Number(result?.meta?.changes || 0);
   }
