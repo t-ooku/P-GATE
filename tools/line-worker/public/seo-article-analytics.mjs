@@ -62,7 +62,10 @@ export function landingSource(referrer, ownHost = location.hostname) {
   return ['other', 'referral'];
 }
 if (!isQaVisit) {
-  const [landingFrom, landingMedium] = landingSource(document.referrer);
+  // 2026-10-14: SNS に貼る URL の印（utm_source / utm_medium）があれば、それを来訪元にする。
+  // Instagram・X のアプリ内ブラウザは参照元を渡さないことが多く、印が無いと「直接」に混ざるため。
+  const tagged = /^[a-z0-9][a-z0-9_.-]{0,40}$/u.test(requestedSource) ? [requestedSource, /^[a-z0-9_-]{1,32}$/u.test(requestedMedium) ? requestedMedium : 'social'] : null;
+  const [landingFrom, landingMedium] = tagged || landingSource(document.referrer);
   const body = JSON.stringify({
     event_type: 'seo_article_landing', locale, source: landingFrom, medium: landingMedium, campaign: searchIntent, content: articleId,
     visitor_id: visitorId, session_id: growthSessionId()
