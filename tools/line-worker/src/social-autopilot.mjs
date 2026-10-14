@@ -9,7 +9,7 @@ import {
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 import { buzzThemeFor } from './buzz-shelf.mjs';
-import { policyV3Allows, seedCarouselQueue, seedReelFallbackQueue } from './social-weekly-plan-v3.mjs';
+import { policyV3Allows, seedCarouselQueue, seedMediaQueue, seedReelFallbackQueue } from './social-weekly-plan-v3.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const NEW_SEARCH_LAUNCH_UTM_CAMPAIGN = 'hoshilu-new-search-launch-20260829';
@@ -1139,9 +1139,11 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   const carousels = await seedCarouselQueue(env, now);
   // 2026-09-18: リール日に承認済みリールが無ければ 19:30 JST 以降にカルーセルで代替（SNS を止めない）
   const reelFallback = await seedReelFallbackQueue(env, now);
+  // 2026-10-14 大隆さん指示: 毎週木曜 20:00 JST に買い物ノート（/media）の紹介を Instagram と X へ
+  const media = await seedMediaQueue(env, now);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
   // 2026-09-19 大隆さん指示: 旧料金（9,800円・送客料のみ）の公開済み投稿を取り下げる（SOCIAL_RETRACT_OLD_PRICING=true の間）
   const retracted = await retractOldPricingPosts(env, now, fetchImpl);
-  return { seeded, carousels, reelFallback, published, permalinks, threadsInsights, retracted };
+  return { seeded, carousels, reelFallback, media, published, permalinks, threadsInsights, retracted };
 }

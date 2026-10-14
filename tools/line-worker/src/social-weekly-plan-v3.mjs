@@ -204,13 +204,102 @@ export async function reelReadyToday(env, now = new Date(), plan = SOCIAL_PLAN_V
   return Number(row?.n || 0) > 0;
 }
 
+// 2026-10-14 大隆さん指示「SNSでオウンドメディアを宣伝して。今後も定期的に自動運用」:
+// 毎週木曜 20:00 JST（v3 でリールもカルーセルも無い曜日）に、ホシルの買い物ノート（/media）の紹介を
+// Instagram と X に出す。2 セット（値下がり・ランキング×価格）を週ごとに交互。画像はカルーセルと同じ仕組み
+// （build-social-carousels.py が文字と図形だけで描く。商品写真・他社ロゴは使わない）。
+export const MEDIA_PLAN = Object.freeze({
+  campaign_id: 'hoshilu-media-notes',
+  weekday: 4,
+  publish_jst: Object.freeze([20, 0]),
+  start_jst: '2026-10-15',
+  set_ids: Object.freeze(['user-media-price-drops', 'user-media-ranking-price']),
+  post_prefix: 'hoshilu-media-notes',
+  crosspost_prefix: 'hoshilu-media-',
+  utm_campaign: 'hoshilu_media_notes',
+  platforms: Object.freeze(['INSTAGRAM', 'X'])
+});
+
+export function mediaSets(plan = MEDIA_PLAN, doc = carouselDoc) {
+  const byId = new Map(doc.sets.map((set) => [set.id, set]));
+  return plan.set_ids.map((id) => byId.get(id)).filter(Boolean);
+}
+
+function mediaLink(platform, set, key, plan = MEDIA_PLAN) {
+  const url = new URL(String(set.link_path || '/media'), 'https://hoshilu.app/');
+  url.searchParams.set('utm_source', platform === 'X' ? 'x' : 'instagram');
+  url.searchParams.set('utm_medium', 'organic_social');
+  url.searchParams.set('utm_campaign', plan.utm_campaign);
+  url.searchParams.set('utm_content', `${set.id}_${key.replace(/-/g, '')}`);
+  return url.toString();
+}
+
+// 木曜 20:00 JST の買い物ノート紹介（今日から days 日分、投稿時刻が未来のものだけ）
+export function buildMediaPosts(now = new Date(), days = 14, { plan = MEDIA_PLAN, sets = mediaSets(plan) } = {}) {
+  const posts = [];
+  if (!sets.length) return posts;
+  const start = new Date(now.getTime() + JST_OFFSET_MS);
+  start.setUTCHours(0, 0, 0, 0);
+  const [sy, sm, sd] = plan.start_jst.split('-').map(Number);
+  const epochWeek = Math.floor(Date.UTC(sy, sm - 1, sd) / DAY_MS / 7);
+  for (let offset = 0; offset < days; offset += 1) {
+    const parts = jstParts(new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS));
+    if (parts.weekday !== plan.weekday) continue;
+    const key = dateKey(parts);
+    if (key < plan.start_jst) continue;
+    const when = scheduledAt(parts, plan.publish_jst);
+    if (Date.parse(when) <= now.getTime()) continue;
+    const week = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS / 7) - epochWeek;
+    const set = sets[((week % sets.length) + sets.length) % sets.length];
+    for (const platform of plan.platforms) {
+      posts.push(normalizeSocialPost({
+        post_id: `${plan.post_prefix}-${platform.toLowerCase()}-${key}`,
+        content_id: `media-${set.id}`,
+        campaign_id: plan.campaign_id,
+        platform,
+        caption: carouselCaption(set, platform),
+        link: mediaLink(platform, set, key, plan),
+        media_url: '',
+        media_urls: carouselMediaUrls(set),
+        scheduled_at: when,
+        status: 'APPROVED',
+        content_format: 'IMAGE',
+        jst_publish_date: key,
+        crosspost_group_id: `${plan.crosspost_prefix}${key}`
+      }));
+    }
+  }
+  return posts;
+}
+
+export async function seedMediaQueue(env, now = new Date()) {
+  if (env.SOCIAL_AUTOPILOT_ENABLED !== 'true' || !env.PRODUCT_DB) return { enabled: false, planned: 0, inserted: 0 };
+  const readiness = await socialPublisherReadinessWithStoredCredentials(env);
+  const xReady = xPublishingSafetyReadiness(env).ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true';
+  const posts = buildMediaPosts(now).filter((post) => readiness[post.platform]
+    && (post.platform !== 'INSTAGRAM' || env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true')
+    && (post.platform !== 'X' || xReady));
+  let inserted = 0;
+  for (const post of posts) {
+    const ts = now.toISOString();
+    const result = await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO social_post_queue
+      (post_id,platform,campaign_id,content_id,caption,link,media_url,media_urls,scheduled_at,status,affiliate,
+       content_format,jst_publish_date,ai_generated,crosspost_group_id,approved_at,created_at,updated_at)
+      VALUES (?1,?2,?3,?4,?5,?6,'',?7,?8,'APPROVED',0,'IMAGE',?9,0,?10,?11,?11,?11)`)
+      .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption, post.link, post.media_urls,
+        post.scheduled_at, post.jst_publish_date, post.crosspost_group_id, ts).run();
+    inserted += Number(result?.meta?.changes || 0);
+  }
+  return { enabled: true, planned: posts.length, inserted };
+}
+
 // 旧方針の投稿を v3 の下で投入してよいか。
 //  - 22 歳 v2 女優の毎日リール（DAILY_AI_ACTRESS_22 / hoshilu-ai-actress-daily-v1）: 投入しない（9/16 大隆さん決定で停止済み）
 //  - Instagram の静止画案内（火木土 20:00）: 投入しない（カルーセルとリールに置き換え）
 //  - X の毎日案内: リール日・カルーセル日は投入しない（同じ内容を同日に流すため）。それ以外の日（木・日）は残す
 export function policyV3Allows(post, plan = SOCIAL_PLAN_V3) {
   if (!post) return false;
-  if (post.campaign_id === plan.campaign_id || post.campaign_id === 'hoshilu-runway-video') return true;
+  if (post.campaign_id === plan.campaign_id || post.campaign_id === 'hoshilu-runway-video' || post.campaign_id === MEDIA_PLAN.campaign_id) return true;
   const at = Date.parse(post.scheduled_at);
   if (!Number.isFinite(at)) return true;
   const parts = jstParts(new Date(at));

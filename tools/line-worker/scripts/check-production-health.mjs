@@ -168,6 +168,49 @@ async function checkGuideHub(fetcher, origin, checks, cacheBust, requestTimeoutM
   checks.push('/ja/guides GET/HEAD, self-canonical, sitemap and security headers');
 }
 
+// 2026-10-14 大隆さん指示「今後も定期的に更新しながら自動運用。更新するたびにバグチェックして」:
+// ホシルの買い物ノート（/media・/media/price-drops）。中身は毎日自動で変わるので、5 分ごとの監視で壊れていないかを見る。
+// 壊れている（ページが返らない・価格記録を読めない・作りが崩れた）は失敗、データが少ないだけ（値下がり 0 件・棚 0）は警告。
+export function inspectOwnedMediaHtml(html = '', pathname = '/media') {
+  const count = (pattern) => (html.match(pattern) || []).length;
+  const drops = count(/class="media-drop"/g);
+  const images = count(/media-drop-figure"><img /g) + count(/media-tile-figure"><img /g);
+  const charts = count(/class="media-spark"/g);
+  const tiles = count(/class="media-tile"/g);
+  const failures = [];
+  const warnings = [];
+  if (!/owned-media\.css\?v=\d+/.test(html)) failures.push(`OWNED_MEDIA_STYLESHEET_MISSING:${pathname}`);
+  if (!html.includes(`<link rel="canonical" href="https://hoshilu.app${pathname}">`)) failures.push(`OWNED_MEDIA_CANONICAL_MISSING:${pathname}`);
+  if (html.includes('価格の記録を読み込めませんでした')) failures.push(`OWNED_MEDIA_PRICE_RECORD_UNAVAILABLE:${pathname}`);
+  if (!html.includes('広告（アフィリエイト）を含みます')) failures.push(`OWNED_MEDIA_AD_DISCLOSURE_MISSING:${pathname}`);
+  if (!drops && !html.includes('条件に合う大きな値下がりはありませんでした')) failures.push(`OWNED_MEDIA_DROPS_SECTION_BROKEN:${pathname}`);
+  if (!drops) warnings.push(`OWNED_MEDIA_NO_DROPS:${pathname}`);
+  if ((drops + tiles) && !images) warnings.push(`OWNED_MEDIA_NO_IMAGES:${pathname}`);
+  if (drops && !charts) warnings.push(`OWNED_MEDIA_NO_PRICE_HISTORY:${pathname}`);
+  if (!tiles) warnings.push(`OWNED_MEDIA_NO_RANKING_SHELVES:${pathname}`);
+  return { drops, images, charts, tiles, failures, warnings };
+}
+
+async function checkOwnedMedia(fetcher, origin, checks, warnings, cacheBust, requestTimeoutMs = 10000) {
+  const summary = [];
+  for (const pathname of ['/media', '/media/price-drops']) {
+    const response = await fetcher(new URL(`${pathname}?${cacheBust}`, origin), {
+      redirect: 'manual',
+      headers: { accept: 'text/html', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+      signal: AbortSignal.timeout(requestTimeoutMs)
+    });
+    const html = await responseText(response, pathname);
+    for (const name of REQUIRED_PAGE_SECURITY_HEADERS) {
+      assert(String(response.headers.get(name) || '').trim().length > 0, `OWNED_MEDIA_SECURITY_HEADER_MISSING:${pathname}:${name}`);
+    }
+    const result = inspectOwnedMediaHtml(html, pathname);
+    assert(!result.failures.length, result.failures[0]);
+    warnings.push(...result.warnings);
+    summary.push(`${pathname} drops=${result.drops} images=${result.images} charts=${result.charts} tiles=${result.tiles}`);
+  }
+  checks.push(`owned media (${summary.join('; ')})`);
+}
+
 async function checkOptionalWww(fetcher, origin, checks, warnings, requestTimeoutMs = 5000) {
   const www = new URL('/', origin);
   www.hostname = `www.${origin.hostname}`;
@@ -243,6 +286,7 @@ export async function inspectProduction({
 
   await checkNotFoundSemantics(fetcher, origin, checks, nonce, fetchTimeoutMs);
   await checkGuideHub(fetcher, origin, checks, cacheBust, fetchTimeoutMs);
+  await checkOwnedMedia(fetcher, origin, checks, warnings, cacheBust, fetchTimeoutMs);
 
   const capabilities = await responseJson(await fetcher(new URL(`/api/ranking-capabilities?${cacheBust}`, origin), {
     headers: { accept: 'application/json', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
