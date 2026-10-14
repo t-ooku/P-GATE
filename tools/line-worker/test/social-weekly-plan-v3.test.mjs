@@ -310,3 +310,29 @@ test('代替カルーセルは週ごとに変わり、前後6日の通常カル�
   const before = buildCarouselPosts(new Date('2026-09-20T00:00:00.000Z'), 10).filter((post) => post.jst_publish_date === '2026-09-28');
   assert.equal(before[0].content_id, 'carousel-seller-shop-entrance');
 });
+
+// 2026-10-14 大隆さん指示「SNSでオウンドメディアを宣伝して。今後も定期的に自動運用」:
+// 毎週木曜 20:00 JST に買い物ノートの紹介（2 セットを交互）を Instagram と X へ。カルーセルの順送りには入れない。
+import { MEDIA_PLAN, buildMediaPosts, mediaSets } from '../src/social-weekly-plan-v3.mjs';
+test('買い物ノートの紹介は木曜 20:00 JST・2 セット交互・UTM 付き。カルーセルの順送りは変えない', () => {
+  const posts = buildMediaPosts(new Date('2026-10-14T12:00:00.000Z'), 21);
+  const instagram = posts.filter((post) => post.platform === 'INSTAGRAM');
+  assert.deepEqual(instagram.map((post) => post.jst_publish_date), ['2026-10-15', '2026-10-22', '2026-10-29']);
+  assert.ok(posts.every((post) => post.scheduled_at.endsWith('T11:00:00.000Z')), '20:00 JST');
+  assert.deepEqual(instagram.map((post) => post.content_id), ['media-user-media-price-drops', 'media-user-media-ranking-price', 'media-user-media-price-drops']);
+  assert.equal(posts.filter((post) => post.platform === 'X').length, 3);
+  assert.match(instagram[0].link, /^https:\/\/hoshilu\.app\/media\/price-drops\?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_media_notes&utm_content=user-media-price-drops_20261015$/u);
+  assert.match(instagram[1].link, /^https:\/\/hoshilu\.app\/media\?utm_source=instagram/u);
+  assert.ok(posts.every((post) => post.campaign_id === MEDIA_PLAN.campaign_id && post.status === 'APPROVED'));
+  assert.ok(posts.every((post) => policyV3Allows(post)), '方針 v3 の門を通る');
+  // 開始前・過去の枠は作らない
+  assert.equal(buildMediaPosts(new Date('2026-10-15T11:30:00.000Z'), 1).length, 0);
+  // 順送り（14 セット）には入れない
+  assert.ok(!loadCarouselSets().order.some((set) => set.id.startsWith('user-media-')));
+  // 文言の決まり（最安・%OFF・保証などを書かない）
+  for (const set of mediaSets()) {
+    assert.equal(set.audience, 'user');
+    assert.doesNotMatch(JSON.stringify(set), /必ず|最安|\d+%|保証|値下げしました/u);
+    assert.match(set.caption, /プロフィールのリンクから/u);
+  }
+});

@@ -42,6 +42,9 @@ function mockFetch({
       if (request.method === 'HEAD') return new Response(null, { status: 200, headers: guideHeaders });
       return new Response('<link rel="canonical" href="https://hoshilu.app/ja/guides">', { headers: guideHeaders });
     }
+    if (url.pathname === '/media' || url.pathname === '/media/price-drops') {
+      return new Response(`<link rel="canonical" href="https://hoshilu.app${url.pathname}"><link rel="stylesheet" href="/owned-media.css?v=4"><li class="media-drop"><a><span class="media-drop-figure"><img src="https://x/a.jpg"></span><svg class="media-spark"></svg></a></li><li class="media-tile"><a><span class="media-tile-figure"><img src="https://x/b.jpg"></span></a></li><p>商品ページ・購入先へのリンクには広告（アフィリエイト）を含みます。</p>`, { headers: guideHeaders });
+    }
     if (url.pathname === '/sitemap.xml') return new Response('<urlset><url><loc>https://hoshilu.app/ja/guides</loc></url></urlset>');
     if (url.pathname === '/health') return Response.json({ ok: healthOk, checks: {
       turnstile_configured: true, search_input_analysis_configured: searchInputConfigured,
@@ -106,8 +109,10 @@ test('scheduled monitor can validate the assets currently referenced by producti
 test('production monitor verifies health, deployed assets, rankings and trace IDs', async () => {
   const result = await inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(), expectedIndexHtml });
   assert.equal(result.ok, true);
-  assert.equal(result.checks.length, 10);
+  // 2026-10-14: 買い物ノート（/media・/media/price-drops）のチェックで 1 つ増えた。
+  assert.equal(result.checks.length, 11);
   assert.deepEqual(result.warnings, ['www.hoshilu.app: SKIP (DNS or endpoint unavailable)']);
+  assert.match(result.checks.find((check) => check.startsWith('owned media')), /\/media drops=1 images=2 charts=1 tiles=1/u);
 });
 
 test('production monitor rejects stale assets without reliability markers', async () => {
@@ -140,7 +145,7 @@ test('production monitor applies a timeout signal to every network request', asy
       return fetcher(input, init);
     }
   });
-  assert.equal(requests, 20);
+  assert.equal(requests, 22); // 2026-10-14: /media と /media/price-drops
 });
 
 test('production monitor fails when Yahoo ranking regresses to planned', async () => {
@@ -199,4 +204,18 @@ test('production monitor requires security headers on the guide hub', async () =
     inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ guideHeaders: incomplete }), expectedIndexHtml }),
     /GUIDE_HUB_SECURITY_HEADER_MISSING:content-security-policy/u
   );
+});
+
+// 2026-10-14 大隆さん「更新するたびにバグチェックして」: 買い物ノートが壊れたら監視が失敗し、データが少ないだけなら警告。
+import { inspectOwnedMediaHtml } from '../scripts/check-production-health.mjs';
+test('買い物ノート: 価格記録を読めない・作りが崩れたら失敗、値下がり0件・画像なしは警告', () => {
+  const base = '<link rel="canonical" href="https://hoshilu.app/media"><link rel="stylesheet" href="/owned-media.css?v=4"><p>広告（アフィリエイト）を含みます</p>';
+  assert.deepEqual(inspectOwnedMediaHtml(`${base}<p>価格の記録を読み込めませんでした。</p>`, '/media').failures, ['OWNED_MEDIA_PRICE_RECORD_UNAVAILABLE:/media', 'OWNED_MEDIA_DROPS_SECTION_BROKEN:/media']);
+  const empty = inspectOwnedMediaHtml(`${base}<p>今週は、条件に合う大きな値下がりはありませんでした。</p>`, '/media');
+  assert.deepEqual(empty.failures, []);
+  assert.deepEqual(empty.warnings, ['OWNED_MEDIA_NO_DROPS:/media', 'OWNED_MEDIA_NO_RANKING_SHELVES:/media']);
+  const noImages = inspectOwnedMediaHtml(`${base}<li class="media-drop"><span class="media-drop-figure"><span class="media-drop-noimage">x</span></span></li>`, '/media');
+  assert.ok(noImages.warnings.includes('OWNED_MEDIA_NO_IMAGES:/media'));
+  assert.ok(noImages.warnings.includes('OWNED_MEDIA_NO_PRICE_HISTORY:/media'));
+  assert.ok(inspectOwnedMediaHtml('<html></html>', '/media').failures.includes('OWNED_MEDIA_STYLESHEET_MISSING:/media'));
 });

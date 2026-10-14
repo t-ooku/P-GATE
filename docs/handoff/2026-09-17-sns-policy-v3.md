@@ -23,3 +23,10 @@
 
 ## 残り
 - 9/21 以降に既に投入済みの旧方針の行（Instagram 静止画案内・X 案内）の扱いは大隆さん判断（既存行の UPDATE）
+
+## 2026-10-14 追加: 買い物ノート（オウンドメディア）の紹介枠（大隆さん指示「SNSでオウンドメディアを宣伝して。今後も定期的に自動運用」）
+- **毎週木曜 20:00 JST**（v3 でリールもカルーセルも無い曜日）に、Instagram と X へ同じ内容を出す。キャンペーン `hoshilu-media-notes`。
+- 2 セットを週ごとに交互: `user-media-price-drops`（→ `/media/price-drops`）、`user-media-ranking-price`（→ `/media`）。リンクは UTM 付き（`utm_campaign=hoshilu_media_notes`）。
+- 画像はカルーセルと同じく `build-social-carousels.py` が文字と図形だけで描く（商品写真・他社ロゴは使わない）。カルーセルの順送り（14 セット）には入れない。
+- 投入は `social-autopilot` の `seedMediaQueue`（承認済みで投入、`post_id` 主キーで再実行しても増えない）。開始は 2026-10-15（木）。
+- 止める時は `MEDIA_PLAN`（`src/social-weekly-plan-v3.mjs`）の曜日・開始日を変えるか、Instagram／X の自動投稿の既存スイッチを切る。
