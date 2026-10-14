@@ -123,7 +123,7 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=3/);
+  assert.match(html, /owned-media\.css\?v=4/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);
@@ -182,4 +182,35 @@ test('記事・買い物ノートの来訪元は、URL の印（utm_source/utm_m
   const source = readFileSync(new URL('../public/seo-article-analytics.mjs', import.meta.url), 'utf8');
   assert.match(source, /const \[landingFrom, landingMedium\] = tagged \|\| landingSource\(document\.referrer\);/);
   assert.match(source, /\/\^\[a-z0-9\]\[a-z0-9_\.-\]\{0,40\}\$\/u\.test\(requestedSource\)/);
+});
+
+// 2026-10-14 大隆さん「ページの後半は文章だけになってるじゃん。もっと商品画像や価格履歴をたくさん表示して」
+import { loadRankingShelves, priceChange, withShelfHistories } from '../src/owned-media.mjs';
+test('ジャンル別の棚: 3日以内の公式ランキング保存から、画像と商品IDのある上位商品だけ。値下がり欄と重ねない', async () => {
+  const ranking = (n, extra = {}) => Array.from({ length: n }, (_, i) => ({ record_key: `RAKUTEN:k:${i}`, display_name: `フライパン ${i}`, image_url: `https://thumbnail.image.rakuten.co.jp/k${i}.jpg?_ex=128x128`, rank: i + 1, offers: [{ price: 1000 + i, marketplace: 'RAKUTEN_JP' }], ...extra }));
+  const env = envWith((db) => {
+    db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8'));
+    const ins = db.prepare(`INSERT INTO marketplace_ranking_cache VALUES ('RAKUTEN_JP', ?, 'REALTIME', ?, '2026-10-14T00:00:00Z', ?)`);
+    ins.run('kitchen', JSON.stringify(ranking(6)), '2026-10-14T01:00:00Z');
+    ins.run('food', JSON.stringify(ranking(3, { image_url: '' })), '2026-10-14T01:00:00Z');                 // 画像なし → 棚にしない
+    ins.run('buzz_unknown', JSON.stringify(ranking(4).map((x) => ({ ...x, record_key: x.record_key + 'u' }))), '2026-10-14T01:00:00Z'); // 登録外のジャンル
+    ins.run('interior', JSON.stringify(ranking(4).map((x) => ({ ...x, record_key: x.record_key + 'i' }))), '2026-10-01T00:00:00Z'); // 古い
+    observe(db, { id: 'k:1', date: '2026-10-10', price: 1300 }); observe(db, { id: 'k:1', date: '2026-10-13', price: 1001 });
+  });
+  const shelves = await loadRankingShelves(env, { now: NOW, exclude: ['RAKUTEN:k:0'] });
+  assert.deepEqual(shelves.map((s) => s.id), ['kitchen']);
+  assert.equal(shelves[0].label, 'キッチン用品・食器・調理器具');
+  assert.deepEqual(shelves[0].items.map((i) => i.record_key), ['RAKUTEN:k:1', 'RAKUTEN:k:2', 'RAKUTEN:k:3', 'RAKUTEN:k:4'], '値下がり欄に出た商品は除き、4件まで');
+  assert.match(shelves[0].items[0].image_url, /_ex=300x300/);
+  const [withHistory] = await withShelfHistories(env, shelves, { now: NOW });
+  assert.equal(withHistory.items[0].history.length, 2);
+  assert.deepEqual(priceChange(withHistory.items[0].history), { diff: -299, days: 2, from: '2026-10-10', to: '2026-10-13' });
+  assert.equal(priceChange([{ date: '2026-10-13', price: 1 }]), null);
+  const html = renderMediaTop({ drops: [], shelves: [withHistory], now: NOW });
+  assert.match(html, /ジャンル別・いま売れている商品と価格の動き/);
+  assert.match(html, /<span class="media-tile-rank">2位<\/span><span class="media-tile-badge media-tile-badge-down">-¥299<\/span>/);
+  assert.match(html, /<span class="media-tile-history"><svg class="media-spark"/);
+  assert.match(html, /価格の記録はこれから/, '記録が1日だけの商品は線を描かずにそう書く');
+  // 商品の棚は記事の一覧より前（後半を文字だけにしない）
+  assert.ok(html.indexOf('id="ranking"') < html.indexOf('id="find"'));
 });
