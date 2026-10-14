@@ -368,6 +368,58 @@
           "bytes": 109948
         }
       ]
+    },
+    "user-media-price-drops": {
+      "audience": "user",
+      "slides": 4,
+      "files": [
+        {
+          "file": "user-media-price-drops/1.jpg",
+          "sha256": "04cb25c3fa70000e7fe1f6dc3321e9a2e100c0fe0d347eaa0686b5e8628336c6",
+          "bytes": 177653
+        },
+        {
+          "file": "user-media-price-drops/2.jpg",
+          "sha256": "92b7d6eb04601e346a7930649af7a5bce0f82d615143f0050ce6b92531283c33",
+          "bytes": 78477
+        },
+        {
+          "file": "user-media-price-drops/3.jpg",
+          "sha256": "230618fb26d5ae80bd278fe6dd1fa3a8259f990b2d0f05e8b6ff676a94024bd2",
+          "bytes": 81424
+        },
+        {
+          "file": "user-media-price-drops/4.jpg",
+          "sha256": "f8bc9e6383f26760d9069c30f62c9e771946d9de54aef4f47d68d7e5da27d63a",
+          "bytes": 92437
+        }
+      ]
+    },
+    "user-media-ranking-price": {
+      "audience": "user",
+      "slides": 4,
+      "files": [
+        {
+          "file": "user-media-ranking-price/1.jpg",
+          "sha256": "7a17759816bb21cf206feaa64182c40b18dd9e0206987835b35eb892efb7a06b",
+          "bytes": 257315
+        },
+        {
+          "file": "user-media-ranking-price/2.jpg",
+          "sha256": "782c2376541b8a0c6b89c97890ce9bd666898b989896642b8da3e9a1d078fbde",
+          "bytes": 81728
+        },
+        {
+          "file": "user-media-ranking-price/3.jpg",
+          "sha256": "0b7c32d4ae13e2637893a64b5892704f29fd881ca76b84141565058caf57676c",
+          "bytes": 78370
+        },
+        {
+          "file": "user-media-ranking-price/4.jpg",
+          "sha256": "d25ccfd1c7bbc52a64f1edc8b34d7012b150cfcf6f377da6147a2db2bf56608b",
+          "bytes": 105091
+        }
+      ]
     }
   }
 }
