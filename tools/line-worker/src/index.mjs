@@ -125,6 +125,7 @@ import {
 } from './runway-generation.mjs';
 import { handleRunwayMediaRoute } from './social-media-r2.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
+import { MEDIA_PATHS, handleOwnedMediaRoutes } from './owned-media.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import {
   classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure,
@@ -166,7 +167,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
 const RELEASE = '1.22.1';
 const CANONICAL_HOST = 'hoshilu.app';
-const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, '/for-sellers', '/for-creators', '/creator-terms']);
+const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, ...MEDIA_PATHS, '/for-sellers', '/for-creators', '/creator-terms']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
   'content-security-policy': "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'",
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
@@ -3965,6 +3966,9 @@ export default {
     }
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
+    // 2026-10-14 大隆さん指示「オウンドメディア作って」: ホシルの買い物ノート（/media・/media/price-drops）。
+    const ownedMediaResponse = await handleOwnedMediaRoutes(request, env, { headers: DOCUMENT_SECURITY_HEADERS });
+    if (ownedMediaResponse) return ownedMediaResponse;
     if (request.method === 'GET' || request.method === 'HEAD') {
       const seoPage = renderSeoPage(url.pathname, env);
       if (seoPage) return new Response(request.method === 'HEAD' ? null : seoPage, {

@@ -117,6 +117,8 @@ const EVENTS = new Set([
   'marketplace_fallback_click',
   'share_started',
   'seo_article_view',
+  // 2026-10-14: 記事・買い物ノートにどこから来たか（参照元のホスト名から分類した固定値だけ。URL のパス・クエリは送らない）。
+  'seo_article_landing',
   'seo_search_transition',
   'seo_feature_transition',
   'seo_hub_view',

@@ -1,0 +1,136 @@
+/* 2026-10-14 ホシルの買い物ノート（/media）。大隆さん「君はオシャレにできる？」を受けて雑誌の体裁にする。
+   記事ページ（seo-article.css）の上に足す。ほかのページへ漏れないよう .media-page の中だけに効かせる。 */
+.media-page {
+  --pink: #ff4f9a;
+  --violet: #6c4cff;
+  --cyan: #23b8ff;
+  --night: #15122b;
+  --drop: #e0245e;
+  background:
+    radial-gradient(circle at 100% 0, #fde7f2 0, transparent 34%),
+    radial-gradient(circle at 0 18%, #e9f6ff 0, transparent 30%),
+    #fffdf8;
+  font-feature-settings: "palt";
+}
+.media-page .seo-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; backdrop-filter: blur(14px); background: rgba(255, 253, 248, .86); }
+.media-header-link { color: var(--night); font-size: .82rem; font-weight: 800; letter-spacing: .04em; text-decoration: none; }
+.media-page .seo-shell { max-width: 980px; }
+.media-page .breadcrumbs { margin-bottom: 1rem; }
+
+/* 表紙 */
+.media-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 1.4rem;
+  padding: clamp(1.6rem, 6vw, 3.4rem) clamp(1.3rem, 5vw, 3rem) clamp(1.4rem, 5vw, 2.6rem);
+  border-radius: 28px;
+  background: var(--night);
+  color: #fff;
+  box-shadow: 0 24px 60px rgba(21, 18, 43, .22);
+}
+.media-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: linear-gradient(90deg, var(--pink), var(--violet), var(--cyan));
+}
+.media-hero::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  bottom: -110px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 79, 154, .45), rgba(108, 76, 255, .25) 45%, transparent 70%);
+  pointer-events: none;
+}
+.media-issue { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 0 0 1.1rem; font-size: .74rem; font-weight: 800; letter-spacing: .18em; }
+.media-issue span { padding: .3rem .7rem; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; }
+.media-issue time { color: rgba(255, 255, 255, .72); letter-spacing: .12em; }
+.media-hero h1 { position: relative; margin: 0; font-size: clamp(2.3rem, 8.5vw, 4.4rem); line-height: 1.12; letter-spacing: -.03em; }
+.media-hero-compact h1 { font-size: clamp(1.9rem, 6.5vw, 3.2rem); }
+.media-lead { position: relative; max-width: 38em; margin: 1.1rem 0 0; color: rgba(255, 255, 255, .84); font-size: clamp(.98rem, 2.4vw, 1.1rem); line-height: 1.85; }
+.media-updated { position: relative; margin: 1rem 0 0; color: rgba(255, 255, 255, .6); font-size: .82rem; }
+.media-stats { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: 1.6rem 0 0; }
+.media-stats div { padding: .8rem .9rem; border: 1px solid rgba(255, 255, 255, .14); border-radius: 16px; background: rgba(255, 255, 255, .06); }
+.media-stats dt { color: rgba(255, 255, 255, .64); font-size: .72rem; font-weight: 700; }
+.media-stats dd { margin: .2rem 0 0; font-size: clamp(1.4rem, 5vw, 1.9rem); font-weight: 900; letter-spacing: -.02em; }
+.media-stats small { margin-left: .15rem; font-size: .78rem; font-weight: 700; color: rgba(255, 255, 255, .7); }
+
+/* 目次 */
+.media-toc { display: flex; gap: .5rem; margin: 0 -1rem 2.2rem; padding: .2rem 1rem .6rem; overflow-x: auto; scrollbar-width: none; }
+.media-toc::-webkit-scrollbar { display: none; }
+.media-toc a { flex: 0 0 auto; padding: .55rem .95rem; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--night); font-size: .84rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.media-toc a:hover { border-color: var(--violet); color: var(--violet); }
+
+/* コーナー見出し */
+.media-section { margin: 0 0 2.8rem; scroll-margin-top: 80px; }
+.media-section-head { margin-bottom: 1.1rem; padding-top: 1rem; border-top: 2px solid var(--night); }
+.media-kicker { margin: 0 0 .35rem; color: var(--violet); font-size: .72rem; font-weight: 900; letter-spacing: .2em; }
+.media-section-head h2 { margin: 0; font-size: clamp(1.45rem, 4.4vw, 2rem); letter-spacing: -.02em; }
+.media-section-head p:not(.media-kicker) { margin: .45rem 0 0; color: var(--muted); font-size: .92rem; line-height: 1.75; }
+
+/* 値下がり */
+.media-drops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin: 0; padding: 0; list-style: none; }
+.media-drops-full { grid-template-columns: 1fr; }
+.media-drop { min-width: 0; margin: 0; }
+.media-drop a {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .2rem 1rem;
+  height: 100%;
+  padding: 1.1rem 1.15rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(48, 35, 102, .06);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.media-drop a:hover { transform: translateY(-2px); border-color: #d8ceff; box-shadow: 0 16px 36px rgba(48, 35, 102, .12); }
+.media-drop-rank { position: absolute; top: .9rem; right: 1rem; color: #d5d0e6; font-size: .78rem; font-weight: 900; letter-spacing: .1em; }
+.media-drop-rate { grid-row: span 4; align-self: start; color: var(--drop); font-size: .95rem; font-weight: 900; line-height: 1; }
+.media-drop-rate { white-space: nowrap; }
+.media-drop-rate b { font-size: clamp(2rem, 7vw, 2.5rem); letter-spacing: -.05em; }
+.media-drop-body { display: grid; gap: .4rem; min-width: 0; padding-right: 1.6rem; }
+.media-drop strong { font-size: .98rem; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.media-drop-prices { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45rem; color: var(--muted); font-size: .88rem; }
+.media-drop-prices s { color: #9a95ad; }
+.media-drop-prices b { color: var(--night); font-size: 1.25rem; letter-spacing: -.01em; }
+.media-drop-meta { color: var(--muted); font-size: .78rem; }
+.media-drop-cta { justify-self: start; margin-top: .2rem; padding: .35rem .8rem; border-radius: 999px; background: var(--night); color: #fff; font-size: .78rem; font-weight: 800; }
+.media-more { margin: 1.1rem 0 0; text-align: right; }
+.media-more a { display: inline-flex; gap: .4rem; align-items: center; color: var(--night); font-weight: 900; text-decoration: none; border-bottom: 2px solid var(--pink); padding-bottom: .15rem; }
+.media-empty { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed #d8ceff; border-radius: 18px; background: #fff; color: var(--muted); }
+
+/* 記事 */
+.media-articles { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.media-articles li { margin: 0; border-bottom: 1px solid var(--line); }
+.media-articles a { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto; gap: .9rem; align-items: center; padding: 1rem .2rem; color: var(--ink); text-decoration: none; }
+.media-articles a:hover .media-article-text strong { color: var(--violet); }
+.media-articles a:hover .media-article-arrow { transform: translateX(4px); color: var(--violet); }
+.media-article-no { color: var(--pink); font-size: 1.05rem; font-weight: 900; letter-spacing: .04em; }
+.media-article-text { display: grid; gap: .25rem; min-width: 0; }
+.media-article-text strong { font-size: 1rem; line-height: 1.5; transition: color .15s ease; }
+.media-article-text span { color: var(--muted); font-size: .84rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.media-article-arrow { color: #b8b2cc; font-size: 1.1rem; transition: transform .15s ease, color .15s ease; }
+
+/* 決まり・注記 */
+.media-rules { margin: 0 0 2.2rem; padding: 1.2rem 1.3rem; border-radius: 20px; background: #fff; border: 1px solid var(--line); }
+.media-rules h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
+.media-rules p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.85; }
+.media-note { margin-top: 2rem; color: var(--muted); font-size: .8rem; line-height: 1.7; }
+.media-page .mid-cta { border-radius: 24px; }
+
+@media (max-width: 720px) {
+  .media-drops { grid-template-columns: 1fr; }
+  .media-stats { gap: .45rem; }
+  .media-stats div { padding: .65rem .7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .media-drop a, .media-article-arrow, .media-article-text strong { transition: none; }
+}

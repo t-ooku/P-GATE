@@ -1,0 +1,253 @@
+// 2026-10-14 大隆さん指示「オウンドメディア作って」。
+//
+// ホシルの読みもの（/media）。既存の買い物ガイド 142 本の実測（8/12〜10/14）では、一般的な「○○の選び方」は
+// ほぼ読まれず、読まれているのは「探し方」「セール時期」「モールの比べ方」「出店者向け」だった。
+// そこで、ここでは次の 2 つだけを出す。
+//   1. ホシル自身の価格記録から毎日自動で作る「値下がりした商品」（他のサイトが持っていないデータ）
+//   2. 実際に読まれている記事と、目的別に選んだ既存記事
+//
+// 守ること:
+// - 価格は HOSHILU が楽天市場・Yahoo!ショッピングの API で確認した記録（price_observations）だけ。推測で埋めない。
+// - 値下がり記事に載せるのは、モール公式ランキング経由で記録した商品だけ（利用者の検索から記録した商品は載せない。
+//   誰かの検索の中身が、公開ページから推し量れないように）。
+// - 価格は「確認した時点」のもの。現在の価格と在庫は商品ページ（/product）で、いま API に取りに行って出す。
+// - 将来の価格は予言しない。「最安」「今が買い時」とは書かない。
+// - 広告（アフィリエイト）を含むことを明記する。掲載と並び順は価格の記録だけで決める。
+import { seoArticleCard } from './seo-pages.mjs';
+import { jstDate } from './price-observations.mjs';
+
+const ORIGIN = 'https://hoshilu.app';
+export const MEDIA_NAME = 'ホシルの買い物ノート';
+export const MEDIA_PATHS = ['/media', '/media/price-drops'];
+const CACHE_SECONDS = 1800;
+const PRICE_RECORD_STARTED = '2026-10-03';
+const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
+
+// 値下がりの条件。数字を変えたらページの説明文（DROP_RULE_TEXT）も合わせる。
+export const DROP_RULES = Object.freeze({
+  windowDays: 14,     // 直近 14 日の記録で比べる
+  minDays: 3,         // 3 日以上記録がある商品だけ
+  freshDays: 2,       // 最後の記録が 2 日以内
+  minDropRate: 0.10,  // 記録上の最高値から 10% 以上下がった
+  maxDropRate: 0.70,  // 70% を超える下がり方は、別の型番・セット違いの取り違えを疑って載せない
+  limit: 30
+});
+const DROP_RULE_TEXT = '直近14日のうち3日以上価格を記録した商品で、記録上の最高値から10%以上（70%以下）下がり、最後の確認が2日以内のもの';
+
+// 目的別の入口。2026-10-14 の実測で読まれていた型を中心に選ぶ（slug が無くなったらテストで止まる）。
+export const MEDIA_SECTIONS = Object.freeze([
+  { id: 'find', kicker: 'FIND', title: '名前が分からない物を探す', description: '見た目・用途・写真から、商品名にたどり着く方法。', slugs: [
+    'find-product-without-name', 'how-to-search-by-description', 'identify-correct-product-name-from-vague-memory',
+    'search-products-from-saved-images', 'find-fashion-items-seen-on-instagram'] },
+  { id: 'timing', kicker: 'TIMING', title: 'セールと買い時', description: '大型セールの時期と、その値引きが本当に得かを確かめる方法。', slugs: [
+    'qoo10-mega-sale-next-round-alert', 'prime-day-vs-rakuten-super-sale-vs-mega-wari', 'check-if-sale-price-is-really-cheaper',
+    'is-it-cheaper-to-wait-for-sale', 'track-price-history-before-buying', 'usual-hoshilu-never-run-out-of-daily-essentials'] },
+  { id: 'compare', kicker: 'COMPARE', title: 'モールを比べる', description: 'Amazon・楽天市場・Yahoo!ショッピング・Qoo10 の違いと、まとめて比べる方法。', slugs: [
+    'compare-amazon-rakuten-yahoo-shopping', 'compare-amazon-and-rakuten', 'compare-qoo10-and-rakuten',
+    'compare-online-shopping-sites', 'cross-search-ec-sites'] },
+  { id: 'sellers', kicker: 'FOR SELLERS', title: '出店者・メーカーの方へ', description: 'モールの外で探されている需要と、見つけてもらう方法。', slugs: [
+    'ec-repeat-customers', 'oudan-kensaku-de-mitsukete-morau', 'mall-seller-see-demand-outside-the-mall',
+    'pr-post-rules-for-influencers', 'sell-more-on-ec-malls'] }
+]);
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/gu, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+const yen = (n) => `¥${Math.round(Number(n) || 0).toLocaleString('ja-JP')}`;
+const daysAgo = (now, days) => jstDate(new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
+
+// 値下がりした商品（ホシルの価格記録だけで決める）。表が無い・読めない時は null（0 件とは区別する）。
+export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES } = {}) {
+  const db = env?.PRODUCT_DB;
+  if (!db) return null;
+  const today = jstDate(now);
+  const since = daysAgo(now, rules.windowDays);
+  const freshSince = daysAgo(now, rules.freshDays);
+  try {
+    const { results = [] } = await db.prepare(`WITH w AS (
+        SELECT marketplace, external_product_id, seller_id, record_key, product_name, observed_date, price, stock_status,
+          ROW_NUMBER() OVER (PARTITION BY marketplace, external_product_id, seller_id ORDER BY observed_date DESC) AS rn,
+          MAX(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS max_price,
+          COUNT(*) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS days
+        FROM price_observations WHERE observed_date >= ?1 AND observed_date <= ?2)
+      SELECT w.marketplace, w.record_key, w.product_name, w.observed_date AS latest_date, w.price AS latest_price,
+        w.max_price, w.days,
+        (SELECT MAX(m.observed_date) FROM price_observations m WHERE m.marketplace = w.marketplace
+          AND m.external_product_id = w.external_product_id AND m.seller_id = w.seller_id
+          AND m.price = w.max_price AND m.observed_date >= ?1) AS max_date
+      FROM w
+      WHERE w.rn = 1 AND w.days >= ?3 AND w.observed_date >= ?4 AND w.stock_status <> 'OUT_OF_STOCK'
+        AND w.price <= w.max_price * (1 - ?5) AND w.price >= w.max_price * (1 - ?6)
+        AND EXISTS (SELECT 1 FROM price_observations r WHERE r.marketplace = w.marketplace
+          AND r.external_product_id = w.external_product_id AND r.source = 'rakuten_ranking_api')
+      ORDER BY (w.max_price - w.price) * 1.0 / w.max_price DESC, w.observed_date DESC
+      LIMIT ?7`).bind(since, today, rules.minDays, freshSince, rules.minDropRate, rules.maxDropRate, rules.limit).all();
+    return results.map((row) => ({
+      record_key: String(row.record_key || ''),
+      marketplace: String(row.marketplace || ''),
+      product_name: String(row.product_name || '').replace(/\s+/gu, ' ').trim().slice(0, 90),
+      latest_price: Number(row.latest_price) || 0,
+      latest_date: String(row.latest_date || ''),
+      max_price: Number(row.max_price) || 0,
+      max_date: String(row.max_date || ''),
+      days: Number(row.days) || 0,
+      drop_rate: row.max_price ? Math.round((1 - Number(row.latest_price) / Number(row.max_price)) * 100) : 0
+    })).filter((row) => row.record_key && row.product_name && row.latest_price > 0 && row.max_price > row.latest_price);
+  } catch {
+    return null;
+  }
+}
+
+// 実際に読まれている記事（直近30日の人の閲覧。テスト訪問と名乗るクローラは除く）。読めなければ空。
+export async function loadPopularArticles(env, { limit = 6 } = {}) {
+  const db = env?.PRODUCT_DB;
+  if (!db) return [];
+  try {
+    const { results = [] } = await db.prepare(`SELECT content AS slug, COUNT(*) AS views FROM growth_events
+      WHERE event_type = 'seo_article_view' AND traffic_class <> 'QA' AND occurred_at >= datetime('now', '-30 days')
+      GROUP BY content ORDER BY views DESC LIMIT 20`).all();
+    return results.map((row) => seoArticleCard(String(row.slug || ''))).filter(Boolean).slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+function productLink(row) {
+  return `/product?key=${encodeURIComponent(row.record_key)}&from=media`;
+}
+
+function dropCard(row, index) {
+  const rank = String(index + 1).padStart(2, '0');
+  return `<li class="media-drop"><a href="${productLink(row)}">
+<span class="media-drop-rank" aria-hidden="true">${rank}</span>
+<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span>
+<span class="media-drop-body"><strong>${esc(row.product_name)}</strong>
+<span class="media-drop-prices"><s>${yen(row.max_price)}</s><span aria-hidden="true">→</span><b>${yen(row.latest_price)}</b></span>
+<span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${esc(row.max_date.slice(5).replace('-', '/'))}→${esc(row.latest_date.slice(5).replace('-', '/'))}・${row.days}日分の記録</span>
+<span class="media-drop-cta">今の価格を見る</span></span>
+</a></li>`;
+}
+
+function articleList(cards) {
+  return `<ol class="media-articles">${cards.map((card, index) => `<li><a href="${esc(card.path)}"><span class="media-article-no" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span><span class="media-article-text"><strong>${esc(card.title)}</strong><span>${esc(card.description)}</span></span><span class="media-article-arrow" aria-hidden="true">→</span></a></li>`).join('')}</ol>`;
+}
+
+function sectionHead(kicker, title, description) {
+  return `<header class="media-section-head"><p class="media-kicker">${esc(kicker)}</p><h2>${esc(title)}</h2>${description ? `<p>${esc(description)}</p>` : ''}</header>`;
+}
+
+function issueLabel(now) {
+  return jstDate(now).replaceAll('-', '.');
+}
+
+function recordDays(now) {
+  return Math.max(1, Math.round((Date.parse(`${jstDate(now)}T00:00:00Z`) - Date.parse(`${PRICE_RECORD_STARTED}T00:00:00Z`)) / 86400000) + 1);
+}
+
+function shell({ title, description, canonical, robots, articleId, intent, body, structured }) {
+  return `<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
+<link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=2"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
+<main class="seo-shell">${body}</main>
+<footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
+<script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
+}
+
+const SEARCH_CTA = `<aside class="mid-cta" id="media-search"><h2>名前が分からなくても、ホシルでまとめて探せます</h2><p>用途・見た目・使う人・予算を文章で入れると、楽天市場・Yahoo!ショッピングなどからまとめて探します。</p><form action="/" method="get" data-seo-search-form><label for="media-search-input">探したい商品の条件</label><textarea id="media-search-input" name="q" required maxlength="200" placeholder="例：洗いやすい、500mlくらいの保冷できる水筒"></textarea><button type="submit">この条件でまとめて探す</button></form></aside>`;
+const AD_NOTE = '<p class="media-note">商品ページ・購入先へのリンクには広告（アフィリエイト）を含みます。掲載する商品と並び順は、ホシルの価格記録だけで決めています。</p>';
+
+export function renderMediaTop({ drops = null, popular = [], now = new Date() } = {}) {
+  const canonical = `${ORIGIN}/media`;
+  const today = jstDate(now);
+  const dropCount = Array.isArray(drops) ? drops.length : 0;
+  const dropsPreview = Array.isArray(drops) && drops.length
+    ? `<ol class="media-drops">${drops.slice(0, 6).map(dropCard).join('')}</ol><p class="media-more"><a href="/media/price-drops">値下がりした商品をすべて見る（${drops.length}件）<span aria-hidden="true">→</span></a></p>`
+    : `<p class="media-empty">${drops === null ? '価格の記録を読み込めませんでした。時間をおいて開き直してください。' : '今週は、条件に合う大きな値下がりはありませんでした。'}</p>`;
+  const sections = MEDIA_SECTIONS.map((section) => {
+    const cards = section.slugs.map(seoArticleCard).filter(Boolean);
+    return `<section class="media-section" id="${section.id}">${sectionHead(section.kicker, section.title, section.description)}${articleList(cards)}</section>`;
+  }).join('');
+  const body = `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>${MEDIA_NAME}</span></nav>
+<article><header class="media-hero"><p class="media-issue"><span>HOSHILU NOTES</span><time datetime="${today}">${issueLabel(now)} 号</time></p><h1>ホシルの<br>買い物ノート</h1><p class="media-lead">ホシルが毎日記録している楽天市場・Yahoo!ショッピングの価格から、値下がりした商品をお知らせします。名前が分からない物の探し方、セールの見分け方も。</p>
+<dl class="media-stats"><div><dt>値下がり</dt><dd>${dropCount}<small>件</small></dd></div><div><dt>価格の記録</dt><dd>${recordDays(now)}<small>日分</small></dd></div><div><dt>更新</dt><dd>毎日</dd></div></dl></header>
+<nav class="media-toc" aria-label="この号の内容"><a href="#drops">今週の値下がり</a>${popular.length ? '<a href="#popular">よく読まれている記事</a>' : ''}${MEDIA_SECTIONS.map((s) => `<a href="#${s.id}">${esc(s.title)}</a>`).join('')}</nav>
+<section class="media-section" id="drops">${sectionHead('PRICE DROPS', '今週の値下がり', 'ホシルの価格記録で、記録上の最高値から10%以上下がった商品です（モール公式ランキングに出た商品から選んでいます）。')}${dropsPreview}</section>
+${popular.length ? `<section class="media-section" id="popular">${sectionHead('MOST READ', 'よく読まれている記事', '直近30日によく読まれた記事です。')}${articleList(popular)}</section>` : ''}
+${sections}
+${SEARCH_CTA}
+<p class="bottom-cta"><a href="/ja/guides">買い物ガイドをすべて見る</a></p>
+${AD_NOTE}</article>`;
+  return shell({
+    title: `${MEDIA_NAME}｜値下がりした商品と、買う前の探し方`,
+    description: 'ホシルが毎日記録している楽天市場・Yahoo!ショッピングの価格から、値下がりした商品をお知らせ。名前が分からない物の探し方、セールの見分け方、モールの比べ方もまとめています。',
+    canonical, robots: 'index,follow,max-image-preview:large,max-snippet:-1',
+    articleId: 'media-top', intent: 'owned_media_top', body,
+    structured: { '@context': 'https://schema.org', '@graph': [
+      { '@type': 'CollectionPage', name: MEDIA_NAME, url: canonical, dateModified: today, inLanguage: 'ja',
+        publisher: { '@type': 'Organization', name: 'HOSHILU', url: ORIGIN } },
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: canonical }] }
+    ] }
+  });
+}
+
+export function renderPriceDrops({ drops = null, now = new Date() } = {}) {
+  const canonical = `${ORIGIN}/media/price-drops`;
+  const today = jstDate(now);
+  const list = Array.isArray(drops) ? drops : [];
+  // 載せる商品が少ない日は検索結果に出さない（中身の薄いページを索引させない）。
+  const robots = list.length >= 3 ? 'index,follow,max-image-preview:large,max-snippet:-1' : 'noindex,follow';
+  const content = list.length
+    ? `<ol class="media-drops media-drops-full">${list.map(dropCard).join('')}</ol>`
+    : `<p class="media-empty">${drops === null ? '価格の記録を読み込めませんでした。時間をおいて開き直してください。' : '今週は、条件に合う大きな値下がりはありませんでした。'}</p>`;
+  const body = `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><a href="/media">${MEDIA_NAME}</a><span aria-hidden="true">›</span><span>値下がりした商品</span></nav>
+<article><header class="media-hero media-hero-compact"><p class="media-issue"><span>PRICE DROPS</span><time datetime="${today}">${issueLabel(now)} 号</time></p><h1>今週値下がりした商品</h1><p class="media-lead">ホシルが楽天市場・Yahoo!ショッピングで毎日確認している価格の記録から、記録上の最高値より下がった商品を、下がった割合の大きい順に並べています。</p><p class="media-updated">毎日自動で更新しています。</p></header>
+<section class="media-rules"><h2>このページの決まり</h2><p>${DROP_RULE_TEXT}です。価格はホシルが確認した時点の商品価格（送料は含みません）で、ホシルでの価格記録は${PRICE_RECORD_STARTED}から始まっています。今の価格と在庫は、各商品を開くとその場でモールに確認して表示します。これから上がるか下がるかの予想はしていません。</p></section>
+<section class="media-section">${sectionHead('THIS WEEK', list.length ? `${list.length}件` : '今週の値下がり', '')}${content}</section>
+${SEARCH_CTA}
+${AD_NOTE}</article>`;
+  return shell({
+    title: '今週値下がりした商品（ホシルの価格記録より）',
+    description: 'ホシルが毎日記録している楽天市場・Yahoo!ショッピングの価格から、記録上の最高値より10%以上下がった商品を毎日自動でまとめています。',
+    canonical, robots, articleId: 'media-price-drops', intent: 'owned_media_price_drops', body,
+    structured: { '@context': 'https://schema.org', '@graph': [
+      { '@type': 'ItemList', name: '今週値下がりした商品', url: canonical, numberOfItems: list.length,
+        itemListElement: list.map((row, index) => ({ '@type': 'ListItem', position: index + 1, name: row.product_name, url: `${ORIGIN}${productLink(row)}` })) },
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: `${ORIGIN}/media` },
+        { '@type': 'ListItem', position: 3, name: '値下がりした商品', item: canonical }] }
+    ] }
+  });
+}
+
+// GET /media・/media/price-drops。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
+export async function handleOwnedMediaRoutes(request, env, { headers = {}, now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
+  if (!['GET', 'HEAD'].includes(request.method)) return null;
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/u, '') || '/';
+  if (!MEDIA_PATHS.includes(path)) return null;
+  const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return request.method === 'HEAD' ? new Response(null, hit) : hit;
+    } catch {}
+  }
+  const drops = await loadPriceDrops(env, { now });
+  const html = path === '/media'
+    ? renderMediaTop({ drops, popular: await loadPopularArticles(env), now })
+    : renderPriceDrops({ drops, now });
+  const response = new Response(html, {
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, ...headers }
+  });
+  // 読み込めなかった時（drops === null）はキャッシュしない。
+  if (cache && drops !== null) {
+    try { await cache.put(cacheKey, response.clone()); } catch {}
+  }
+  return request.method === 'HEAD' ? new Response(null, response) : response;
+}

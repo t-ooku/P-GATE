@@ -4167,6 +4167,7 @@ function renderGuideHub() {
 <body data-seo-article-id="shopping-guides-hub" data-seo-intent="shopping_guides_hub" data-seo-cluster="content-hub" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a></header>
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>買い物ガイド</span></nav>
 <article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDES</p><h1>商品選び・比較・探し方ガイド</h1><p class="lead">欲しい物の状態に合わせて、探し方・見分け方・比較方法を選べます。AIは条件を整理し、HOSHILUは実在する商品候補と購入先を探します。</p><p class="updated"><time datetime="${HUB_UPDATED_AT}">最終更新: ${HUB_UPDATED_AT}</time></p></header>
+<p class="media-link-note"><a href="/media">ホシルの買い物ノート：今週値下がりした商品と、よく読まれている記事</a></p>
 <nav class="article-toc guide-hub-toc" aria-label="ガイドの分類"><strong>目的から選ぶ</strong><div>${guideHubGroups.map((group) => `<a href="#${group.id}">${esc(group.title)}</a>`).join('')}<a href="#hub-search">HOSHILUで探す</a></div></nav>
 <section class="answer"><h2>今の状況に近い項目から選んでください</h2><p>商品名が分からない場合は「名前・特徴・予算から探す」、候補が決まっている場合は「同じ商品・使える商品を見分ける」、購入直前なら「購入先・総額・口コミを比較する」から始められます。</p></section>
 ${groups}
@@ -4297,4 +4298,11 @@ export function renderSeoPage(pathname, env = {}) {
 <footer><a href="/privacy">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
 ${stickyCta}
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
+}
+
+// 2026-10-14 オウンドメディア（/media）が既存の日本語記事を目的別に並べるために使う。
+export function seoArticleCard(slug) {
+  const page = pages[slug]?.ja;
+  if (!page) return null;
+  return { slug, path: pathFor('ja', slug), title: page.title, description: page.description };
 }

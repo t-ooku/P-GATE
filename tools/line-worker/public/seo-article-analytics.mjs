@@ -40,6 +40,36 @@ function preserveArticleContext(eventType = transitionEvent) {
 }
 
 send(viewEvent);
+
+// 2026-10-14 大隆さん指示「オウンドメディア作って」: 記事にどこから来たか（Google・ChatGPT・SNS など）を残す。
+// 参照元はホスト名だけを読んで固定の分類にする。URL のパス・クエリ（検索語など）は読まない・送らない。
+const REFERRER_GROUPS = [
+  [/(^|\.)google\./u, 'google', 'organic'], [/(^|\.)yahoo\.(co\.jp|com)$/u, 'yahoo', 'organic'], [/(^|\.)bing\.com$/u, 'bing', 'organic'],
+  [/(^|\.)duckduckgo\.com$/u, 'duckduckgo', 'organic'], [/(^|\.)(chatgpt\.com|openai\.com)$/u, 'chatgpt', 'ai'],
+  [/(^|\.)perplexity\.ai$/u, 'perplexity', 'ai'], [/(^|\.)(gemini\.google\.com)$/u, 'gemini', 'ai'],
+  [/(^|\.)threads\.(net|com)$/u, 'threads', 'social'], [/(^|\.)instagram\.com$/u, 'instagram', 'social'],
+  [/^(t\.co|x\.com|(www\.)?twitter\.com)$/u, 'x', 'social'], [/(^|\.)facebook\.com$/u, 'facebook', 'social'],
+  [/(^|\.)line\.me$/u, 'line', 'social']
+];
+export function landingSource(referrer, ownHost = location.hostname) {
+  if (!referrer) return ['direct', 'none'];
+  let host = '';
+  try { host = new URL(referrer).hostname.toLowerCase(); } catch { return ['other', 'referral']; }
+  if (host === ownHost) return ['internal', 'internal'];
+  // gemini.google.com は google より先に見る
+  if (/(^|\.)gemini\.google\.com$/u.test(host)) return ['gemini', 'ai'];
+  for (const [pattern, source, medium] of REFERRER_GROUPS) if (pattern.test(host)) return [source, medium];
+  return ['other', 'referral'];
+}
+if (!isQaVisit) {
+  const [landingFrom, landingMedium] = landingSource(document.referrer);
+  const body = JSON.stringify({
+    event_type: 'seo_article_landing', locale, source: landingFrom, medium: landingMedium, campaign: searchIntent, content: articleId,
+    visitor_id: visitorId, session_id: growthSessionId()
+  });
+  try { if (!(typeof navigator.sendBeacon === 'function' && navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' })))) throw new Error('fallback'); }
+  catch { fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {}); }
+}
 document.querySelectorAll('[data-seo-search-form]').forEach((form) => form.addEventListener('submit', preserveArticleContext));
 document.querySelectorAll('[data-seo-search-link]').forEach((link) => link.addEventListener('click', preserveArticleContext));
 document.querySelectorAll('[data-seo-feature-link]').forEach((link) => link.addEventListener('click', () => preserveArticleContext('seo_feature_transition')));
