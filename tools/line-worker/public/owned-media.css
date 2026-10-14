@@ -115,6 +115,30 @@
 .media-more a { display: inline-flex; gap: .4rem; align-items: center; color: var(--night); font-weight: 900; text-decoration: none; border-bottom: 2px solid var(--pink); padding-bottom: .15rem; }
 .media-empty { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed #d8ceff; border-radius: 18px; background: #fff; color: var(--muted); }
 
+/* ジャンル別・売れている商品と価格の動き（2026-10-14 大隆さん「後半も商品画像と価格履歴を」） */
+.media-shelf-nav { display: flex; gap: .45rem; margin: 0 -1rem 1.2rem; padding: 0 1rem .4rem; overflow-x: auto; scrollbar-width: none; }
+.media-shelf-nav::-webkit-scrollbar { display: none; }
+.media-shelf-nav a { flex: 0 0 auto; padding: .4rem .8rem; border-radius: 999px; background: var(--night); color: #fff; font-size: .78rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.media-shelf { margin: 0 0 1.8rem; scroll-margin-top: 80px; }
+.media-shelf h3 { display: flex; align-items: center; gap: .5rem; margin: 0 0 .8rem; font-size: 1.1rem; }
+.media-shelf h3::before { content: ""; width: 6px; height: 1.1em; border-radius: 3px; background: linear-gradient(var(--pink), var(--violet)); }
+.media-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin: 0; padding: 0; list-style: none; }
+.media-tile { min-width: 0; margin: 0; }
+.media-tile a { display: grid; align-content: start; gap: .4rem; height: 100%; padding: .65rem; border: 1px solid var(--line); border-radius: 18px; background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 8px 24px rgba(48, 35, 102, .05); transition: transform .18s ease, box-shadow .18s ease; }
+.media-tile a:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(48, 35, 102, .12); }
+.media-tile-figure { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 13px; background: #fff; }
+.media-tile-figure img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.media-tile-rank { position: absolute; left: .35rem; top: .35rem; padding: .2rem .45rem; border-radius: 8px; background: rgba(21, 18, 43, .78); color: #fff; font-size: .7rem; font-weight: 900; }
+.media-tile-badge { position: absolute; right: .35rem; bottom: .35rem; padding: .22rem .5rem; border-radius: 9px; background: #fff; color: var(--muted); font-size: .72rem; font-weight: 900; box-shadow: 0 4px 12px rgba(21, 18, 43, .14); }
+.media-tile-badge-down { background: var(--drop); color: #fff; }
+.media-tile-badge-up { background: #fff3e6; color: #b45309; }
+.media-tile-badge-new { background: #f1f0f6; }
+.media-tile strong { font-size: .84rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.media-tile-price { color: var(--night); font-size: 1.08rem; font-weight: 900; letter-spacing: -.01em; }
+.media-tile-history { display: grid; gap: .1rem; padding: .3rem .4rem .25rem; border-radius: 10px; background: #faf8ff; }
+.media-tile-history .media-spark { height: 34px; }
+.media-tile-history-empty { color: var(--muted); font-size: .7rem; text-align: center; padding: .55rem .4rem; }
+
 /* 記事 */
 .media-articles { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .media-articles li { margin: 0; border-bottom: 1px solid var(--line); }
@@ -134,12 +158,12 @@
 .media-note { margin-top: 2rem; color: var(--muted); font-size: .8rem; line-height: 1.7; }
 .media-page .mid-cta { border-radius: 24px; }
 
-@media (max-width: 860px) { .media-drops, .media-drops-full { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .media-drops, .media-drops-full { grid-template-columns: 1fr; } .media-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .media-drop a { grid-template-columns: 124px minmax(0, 1fr); gap: .8rem; padding: .8rem; } }
 @media (max-width: 720px) {
   .media-stats { gap: .45rem; }
   .media-stats div { padding: .65rem .7rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .media-drop a, .media-article-arrow, .media-article-text strong { transition: none; }
+  .media-drop a, .media-tile a, .media-article-arrow, .media-article-text strong { transition: none; }
 }
