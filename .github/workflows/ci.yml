@@ -391,6 +391,20 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+      # 2026-10-14: build-social-carousels.yml は画像を [carousel-build] コミットとして push して先にデプロイする。
+      # このジョブは同じ cloudflare-deploy の列で後から走るので、push 時点のコミットのままだと画像の無い版で上書きする
+      # （#627 で /social/carousel/user-media-*/ が 404 になった）。push 後に足されたのが [carousel-build] だけなら、それも含めて出す。
+      - name: Include carousel images committed after this push
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=20 origin feature/ui-search-v2
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ] && git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            subjects="$(git log --format=%s HEAD..FETCH_HEAD)"
+            if ! printf '%s\n' "$subjects" | grep -qv '\[carousel-build\]$'; then
+              git -c advice.detachedHead=false checkout FETCH_HEAD
+              echo "deploying with carousel images: $(git rev-parse --short HEAD)"
+            fi
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -99,6 +99,8 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
     /google-visual-activate:[\s\S]*Install Worker dependencies[\s\S]*npm ci --prefix tools\/line-worker[\s\S]*Deploy enabled Worker/u,
     'Google visual activation must install Worker dependencies before deployment'
   );
+  // 2026-10-14: 後から push された [carousel-build] の画像を、通常のデプロイが古い版で上書きしない
+  assert.match(ci, /deploy:[\s\S]*Include carousel images committed after this push[\s\S]*\\\[carousel-build\\\]\$[\s\S]*Deploy/u);
   assert.doesNotMatch(ci, /skipping deploy/u);
   assert.doesNotMatch(ci, /steps\.creds\.outputs\.configured/u);
 });
