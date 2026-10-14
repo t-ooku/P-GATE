@@ -172,3 +172,13 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は content_id=seller-pr-slot・APPROVED・last_error なし（updated_at 10/14 14:12 JST、既存自動投入の再上書き）。公開確認は 10/21 22:30 JST 以降。
 - 成果指標（D1 実測、14:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
 - 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の seller_landing_view／seller_form_* を確認。seller_form_* は毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
+
+### 2026-10-14 18:15 JST インフルエンサー（トリドリ2回目「HOSHILU ホシル アプリPR」）展開中の点検（大隆さん依頼、Claude）
+- **実装・本番反映: Issue #617（head 8870df1、deploy/health success）**
+  - /for-creators のセラー向け画像が旧フォルダ（seller30-20260927-r2＝**4,980円/月 表記**）を指していた → 現行 1,980円の版フォルダ（seller1980-30d-autorenew-20260927）へ。
+  - ショップページ案内（「お店の入口を、モールの外にも。」ロゴ・クーポン等）を素材から外し「モールの出店は、そのまま。」へ。セラー向け訴求に「PR」枠（最大2件・保証しない）を追加。
+  - 「13モールまとめて検索」→「最大13モールで探せる」（まとめて検索は2モール）。募集ページ・クリエイター規約の機能説明・記事FAQ。
+  - リール日の代替カルーセルが曜日ごとに毎週同じセットに固定（金=ショップ入口、火=大型セール通知）→ 週ごとに順送り・前後6日の通常枠と重ねない。ショップ入口セットは 10/14 以降の枠で使わない（10/31 通常枠は seller-keep-mall-see-demand に置換）。次の 10/16（金）代替は seller-demand-visible。
+- **キュー反映（既存行の変更・大隆さんの「改善して」に基づく）**: hoshilu-carousel-v3-instagram-2026-10-14（APPROVED・未公開）を carousel-user-big-sale-alert → carousel-user-price-watch に差し替え（10/13 代替と同じセットが連日になるため）。caption・link・media_urls は buildCarouselPosts と同じ生成結果。
+- **計測**: 10/14 15〜18 時 JST の流入は instagram/bio 3件＋流入元なし 13件（8人）。creator_id 付きの着地は 0 → トリドリの投稿者ごとの効果は計測できていない。
+- **Codex へ（担当外）**: 有料 canary の料金見直し（CANARY_PRICING_REVIEW_REQUIRED）が 10/13 09:07 JST から未対応で監視が赤のまま。openai_backup は CANARY_PROVIDER_BILLING_DISABLED。自動リール（火・金）は 10/6 以降生成なし。
