@@ -176,3 +176,10 @@ test('保存の鍵に作りの版を入れ、版は CSS の版と揃える', asy
   const html = renderMediaTop({ drops: [], now: NOW });
   assert.match(html, new RegExp(`owned-media\\.css\\?v=${MEDIA_TEMPLATE_VERSION}"`), 'CSS を上げたら保存の版も上げる');
 });
+
+// 2026-10-14 大隆さん「Instagramやxに貼りたいからURL」: 貼る URL の印（utm）を来訪元として残す。
+test('記事・買い物ノートの来訪元は、URL の印（utm_source/utm_medium）を参照元より優先する', () => {
+  const source = readFileSync(new URL('../public/seo-article-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const \[landingFrom, landingMedium\] = tagged \|\| landingSource\(document\.referrer\);/);
+  assert.match(source, /\/\^\[a-z0-9\]\[a-z0-9_\.-\]\{0,40\}\$\/u\.test\(requestedSource\)/);
+});
