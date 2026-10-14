@@ -165,3 +165,14 @@ test('価格履歴の折れ線: 記録した日だけで描き、読み上げ用
   assert.match(html, /<span class="media-spark-axis"><span>10\/10<\/span><span>10\/13<\/span><\/span>/);
   assert.match(html, /今の価格と履歴を見る/);
 });
+
+// 2026-10-14: 30 分の保存の鍵に作りの版を入れる（反映直後に古い作りのページを出し続けた）。
+import { MEDIA_TEMPLATE_VERSION } from '../src/owned-media.mjs';
+test('保存の鍵に作りの版を入れ、版は CSS の版と揃える', async () => {
+  const keys = [];
+  const cache = { async match(request) { keys.push(request.url); return undefined; }, async put() {} };
+  await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media'), envWith(), { now: NOW, cache });
+  assert.match(keys[0], new RegExp(`media-cache=2026-10-14&v=${MEDIA_TEMPLATE_VERSION}$`));
+  const html = renderMediaTop({ drops: [], now: NOW });
+  assert.match(html, new RegExp(`owned-media\\.css\\?v=${MEDIA_TEMPLATE_VERSION}"`), 'CSS を上げたら保存の版も上げる');
+});
