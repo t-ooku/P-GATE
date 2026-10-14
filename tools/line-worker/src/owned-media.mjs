@@ -20,6 +20,8 @@ const ORIGIN = 'https://hoshilu.app';
 export const MEDIA_NAME = 'ホシルの買い物ノート';
 export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
+// ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
+export const MEDIA_TEMPLATE_VERSION = '3';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -322,7 +324,7 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/u, '') || '/';
   if (!MEDIA_PATHS.includes(path)) return null;
-  const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}`);
+  const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
   if (cache) {
     try {
       const hit = await cache.match(cacheKey);
