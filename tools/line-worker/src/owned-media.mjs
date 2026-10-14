@@ -98,6 +98,91 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
   }
 }
 
+// 2026-10-14 大隆さん指示「商品画像も表示して。人は視認性が大切よ。あと価格履歴ね」。
+// 画像: 値下がり記事に載せるのはモール公式ランキング経由の商品だけなので、ランキングの保存データ
+// （marketplace_ranking_cache の公式 API の結果）から record_key で引く。D1 の表は変えない。
+// 見つからない商品は画像なしの枠にする（別の商品の画像で埋めない）。
+export function largerImage(url) {
+  const value = String(url || '');
+  if (!/^https:\/\//iu.test(value)) return '';
+  // 楽天のサムネイルは ?_ex=128x128 のようにサイズを指定できる。カードで粗く見えないよう 300px を求める。
+  return /thumbnail\.image\.rakuten\.co\.jp/iu.test(value) ? value.replace(/([?&]_ex=)\d+x\d+/iu, '$1300x300') : value;
+}
+
+export async function loadRankingImages(env, recordKeys = []) {
+  const db = env?.PRODUCT_DB;
+  const wanted = new Set(recordKeys.filter(Boolean));
+  const images = new Map();
+  if (!db || !wanted.size) return images;
+  try {
+    const { results = [] } = await db.prepare(`SELECT payload_json FROM marketplace_ranking_cache
+      WHERE marketplace_id IN ('RAKUTEN_JP','YAHOO_JP') ORDER BY updated_at DESC LIMIT 200`).all();
+    for (const row of results) {
+      let items = [];
+      try { items = JSON.parse(row.payload_json); } catch { items = []; }
+      for (const item of Array.isArray(items) ? items : []) {
+        const key = String(item?.record_key || '');
+        if (!wanted.has(key) || images.has(key)) continue;
+        const image = largerImage(item?.image_url || (Array.isArray(item?.image_urls) ? item.image_urls[0] : ''));
+        if (image) images.set(key, image);
+      }
+    }
+  } catch {}
+  return images;
+}
+
+// 価格履歴: HOSHILU が記録した日の価格だけ（記録の無い日は線でつなぐだけで、値を作らない）。
+export async function loadPriceHistories(env, recordKeys = [], { now = new Date(), days = DROP_RULES.windowDays } = {}) {
+  const db = env?.PRODUCT_DB;
+  const keys = [...new Set(recordKeys.filter(Boolean))].slice(0, 40);
+  const histories = new Map();
+  if (!db || !keys.length) return histories;
+  try {
+    const placeholders = keys.map((_, index) => `?${index + 3}`).join(',');
+    const { results = [] } = await db.prepare(`SELECT record_key, observed_date, MIN(price) AS price FROM price_observations
+      WHERE observed_date >= ?1 AND observed_date <= ?2 AND record_key IN (${placeholders})
+      GROUP BY record_key, observed_date ORDER BY record_key, observed_date`)
+      .bind(daysAgo(now, days), jstDate(now), ...keys).all();
+    for (const row of results) {
+      const key = String(row.record_key || '');
+      if (!histories.has(key)) histories.set(key, []);
+      histories.get(key).push({ date: String(row.observed_date || ''), price: Number(row.price) || 0 });
+    }
+  } catch {}
+  return histories;
+}
+
+export async function withImagesAndHistory(env, drops, { now = new Date() } = {}) {
+  if (!Array.isArray(drops) || !drops.length) return drops;
+  const keys = drops.map((row) => row.record_key);
+  const [images, histories] = await Promise.all([loadRankingImages(env, keys), loadPriceHistories(env, keys, { now })]);
+  return drops.map((row) => ({ ...row, image_url: images.get(row.record_key) || '', history: histories.get(row.record_key) || [] }));
+}
+
+// 小さな折れ線（価格履歴）。CSP（style-src 'self'）に合わせ、色や太さは CSS のクラスで付ける。
+export function sparkline(history = []) {
+  const points = (Array.isArray(history) ? history : []).filter((point) => point.price > 0);
+  if (points.length < 2) return '';
+  const width = 220;
+  const height = 48;
+  const pad = 5;
+  const prices = points.map((point) => point.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const first = Date.parse(`${points[0].date}T00:00:00Z`);
+  const span = Math.max(1, Date.parse(`${points[points.length - 1].date}T00:00:00Z`) - first);
+  const xy = points.map((point) => {
+    const x = pad + ((Date.parse(`${point.date}T00:00:00Z`) - first) / span) * (width - pad * 2);
+    const y = max === min ? height / 2 : pad + ((max - point.price) / (max - min)) * (height - pad * 2);
+    return [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
+  });
+  const line = xy.map(([x, y]) => `${x},${y}`).join(' ');
+  const area = `${xy[0][0]},${height} ${line} ${xy[xy.length - 1][0]},${height}`;
+  const [lastX, lastY] = xy[xy.length - 1];
+  const label = `価格の推移（${points.length}日分の記録）: ${points.map((point) => `${point.date.slice(5).replace('-', '/')} ${yen(point.price)}`).join('、')}`;
+  return `<svg class="media-spark" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${esc(label)}"><polygon class="media-spark-area" points="${area}"/><polyline class="media-spark-line" points="${line}"/><circle class="media-spark-dot" cx="${lastX}" cy="${lastY}" r="3.5"/></svg>`;
+}
+
 // 実際に読まれている記事（直近30日の人の閲覧。テスト訪問と名乗るクローラは除く）。読めなければ空。
 export async function loadPopularArticles(env, { limit = 6 } = {}) {
   const db = env?.PRODUCT_DB;
@@ -116,15 +201,21 @@ function productLink(row) {
   return `/product?key=${encodeURIComponent(row.record_key)}&from=media`;
 }
 
+const shortDate = (date) => String(date || '').slice(5).replace('-', '/');
+
 function dropCard(row, index) {
   const rank = String(index + 1).padStart(2, '0');
+  const image = row.image_url
+    ? `<img src="${esc(row.image_url)}" alt="" loading="${index < 2 ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" width="300" height="300">`
+    : `<span class="media-drop-noimage" aria-hidden="true">${esc(String(row.product_name || '').slice(0, 1))}</span>`;
+  const history = sparkline(row.history);
   return `<li class="media-drop"><a href="${productLink(row)}">
-<span class="media-drop-rank" aria-hidden="true">${rank}</span>
-<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span>
+<span class="media-drop-figure">${image}<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span><span class="media-drop-rank" aria-hidden="true">${rank}</span></span>
 <span class="media-drop-body"><strong>${esc(row.product_name)}</strong>
 <span class="media-drop-prices"><s>${yen(row.max_price)}</s><span aria-hidden="true">→</span><b>${yen(row.latest_price)}</b></span>
-<span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${esc(row.max_date.slice(5).replace('-', '/'))}→${esc(row.latest_date.slice(5).replace('-', '/'))}・${row.days}日分の記録</span>
-<span class="media-drop-cta">今の価格を見る</span></span>
+${history ? `<span class="media-drop-history"><span class="media-drop-history-label">価格の推移</span>${history}<span class="media-spark-axis"><span>${esc(shortDate(row.history[0].date))}</span><span>${esc(shortDate(row.history[row.history.length - 1].date))}</span></span></span>` : ''}
+<span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${row.days}日分の記録</span>
+<span class="media-drop-cta">今の価格と履歴を見る</span></span>
 </a></li>`;
 }
 
@@ -149,7 +240,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=2"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=3"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
@@ -238,7 +329,7 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
       if (hit) return request.method === 'HEAD' ? new Response(null, hit) : hit;
     } catch {}
   }
-  const drops = await loadPriceDrops(env, { now });
+  const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
   const html = path === '/media'
     ? renderMediaTop({ drops, popular: await loadPopularArticles(env), now })
     : renderPriceDrops({ drops, now });

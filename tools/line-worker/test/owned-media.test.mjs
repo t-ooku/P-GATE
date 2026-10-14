@@ -123,9 +123,45 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=2/);
+  assert.match(html, /owned-media\.css\?v=3/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);
   }
+});
+
+// 2026-10-14 大隆さん「商品画像も表示して。人は視認性が大切よ。あと価格履歴ね」
+import { largerImage, loadPriceHistories, loadRankingImages, sparkline, withImagesAndHistory } from '../src/owned-media.mjs';
+
+test('画像はモール公式ランキングの保存データから record_key で引く（無ければ画像なしの枠。別の商品で埋めない）', async () => {
+  const env = envWith((db) => {
+    db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8'));
+    db.prepare(`INSERT INTO marketplace_ranking_cache VALUES ('RAKUTEN_JP','kitchen','REALTIME',?, '2026-10-01T00:00:00Z','2026-10-14T00:00:00Z')`)
+      .run(JSON.stringify([{ record_key: 'RAKUTEN:shop:a', image_url: 'https://thumbnail.image.rakuten.co.jp/@0_mall/shop/a.jpg?_ex=128x128' }, { record_key: 'RAKUTEN:shop:z', image_url: 'http://insecure.example/z.jpg' }]));
+    observe(db, { id: 'shop:a', date: '2026-10-10', price: 3000 }); observe(db, { id: 'shop:a', date: '2026-10-13', price: 2400 });
+  });
+  const images = await loadRankingImages(env, ['RAKUTEN:shop:a', 'RAKUTEN:shop:b', 'RAKUTEN:shop:z']);
+  assert.equal(images.get('RAKUTEN:shop:a'), 'https://thumbnail.image.rakuten.co.jp/@0_mall/shop/a.jpg?_ex=300x300', '期限切れの保存データでも画像は使う・300px を求める');
+  assert.equal(images.has('RAKUTEN:shop:b'), false);
+  assert.equal(images.has('RAKUTEN:shop:z'), false, 'https 以外は使わない');
+  assert.equal(largerImage('javascript:alert(1)'), '');
+  const histories = await loadPriceHistories(env, ['RAKUTEN:shop:a'], { now: NOW });
+  assert.deepEqual(histories.get('RAKUTEN:shop:a'), [{ date: '2026-10-10', price: 3000 }, { date: '2026-10-13', price: 2400 }]);
+  const [row] = await withImagesAndHistory(env, [{ record_key: 'RAKUTEN:shop:a', product_name: 'x' }], { now: NOW });
+  assert.match(row.image_url, /_ex=300x300/);
+  assert.equal(row.history.length, 2);
+});
+
+test('価格履歴の折れ線: 記録した日だけで描き、読み上げ用の文に全日の価格を入れる。1日しか無ければ描かない', () => {
+  assert.equal(sparkline([{ date: '2026-10-13', price: 100 }]), '');
+  const svg = sparkline([{ date: '2026-10-10', price: 3000 }, { date: '2026-10-12', price: 2800 }, { date: '2026-10-13', price: 2400 }]);
+  assert.match(svg, /<svg class="media-spark"[^>]*role="img"/);
+  assert.match(svg, /aria-label="価格の推移（3日分の記録）: 10\/10 ¥3,000、10\/12 ¥2,800、10\/13 ¥2,400"/);
+  assert.doesNotMatch(svg, /style=/, 'CSP（style-src self）に合わせ style 属性は使わない');
+  const html = renderPriceDrops({ drops: [{ record_key: 'RAKUTEN:shop:a', marketplace: 'RAKUTEN_JP', product_name: '水筒', latest_price: 2400, latest_date: '2026-10-13', max_price: 3000, max_date: '2026-10-10', days: 3, drop_rate: 20,
+    image_url: 'https://thumbnail.image.rakuten.co.jp/a.jpg?_ex=300x300', history: [{ date: '2026-10-10', price: 3000 }, { date: '2026-10-13', price: 2400 }] }], now: NOW });
+  assert.match(html, /<img src="https:\/\/thumbnail\.image\.rakuten\.co\.jp\/a\.jpg\?_ex=300x300" alt="" loading="eager"[^>]*referrerpolicy="no-referrer"/);
+  assert.match(html, /<span class="media-drop-history-label">価格の推移<\/span><svg/);
+  assert.match(html, /<span class="media-spark-axis"><span>10\/10<\/span><span>10\/13<\/span><\/span>/);
+  assert.match(html, /今の価格と履歴を見る/);
 });

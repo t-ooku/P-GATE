@@ -72,19 +72,18 @@
 .media-section-head h2 { margin: 0; font-size: clamp(1.45rem, 4.4vw, 2rem); letter-spacing: -.02em; }
 .media-section-head p:not(.media-kicker) { margin: .45rem 0 0; color: var(--muted); font-size: .92rem; line-height: 1.75; }
 
-/* 値下がり */
-.media-drops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin: 0; padding: 0; list-style: none; }
-.media-drops-full { grid-template-columns: 1fr; }
+/* 値下がり（2026-10-14 大隆さん「商品画像も表示して。人は視認性が大切よ。あと価格履歴ね」） */
+.media-drops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.media-drops-full { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .media-drop { min-width: 0; margin: 0; }
 .media-drop a {
-  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: .2rem 1rem;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 1rem;
   height: 100%;
-  padding: 1.1rem 1.15rem 1.15rem;
+  padding: .9rem;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 22px;
   background: #fff;
   color: var(--ink);
   text-decoration: none;
@@ -92,17 +91,26 @@
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .media-drop a:hover { transform: translateY(-2px); border-color: #d8ceff; box-shadow: 0 16px 36px rgba(48, 35, 102, .12); }
-.media-drop-rank { position: absolute; top: .9rem; right: 1rem; color: #d5d0e6; font-size: .78rem; font-weight: 900; letter-spacing: .1em; }
-.media-drop-rate { grid-row: span 4; align-self: start; color: var(--drop); font-size: .95rem; font-weight: 900; line-height: 1; }
-.media-drop-rate { white-space: nowrap; }
-.media-drop-rate b { font-size: clamp(2rem, 7vw, 2.5rem); letter-spacing: -.05em; }
-.media-drop-body { display: grid; gap: .4rem; min-width: 0; padding-right: 1.6rem; }
-.media-drop strong { font-size: .98rem; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.media-drop-figure { position: relative; align-self: start; aspect-ratio: 1; overflow: hidden; border-radius: 16px; background: #f6f4fb; }
+.media-drop-figure img { display: block; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.media-drop-noimage { display: grid; place-items: center; width: 100%; height: 100%; color: #c9c3dc; font-size: 2.4rem; font-weight: 900; }
+.media-drop-rate { position: absolute; left: .45rem; top: .45rem; padding: .3rem .55rem .32rem; border-radius: 12px; background: var(--drop); color: #fff; font-size: .78rem; font-weight: 900; line-height: 1; white-space: nowrap; box-shadow: 0 6px 16px rgba(224, 36, 94, .35); }
+.media-drop-rate b { font-size: 1.35rem; letter-spacing: -.04em; }
+.media-drop-rank { position: absolute; right: .45rem; bottom: .4rem; padding: .15rem .4rem; border-radius: 8px; background: rgba(21, 18, 43, .72); color: #fff; font-size: .68rem; font-weight: 900; letter-spacing: .08em; }
+.media-drop-body { display: grid; align-content: start; gap: .45rem; min-width: 0; }
+.media-drop strong { font-size: .95rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .media-drop-prices { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45rem; color: var(--muted); font-size: .88rem; }
 .media-drop-prices s { color: #9a95ad; }
-.media-drop-prices b { color: var(--night); font-size: 1.25rem; letter-spacing: -.01em; }
-.media-drop-meta { color: var(--muted); font-size: .78rem; }
-.media-drop-cta { justify-self: start; margin-top: .2rem; padding: .35rem .8rem; border-radius: 999px; background: var(--night); color: #fff; font-size: .78rem; font-weight: 800; }
+.media-drop-prices b { color: var(--drop); font-size: 1.4rem; letter-spacing: -.02em; }
+.media-drop-history { display: grid; gap: .15rem; padding: .45rem .55rem .35rem; border-radius: 12px; background: #faf8ff; }
+.media-drop-history-label { color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .06em; }
+.media-spark { display: block; width: 100%; height: 44px; overflow: visible; }
+.media-spark-area { fill: rgba(108, 76, 255, .10); stroke: none; }
+.media-spark-line { fill: none; stroke: var(--violet); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.media-spark-dot { fill: var(--drop); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.media-spark-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: .68rem; font-weight: 700; }
+.media-drop-meta { color: var(--muted); font-size: .76rem; }
+.media-drop-cta { justify-self: start; padding: .4rem .85rem; border-radius: 999px; background: var(--night); color: #fff; font-size: .78rem; font-weight: 800; }
 .media-more { margin: 1.1rem 0 0; text-align: right; }
 .media-more a { display: inline-flex; gap: .4rem; align-items: center; color: var(--night); font-weight: 900; text-decoration: none; border-bottom: 2px solid var(--pink); padding-bottom: .15rem; }
 .media-empty { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed #d8ceff; border-radius: 18px; background: #fff; color: var(--muted); }
@@ -126,8 +134,9 @@
 .media-note { margin-top: 2rem; color: var(--muted); font-size: .8rem; line-height: 1.7; }
 .media-page .mid-cta { border-radius: 24px; }
 
+@media (max-width: 860px) { .media-drops, .media-drops-full { grid-template-columns: 1fr; } }
+@media (max-width: 420px) { .media-drop a { grid-template-columns: 124px minmax(0, 1fr); gap: .8rem; padding: .8rem; } }
 @media (max-width: 720px) {
-  .media-drops { grid-template-columns: 1fr; }
   .media-stats { gap: .45rem; }
   .media-stats div { padding: .65rem .7rem; }
 }
