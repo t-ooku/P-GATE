@@ -170,6 +170,23 @@ function keepButton(item) {
   return button;
 }
 
+// 2026-10-15: 統合カードのクリックはモール送客（marketplace_click）に数えられていなかった
+// （growth-analytics.mjs の対象クラスに unified-card-link が無かった）。販売先のモールをカードに持たせる。
+// 判定は item.marketplace（HOSHILU が API で確認した商品）か、リンク先のホスト名だけ。商品名からは推測しない。
+const CARD_MALL_HOSTS = [
+  ['amazon.co.jp', 'AMAZON_JP'], ['rakuten.co.jp', 'RAKUTEN_JP'], ['shopping.yahoo.co.jp', 'YAHOO_JP'], ['paypaymall.yahoo.co.jp', 'YAHOO_JP'],
+  ['qoo10.jp', 'QOO10_JP'], ['shein.com', 'SHEIN_JP'], ['zozo.jp', 'ZOZOTOWN_JP'], ['shop-list.com', 'SHOPLIST_JP'],
+  ['musinsa.com', 'MUSINSA_JP'], ['buyma.com', 'BUYMA_JP'], ['snkrdunk.com', 'SNKRDUNK_JP'], ['loft.co.jp', 'LOFT_JP'],
+  ['hands.net', 'HANDS_JP'], ['matsukiyococokara-online.com', 'MATSUKIYO_JP'], ['cosme.com', 'COSME_JP'], ['cosme.net', 'COSME_JP'], ['abc-mart.net', 'ABCMART_JP']
+];
+export function cardMarketplace(item) {
+  const explicit = String(item?.marketplace || '').toUpperCase();
+  if (CARD_MALL_HOSTS.some(([, code]) => code === explicit)) return explicit;
+  let host = '';
+  try { host = new URL(String(item?.url || '')).hostname.toLowerCase(); } catch { return ''; }
+  return CARD_MALL_HOSTS.find(([domain]) => host === domain || host.endsWith(`.${domain}`))?.[1] || '';
+}
+
 function card(item) {
   const article = el('article', `unified-card unified-card-${String(item.source || '').toLowerCase()}`);
   if (item.listing) article.classList.add('unified-card-listing');
@@ -180,6 +197,8 @@ function card(item) {
   link.rel = 'noopener noreferrer';
   link.dataset.position = String(item.position || 0);
   link.dataset.source = String(item.source || '');
+  const mall = cardMarketplace(item);
+  if (mall) link.dataset.marketplace = mall;
 
   const figure = el('div', 'unified-card-image');
   if (item.image_url) {

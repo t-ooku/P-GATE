@@ -375,11 +375,12 @@ document.addEventListener('click', event => {
   if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')
     || target.classList.contains('share-gmail-button') || target.classList.contains('social-target')
     || target.dataset.channel === 'line') send('share_started');
-  if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link,.buzz-home-card') && target.tagName === 'A') {
+  if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link,.buzz-home-card,.unified-card-link') && target.tagName === 'A') {
     // LINE is a share handoff, not a product-result click. It was previously
     // misclassified as ai_result_clicked because it reuses the buy-link style.
     if (target.dataset.channel === 'line') return;
-    const marketplace = growthMarketplace(target.dataset.marketplace, target.textContent);
+    // 統合カード（2026-10-15 追加）は商品名にモール名が入ることがあるので、文字からは推測しない。
+    const marketplace = growthMarketplace(target.dataset.marketplace, target.classList.contains('unified-card-link') ? '' : target.textContent);
     send(target.closest('.ranking-product-card,.buzz-home-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
     if (marketplace) {
       send('marketplace_click', { marketplace });
