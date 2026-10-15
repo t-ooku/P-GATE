@@ -73,3 +73,29 @@
 - 金曜のためSEO週次なし、月初ではないためAmazon期限監査なし。SNS公開/営業送信/新記事/D1書込/料金規約変更なし。
 - CI・本番配備・新SELECT成果物での確認は追記する。最大ボトルネックE、写真内割引マスク、取得不可の日次内訳、公開三要素を未完了として管理する。
 - 大隆さんがやること: ない。
+
+## 08:12 JST 本番反映・固定QAの意味判定
+
+- **本番確認済み**: commit `df21f20ca4fef9dd0bb69f1a01536f9aaaee565b`、[CI / deploy #2423](https://github.com/t-ooku/P-GATE/actions/runs/38821806064)成功。対象39件、Worker全回帰3,035件/0失敗、GAS・release・Chrome・検索品質・本番bundle再現性も成功。Version ID `8cdef378-b93e-4313-bf2d-6f8ba4f4dfce`。08:11 JST本番health（7 critical integrations）とKPI接続成功。D1 migration・SNS/営業ジョブはskipped。
+- 新しい既存SELECT artifact `hoshilu-codex-kpi-38821806064`、ID `12013017750`、生成10月16日08:11:21 JST。7日窓10月9日08:11〜10月16日08:11 JST。LP190/全体検索18/完了17/購入先1/一般保存0は07:07成果物から変化なし。
+- Seller根拠はLEGACY_FOCUS_ONLY4件、新方式TRUSTED_INPUT_EVENTは行なし。新方式は配備直後で観測0であり、既存4人が消えた意味ではない。人の入力開始人数は依然未計測。送信試行0/問い合わせ新規0/有料0を成果として増やさない。
+- 固定QAの本日07:22〜07:24の本命25件を既存SELECTから読み、意味を判定した。最初の固定9件は**カテゴリ一致8/9**、全25件は**カテゴリ一致23/25**。これは人の独立したカテゴリ判定で、個別属性や商品同一性を23件すべて確認した意味ではない。自動判定24PASS/1FAILと区別する。
+
+| 固定QA ID（最初の9件） | 本命の商品名の核 | 独立した意味判定 |
+|---|---|---|
+| ig_mattress | Queen Mattress Topper / 3 Inch / Memory Foam Bed Topper | 不一致。本体ではなく上に重ねるトッパー。自動PASSの過大判定 |
+| koala_mattress | コアラマットレス オリジナル シングル 中古美品 | 本体・ブランド一致。中古と記載あり |
+| qoo10_korean_lip | PHリップ / リップティント / 韓国コスメ | リップカテゴリ一致。元の閲覧先との同一商品は未確認 |
+| korean_pink_lip | ROM&ND グラスティングウォーターグロス / ピンク | リップカテゴリ・色の記載一致 |
+| standing_leather_tote | 本革トート / 自立 / JOYA J4706 | 本体・素材・自立の記載一致 |
+| smoky_quartz_ring | スモーキークォーツ / 天然石 / リング | 指輪カテゴリ・石の記載一致 |
+| ig_white_bag | ミニショルダーバッグ / レザーバッグ白 | バッグ・白の記載一致。Instagram閲覧商品との同一性は未確認 |
+| shein_one_piece | ノーカラー袖ボリューム ダブルポケットワンピース | ワンピースカテゴリ一致。SHEIN閲覧商品との同一性は未確認 |
+| amazon_storage | 東和産業 コンパクト優収納アルファ ネイビーM | 収納用品カテゴリ一致。Amazon閲覧商品との同一性は未確認 |
+
+- 追加16件: bottom_removable_bottleはsokomo底開口ボトル、pet_shedding_brushは猫用抜け毛取りブラシ/グローブ、auto_off_humidifierは自動オフ加湿器、easy_clean_baby_bottleは広口哺乳瓶、energy_saving_kotatsuはこたつ本体、freezer_safe_food_containerは食品保存容器、oil_free_air_fryerはノンフライヤー、easy_wrist_blood_pressure_monitorは手首式血圧計、sleep_comfortable_earplugsは睡眠用耳栓、auto_drain_dehumidifierは自動排水記載の除湿機、washable_electric_blanketは丸洗いOK電気毛布、energy_saving_electric_carpetは節電電気カーペット、dull_knife_sharpenerは包丁研ぎ器、pink_slime_bathroom_cleanerは浴室用洗剤、uv_shade_stroller_canopyはベビーカー用UVサンシェードでカテゴリ一致。
+- freezer_safe_food_containerは取得した80字の商品名だけでは冷凍適合を確認できず、属性は未計測。その他の性能表示も実性能の検証・保証ではない。
+- dark_ink_name_penは本命「名入れ パイロット PILOT ボールペン アクロ1000…」で**不一致**。布用のお名前ペンとは違い、自動FAILは妥当。
+- **未完了/P1**: ig_mattressの本命トッパー除外と、dark_ink_name_penの名入れボールペン混入の原因修正。次は既存固定QAを使って本体/付属品・用途語の除外を局所的に検証する。今回、新規本番検索やQA再実行はしていない。
+- Gemini監視当月台帳は精算US$0.320699/予約0、上限5の残枠US$4.679301。Google全体の残高ではない。写真内10%OFFのマスク漏れも未修正P1のまま。最大ボトルネックは一般保存0のEを維持し、複数を同率の最大課題とはしない。
+- 本番で人の入力・問い合わせ送信を作る検証はせず、通信・イベントの挙動は回帰試験、本番配備と旧focus分離はCI/SELECTの証拠と区別する。大隆さんがやること: ない。
