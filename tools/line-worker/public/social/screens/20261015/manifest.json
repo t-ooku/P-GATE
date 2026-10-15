@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-15T13:40:57.925Z",
+  "captured_at": "2026-10-15T13:51:51.218Z",
   "size": [
     1080,
     1350
@@ -12,7 +12,7 @@
           "file": "notes/1.jpg",
           "id": "notes-top",
           "items": 1,
-          "blurred": 118,
+          "blurred": 119,
           "label": ""
         },
         {
@@ -26,7 +26,7 @@
           "file": "notes/3.jpg",
           "id": "ranking-price",
           "items": 6,
-          "blurred": 118,
+          "blurred": 119,
           "label": ""
         },
         {
