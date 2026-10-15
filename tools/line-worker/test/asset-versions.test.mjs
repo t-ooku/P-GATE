@@ -18,7 +18,7 @@ const EXPECTED = Object.freeze({
   'tab-nav.css': '5',
   'tab-nav.mjs': '16',
   'site-i18n.js': '9',
-  'growth-analytics.mjs': '17',
+  'growth-analytics.mjs': '18',
   'ai-search-ui.mjs': '16',
   'search-suggest.mjs': '3',
   'buzz-home.mjs': '15',
@@ -32,7 +32,7 @@ const EXPECTED = Object.freeze({
   'usual-hoshiru.mjs': '6',
   'result-compact.css': '5',
   'unified-results-ui.css': '13',
-  'unified-results-ui.mjs': '20',
+  'unified-results-ui.mjs': '21',
   'instagram-look.css': '11'
 });
 

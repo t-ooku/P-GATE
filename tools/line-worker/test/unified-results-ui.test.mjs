@@ -123,7 +123,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=13/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=20/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=21/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -301,4 +301,21 @@ test('安い順の並びが壊れていたら、切り替えは出さずおす�
   assert.equal(cheapOrder(items, [1, 2]), null, '数が合わない');
   assert.equal(cheapOrder(items, [1, 2, 9]), null, '知らない番号');
   assert.equal(cheapOrder(items, [1, 1, 2]), null, '同じ商品が2回');
+});
+
+// 2026-10-15: 統合カードのクリックがモール送客に数えられていなかった（モール送客率の低下は計測漏れ）。
+test('統合カードは販売先モールを持ち、クリックはモール送客として数える', async () => {
+  const { cardMarketplace } = await import('../public/unified-results-ui.mjs');
+  assert.equal(cardMarketplace({ source: 'HOSHILU', marketplace: 'RAKUTEN_JP', url: 'https://item.rakuten.co.jp/a/b/' }), 'RAKUTEN_JP');
+  assert.equal(cardMarketplace({ source: 'WEB', url: 'https://www.amazon.co.jp/dp/B000000000' }), 'AMAZON_JP');
+  assert.equal(cardMarketplace({ source: 'WEB', url: 'https://store.shopping.yahoo.co.jp/x/y.html' }), 'YAHOO_JP');
+  assert.equal(cardMarketplace({ source: 'WEB', url: 'https://zozo.jp/shop/x/goods/1/' }), 'ZOZOTOWN_JP');
+  // 商品名にモール名が入っていても、リンク先が別のお店なら数えない
+  assert.equal(cardMarketplace({ source: 'WEB', product_name: '楽天で人気のバッグ', url: 'https://example-shop.jp/item/1' }), '');
+  assert.equal(cardMarketplace({ source: 'WEB', url: 'https://notamazon.co.jp.evil.example/' }), '');
+  assert.equal(cardMarketplace({ source: 'HOSHILU_SHOP', url: '/shop/abc' }), '');
+  const analytics = read('growth-analytics.mjs');
+  assert.match(analytics, /\.buzz-home-card,\.unified-card-link'\)/u);
+  assert.match(analytics, /classList\.contains\('unified-card-link'\) \? '' : target\.textContent/u);
+  assert.match(read('unified-results-ui.mjs'), /if \(mall\) link\.dataset\.marketplace = mall;/u);
 });

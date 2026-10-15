@@ -38,15 +38,16 @@ export const DROP_RULES = Object.freeze({
 const DROP_RULE_TEXT = '直近14日のうち3日以上価格を記録した商品で、記録上の最高値から10%以上（70%以下）下がり、最後の確認が2日以内のもの';
 
 // 目的別の入口。2026-10-14 の実測で読まれていた型を中心に選ぶ（slug が無くなったらテストで止まる）。
+// 2026-10-15: Search Console で 7〜11 位にいる「同一商品」「Amazon セール 通知」の記事を足す。
 export const MEDIA_SECTIONS = Object.freeze([
   { id: 'find', kicker: 'FIND', title: '名前が分からない物を探す', description: '見た目・用途・写真から、商品名にたどり着く方法。', slugs: [
     'find-product-without-name', 'how-to-search-by-description', 'identify-correct-product-name-from-vague-memory',
     'search-products-from-saved-images', 'find-fashion-items-seen-on-instagram'] },
   { id: 'timing', kicker: 'TIMING', title: 'セールと買い時', description: '大型セールの時期と、その値引きが本当に得かを確かめる方法。', slugs: [
-    'qoo10-mega-sale-next-round-alert', 'prime-day-vs-rakuten-super-sale-vs-mega-wari', 'check-if-sale-price-is-really-cheaper',
+    'qoo10-mega-sale-next-round-alert', 'sale-notification-only-for-malls-you-use', 'prime-day-vs-rakuten-super-sale-vs-mega-wari', 'check-if-sale-price-is-really-cheaper',
     'is-it-cheaper-to-wait-for-sale', 'track-price-history-before-buying', 'usual-hoshilu-never-run-out-of-daily-essentials'] },
   { id: 'compare', kicker: 'COMPARE', title: 'モールを比べる', description: 'Amazon・楽天市場・Yahoo!ショッピング・Qoo10 の違いと、まとめて比べる方法。', slugs: [
-    'compare-amazon-rakuten-yahoo-shopping', 'compare-amazon-and-rakuten', 'compare-qoo10-and-rakuten',
+    'how-to-compare-the-same-product', 'compare-amazon-rakuten-yahoo-shopping', 'compare-amazon-and-rakuten', 'compare-qoo10-and-rakuten',
     'compare-online-shopping-sites', 'cross-search-ec-sites'] },
   { id: 'sellers', kicker: 'FOR SELLERS', title: '出店者・メーカーの方へ', description: 'モールの外で探されている需要と、見つけてもらう方法。', slugs: [
     'ec-repeat-customers', 'oudan-kensaku-de-mitsukete-morau', 'mall-seller-see-demand-outside-the-mall',
