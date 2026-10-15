@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-15T12:50:01.573Z",
+  "captured_at": "2026-10-15T12:55:57.803Z",
   "size": [
     1080,
     1350
@@ -10,31 +10,31 @@
       "file": "1.jpg",
       "id": "notes-top",
       "items": 1,
-      "blurred": 49
+      "blurred": 118
     },
     {
       "file": "2.jpg",
       "id": "price-drops",
       "items": 26,
-      "blurred": 85
+      "blurred": 205
     },
     {
       "file": "3.jpg",
       "id": "ranking-price",
       "items": 6,
-      "blurred": 49
+      "blurred": 118
     },
     {
       "file": "4.jpg",
       "id": "buzz",
       "items": 25,
-      "blurred": 252
+      "blurred": 692
     },
     {
       "file": "5.jpg",
       "id": "search",
       "items": 1,
-      "blurred": 252
+      "blurred": 692
     }
   ]
 }
