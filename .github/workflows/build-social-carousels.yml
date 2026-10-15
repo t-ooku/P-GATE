@@ -7,6 +7,10 @@ name: Build social carousels (Pillow) and deploy
 # （assets として hoshilu.app/social/carousel/ から配信）。AI 生成・課金は発生しない。
 # Issue パッチ（apply-patch.yml）経由の push ではこのワークフローは起動しない。定義だけ先に入れた時は、
 # このファイルか carousels-v3.json を外から push して起動する（2026-09-27: 14 セット化で使用）。
+# 2026-10-15 大隆さん指示「オウンドメディアの実画像・ホシルバズも載せて、見る人が興味を持つフィード投稿を」「価格だけぼかす」:
+# 同じジョブで本番の実画面（買い物ノート・値下がり・ランキング×価格・ホシルバズ・検索）を Playwright で撮り、
+# public/social/screens/<JST日付>/ に 1080×1350 のカルーセル画像を作る（scripts/build-social-screens.mjs）。
+# 金額・値下がり率・差額は撮影前にぼかす。空の画面・ぼかし漏れがあれば失敗。毎週木曜 17:30 JST にも撮り直す。
 
 on:
   push:
@@ -14,7 +18,10 @@ on:
     paths:
       - 'tools/line-worker/scripts/build-social-carousels.py'
       - 'tools/line-worker/ops/social/carousels-v3.json'
+      - 'tools/line-worker/scripts/build-social-screens.mjs'
       - '.github/workflows/build-social-carousels.yml'
+  schedule:
+    - cron: '30 8 * * 4'
   workflow_dispatch:
 
 permissions:
@@ -27,10 +34,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: feature/ui-search-v2
           fetch-depth: 0
           persist-credentials: true
 
@@ -62,13 +70,43 @@ jobs:
           print('carousel images verified:', sum(len(i['files']) for i in m['sets'].values()))
           PY
 
+      - name: Install Worker dependencies and Playwright (not saved)
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npm ci
+          npm install --no-save --no-audit --no-fund playwright@1.48.2
+          npx playwright install --with-deps chromium
+
+      - name: Capture the real HOSHILU screens (prices blurred)
+        id: screens
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          day="$(TZ=Asia/Tokyo date +%Y%m%d)"
+          out="public/social/screens/${day}"
+          node scripts/build-social-screens.mjs "$out" --base https://hoshilu.app
+          python3 - "$out" <<'PY'
+          import json, sys
+          from pathlib import Path
+          from PIL import Image
+          out = Path(sys.argv[1])
+          m = json.loads((out / 'manifest.json').read_text())
+          assert len(m['files']) == 5, m
+          for f in m['files']:
+              im = Image.open(out / f['file'])
+              assert im.size == (1080, 1350), (f, im.size)
+          print('screens verified:', [f['file'] for f in m['files']])
+          PY
+          echo "day=${day}" >> "$GITHUB_OUTPUT"
+
       - name: Commit the images
         id: commit
         run: |
           set -euo pipefail
           git config user.name "hoshilu-patch-bot"
           git config user.email "noreply@hoshilu.app"
-          git add tools/line-worker/public/social/carousel
+          git add tools/line-worker/public/social/carousel tools/line-worker/public/social/screens
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "carousel images unchanged"
@@ -76,9 +114,6 @@ jobs:
             git commit -m "chore(social): カルーセル画像（方針 v3）を Pillow で再生成 [carousel-build]"
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Install Worker dependencies
-        run: npm ci --prefix tools/line-worker
 
       - name: Validate exact production Worker bundle and bindings
         working-directory: tools/line-worker
@@ -111,5 +146,11 @@ jobs:
           for f in user-hoshittoku-basics/1.jpg seller-demand-visible/4.jpg user-media-price-drops/1.jpg user-media-ranking-price/1.jpg; do
             code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/carousel/$f")"
             echo "HEAD /social/carousel/$f -> $code"
+            test "$code" = "200"
+          done
+          for n in 1 2 3 4 5; do
+            f="${{ steps.screens.outputs.day }}/${n}.jpg"
+            code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/screens/$f")"
+            echo "HEAD /social/screens/$f -> $code"
             test "$code" = "200"
           done
