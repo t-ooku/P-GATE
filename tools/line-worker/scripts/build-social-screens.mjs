@@ -51,7 +51,8 @@ export const SLIDES = Object.freeze([
 ]);
 
 async function capture(page, slide) {
-  await page.goto(`${BASE}${slide.url}`, { waitUntil: 'networkidle', timeout: 60_000 });
+  // トップは常時通信があり networkidle にならない（10/15 CI で 60 秒超過）。load 後は waitForSelector で待つ。
+  await page.goto(`${BASE}${slide.url}`, { waitUntil: 'load', timeout: 60_000 });
   await page.addStyleTag({ content: BLUR_CSS });
   await page.waitForSelector(slide.selector, { state: 'visible', timeout: 45_000 });
   await page.waitForTimeout(1500);
