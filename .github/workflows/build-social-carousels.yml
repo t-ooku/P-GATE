@@ -13,6 +13,7 @@ name: Build social carousels (Pillow) and deploy
 # 金額・値下がり率・差額は撮影前にぼかす。空の画面・ぼかし漏れがあれば失敗。毎週木曜 17:30 JST にも撮り直す。
 # 失敗時はログの末尾を「[CI-LOG] …」Issue に残す（Claude/Cowork は Actions のログを読めないため）。
 # 本番は CSP（style-src 'self'）があるので、撮影ブラウザだけ bypassCSP でぼかし用 CSS を当てる（#632）。
+# トップは常時通信があり networkidle にならないので load で待つ（#634）。
 
 on:
   push:
