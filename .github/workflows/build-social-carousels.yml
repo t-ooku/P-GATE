@@ -11,6 +11,7 @@ name: Build social carousels (Pillow) and deploy
 # 同じジョブで本番の実画面（買い物ノート・値下がり・ランキング×価格・ホシルバズ・検索）を Playwright で撮り、
 # public/social/screens/<JST日付>/ に 1080×1350 のカルーセル画像を作る（scripts/build-social-screens.mjs）。
 # 金額・値下がり率・差額は撮影前にぼかす。空の画面・ぼかし漏れがあれば失敗。毎週木曜 17:30 JST にも撮り直す。
+# 失敗時はログの末尾を「[CI-LOG] …」Issue に残す（Claude/Cowork は Actions のログを読めないため）。
 
 on:
   push:
@@ -26,6 +27,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: cloudflare-deploy
@@ -49,6 +51,7 @@ jobs:
       - name: Install Noto CJK font and Pillow
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           sudo apt-get update -qq
           sudo apt-get install -y -qq fonts-noto-cjk python3-pil
           test -f /usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
@@ -57,6 +60,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           python3 scripts/build-social-carousels.py /usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
           ls -la public/social/carousel/*/
           python3 - <<'PY'
@@ -74,6 +78,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           npm ci
           npm install --no-save --no-audit --no-fund playwright@1.48.2
           npx playwright install --with-deps chromium
@@ -83,6 +88,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           day="$(TZ=Asia/Tokyo date +%Y%m%d)"
           out="public/social/screens/${day}"
           node scripts/build-social-screens.mjs "$out" --base https://hoshilu.app
@@ -104,6 +110,7 @@ jobs:
         id: commit
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           git config user.name "hoshilu-patch-bot"
           git config user.email "noreply@hoshilu.app"
           git add tools/line-worker/public/social/carousel tools/line-worker/public/social/screens
@@ -117,15 +124,16 @@ jobs:
 
       - name: Validate exact production Worker bundle and bindings
         working-directory: tools/line-worker
-        run: npx --yes wrangler@4.121.0 deploy --dry-run --outdir /tmp/hoshilu-worker-dry-run
+        run: npx --yes wrangler@4.121.0 deploy --dry-run --outdir /tmp/hoshilu-worker-dry-run 2>&1 | tee -a /tmp/ci.log
 
       - name: Run all regression tests
-        run: npm test
+        run: npm test 2>&1 | tail -n 400 | tee -a /tmp/ci.log
 
       - name: Push to production branch
         if: steps.commit.outputs.changed == 'true'
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           git pull --rebase origin feature/ui-search-v2
           git push origin HEAD:refs/heads/feature/ui-search-v2
 
@@ -143,6 +151,7 @@ jobs:
       - name: Verify the carousel images are served
         run: |
           set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
           for f in user-hoshittoku-basics/1.jpg seller-demand-visible/4.jpg user-media-price-drops/1.jpg user-media-ranking-price/1.jpg; do
             code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/carousel/$f")"
             echo "HEAD /social/carousel/$f -> $code"
@@ -154,3 +163,18 @@ jobs:
             echo "HEAD /social/screens/$f -> $code"
             test "$code" = "200"
           done
+
+      - name: Report the failure log to an issue (Claude/Cowork cannot read Actions logs)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let log = '';
+            try { log = fs.readFileSync('/tmp/ci.log', 'utf8'); } catch { log = '(no log captured)'; }
+            const tail = log.slice(-12000).replace(/```/g, "'''");
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: `[CI-LOG] build-social-carousels failed ${context.sha.slice(0, 7)}`,
+              body: `run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n\`\`\`\n${tail}\n\`\`\``
+            });
