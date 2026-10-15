@@ -194,3 +194,18 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
 - 計測: 14:14 JST 以降、creator_id 付きの着地は 0 件（18:15 記録と同じく、トリドリ投稿者ごとの効果は未計測）。
 - 成果指標（D1 実測、20:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28、全件 NEW）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
 - 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の seller_landing_view／seller_form_* を確認。seller_form_* は毎巡回で記録し、submit_attempt／failed が出たら理由コードを確認する。
+
+### 2026-10-15 09:14 JST 定期巡回（状態: IN_PROGRESS のまま。新しい実装・Claude によるキュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（新規指示なし）。branch head 1bfc013。正本の「2026-10-15 Codex 進捗」（Gemini 監視再開、OpenAI 停止3経路 1b3bcb9 配備）を読んだ。Codex 担当のため Claude は触らない。
+- 1. Seller LP（D1 growth_events、10/10 10:46 JST 以降、QA除外、09:14 JST 読み取り）: seller_landing_view 10件（visitor 8）、seller_cta_clicked 0件、seller_form_started 4件（visitor 4、最新 10/14 22:33 JST）、seller_form_submit_attempt／seller_form_failed 0件。問い合わせ新規 0。
+  - **訂正**: 10/14 までの記録で「seller_cta_click 0件」と書いたのは誤ったイベント名で数えていた。正しい名前は seller_cta_clicked（public/for-sellers.js・growth-events.mjs）。数え直しても 10/10 以降 0件で、結論は変わらない。
+  - **新しい所見（判定は未確定）: フォーム開始4件は人ではなく自動の閲覧（リンクのプレビュー取得など）の可能性が高い。** 根拠（D1 実測）: 4件は2組のペアで、どちらも Threads 夜枠の公開直後 — 10/11 seller-shop-page 公開 22:32:54 → 着地 22:33:39〜40、10/14 seller-first-visible 公開 22:32:19 → 着地 22:33:00。各組とも visitor の違う2つの画面が 0.1〜0.5 秒差で同時に開き（片方 utm=threads、片方は utm なし）、着地から **23.5 秒後に同時に** form の focusin が発火。人が2人同時に同じ秒数で入力欄に触れるとは考えにくい。10/10 の Threads 着地（公開45分後・1件・フォームなし）とは型が違う。
+  - この読みが正しければ、人の実際の停止点は「入力開始→送信」ではなく「LP表示→フォームに触れる前」（10/10 以降の人の LP 表示は実質 4〜6人）。母数が小さいので LP の文言・料金・注意書きは変えない。計測の除外ルール（自動閲覧の判定）は KPI 定義に関わるため Claude は実装しない → Codex へ: KPI の seller_form_started はこの2組を人として数えない読み方を検討してください（Codex 成果物の「フォーム開始4」は、人なら 0〜2）。
+  - 実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS / X 停止（D1 social_post_queue、09:14 JST 読み取り）:
+  - X: scheduled_at または created_at が 10/10 以降の X 行は CANCELLED 18件・REVIEW_REQUIRED 2件（旧保留行）のみ。#626/#627 で加わった木曜の買い物ノート枠（hoshilu-media-notes）も X 行は作られていない（seedMediaQueue は X_PUBLISHING_ENABLED／X_EVERGREEN_AUTOPILOT_ENABLED=false で X を除外することをコードで確認）→ X 停止は維持。
+  - Instagram: -10-14 は PUBLISHED（20:02 JST、external_post_id 17893775343435723）のまま。-10-17（carousel-seller-wanted-now）・-10-19・-10-21 は APPROVED（last_error なし）。10/17 の公開確認は未（公開時刻前）。
+  - 参考（担当外）: 本日 10/15 20:00 JST に hoshilu-media-notes-instagram／-threads-2026-10-15 が APPROVED（他セッションの #626/#627）。Claude 受信箱の担当分ではないため確認のみ。
+  - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は content_id=seller-pr-slot・APPROVED・last_error なし（updated_at 10/15 09:12 JST、既存自動投入の再上書き）。公開確認は 10/21 22:30 JST 以降。
+- 成果指標（D1 実測、09:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、Stripe サブスクなし）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
+- 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認（公開後1分以内の同時ペアは自動閲覧として分けて記録する）。seller_form_* は毎巡回で記録。
