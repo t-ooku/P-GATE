@@ -14,6 +14,7 @@ name: Build social carousels (Pillow) and deploy
 # 失敗時はログの末尾を「[CI-LOG] …」Issue に残す（Claude/Cowork は Actions のログを読めないため）。
 # 本番は CSP（style-src 'self'）があるので、撮影ブラウザだけ bypassCSP でぼかし用 CSS を当てる（#632）。
 # トップは常時通信があり networkidle にならないので load で待つ（#634）。値下がりは画像のある商品、バズは棚から撮る（#636）。
+# 商品名（店の題名）に入った金額・割引率も文字ごとにぼかす（#637）。
 
 on:
   push:
