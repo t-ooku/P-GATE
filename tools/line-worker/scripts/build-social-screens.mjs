@@ -125,6 +125,8 @@ async function main() {
   const browser = await chromium.launch();
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: 'ja-JP', timezoneId: 'Asia/Tokyo', isMobile: true, hasTouch: true,
+    // 本番は CSP（style-src 'self'）で差し込みの CSS を拒む。撮影用のぼかしだけを当てるため、この撮影ブラウザでは CSP を無視する。
+    bypassCSP: true,
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 HOSHILU-SocialScreens/1.0'
   });
   const page = await mobile.newPage();
