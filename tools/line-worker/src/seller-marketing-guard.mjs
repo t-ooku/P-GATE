@@ -20,7 +20,10 @@ export function assertSellerMarketingCurrent(post = {}, env = {}) {
   // The new versioned carousel directory is built from reviewed 30-day sources.
   const mentionsTrial = /30日.{0,10}無料/u.test(pricingText);
   const oldCarousel = /\/social\/carousel\/seller-/u.test(media);
-  if (media && (oldCarousel || mentionsTrial) && !media.split(/[,\s"\[\]]+/u).filter(Boolean).every(url => url.includes('/social/carousel/seller1980-30d-autorenew-20260927/'))) {
+  // 2026-10-15: 出品者向けページ（/for-sellers）を毎日撮った実画像（/social/screens/<YYYYMMDD>/seller/）も可。ページそのものが現行条件の正本。
+  const currentMedia = (url) => url.includes('/social/carousel/seller1980-30d-autorenew-20260927/')
+    || /^https:\/\/hoshilu\.app\/social\/screens\/\d{8}\/seller\/\d+\.jpg$/u.test(url);
+  if (media && (oldCarousel || mentionsTrial) && !media.split(/[,\s"\[\]]+/u).filter(Boolean).every(currentMedia)) {
     throw new Error('SELLER_MARKETING_REVIEW_REQUIRED:MEDIA_OFFER_UNVERIFIED');
   }
   if (mentionsTrial && !recruitmentVerified(env) && !/準備中/u.test(caption)) {
