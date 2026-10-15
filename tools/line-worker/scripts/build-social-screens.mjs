@@ -17,7 +17,10 @@ export const PRICE_SELECTORS = Object.freeze([
   '.media-drop-prices', '.media-drop-rate', '.media-tile-price', '.media-tile-badge-down', '.media-tile-badge-up',
   '.buzz-home-price', '.price', '.price-offer', '.product-price', '.unified-card-price'
 ]);
-const BLUR_CSS = `${PRICE_SELECTORS.join(',')}{filter:blur(9px)!important;user-select:none!important}
+// 商品名（店が付けた題名）にも金額・割引率が入る（例「79%OFF」「830円〜」「クーポンで1000円OFF」）。文字ごとにぼかす。
+export const PRICE_TEXT = /(?:[¥￥]\s?\d[\d,]*|\d[\d,]*\s?円|\d+(?:\.\d+)?\s?[%％](?:\s?(?:OFF|off|オフ))?|\d{1,3}(?:,\d{3})+)/gu;
+const BLUR_CSS = `${PRICE_SELECTORS.join(',')},.hoshilu-price-mask{filter:blur(9px)!important;user-select:none!important}
+.hoshilu-price-mask{display:inline-block}
 .tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"]{display:none!important}
 .topbar,.seo-header{position:static!important}
 html{scroll-behavior:auto!important}`;
@@ -70,7 +73,36 @@ async function capture(page, slide) {
       setTimeout(resolve, 8000);
     })));
   });
-  const blurred = await page.$$eval(PRICE_SELECTORS.join(','), (nodes) => nodes.filter((n) => getComputedStyle(n).filter.includes('blur')).length);
+  const masked = await page.evaluate((source) => {
+    const pattern = new RegExp(source, 'gu');
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const targets = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.parentElement?.closest('script,style,.hoshilu-price-mask')) continue;
+      pattern.lastIndex = 0;
+      if (pattern.test(node.nodeValue)) targets.push(node);
+    }
+    let count = 0;
+    for (const node of targets) {
+      const fragment = document.createDocumentFragment();
+      let last = 0;
+      const text = node.nodeValue;
+      pattern.lastIndex = 0;
+      for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
+        fragment.append(text.slice(last, match.index));
+        const span = document.createElement('span');
+        span.className = 'hoshilu-price-mask';
+        span.textContent = match[0];
+        fragment.append(span);
+        last = match.index + match[0].length;
+        count += 1;
+      }
+      fragment.append(text.slice(last));
+      node.replaceWith(fragment);
+    }
+    return count;
+  }, PRICE_TEXT.source);
+  const blurred = masked + await page.$$eval(PRICE_SELECTORS.join(','), (nodes) => nodes.filter((n) => getComputedStyle(n).filter.includes('blur')).length);
   const box = await page.evaluate(({ selector, count, extend, section, fromTop }) => {
     const nodes = [...document.querySelectorAll(selector)].filter((n) => n.getBoundingClientRect().height > 0);
     const first = section ? (document.querySelector(section) || nodes[0]) : nodes[0];

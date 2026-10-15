@@ -23,3 +23,13 @@ test('実画面カルーセル: 5枚・買い物ノートとホシルバズを�
     assert.doesNotMatch(copy, /[¥￥]|\d+\s*円|\d+\s*[%％]|最安|必ず|保証|No\.?1/u, slide.id);
   }
 });
+
+test('実画面カルーセル: 商品名に入った金額・割引率も文字ごとにぼかす', async () => {
+  const { PRICE_TEXT } = await import('../scripts/build-social-screens.mjs');
+  const hits = (text) => (String(text).match(new RegExp(PRICE_TEXT.source, 'gu')) || []);
+  assert.deepEqual(hits('79%OFF!【10/14 10時〜24H限定：830円〜'), ['79%OFF', '830円']);
+  assert.deepEqual(hits('65%OFF! 1,370'), ['65%OFF', '1,370']);
+  assert.deepEqual(hits('【クーポンで1000円OFF】送料無料'), ['1000円']);
+  assert.deepEqual(hits('¥2,980 → ¥1,980'), ['¥2,980', '¥1,980']);
+  assert.deepEqual(hits('花王 キュレル 泡洗顔料 詰替 130ml 10/14 30位'), []);
+});
