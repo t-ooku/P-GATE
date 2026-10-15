@@ -29,7 +29,7 @@ export const SLIDES = Object.freeze([
     body: 'ホシルが楽天市場・Yahoo!ショッピングの価格を\n毎日記録。「買い物ノート」で読めます。'
   },
   {
-    id: 'price-drops', url: '/media/price-drops', selector: '.media-drop', min: 2, count: 3,
+    id: 'price-drops', url: '/media/price-drops', selector: '.media-drop:has(.media-drop-figure img)', min: 2, count: 2,
     kicker: 'PRICE DROPS', title: '今週、\n値下がりした物。',
     body: '記録の中で、下がった商品だけを集めています。\n価格の動きはグラフで。（画像の価格はぼかしています）'
   },
@@ -39,7 +39,7 @@ export const SLIDES = Object.freeze([
     body: 'モール公式ランキングの上位を、\nホシルの価格記録と並べています。'
   },
   {
-    id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf, #buzzTab .buzz-home-item', min: 3, section: '#buzzTab',
+    id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 2, count: 2,
     kicker: 'HOSHILU BUZZ', title: '今、みんなが\nホシってる。',
     body: 'ジャンル別のトレンドを、ホシルバズに。\n気になったら、そのまま探せます。'
   },
