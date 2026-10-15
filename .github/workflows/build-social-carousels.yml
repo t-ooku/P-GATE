@@ -176,8 +176,13 @@ jobs:
           done
           day="${{ steps.screens.outputs.day }}"
           for f in manifest.json $(python3 -c "import json,sys;m=json.load(open(sys.argv[1]));print(' '.join(f['file'] for s in m['sets'].values() for f in s['files']))" "tools/line-worker/public/social/screens/${day}/manifest.json"); do
-            code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/screens/${day}/$f")"
-            echo "HEAD /social/screens/${day}/$f -> $code"
+            # デプロイ直後は配信の反映に数十秒かかることがある（10/15: notes/5.jpg だけ 404 → 少し待って再確認する）
+            for try in 1 2 3 4 5 6 7 8; do
+              code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/screens/${day}/$f")"
+              [ "$code" = "200" ] && break
+              sleep 15
+            done
+            echo "HEAD /social/screens/${day}/$f -> $code (try ${try})"
             test "$code" = "200"
           done
 
