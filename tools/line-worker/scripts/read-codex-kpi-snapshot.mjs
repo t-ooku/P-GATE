@@ -1,6 +1,7 @@
 import { chmod, writeFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { codexKpiSnapshotSummary } from '../src/promotion-dashboard.mjs';
+import { SEARCH_QA_CANARY_QUERIES, PRIORITY_SEARCH_QA_QUERIES } from '../src/search-qa-canary.mjs';
 
 const DEFAULT_DATABASE_ID = '17629324-b771-4348-982c-c25da48c29b2';
 const MUTATING_SQL = /\b(?:ALTER|ATTACH|CREATE|DELETE|DETACH|DROP|INSERT|PRAGMA|REINDEX|REPLACE|UPDATE|VACUUM)\b/iu;
@@ -427,6 +428,23 @@ export async function operationalDiagnostics(db, internalIds = []) {
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney,
     target_price_funnel_stages_7d: targetPriceStages,
     seller_form_funnel_stages_7d: sellerFormStages,
+    seller_form_input_evidence_7d: {
+      ...await read(`SELECT CASE WHEN content='consultation_input' THEN 'TRUSTED_INPUT_EVENT'
+        ELSE 'LEGACY_FOCUS_ONLY' END AS measurement_basis,COUNT(*) AS count,
+        MAX(occurred_at) AS last_observed_at
+        FROM growth_events WHERE event_type='seller_form_started'
+        AND datetime(occurred_at)>=datetime('now','-7 days')
+        AND traffic_class NOT IN ('QA','INTERNAL') GROUP BY measurement_basis`),
+      definition: 'INPUT_EVENT_IS_NOT_PROOF_OF_UNIQUE_HUMANS_LEGACY_FOCUS_IS_NOT_INPUT'
+    },
+    fixed_search_qa_24h: await read(`SELECT medium AS fixture_id,campaign AS outcome,
+      substr(content,instr(content,' ')+1,80) AS top_product_name,
+      marketplace,occurred_at
+      FROM growth_events WHERE event_type='search_qa_result' AND source='worker' AND traffic_class='QA'
+      AND medium IN (${[...SEARCH_QA_CANARY_QUERIES, ...PRIORITY_SEARCH_QA_QUERIES].map(() => '?').join(',')})
+      AND campaign IN ('PASS','FAIL') AND instr(content,' ')>0
+      AND datetime(occurred_at)>=datetime('now','-24 hours')
+      ORDER BY occurred_at DESC LIMIT 60`, [...SEARCH_QA_CANARY_QUERIES, ...PRIORITY_SEARCH_QA_QUERIES].map(row=>row.id)),
     notifications,
     price_cache: priceCache, search_qa: searchQa,
     target_price_providers_24h: watchProviders, registration_funnel_30d: registrationFunnel,
@@ -453,6 +471,9 @@ async function main(argv) {
   const config = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   const internalIds = String(config.vars?.INTERNAL_MEMBER_IDS || '').split(',').map(x=>x.trim()).filter(Boolean);
   snapshot.operational_diagnostics = await operationalDiagnostics(PRODUCT_DB, internalIds);
+  // The only row-level text is a bounded product title from repository-defined
+  // internal QA. No user search, photo, identity, or arbitrary event content.
+  snapshot.privacy.fixed_qa_product_names = 'REPOSITORY_FIXTURES_WORKER_QA_ONLY';
   await writeFile(output, `${JSON.stringify(snapshot, null, 2)}\n`, { mode: 0o600, flag: 'w' });
   await chmod(output, 0o600);
   console.log(`CODEX_KPI_SNAPSHOT_READY:${snapshot.generated_at}:${output}`);

@@ -255,6 +255,36 @@ test('過去日付のThreads再試行とStoryを匿名集計し、未接続を�
   assert.equal(unavailable.instagram_formats_today.status,'UNAVAILABLE');
 });
 
+test('Seller input evidence separates legacy focus, new input and excluded QA without exposing fields', async () => {
+  const sqlite = setup();
+  sqlite.exec(`INSERT INTO growth_events(event_type,traffic_class,content,occurred_at) VALUES
+    ('seller_form_started','ATTRIBUTED','consultation_input',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('seller_form_started','QA','consultation_input',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('seller_form_started','INTERNAL','consultation_input',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result = await operationalDiagnostics(d1(sqlite), ['internal-1']);
+  const rows = result.seller_form_input_evidence_7d.rows;
+  assert.equal(rows.find(row=>row.measurement_basis==='LEGACY_FOCUS_ONLY').count, 1);
+  assert.equal(rows.find(row=>row.measurement_basis==='TRUSTED_INPUT_EVENT').count, 1);
+  const unavailable = await operationalDiagnostics({prepare(){throw Error('offline');}}, []);
+  assert.equal(unavailable.seller_form_input_evidence_7d.status, 'UNAVAILABLE');
+});
+
+test('fixed QA names come only from worker QA with a repository fixture ID, never user searches', async () => {
+  const sqlite = setup();
+  sqlite.exec(`ALTER TABLE growth_events ADD COLUMN marketplace TEXT DEFAULT '';
+    INSERT INTO growth_events(event_type,traffic_class,source,medium,campaign,content,occurred_at) VALUES
+    ('search_qa_result','QA','worker','koala_mattress','PASS','C3_E1_R0_H2_L5_T50 コアラマットレス',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('search_qa_result','QA','worker','private-query-id','PASS','C3 private user search',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('search_qa_result','ATTRIBUTED','worker','koala_mattress','PASS','C3 private user search',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('search_qa_result','QA','browser','koala_mattress','PASS','C3 private browser text',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result = await operationalDiagnostics(d1(sqlite), []);
+  assert.equal(result.fixed_search_qa_24h.status, 'AVAILABLE');
+  assert.equal(result.fixed_search_qa_24h.rows.length, 1);
+  assert.equal(result.fixed_search_qa_24h.rows[0].top_product_name, 'コアラマットレス');
+  assert.equal(JSON.stringify(result).includes('private user search'), false);
+  assert.equal(JSON.stringify(result).includes('private browser text'), false);
+});
+
 test('内部会員IDがない場合は通知・一般利用者ウォッチを0件に偽装しない', async () => {
   const result = await operationalDiagnostics(d1(setup()));
   assert.deepEqual(result.notifications, {

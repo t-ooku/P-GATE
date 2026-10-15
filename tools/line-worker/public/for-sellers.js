@@ -32,13 +32,17 @@ document.querySelectorAll('[data-seller-cta]').forEach((link) => link.addEventLi
   sendSellerEvent('seller_cta_clicked', { content: link.dataset.sellerCta || 'unknown' });
 }));
 
-// 2026-10-10 Seller LP の離脱改善: CTA の先（フォーム）の段階を数える。入力内容は送らない（理由コードだけ）。
+// Focus alone can come from previews/autofocus. Count the first trusted edit,
+// without inspecting or transmitting field values. This is interaction evidence,
+// not proof of a unique human; older consultation events remain focus-only.
 let sellerFormStarted = false;
-form?.addEventListener('focusin', () => {
-  if (sellerFormStarted) return;
+function recordSellerFormInput(event) {
+  if (sellerFormStarted || event.isTrusted !== true) return;
   sellerFormStarted = true;
-  sendSellerEvent('seller_form_started', { content: 'consultation' });
-}, { passive: true });
+  sendSellerEvent('seller_form_started', { content: 'consultation_input' });
+}
+form?.addEventListener('input', recordSellerFormInput, { passive: true });
+form?.addEventListener('change', recordSellerFormInput, { passive: true });
 const failureSent = new Set();
 function sendFormFailure(reason) {
   const code = String(reason || 'unknown').replace(/[^a-z0-9_:-]/giu, '_').slice(0, 60);
