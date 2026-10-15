@@ -15,6 +15,9 @@ name: Build social carousels (Pillow) and deploy
 # 本番は CSP（style-src 'self'）があるので、撮影ブラウザだけ bypassCSP でぼかし用 CSS を当てる（#632）。
 # トップは常時通信があり networkidle にならないので load で待つ（#634）。値下がりは画像のある商品、バズは棚から撮る（#636）。
 # 商品名（店の題名）に入った金額・割引率も文字ごとにぼかす（#637）。
+# 2026-10-15 大隆さん「今後の投稿も、実画像を踏まえて投稿して」: 毎日 17:30 JST に notes／buzz／seller の 3 セットを撮る。
+# 撮れたセットだけ manifest.json に載り、Worker（src/social-screens.mjs）がその日の未投稿のフィード投稿を差し替える。
+# 14 日より古い screens/<日付>/ は自動で外す（配信ファイル数を増やし続けない）。
 
 on:
   push:
@@ -25,7 +28,7 @@ on:
       - 'tools/line-worker/scripts/build-social-screens.mjs'
       - '.github/workflows/build-social-carousels.yml'
   schedule:
-    - cron: '30 8 * * 4'
+    - cron: '30 8 * * *'
   workflow_dispatch:
 
 permissions:
@@ -101,11 +104,13 @@ jobs:
           from PIL import Image
           out = Path(sys.argv[1])
           m = json.loads((out / 'manifest.json').read_text())
-          assert len(m['files']) == 5, m
-          for f in m['files']:
-              im = Image.open(out / f['file'])
-              assert im.size == (1080, 1350), (f, im.size)
-          print('screens verified:', [f['file'] for f in m['files']])
+          assert m['sets'], m
+          for set_id, info in m['sets'].items():
+              assert 2 <= len(info['files']) <= 10, (set_id, info)
+              for f in info['files']:
+                  im = Image.open(out / f['file'])
+                  assert im.size == (1080, 1350), (f, im.size)
+          print('screens verified:', {k: len(v['files']) for k, v in m['sets'].items()}, 'skipped:', m.get('failures'))
           PY
           echo "day=${day}" >> "$GITHUB_OUTPUT"
 
@@ -116,6 +121,15 @@ jobs:
           exec > >(tee -a /tmp/ci.log) 2>&1
           git config user.name "hoshilu-patch-bot"
           git config user.email "noreply@hoshilu.app"
+          # 実画像は毎日増えるので、14 日より古い日付フォルダは配信物から外す（投稿済みの画像は Instagram 側に保存済み）
+          cutoff="$(TZ=Asia/Tokyo date -d '14 days ago' +%Y%m%d)"
+          for d in tools/line-worker/public/social/screens/20[0-9][0-9][0-9][0-9][0-9][0-9]; do
+            if [ -d "$d" ] && [ "$(basename "$d")" -lt "$cutoff" ]; then
+              git rm -rq --ignore-unmatch "$d"
+              rm -rf "$d"
+              echo "pruned $d"
+            fi
+          done
           git add tools/line-worker/public/social/carousel tools/line-worker/public/social/screens
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -160,10 +174,10 @@ jobs:
             echo "HEAD /social/carousel/$f -> $code"
             test "$code" = "200"
           done
-          for n in 1 2 3 4 5; do
-            f="${{ steps.screens.outputs.day }}/${n}.jpg"
-            code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/screens/$f")"
-            echo "HEAD /social/screens/$f -> $code"
+          day="${{ steps.screens.outputs.day }}"
+          for f in manifest.json $(python3 -c "import json,sys;m=json.load(open(sys.argv[1]));print(' '.join(f['file'] for s in m['sets'].values() for f in s['files']))" "tools/line-worker/public/social/screens/${day}/manifest.json"); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/social/screens/${day}/$f")"
+            echo "HEAD /social/screens/${day}/$f -> $code"
             test "$code" = "200"
           done
 
