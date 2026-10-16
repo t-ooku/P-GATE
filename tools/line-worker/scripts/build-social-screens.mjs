@@ -119,7 +119,7 @@ ${PHOTO_SELECTORS.join(',')}{position:relative!important}
 .hoshilu-photo-full>.hoshilu-photo-band img{filter:blur(16px) saturate(.7)!important}
 ${PHOTO_RANK_SELECTORS.join(',')}{z-index:2!important}`;
 const LAYOUT_CSS = `.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"],.seller-sticky-cta{display:none!important}
-.topbar,.seo-header{position:static!important}
+.topbar,.seo-header,.business-top{position:static!important}
 html{scroll-behavior:auto!important}`;
 
 // 出品者向けページの「実際の画面」は、スマホ幅では横スワイプの列になる。撮影の時だけ縦に並べて 1 枚ずつ撮る。
