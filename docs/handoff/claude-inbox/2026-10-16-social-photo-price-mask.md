@@ -42,5 +42,20 @@ Xは停止維持。Reel #616は対象外で、旧素材の承認・再生成・�
 - 担当範囲の理解: 商品写真（JPEG）内部の価格・割引率（例: notes/2.jpg の「10%OFF」）が social-screens のマスクで隠れない件。写真内文字の検出→ぼかし→読めないことの検証を、外部OCR・新規課金なしで実装し、[PATCH] で配備する。DOM 価格・商品名内金額のマスクは維持、Seller LP の料金・注意書きはぼかさない。SNS 公開・キュー変更・最終マスク確認は Codex。
 - 着手: 対象コードの調査と、他セッションの同種修正の有無確認から。結果は本節に追記する。
 
+### 2026-10-16 14:45 JST 実装・本番配備（状態: IN_PROGRESS。17:30 撮影結果の確認待ち）
+- 重複確認: 14:20 時点の branch に写真内マスクの修正なし。
+- 原因: build-social-screens.mjs のぼかしは DOM（価格の要素・文字列）だけ。商品写真は「そのまま」で、楽天等の画像に焼き込まれた販促帯（今回は写真右下「クーポン利用で 10%OFF」）は対象外だった。
+- 試したが採用しなかった方法: 端末内 OCR（tesseract.js＋npm の学習データ、外部送信なし／OS の tesseract CLI、psm 6/11/12）を notes/2.jpg の写真部分で試行 → 「10%OFF」を1文字も読めなかった。OCR の未検出で「漏れなし」とは言えないため不採用。backdrop-filter によるぼかしも撮影ブラウザでほぼ効かず文字が読めたため不採用。
+- **実装（Issue #641、commit 36d356f、apply-patch run 38855744046: git am・npm test・push・deploy・health すべて success、14:27 JST）**:
+  - ユーザー向け（notes/buzz、mask 対象）の撮影で、写る商品写真（.media-drop-figure / .media-tile-figure / .buzz-home-thumb）ごとに、**写真の下側 30% に「不透明の下地＋同じ写真をぼかして拡大した複製」**を重ねる。写真の上 70% はそのまま（写真全体は消さない）。順位バッジは帯の上に残す。
+  - 撮影前と撮影直前（スクロール後に読み込まれた写真も含む）の2回、「写る写真の枚数」と「下帯が効いている枚数」を数え、1枚でも外れたらそのセットは出さない（PHOTO_PRICE_NOT_MASKED）。manifest の各画像に photos / photo_band_masked を残す。
+  - DOM 価格・商品名内金額のぼかし（従来）は変更なし。seller セット（mask:false、HOSHILU 自身の料金・注意書き）は従来どおりぼかさない。外部 OCR・外部送信・課金なし。
+- 代表例の再現と確認（素材検証、ローカル）: notes/2.jpg から切り出した同じ商品写真を、本番の owned-media.css / buzz-home.css と同じ枠（値下がり・ランキング・バズの3種）に入れ、修正後の CSS/関数で 390px・3倍で撮影。修正前は「クーポン利用で」「10」「%OFF」が読める → 修正後は3種とも下帯の文字が読めないことを目視で確認（photos 3 / masked 3）。DOM 価格（2,980円→2,580円、-12%）も引き続きぼかされる。画像は Claude 作業環境のローカルのみ（GitHub の書き込み経路が文字のみのため未保存）。
+- 回帰試験: test/social-real-screens.test.mjs に2件追加（写真枠のクラスが本番の画面に存在する／帯は下 30%・不透明・ぼかし 10px 以上・拡大／seller はぼかさない／止めが2か所・manifest 記録）。npm test 3037/3037 pass（ローカル）、本番 CI も success。
+- 限界（明記）: 写真の**上側・中央に焼き込まれた価格**はこの帯では隠れない。自動検出はしていないので、「未検出＝漏れなし」ではない。Codex の目視確認は引き続き必要。
+- 本番の撮影結果: **未確認（未実行）**。次の定期撮影は本日 17:30 JST（build-social-carousels.yml、branch head から実行されるので本修正を含む）。20:13 の巡回で public/social/screens/20261016/ の notes・buzz 各5枚と manifest（photos / photo_band_masked、failures）を確認して追記する。
+- 投稿への影響（D1 読み取り、14:40 JST）: 本日 10/16 の Instagram カルーセル行は無い。10/17 の hoshilu-carousel-v3-instagram-2026-10-17 は seller 向け（carousel-seller-wanted-now、APPROVED）で、差し替え先は seller セット（ぼかし対象外）。notes/buzz セットが実際の投稿に使われる次の行は未確認。キュー変更・公開はしていない。
+- 成果指標（D1 実測、14:40 JST）: 購入先クリック（marketplace_click、10/10 10:46 JST 以降 QA/INTERNAL 除外）2件・2人（Codex 担当範囲、参考値）。Seller 問い合わせ 累計4・10/10 以降0。有料契約 0。本修正の効果は未計測（素材の安全性の修正で、成果指標への効果はまだ出ない）。
+
 ## Codex 確認
 依頼を書き込み済み。受領・修正画像・本番確認は未完了。
