@@ -1,5 +1,5 @@
 ---
-status: BLOCKED
+status: DONE
 owner: Claude
 from: Codex（大隆さんの2026-10-16指示）
 created: 2026-10-16T13:47:47+09:00
@@ -77,3 +77,13 @@ Xは停止維持。Reel #616は対象外で、旧素材の承認・再生成・�
 
 ## Codex 確認
 2026-10-17朝: ACKED/IN_PROGRESS→BLOCKED、#641/#654の実装配備を確認。最新20261017 manifestでもphoto_ocr=unavailableで、BLOCKEDは実態と一致。Codexが不足していたworkflowのtesseract導入・SOCIAL_SCREENS_REQUIRE_OCR=1を準備し、既存反映経路で進める。画像の最終確認はCodexが担当し、Claudeへ点検を丸投げしない。受信箱statusは確認完了までBLOCKEDのまま保持する。新規依頼・重複OCR実装・SNS公開・D1書込なし。
+
+### 2026-10-17 08:18 JST Codex 最終確認（BLOCKED → DONE）
+- **実装・配備済み**: 677c592bでtesseract導入/必須化、59405407で見える写真単位のローカル切り出しOCR。初回build #39ではOCR作動だけ確認できてもcrocsが読めたため、完了判定せず追加修正した。全回帰3049件、局所試験/実crocsラスター検出も成功。
+- **素材完成・本番確認済み**: [既存build #40/run38980050574](https://github.com/t-ooku/P-GATE/actions/runs/38980050574) success。生成commit37ed5d37584c58a5c7f3a1e639aa9b13ac4f1576、manifest captured_at 10月17日08:14:15 JST、notes5/buzz5/seller7、failuresなし。14枚はphoto_ocr=tesseract、写真なしSeller3枚はskipped、全写真photos=photo_band_masked。buzz/3だけphoto_full_blur1。
+- 17枚を一覧目視、問題のbuzz/3・notes/2は元解像度で拡大確認。crocs上側の「50%OFF・3,850円」は当該写真だけ全ぼかしになり読めない。他の靴/服等の写真上部は保持。プロテイン写真下の10%OFFも読めない。Seller6の月額1,980円/9,800円/19,800円、無料期間/自動課金の注意書きは保持。OCR未検出を全商品の漏れなしの保証とはしない。商品名「半額セール」の文字は既存方針どおり残る。
+- 本番health/17画像/LP用5画像のHEAD200は同buildの検証で確認（別の手動probeはなし）。build配備Version ID548d897d-9638-4c04-bce4-a207be754ea4。後続CIの最終Versionは本日日報に記録する。
+- **キュー反映・公開**: CodexからD1/キュー/公開操作なし。素材配信を公開実績とはしない。#616旧素材レビュー待ちとX停止は維持。10月17日20時の既存予約の公開三要素は未来のため未完了。
+- 成果は本日08:07既存成果物で購入先クリック2セッション、一般保存0、Seller問い合わせ10月10日以降0/有料契約0（契約は既存20:50確認）。素材修正を獲得成功にしない。Claudeへの即時起動は行っておらず、受信箱経由の経緯を保存。大隆さんの転送・操作は不要。
+
+最終CI #2456/run38980050569が画像commit37ed5d37を含めて再配備し、Version e13948b3-afb1-4c78-b486-a574fc76c6b8。既存health ok/missing0/weak0も確認。素材完成と将来のSNS公開を区別する。
