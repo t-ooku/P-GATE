@@ -35,7 +35,7 @@ export const PRICE_TEXT = /(?:[¥￥]\s?\d[\d,]*|\d[\d,]*\s?円|\d+(?:\.\d+)?\s?
 // 限界: 上側や中央に焼き込まれた文字はこの帯では隠れない（端末内 OCR も試したが、この代表例を読めず採用しなかった）。
 // 「未検出＝漏れなし」とはしないので、公開前の目視確認は残す。
 // 2026-10-16: 出品者向けページ用の検索結果の撮影（scripts/build-seller-lp-shots.mjs）でも同じ下帯ぼかしを掛ける（.product-image-gallery）。
-export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb', '.product-image-gallery']);
+export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb', '.product-image-gallery', '.unified-pr-image']);
 export const PHOTO_BAND_RATIO = 0.3;
 // 2026-10-16 20:13 追加（Claude、20261016/buzz/3.jpg で写真の左上に「50%OFF 3,850円」が読めた）: 下帯の外に焼き込まれた
 // 価格・割引率を、撮影直前の画面を端末内の tesseract（OS パッケージ、外部送信・課金なし）で読み、読めた文字が載っている写真だけを
@@ -188,17 +188,18 @@ export const SCREEN_SETS = Object.freeze({
     // 2026-10-16 大隆さん「せっかく改修したページだから販促増やして」: 出品者向けページの「これが、HOSHILUの実際の画面です。」
     // （本番の検索結果・検索・ホシルバズの画面。他店の価格はぼかし済み）を 1 枚ずつ見せる。
     {
-      id: 'seller-real-results', url: '/for-sellers#screens', selector: '.real-screen', nth: 1, min: 3, mask: false, css: SELLER_REAL_CSS,
+      // 10/16 掲載見本（第一画面の .seller-hero-real。本番の検索結果に見本の商品を PR 枠で入れた画面）
+      id: 'seller-real-results', url: '/for-sellers', selector: '.seller-hero-real .real-phone', min: 1, mask: false,
       kicker: 'REAL SCREENS', title: 'お客さまの検索結果、\n一番上が「PR」枠。',
-      body: '条件にすべて合う検索で、お店の商品を最大2件。\nHOSHILU本番の画面です（他店の価格はぼかし）。'
+      body: '条件にすべて合う検索で、お店の商品を最大2件。\n本番の画面です（PR枠の商品は見本）。'
     },
     {
-      id: 'seller-real-search', url: '/for-sellers#screens', selector: '.real-screen', nth: 0, min: 3, mask: false, css: SELLER_REAL_CSS,
+      id: 'seller-real-search', url: '/for-sellers#screens', selector: '.real-screen', nth: 0, min: 2, mask: false, css: SELLER_REAL_CSS,
       kicker: 'REAL SCREENS', title: '名前が分からなくても、\n探される。',
       body: '「玄関に置ける スリムな傘立て」のような言葉で、\nお客さまが商品を探します。'
     },
     {
-      id: 'seller-real-buzz', url: '/for-sellers#screens', selector: '.real-screen', nth: 2, min: 3, mask: false, css: SELLER_REAL_CSS,
+      id: 'seller-real-buzz', url: '/for-sellers#screens', selector: '.real-screen', nth: 1, min: 2, mask: false, css: SELLER_REAL_CSS,
       kicker: 'REAL SCREENS', title: '売れ筋の棚と、\n「価格通知」。',
       body: '今すぐ買わないお客さまも、\n「気になる」「価格通知」で商品を残せます。'
     },
@@ -271,7 +272,36 @@ export function setScreensBase(url) {
   BASE = String(url || '').replace(/\/$/u, '');
 }
 
+// 2026-10-16 大隆さん指示「リアルな掲載見本を画面掲載して」: 出品者向けページの掲載見本。
+// まだ掲載店が無いので、本番の検索結果（/api/knowledge の応答）の先頭 2 件を、その画面の中だけ「PR」枠へ移して撮る。
+// 店名は「あなたのお店（見本）」、価格は出さない（「価格はリンク先で確認」）。本番のデータ・D1 は変えない。撮った画像には「見本」と書く。
+export const PR_SAMPLE_SHOP = 'あなたのお店（見本）';
+export function samplePrResponse(body, base = BASE) {
+  const unified = body?.unified_results;
+  if (!unified || !Array.isArray(unified.items)) return body;
+  const https = (value) => /^https:\/\//u.test(String(value || ''));
+  const picks = unified.items.filter((item) => !item?.listing && https(item?.image_url) && https(item?.url) && item?.product_name).slice(0, 2);
+  if (!picks.length) return body;
+  const moved = new Set(picks.map((item) => item.position));
+  unified.sponsored = picks.map((item, index) => ({
+    label: 'PR', source: 'HOSHILU_PR', pilot_id: 'SAMPLE', product_id: String(index + 1), shop_name: PR_SAMPLE_SHOP,
+    product_name: item.product_name, image_url: item.image_url, url: `${base}/for-sellers`, marketplace_label: '販売先',
+    price_jpy: null, price_verified_at: ''
+  }));
+  unified.items = unified.items.filter((item) => !moved.has(item.position));
+  if (Array.isArray(unified.price_order)) unified.price_order = unified.price_order.filter((position) => !moved.has(position));
+  return body;
+}
+
 export async function capture(page, slide) {
+  if (slide.prSample) {
+    await page.route('**/api/knowledge', async (route) => {
+      const response = await route.fetch();
+      let body;
+      try { body = await response.json(); } catch { return route.fulfill({ response }); }
+      return route.fulfill({ response, json: samplePrResponse(body) });
+    });
+  }
   // トップは常時通信があり networkidle にならない（10/15 CI で 60 秒超過）。load 後は waitForSelector で待つ。
   await page.goto(`${BASE}${slide.url}`, { waitUntil: 'load', timeout: 60_000 });
   await page.addStyleTag({ content: slide.mask === false ? LAYOUT_CSS : `${BLUR_CSS}\n${LAYOUT_CSS}` });

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 2026-10-16 大隆さん指示「セラー募集のLPは文字ばかりで実画像がないから全然だめ。人は視認性で判断する。
 // ホシルの訴求ポイントや推し機能を、実際の画像を掲載して。表示できない部分はぼかせばよい」。
-// 本番の HOSHILU の画面（検索・検索結果・ホシルバズ・値下がり）をスマホ幅で撮り、出品者向けページ（/for-sellers）に載せる
+// 本番の HOSHILU の画面（検索・掲載見本・ホシっとく・ホシルバズ・値下がり）をスマホ幅で撮り、出品者向けページ（/for-sellers）に載せる
 // 素の画面写真（JPEG）を作る。枠や説明は LP 側の HTML/CSS で付ける。
 // - 商品の金額・割引率・差額はぼかす。商品写真は見せるが、販促文字が入りやすい下側の帯はぼかす（build-social-screens と同じ処理）。
 // - 検索語は固定の見本（利用者の検索ではない）。AI 生成なし・課金なし。
@@ -18,17 +18,17 @@ export const SAMPLE_QUERY = '玄関に置ける スリムな傘立て';
 export const LP_SHOTS = Object.freeze([
   // 1. 名前が分からなくても、言葉で探せる（入力した状態のトップ）
   { id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true, typeOnly: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 700 },
-  // 2. 検索結果（モール横断の商品カード。価格はぼかす）。条件に合う検索では、この一覧の一番上に「PR」枠が入る
-  // 10/16 初回は商品カード 1 枚だけを切り出して上下が欠けたため、商品カードがそろってから結果の枠ごと上から撮る
-  // 10/16 2 回目は 90 秒以内に商品カードが出ず失敗（検索の混み具合で遅れる）。一覧（#resultCards）の上から撮り、失敗したら 1 回だけ撮り直す
-  // 10/16 3 回目の記録（#649）: 結果は出ていた（result-row・商品カードあり）。最初に見つかる .product-card が畳まれた行の中で見えず待ち続けていた。
-  // 目印を「結果の行」（#resultCards > .result-row）にする。#resultCards 自体は箱を持たない（見える判定にならない）ので、撮る範囲は #resultsSection
-  // 目印は「どれか 1 つ見えれば進む」（build-social-screens の capture、#653）
-  { id: 'results', url: '/', selector: '#resultsSection', ready: '#resultCards > .result-row', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 1000, retries: 1 },
-  // 3. ホシルバズ（ジャンル別のいま売れている物）
+  // 2. 掲載見本（第一画面・相談フォーム）。2026-10-16 大隆さん指示「リアルな掲載見本を画面掲載して」。
+  // 本番の検索結果の先頭 2 件を、撮る画面の中だけ「PR」枠へ移す（build-social-screens の samplePrResponse。店名は「あなたのお店（見本）」・価格なし）。
+  // 件数の行（.unified-head）から下を撮る＝件数 → PR枠 → 通常の列、の順に写る。
+  // 以前の検索結果だけの画面（results、#647〜#653 の経緯）は撮らない。results.jpg は掲載見本が撮れるまでの代わりとして残す。
+  { id: 'listing', url: '/', selector: '.unified-pr-card', ready: '.unified-pr-card', section: '.unified-head', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 900, retries: 1, prSample: true },
+  // 3. ホシっとく（見つからない物を保存 → 探されている需要としてお店に届く）。「探していた人を、呼び戻す」の横に載せる
+  { id: 'keep', url: '/', selector: '#resultCards > .continuous-search-card', ready: '#resultCards > .continuous-search-card', section: '#resultCards > .continuous-search-card', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 760, retries: 1 },
+  // 4. ホシルバズ（ジャンル別のいま売れている物）
   // 棚 2 つ分を縦長に撮る（LP のスマホ枠 9:16 に収まる長さ）
   { id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 2, count: 2, maxHeight: 900 },
-  // 4. 買い物ノートの値下がり（毎日の価格記録）
+  // 5. 買い物ノートの値下がり（毎日の価格記録）
   { id: 'drops', url: '/media/price-drops', selector: '.media-drop:has(.media-drop-figure img)', min: 2, count: 2, maxHeight: 900 }
 ]);
 

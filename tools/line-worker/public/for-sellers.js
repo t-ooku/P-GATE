@@ -239,12 +239,20 @@ form?.addEventListener('submit', async event => {
 });
 
 // 2026-10-16: 出品者向けページの実画面（/for-sellers-shots/）が撮れていない・読めないときは、空の枠を出さずに枠ごと外す。
+// 掲載見本（listing.jpg）は、まだ撮れていなければ data-fallback（以前の検索結果の画面）に 1 回だけ差し替える。
 function dropBrokenRealScreen(img) {
-  const figure = img.closest('.real-screen, .seller-hero-real');
+  const fallback = img.getAttribute('data-fallback');
+  if (fallback && img.getAttribute('src') !== fallback) {
+    img.removeAttribute('data-fallback');
+    img.addEventListener('error', () => dropBrokenRealScreen(img), { once: true });
+    img.setAttribute('src', fallback);
+    return;
+  }
+  const figure = img.closest('.real-screen, .seller-hero-real, .seller-sample-real');
   if (figure) figure.remove();
 }
 if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
-  document.querySelectorAll('.real-screen img, .seller-hero-real img').forEach((img) => {
+  document.querySelectorAll('.real-screen img, .seller-hero-real img, .seller-sample-real img').forEach((img) => {
     if (img.complete && img.naturalWidth === 0) dropBrokenRealScreen(img);
     else img.addEventListener('error', () => dropBrokenRealScreen(img), { once: true });
   });

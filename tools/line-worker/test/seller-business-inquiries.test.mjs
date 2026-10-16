@@ -84,7 +84,8 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /新しいECモールを増やす必要はありません/u);
   assert.match(html, /<summary>クリックされると料金は増えますか？<\/summary><p>増えません。料金は月額1,980円だけです/u);
   assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
-  assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
+  // 2026-10-16 大隆さん指示「後半に重複している内容あったら削除」: 「費用が勝手に増えませんか？」は「クリックされると料金は増えますか？」と同じなので外した
+  assert.doesNotMatch(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
   // The approved 30-day policy is announced without claiming activation before QA.
   assert.match(html, /新規Sellerは商品公開から30日間無料。/);
   assert.match(html, /体験開始の準備中/);
@@ -121,11 +122,13 @@ test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮�
   assert.match(css, /\.form-shell\{margin:38px 0/u);
   assert.match(css, /\.flow h2\{[^}]*white-space:nowrap/u);
   assert.match(css, /\.price-table-wrap table\{min-width:0;table-layout:fixed\}/u);
-  // 2026-09-19: 8 段の流れはスマホで 1 列、タブレットで 2 列
+  // 2026-09-19: 段の流れはスマホで 1 列、タブレットで 2 列
   assert.match(css, /@media\(max-width:520px\)\{\.dm-flow ol\{grid-template-columns:1fr\}/u);
   assert.match(html, /<section class="flow dm-flow" id="how">/u);
   const dmFlow = html.slice(html.indexOf('<section class="flow dm-flow"'), html.indexOf('</section>', html.indexOf('<section class="flow dm-flow"')));
-  assert.equal((dmFlow.match(/<li><span>[1-8]<\/span><div><strong>/gu) || []).length, 8);
+  // 2026-10-16 大隆さん指示「長文はくどい。端的に」: 8 段 → 4 段にし、横に実際の「ホシっとく」の画面を置く
+  assert.equal((dmFlow.match(/<li><span>[1-4]<\/span><div><strong>/gu) || []).length, 4);
+  assert.match(dmFlow, /\/for-sellers-shots\/keep\.jpg/u);
 });
 
 test('値下げ待ちと見つからなかった検索を匿名需要としてBusinessへ届ける', () => {
@@ -263,17 +266,19 @@ test('掲載見本の相談を主導線にし、未承認の体験条件・保�
   // 見えるのは HOSHILU 内の匿名集計なので「世の需要」「市場全体」とは書かない。
   // 2026-10-09 大隆さん指示「まず入り口は1980円」: 第一画面は掲載プラン 月額1,980円が主役。
   assert.match(html, /<h1>まずは月額1,980円で、<br><span>探している人の目の前へ。<\/span><\/h1>/u);
-  assert.match(html, /検索語の条件にすべて合うときは、HOSHILUの検索結果の一番上にある「PR」枠/u);
-  assert.match(html, /HOSHILUで何が探されていて、何が見つからなかったか/u);
+  // 2026-10-16 大隆さん指示「長文はくどい」: 第一画面の説明は 2 文に
+  assert.match(html, /条件にすべて合う検索で、お店の商品を一番上の「PR」枠に表示します（最大2件）/u);
+  assert.match(html, /HOSHILUで探されて、見つからなかった物です/u);
   assert.doesNotMatch(html, /世の需要|世の中の需要|市場全体の需要/u);
   assert.match(html, /data-seller-cta="hero-inquiry">1,980円の掲載を相談する</u);
   assert.ok(html.indexOf('id="included"') < html.indexOf('id="how"'), '「1,980円でできること」は第一画面の直後');
   assert.match(html, /<summary>優先出品（「PR」枠）とは？<\/summary>/u);
-  assert.match(html, /掲載順位や表示回数は保証しません/u);
-  assert.match(html, /非公開の見本/u);
-  assert.match(html, /店舗様ご本人/u);
+  assert.match(html, /売上、注文、掲載順位は保証しません/u);
+  assert.match(html, /商品3点で、下のような見本を非公開で作ります。公開は、お店の確認・承認の後です。/u);
+  // 掲載見本は文字ではなく実際の画面で見せる（2026-10-16 大隆さん指示「リアルな掲載見本を画面掲載して」）
+  assert.match(html, /<figure class="seller-sample-real">[\s\S]*?\/for-sellers-shots\/listing\.jpg/u);
   assert.doesNotMatch(html, /クリック50円|今月の利用額|予算上限の設定|自動課金なし|支払い登録不要の3か月/u);
-  assert.match(html, /同じ条件を5人以上が探している項目だけを、検索文ではなく正規化した条件/u);
+  assert.match(html, /匿名・5人以上の条件だけを、色・素材・サイズなどで表示します。検索文そのものや個人情報は共有しません。/u);
   for (const banned of ['必ず売れ', '売上が上がり', '多数のユーザー', '業界No', '確実に']) assert.ok(!html.includes(banned), banned);
 });
 
