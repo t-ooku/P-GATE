@@ -6,6 +6,7 @@
 // - 商品の金額・割引率・差額はぼかす。商品写真は見せるが、販促文字が入りやすい下側の帯はぼかす（build-social-screens と同じ処理）。
 // - 検索語は固定の見本（利用者の検索ではない）。AI 生成なし・課金なし。
 // - 撮れなかった画面は出力しない（manifest の failures に理由）。1 枚も撮れなければ失敗。
+// 掲載先: public/for-sellers.html の第一画面と「これが、HOSHILUの実際の画面です。」（#646）。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
