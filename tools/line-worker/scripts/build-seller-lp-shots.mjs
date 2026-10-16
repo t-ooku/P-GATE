@@ -7,7 +7,7 @@
 // - 検索語は固定の見本（利用者の検索ではない）。AI 生成なし・課金なし。
 // - 撮れなかった画面は出力しない（manifest の failures に理由）。1 枚も撮れなければ失敗。
 // 掲載先: public/for-sellers.html の第一画面と「これが、HOSHILUの実際の画面です。」（#646）。
-// その画面は、セラー向けの実画像カルーセル（build-social-screens の seller セット、#655）にも写る。
+// その画面は、セラー向けの実画像カルーセル（build-social-screens の seller セット、#655・#656）にも写る。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
