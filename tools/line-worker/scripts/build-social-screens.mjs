@@ -63,12 +63,19 @@ export function photoIndexesWithPriceText(tsv, rects, scale = PHOTO_OCR_SCALE) {
   return { indexes: [...hits].sort((a, b) => a - b), words };
 }
 let ocrAvailable;
-async function runTesseract(png) {
+export async function runTesseract(png, crop = null) {
   if (ocrAvailable === false) return null;
   const dir = await mkdtemp(path.join(os.tmpdir(), 'hoshilu-ocr-'));
   try {
     const file = path.join(dir, 'probe.png');
     await writeFile(file, png);
+    if (crop) {
+      // Small promotional badges disappear in OCR of a whole Japanese page.
+      // Crop the already captured pixels locally; never fetch another image.
+      await new Promise((resolve, reject) => execFile('python3', ['-c',
+        'import sys,json;from PIL import Image;p=sys.argv[1];r=json.loads(sys.argv[2]);im=Image.open(p);im.crop(tuple(r)).resize(((r[2]-r[0])*2,(r[3]-r[1])*2)).save(p)',
+        file, JSON.stringify(crop)], { timeout: 10000 }, error => error ? reject(error) : resolve()));
+    }
     const out = await new Promise((resolve, reject) => {
       execFile('tesseract', [file, 'stdout', '-l', 'eng', '--psm', '11', 'tsv'], { maxBuffer: 32 * 1024 * 1024, timeout: 120_000 },
         (error, stdout) => (error ? reject(error) : resolve(stdout)));
@@ -81,6 +88,25 @@ async function runTesseract(png) {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+}
+
+export async function photoPriceCropIndexes(png, rects, clip, recognize = runTesseract) {
+  const indexes = [];
+  for (let index = 0; index < rects.length; index += 1) {
+    const r = rects[index];
+    const left = Math.max(0, r.x), top = Math.max(0, r.y);
+    const right = Math.min(clip.width, r.x + r.width), bottom = Math.min(clip.height, r.y + r.height);
+    if (right - left < 8 || bottom - top < 8) continue;
+    const crop = [left, top, right, bottom].map(n=>Math.round(n * PHOTO_OCR_SCALE));
+    const tsv = await recognize(png, crop);
+    if (tsv === null) throw new Error('PHOTO_OCR_UNAVAILABLE:CROP');
+    const priceFound = String(tsv).split('\n').slice(1).some(line => {
+      const cols = line.split('\t');
+      return cols[0] === '5' && cols.length >= 12 && PHOTO_OCR_TEXT.test(cols.slice(11).join('\t'));
+    });
+    if (priceFound) indexes.push(index);
+  }
+  return indexes;
 }
 // 撮る範囲の画面を読み、価格らしい文字が載った写真を全体ぼかしにする。2 回目でも残れば、そのセットは出さない。
 async function ocrMaskPhotos(page, clip, slideId) {
@@ -96,7 +122,11 @@ async function ocrMaskPhotos(page, clip, slideId) {
       if (process.env.SOCIAL_SCREENS_REQUIRE_OCR === '1') throw new Error(`PHOTO_OCR_UNAVAILABLE:${slideId}`);
       return { ocr: 'unavailable', full: 0 };
     }
-    const { indexes, words } = photoIndexesWithPriceText(tsv, await rectsOf());
+    const rects = await rectsOf();
+    const { indexes: pageIndexes, words } = photoIndexesWithPriceText(tsv, rects);
+    const cropIndexes = await photoPriceCropIndexes(png, rects, clip);
+    const indexes = [...new Set([...pageIndexes, ...cropIndexes])];
+    if (cropIndexes.length) console.log(`ocr ${slideId} photo crops detected: ${cropIndexes.length}`);
     if (words.length) console.log(`ocr ${slideId} round${round + 1}: ${words.map((w) => `${w.inPhoto ? 'photo' : 'page'}:${w.text}`).join(' ')}`);
     if (!indexes.length) return { ocr: 'tesseract', full };
     if (round === 1) throw new Error(`PHOTO_PRICE_OCR_REMAINS:${slideId}:${indexes.length}`);
