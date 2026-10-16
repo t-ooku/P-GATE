@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-16T10:54:15.974Z",
+  "captured_at": "2026-10-16T11:03:03.662Z",
   "query": "玄関に置ける スリムな傘立て",
   "files": [
     {
@@ -35,6 +35,6 @@
     }
   ],
   "failures": {
-    "results": "page.waitForSelector: Timeout 90000ms exceeded."
+    "results": "page.waitForSelector: Timeout 90000ms exceeded. / seen: resultsSection=1 cards=7 product=1 msg= status= classes=|result-row result-row-confirmed|refinement-card marketplace-quick-strip|continuous-search-card"
   }
 }
