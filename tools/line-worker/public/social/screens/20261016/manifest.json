@@ -1,0 +1,158 @@
+{
+  "base": "https://hoshilu.app",
+  "captured_at": "2026-10-16T10:07:31.271Z",
+  "size": [
+    1080,
+    1350
+  ],
+  "sets": {
+    "notes": {
+      "files": [
+        {
+          "file": "notes/1.jpg",
+          "id": "notes-top",
+          "items": 1,
+          "blurred": 116,
+          "photos": 21,
+          "photo_band_masked": 21,
+          "label": ""
+        },
+        {
+          "file": "notes/2.jpg",
+          "id": "price-drops",
+          "items": 24,
+          "blurred": 201,
+          "photos": 24,
+          "photo_band_masked": 24,
+          "label": ""
+        },
+        {
+          "file": "notes/3.jpg",
+          "id": "ranking-price",
+          "items": 6,
+          "blurred": 116,
+          "photos": 33,
+          "photo_band_masked": 33,
+          "label": ""
+        },
+        {
+          "file": "notes/4.jpg",
+          "id": "buzz",
+          "items": 22,
+          "blurred": 611,
+          "photos": 93,
+          "photo_band_masked": 93,
+          "label": ""
+        },
+        {
+          "file": "notes/5.jpg",
+          "id": "search",
+          "items": 1,
+          "blurred": 611,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "label": ""
+        }
+      ]
+    },
+    "buzz": {
+      "files": [
+        {
+          "file": "buzz/1.jpg",
+          "id": "buzz-1",
+          "items": 22,
+          "blurred": 611,
+          "photos": 93,
+          "photo_band_masked": 93,
+          "label": "👗 レディースファッション"
+        },
+        {
+          "file": "buzz/2.jpg",
+          "id": "buzz-2",
+          "items": 22,
+          "blurred": 230,
+          "photos": 104,
+          "photo_band_masked": 104,
+          "label": "👕 メンズファッション"
+        },
+        {
+          "file": "buzz/3.jpg",
+          "id": "buzz-3",
+          "items": 22,
+          "blurred": 230,
+          "photos": 116,
+          "photo_band_masked": 116,
+          "label": "👟 靴・スニーカー"
+        },
+        {
+          "file": "buzz/4.jpg",
+          "id": "buzz-4",
+          "items": 22,
+          "blurred": 230,
+          "photos": 126,
+          "photo_band_masked": 126,
+          "label": "💄 コスメ"
+        },
+        {
+          "file": "buzz/5.jpg",
+          "id": "search",
+          "items": 1,
+          "blurred": 611,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "label": ""
+        }
+      ]
+    },
+    "seller": {
+      "files": [
+        {
+          "file": "seller/1.jpg",
+          "id": "seller-hero",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/2.jpg",
+          "id": "seller-included",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/3.jpg",
+          "id": "seller-demand",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/4.jpg",
+          "id": "seller-pricing",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/5.jpg",
+          "id": "seller-form",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "label": ""
+        }
+      ]
+    }
+  },
+  "failures": {}
+}
