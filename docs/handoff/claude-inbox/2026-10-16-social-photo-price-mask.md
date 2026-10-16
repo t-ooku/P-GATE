@@ -1,5 +1,5 @@
 ---
-status: IN_PROGRESS
+status: BLOCKED
 owner: Claude
 from: Codex（大隆さんの2026-10-16指示）
 created: 2026-10-16T13:47:47+09:00
@@ -56,6 +56,24 @@ Xは停止維持。Reel #616は対象外で、旧素材の承認・再生成・�
 - 本番の撮影結果: **未確認（未実行）**。次の定期撮影は本日 17:30 JST（build-social-carousels.yml、branch head から実行されるので本修正を含む）。20:13 の巡回で public/social/screens/20261016/ の notes・buzz 各5枚と manifest（photos / photo_band_masked、failures）を確認して追記する。
 - 投稿への影響（D1 読み取り、14:40 JST）: 本日 10/16 の Instagram カルーセル行は無い。10/17 の hoshilu-carousel-v3-instagram-2026-10-17 は seller 向け（carousel-seller-wanted-now、APPROVED）で、差し替え先は seller セット（ぼかし対象外）。notes/buzz セットが実際の投稿に使われる次の行は未確認。キュー変更・公開はしていない。
 - 成果指標（D1 実測、14:40 JST）: 購入先クリック（marketplace_click、10/10 10:46 JST 以降 QA/INTERNAL 除外）2件・2人（Codex 担当範囲、参考値）。Seller 問い合わせ 累計4・10/10 以降0。有料契約 0。本修正の効果は未計測（素材の安全性の修正で、成果指標への効果はまだ出ない）。
+
+### 2026-10-16 20:45 JST 定期巡回（状態: IN_PROGRESS → **BLOCKED**。止まっている理由は末尾）
+- **撮影結果の目視（素材確認、20:14〜20:20 JST）**: 対象は branch 上の public/social/screens/20261016/（manifest captured_at 2026-10-16T11:08:44Z＝20:08 JST、commit af479db。failures なし）。17:30 JST の定期 run（cron 08:30 UTC）による 20261016 のコミットは branch 履歴に無く、最初の 20261016 は 19:07 JST（6d6298e、seller-lp 系の push で起動した run）。17:30 run の実行有無は**未確認**（Actions の一覧はこの環境から読めない）。
+  - manifest: notes 5枚・buzz 5枚とも photos = photo_band_masked（例 notes/2 24/24、buzz/3 116/116）。seller 5枚は photos 0（ぼかし対象外、従来どおり）。
+  - 目視（notes 1〜5、buzz 1〜5 の10枚。notes/5 と buzz/5 は同一画像）: 写真下帯は全写真でぼかし済み。notes/2 のプロテイン写真下帯、notes/3 の写真下帯・商品名内「最大◯%OFF」もぼかし済み。**漏れ1件: buzz/3.jpg（靴・スニーカー）2位 crocs の写真左上に「50%OFF」「3,850円」「~10/17 9:59迄」が読める**（下帯の外＝上側に焼き込み。14:45 に書いた限界がそのまま出た）。他の9枚では価格・割引率の数字は読めなかった（目視。読めなかった＝漏れなしの証明ではない）。商品名の「半額セール」（buzz/3 2位）は金額・%ではないので現行ルールではぼかしていない（判断は Codex／方針側）。seller 5枚は目視していない（ぼかし対象外のため）。
+  - 投稿への影響（D1 読み取り 20:20 JST）: 本日の hoshilu-carousel-v3-fallback-instagram-2026-10-16 は seller-screens（seller セット）で **PUBLISHED 20:17:39 JST、external_post_id 18038997128646714**（buzz/notes は使われていない）。10/17 Instagram は carousel-seller-wanted-now・APPROVED（seller 向け）。notes/buzz が実際に使われる次の行は **10/19 20:00 JST の hoshilu-carousel-v3-instagram-2026-10-19（carousel-user-usual-refill、ユーザー向け）**＝当日の撮影で差し替わる見込み。キュー変更・公開はしていない。
+- **実装・本番配備: Issue #654（commit f4e649e、apply-patch: git am・npm test・push・deploy・health すべて success、20:36 JST）**
+  - 撮影直前の画面（撮影範囲そのもの、3倍）を**端末内の tesseract（OS パッケージ、eng、外部送信・課金なし）**で読み、「OFF」「¥/円付きの数字」「3,850 のような3桁区切りの数字」が**写真の上に載っている写真だけ**を写真全体ぼかしに切り替える（下帯ぼかしは全写真のまま。写真を一律に消さない）。2回目の読み取りでまだ残れば、そのセットは出さない（PHOTO_PRICE_OCR_REMAINS）。順位バッジの読み違い（30位→304%）や日付・号数・容量は数えない。manifest の各画像に photo_ocr（tesseract / unavailable / skipped）と photo_full_blur（全体ぼかしにした写真の数）を残す。
+  - 素材検証（ローカル、本番と同じ capture 関数）: buzz/3 の crocs・スニーカー、buzz/2 の THE NORTH FACE の写真を同じ枠に入れて撮影 → OCR が crocs の「OFF」を写真内として検出し、**crocs の写真だけ全体ぼかし、他2枚は上側そのまま**、日付「2026.10.16 号 10/17 9:59」は対象外のまま、を目視で確認（photos 3 / masked 3 / full 1）。
+  - 回帰試験 1件追加（拾う語・拾わない語、写真位置との対応、全体ぼかしは読めた写真だけ、OCR 必須時の止め、外部 OCR の URL が無いこと）。npm test 3043/3043 pass（ローカル）、apply-patch でも success。
+  - 先に出した Issue #652（同内容＋workflow 変更）は git am 成功・**push failure** でクローズ。workflow ファイル（.github/workflows/）を GITHUB_TOKEN で push できないためと判断（同時刻の他 push との競合の可能性も残る。run のログはこの環境から読めず未確認）。
+- **本番の撮影結果: 未確認**。#654 の push は build-social-screens.mjs の変更なので撮影 run が起動する見込みだが、20:44 JST 時点で新しい 20261016 manifest のコミットは未着。しかも CI に tesseract が入っていないため、その run の photo_ocr は unavailable になり、**OCR の層は本番の撮影ではまだ効かない**（下帯ぼかしだけの従来状態）。
+- **止まっている理由（BLOCKED、大隆さんの承認事項ではない）**: CI の撮影で OCR を効かせるには `.github/workflows/build-social-carousels.yml` の2行変更が必要で、Claude の経路（[PATCH] Issue の GITHUB_TOKEN）では workflow ファイルを push できない。push 権限のある Codex（または workflows 権限のあるセッション）に次の2行をお願いしたい:
+  1. `sudo apt-get install -y -qq fonts-noto-cjk python3-pil` → 末尾に ` tesseract-ocr` を追加
+  2. `node scripts/build-social-screens.mjs "$out" --base https://hoshilu.app` → 先頭に `SOCIAL_SCREENS_REQUIRE_OCR=1 ` を付ける（OCR が無ければ notes/buzz を出さず、従来画像のまま投稿＝漏れ側に倒さない）
+  - 期限の目安: 10/19 20:00 JST のユーザー向け Instagram（notes/buzz に差し替わる行）より前。間に合わない場合、10/19 の差し替え画像は Codex の目視確認で判断してください（Claude はキューを変えない）。
+  - 反映後の確認は Claude が次の巡回で manifest の photo_ocr=tesseract・photo_full_blur と画像の目視で行う。
+- 成果指標（D1 実測、20:20 JST、10/10 10:46 JST 以降・QA 除外）: 購入先クリック（marketplace_click）2件（Codex 担当範囲、参考値。最新 10/16 11:56 JST）。Seller 問い合わせ 累計4・10/10 以降0。有料契約 0（seller_billing_accounts 3件、Stripe サブスクあり0）。本件は素材の安全性の修正で、成果指標への効果は未計測。
 
 ## Codex 確認
 依頼を書き込み済み。受領・修正画像・本番確認は未完了。
