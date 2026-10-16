@@ -122,6 +122,10 @@ const LAYOUT_CSS = `.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"]
 .topbar,.seo-header{position:static!important}
 html{scroll-behavior:auto!important}`;
 
+// 出品者向けページの「実際の画面」は、スマホ幅では横スワイプの列になる。撮影の時だけ縦に並べて 1 枚ずつ撮る。
+const SELLER_REAL_CSS = '.real-screens-track{display:block!important;overflow:visible!important;margin:0!important;padding:0!important}'
+  + '.real-screen{width:84%!important;margin:0 auto 28px!important}.real-swipe-hint{display:none!important}';
+
 const SEARCH_SLIDE = Object.freeze({
   id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true,
   kicker: 'SEARCH', title: '名前が分からなくても、\nまとめて探せる。',
@@ -181,10 +185,22 @@ export const SCREEN_SETS = Object.freeze({
       kicker: 'FOR SELLERS', title: '探している人の、\n目の前へ。',
       body: 'Amazonや楽天の出店はそのまま。\n条件に合う検索で、検索結果の「PR」枠に。'
     },
+    // 2026-10-16 大隆さん「せっかく改修したページだから販促増やして」: 出品者向けページの「これが、HOSHILUの実際の画面です。」
+    // （本番の検索結果・検索・ホシルバズの画面。他店の価格はぼかし済み）を 1 枚ずつ見せる。
     {
-      id: 'seller-included', url: '/for-sellers#included', selector: '#included', min: 1, mask: false,
-      kicker: 'FOR SELLERS', title: '掲載プランで\nできること。',
-      body: '「PR」枠への掲載、探されている需要の確認まで。\nクリックによる追加料金はありません。'
+      id: 'seller-real-results', url: '/for-sellers#screens', selector: '.real-screen', nth: 1, min: 3, mask: false, css: SELLER_REAL_CSS,
+      kicker: 'REAL SCREENS', title: 'お客さまの検索結果、\n一番上が「PR」枠。',
+      body: '条件にすべて合う検索で、お店の商品を最大2件。\nHOSHILU本番の画面です（他店の価格はぼかし）。'
+    },
+    {
+      id: 'seller-real-search', url: '/for-sellers#screens', selector: '.real-screen', nth: 0, min: 3, mask: false, css: SELLER_REAL_CSS,
+      kicker: 'REAL SCREENS', title: '名前が分からなくても、\n探される。',
+      body: '「玄関に置ける スリムな傘立て」のような言葉で、\nお客さまが商品を探します。'
+    },
+    {
+      id: 'seller-real-buzz', url: '/for-sellers#screens', selector: '.real-screen', nth: 2, min: 3, mask: false, css: SELLER_REAL_CSS,
+      kicker: 'REAL SCREENS', title: '売れ筋の棚と、\n「価格通知」。',
+      body: '今すぐ買わないお客さまも、\n「気になる」「価格通知」で商品を残せます。'
     },
     {
       id: 'seller-demand', url: '/for-sellers#demand-now', selector: '#demand-now', min: 1, mask: false,
@@ -261,6 +277,7 @@ export async function capture(page, slide) {
   await page.addStyleTag({ content: slide.mask === false ? LAYOUT_CSS : `${BLUR_CSS}\n${LAYOUT_CSS}` });
   // 検索欄に言葉を入れる（typeOnly は入れるだけ、search は入れて検索する）。検索語は固定の見本（利用者の検索ではない）。
   if (slide.hide) await page.addStyleTag({ content: `${slide.hide}{display:none!important}` });
+  if (slide.css) await page.addStyleTag({ content: slide.css });
   const words = slide.search || slide.typeOnly;
   if (words) {
     await page.waitForSelector('#query', { state: 'visible', timeout: 45_000 });
