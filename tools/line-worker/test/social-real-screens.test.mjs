@@ -5,7 +5,7 @@ import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow } fro
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
 import { readFileSync } from 'node:fs';
-import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands } from '../scripts/build-social-screens.mjs';
+import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText } from '../scripts/build-social-screens.mjs';
 
 // 2026-10-15 大隆さん指示「今後の投稿も、実画像を踏まえて投稿して」
 function d1(database) {
@@ -163,4 +163,27 @@ test('写真の下帯ぼかしが 1 枚でも効いていなければ、その�
   assert.match(source, /PHOTO_PRICE_NOT_MASKED/u);
   assert.equal((source.match(/photo\.masked < photo\.photos\) throw/gu) || []).length, 2, '撮影前と撮影直前の 2 回数える');
   assert.match(source, /photo_band_masked/u, 'manifest に写真の枚数と下帯ぼかし済みの枚数を残す');
+});
+
+test('写真の上側に焼き込まれた価格（例: 20261016/buzz/3.jpg 左上「50%OFF 3,850円」）は、端末内 OCR で読めた写真だけ全体ぼかし', () => {
+  // 価格・割引率だけを数える。順位バッジの読み違い（30位→304%）や日付・号数・容量は数えない
+  for (const word of ['OFF', '%OFF', '3,850.', '¥1980', '980円', '12,800']) assert.match(word, PHOTO_OCR_TEXT, word);
+  for (const word of ['304%', '4%', '10/17', '9:59', '2026.10.16', '350mL', '1位', 'NILE', 'P10']) assert.doesNotMatch(word, PHOTO_OCR_TEXT, word);
+  const header = 'level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext';
+  const word = (left, top, text) => ['5', '1', '1', '1', '1', '1', left, top, 60, 30, '90', text].join('\t');
+  // 撮影は 3 倍。写真 0: x 12–182, 写真 1: x 190–360（CSS px）
+  const rects = [{ x: 12, y: 50, width: 170, height: 170 }, { x: 190, y: 50, width: 170, height: 170 }];
+  const tsv = [header, word(600, 200, 'OFF'), word(600, 260, '3,850.'), word(100, 200, '304%'), word(100, 800, '12,800')].join('\n');
+  const result = photoIndexesWithPriceText(tsv, rects, 3);
+  assert.deepEqual(result.indexes, [1]);
+  assert.deepEqual(result.words.map((w) => [w.text, w.inPhoto]), [['OFF', true], ['3,850.', true], ['12,800', false]]);
+  assert.deepEqual(photoIndexesWithPriceText('', rects).indexes, []);
+  // 全体ぼかしは読めた写真だけ（下帯ぼかしは全写真のまま）。SOCIAL_SCREENS_REQUIRE_OCR=1 なら OCR が無ければ止める。無い時は manifest に unavailable
+  assert.match(BLUR_CSS, /\.hoshilu-photo-full>\.hoshilu-photo-band\{clip-path:inset\(0 0 0 0\)!important\}/u);
+  const source = readFileSync(new URL('../scripts/build-social-screens.mjs', import.meta.url), 'utf8');
+  assert.match(source, /PHOTO_OCR_UNAVAILABLE/u);
+  assert.match(source, /PHOTO_PRICE_OCR_REMAINS/u);
+  assert.match(source, /photo_ocr: shots\[index\]\.photoOcr/u);
+  assert.doesNotMatch(source, /https?:\/\/[^'"`\s]*(?:ocr|vision)/iu);
+  assert.match(source, /ocr: 'unavailable'/u);
 });

@@ -13,7 +13,9 @@
 //   投稿の差し替えは Worker（src/social-screens.mjs）が manifest を見て、当日の未投稿の行だけに行う。
 // - AI 生成なし・課金なし。GitHub Actions（.github/workflows/build-social-carousels.yml）で毎日 17:30 JST に実行する。
 // 使い方: node scripts/build-social-screens.mjs <出力フォルダ> [--base https://hoshilu.app]
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import os from 'node:os';
 import path from 'node:path';
 
 let outDir = '';
@@ -35,12 +37,86 @@ export const PRICE_TEXT = /(?:[¥￥]\s?\d[\d,]*|\d[\d,]*\s?円|\d+(?:\.\d+)?\s?
 // 2026-10-16: 出品者向けページ用の検索結果の撮影（scripts/build-seller-lp-shots.mjs）でも同じ下帯ぼかしを掛ける（.product-image-gallery）。
 export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb', '.product-image-gallery']);
 export const PHOTO_BAND_RATIO = 0.3;
+// 2026-10-16 20:13 追加（Claude、20261016/buzz/3.jpg で写真の左上に「50%OFF 3,850円」が読めた）: 下帯の外に焼き込まれた
+// 価格・割引率を、撮影直前の画面を端末内の tesseract（OS パッケージ、外部送信・課金なし）で読み、読めた文字が載っている写真だけを
+// 写真全体ぼかしに切り替える。写真全体を一律に消すのではなく、読めた写真だけ。読めなかった＝漏れなし、とはしない（目視確認は残す）。
+// OCR が無い環境では manifest の photo_ocr を unavailable にして従来どおり撮る（SOCIAL_SCREENS_REQUIRE_OCR=1 なら止める）。
+// 写真の中の順位バッジ（「30位」→「304%」等）を拾わないよう、% 単独は数えず OFF・金額（3,850 / ¥ / 円）だけを数える。
+export const PHOTO_OCR_TEXT = /(?:OFF|[¥￥]\s?\d|\d\s?円|\d{1,3}[,.]\d{3}(?!\d))/iu;
+export const PHOTO_OCR_SCALE = 3;
+// tesseract の TSV（level 5 = 単語）と、写真の位置（撮影範囲の CSS px）から、価格らしい文字が載っている写真の番号を返す。
+export function photoIndexesWithPriceText(tsv, rects, scale = PHOTO_OCR_SCALE) {
+  const hits = new Set();
+  const words = [];
+  for (const line of String(tsv || '').split('\n').slice(1)) {
+    const cols = line.split('\t');
+    if (cols.length < 12 || cols[0] !== '5') continue;
+    const text = cols.slice(11).join('\t').trim();
+    if (!text || !PHOTO_OCR_TEXT.test(text)) continue;
+    const [left, top, width, height] = cols.slice(6, 10).map(Number);
+    const cx = (left + width / 2) / scale;
+    const cy = (top + height / 2) / scale;
+    const index = rects.findIndex((r) => cx >= r.x && cx <= r.x + r.width && cy >= r.y && cy <= r.y + r.height);
+    words.push({ text, inPhoto: index >= 0 });
+    if (index >= 0) hits.add(index);
+  }
+  return { indexes: [...hits].sort((a, b) => a - b), words };
+}
+let ocrAvailable;
+async function runTesseract(png) {
+  if (ocrAvailable === false) return null;
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'hoshilu-ocr-'));
+  try {
+    const file = path.join(dir, 'probe.png');
+    await writeFile(file, png);
+    const out = await new Promise((resolve, reject) => {
+      execFile('tesseract', [file, 'stdout', '-l', 'eng', '--psm', '11', 'tsv'], { maxBuffer: 32 * 1024 * 1024, timeout: 120_000 },
+        (error, stdout) => (error ? reject(error) : resolve(stdout)));
+    });
+    ocrAvailable = true;
+    return out;
+  } catch (error) {
+    if (error?.code === 'ENOENT') { ocrAvailable = false; return null; }
+    throw error;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+// 撮る範囲の画面を読み、価格らしい文字が載った写真を全体ぼかしにする。2 回目でも残れば、そのセットは出さない。
+async function ocrMaskPhotos(page, clip, slideId) {
+  const rectsOf = () => page.evaluate(({ selectors, top }) => [...document.querySelectorAll(selectors.join(','))].map((n) => {
+    const r = n.getBoundingClientRect();
+    return { x: r.left, y: r.top + window.scrollY - top, width: r.width, height: r.height };
+  }), { selectors: PHOTO_SELECTORS, top: clip.y });
+  let full = 0;
+  for (let round = 0; round < 2; round += 1) {
+    const png = await page.screenshot({ type: 'png', clip, fullPage: true });
+    const tsv = await runTesseract(png);
+    if (tsv === null) {
+      if (process.env.SOCIAL_SCREENS_REQUIRE_OCR === '1') throw new Error(`PHOTO_OCR_UNAVAILABLE:${slideId}`);
+      return { ocr: 'unavailable', full: 0 };
+    }
+    const { indexes, words } = photoIndexesWithPriceText(tsv, await rectsOf());
+    if (words.length) console.log(`ocr ${slideId} round${round + 1}: ${words.map((w) => `${w.inPhoto ? 'photo' : 'page'}:${w.text}`).join(' ')}`);
+    if (!indexes.length) return { ocr: 'tesseract', full };
+    if (round === 1) throw new Error(`PHOTO_PRICE_OCR_REMAINS:${slideId}:${indexes.length}`);
+    full += await page.evaluate(({ selectors, indexes }) => {
+      const nodes = [...document.querySelectorAll(selectors.join(','))];
+      for (const i of indexes) nodes[i]?.classList.add('hoshilu-photo-full');
+      return indexes.length;
+    }, { selectors: PHOTO_SELECTORS, indexes });
+    await page.waitForTimeout(300);
+  }
+  return { ocr: 'tesseract', full };
+}
 const PHOTO_RANK_SELECTORS = Object.freeze(['.media-drop-rank', '.media-tile-rank', '.buzz-home-rank']);
 export const BLUR_CSS = `${PRICE_SELECTORS.join(',')},.hoshilu-price-mask{filter:blur(9px)!important;user-select:none!important}
 .hoshilu-price-mask{display:inline-block}
 ${PHOTO_SELECTORS.join(',')}{position:relative!important}
 .hoshilu-photo-band{position:absolute!important;inset:0!important;margin:0!important;overflow:hidden!important;background:#fff!important;clip-path:inset(${Math.round((1 - PHOTO_BAND_RATIO) * 100)}% 0 0 0)!important;z-index:1!important;pointer-events:none!important}
 .hoshilu-photo-band img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;filter:blur(12px) saturate(.7)!important;transform:scale(1.3)!important;transform-origin:50% 85%!important}
+.hoshilu-photo-full>.hoshilu-photo-band{clip-path:inset(0 0 0 0)!important}
+.hoshilu-photo-full>.hoshilu-photo-band img{filter:blur(16px) saturate(.7)!important}
 ${PHOTO_RANK_SELECTORS.join(',')}{z-index:2!important}`;
 const LAYOUT_CSS = `.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"],.seller-sticky-cta{display:none!important}
 .topbar,.seo-header{position:static!important}
@@ -280,8 +356,10 @@ export async function capture(page, slide) {
     if (photo.masked < photo.photos) throw new Error(`PHOTO_PRICE_NOT_MASKED:${slide.id}:${photo.masked}/${photo.photos}`);
   }
   const height = Math.min(box.height, slide.maxHeight || 1100);
-  const shot = await page.screenshot({ type: 'png', clip: { x: 0, y: box.top, width: 390, height }, fullPage: true });
-  return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked };
+  const clip = { x: 0, y: box.top, width: 390, height };
+  const ocr = slide.mask === false || !photo.photos ? { ocr: 'skipped', full: 0 } : await ocrMaskPhotos(page, clip, slide.id);
+  const shot = await page.screenshot({ type: 'png', clip, fullPage: true });
+  return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked, photoOcr: ocr.ocr, photoFullBlur: ocr.full };
 }
 
 function slideHtml(slide, index, total, shotBase64, label = '') {
@@ -315,7 +393,7 @@ async function buildSet(browser, composer, page, setId, slides) {
   const shots = [];
   for (const slide of slides) {
     const result = await capture(page, slide);
-    console.log(`captured ${setId}/${slide.id}: items=${result.found} blurred=${result.blurred} photos_masked=${result.photoMasked}/${result.photos} label=${result.label}`);
+    console.log(`captured ${setId}/${slide.id}: items=${result.found} blurred=${result.blurred} photos_masked=${result.photoMasked}/${result.photos} ocr=${result.photoOcr} full_blur=${result.photoFullBlur} label=${result.label}`);
     shots.push(result);
   }
   // 商品の価格が出る画面（値下がり・ランキング）で、ぼかしが1つも効いていなければ止める
@@ -328,7 +406,7 @@ async function buildSet(browser, composer, page, setId, slides) {
   for (const [index, slide] of slides.entries()) {
     await composer.setContent(slideHtml(slide, index, slides.length, shots[index].shot.toString('base64'), shots[index].label), { waitUntil: 'load' });
     await writeFile(path.join(dir, `${index + 1}.jpg`), await composer.screenshot({ type: 'jpeg', quality: 88, clip: { x: 0, y: 0, width: 1080, height: 1350 } }));
-    files.push({ file: `${setId}/${index + 1}.jpg`, id: slide.id, items: shots[index].found, blurred: shots[index].blurred, photos: shots[index].photos, photo_band_masked: shots[index].photoMasked, label: shots[index].label });
+    files.push({ file: `${setId}/${index + 1}.jpg`, id: slide.id, items: shots[index].found, blurred: shots[index].blurred, photos: shots[index].photos, photo_band_masked: shots[index].photoMasked, photo_ocr: shots[index].photoOcr, photo_full_blur: shots[index].photoFullBlur, label: shots[index].label });
   }
   return files;
 }
