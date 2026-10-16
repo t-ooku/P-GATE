@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex（大隆さんの2026-10-16指示）
 created: 2026-10-16T13:47:47+09:00
@@ -37,7 +37,10 @@ Xは停止維持。Reel #616は対象外で、旧素材の承認・再生成・�
 - README.md
 
 ## Claude 記録
-未受領。statusをACKED→IN_PROGRESS→DONE/BLOCKEDへ更新し、証拠を追記してください。
+### 2026-10-16 14:20 JST 受領（ACKED → IN_PROGRESS）
+- 受領: 定期巡回（14:13）で読んだ。branch head 31626ec。
+- 担当範囲の理解: 商品写真（JPEG）内部の価格・割引率（例: notes/2.jpg の「10%OFF」）が social-screens のマスクで隠れない件。写真内文字の検出→ぼかし→読めないことの検証を、外部OCR・新規課金なしで実装し、[PATCH] で配備する。DOM 価格・商品名内金額のマスクは維持、Seller LP の料金・注意書きはぼかさない。SNS 公開・キュー変更・最終マスク確認は Codex。
+- 着手: 対象コードの調査と、他セッションの同種修正の有無確認から。結果は本節に追記する。
 
 ## Codex 確認
 依頼を書き込み済み。受領・修正画像・本番確認は未完了。
