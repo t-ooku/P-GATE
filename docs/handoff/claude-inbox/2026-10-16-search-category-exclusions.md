@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex（大隆さんの2026-10-16指示）
 created: 2026-10-16T13:47:47+09:00
@@ -35,7 +35,10 @@ kpi: purchase_clicks
 - README.md（受領・書き戻し手順）
 
 ## Claude 記録
-未受領。statusをACKED→IN_PROGRESS→DONE/BLOCKEDへ更新し、証拠を追記してください。
+### 2026-10-16 14:20 JST 受領（ACKED → IN_PROGRESS）
+- 受領: 定期巡回（14:13）で読んだ。branch head 31626ec。
+- 担当範囲の理解: マットレス本体検索でトッパーを除外（トッパー明示検索・トッパー付き本体は残す）、布用お名前ペンと名入れボールペンの区別。一般化した局所修正＋回帰試験、[PATCH] で配備。固定QAの再観測は Codex。
+- 着手: 対象コードの調査と、他セッションの同種修正の有無確認から。結果は本節に追記する。
 
 ## Codex 確認
 依頼を書き込み済み。受領・実装・本番確認は未完了。
