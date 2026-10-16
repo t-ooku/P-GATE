@@ -8,6 +8,7 @@
 // - 撮れなかった画面は出力しない（manifest の failures に理由）。1 枚も撮れなければ失敗。
 // 掲載先: public/for-sellers.html の第一画面と「これが、HOSHILUの実際の画面です。」（#646）。
 // その画面は、セラー向けの実画像カルーセル（build-social-screens の seller セット、#655・#656）にも写る。
+// 10/16 #658: 掲載見本（listing）・ホシっとく（keep）を追加。この行の追加で撮影を動かす（Issue 経由の反映では撮影が動かないため）。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -77,7 +78,7 @@ async function main() {
       const seen = await page.evaluate(() => {
         const visible = (selector) => [...document.querySelectorAll(selector)].filter((n) => n.getBoundingClientRect().height > 0).length;
         const text = (selector) => String(document.querySelector(selector)?.innerText || '').replace(/\s+/gu, ' ').trim().slice(0, 120);
-        return `resultsSection=${visible('#resultsSection')} cards=${visible('#resultCards > *')} product=${visible('.product-card')} msg=${text('#resultMessage')} status=${text('#searchStatus, .search-progress, [role="status"]')} classes=${[...document.querySelectorAll('#resultCards > *')].slice(0, 4).map((n) => n.className).join('|').slice(0, 160)}`;
+        return `resultsSection=${visible('#resultsSection')} cards=${visible('#resultCards > *')} product=${visible('.product-card')} pr=${visible('.unified-pr-card')} keep=${visible('.continuous-search-card')} msg=${text('#resultMessage')} status=${text('#searchStatus, .search-progress, [role="status"]')} classes=${[...document.querySelectorAll('#resultCards > *')].slice(0, 4).map((n) => n.className).join('|').slice(0, 160)}`;
       }).catch((e) => `evaluate_failed:${String(e?.message || e).slice(0, 80)}`);
       failures[shot.id] = `${String(error?.message || error).split('\n')[0].slice(0, 200)} / seen: ${seen}`;
       console.error(`lp shot ${shot.id} skipped: ${failures[shot.id]}`);
