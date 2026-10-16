@@ -168,6 +168,27 @@ export async function readPublicHealth(fetcher = fetch, now = new Date()) {
   }
 }
 
+// Public post metadata requested for publication verification. Do not export
+// captions, recipient data, internal post IDs, media, or arbitrary URLs.
+export async function instagramPublicationEvidence(PRODUCT_DB) {
+  try {
+    const result = await PRODUCT_DB.prepare(`SELECT q.external_post_id,q.published_at,
+      MAX(CASE WHEN p.public_url LIKE 'https://www.instagram.com/p/%'
+        OR p.public_url LIKE 'https://www.instagram.com/reel/%'
+        OR p.public_url LIKE 'https://instagram.com/p/%'
+        OR p.public_url LIKE 'https://instagram.com/reel/%' THEN p.public_url ELSE NULL END) AS public_url
+      FROM social_post_queue q LEFT JOIN social_post_performance p ON p.post_id=q.post_id
+      WHERE q.platform='INSTAGRAM' AND q.status='PUBLISHED'
+      AND q.external_post_id<>'' AND q.external_post_id NOT GLOB '*[^0-9]*'
+      AND datetime(q.published_at)>=datetime('now','-7 days')
+      GROUP BY q.external_post_id,q.published_at ORDER BY q.published_at DESC LIMIT 20`).all();
+    return { status: 'AVAILABLE', rows: result.results || [],
+      scope: 'PUBLIC_INSTAGRAM_ID_TIME_URL_ONLY_NOT_ACQUISITION_KPI' };
+  } catch {
+    return { status: 'UNAVAILABLE', reason: 'PUBLIC_INSTAGRAM_EVIDENCE_READ_FAILED' };
+  }
+}
+
 // Operational totals include internal/test watches. These are diagnostics, not
 // evidence of general-user adoption. No member IDs, wish IDs or titles leave D1.
 export async function targetPriceDiagnostics(PRODUCT_DB) {
@@ -474,6 +495,9 @@ async function main(argv) {
   // The only row-level text is a bounded product title from repository-defined
   // internal QA. No user search, photo, identity, or arbitrary event content.
   snapshot.privacy.fixed_qa_product_names = 'REPOSITORY_FIXTURES_WORKER_QA_ONLY';
+  snapshot.instagram_publication_evidence = await instagramPublicationEvidence(PRODUCT_DB);
+  snapshot.privacy.post_text_or_ids = true;
+  snapshot.privacy.public_post_fields = ['instagram_external_post_id', 'published_at', 'official_public_url'];
   await writeFile(output, `${JSON.stringify(snapshot, null, 2)}\n`, { mode: 0o600, flag: 'w' });
   await chmod(output, 0o600);
   console.log(`CODEX_KPI_SNAPSHOT_READY:${snapshot.generated_at}:${output}`);

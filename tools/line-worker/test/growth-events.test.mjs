@@ -514,6 +514,27 @@ test('2026-09-11: 既知クローラのUAで届いた記事閲覧は KPI から�
   assert.doesNotMatch(JSON.stringify(writes), /Googlebot|Safari/u);
 });
 
+test('own screenshot browsers are QA for Seller and watch events while ordinary Safari remains attributed', async () => {
+  const writes = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({
+    run: async () => { writes.push({ sql, values }); return { success: true }; }
+  }) }) } };
+  const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1';
+  for (const event_type of ['seller_landing_view', 'seller_cta_clicked', 'seller_form_started', 'target_price_watch_started']) {
+    for (const automated of [true, false]) {
+      const ua = safari + (automated ? ' HOSHILU-SocialScreens/1.0' : '');
+      const response = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+        method: 'POST', headers: { origin: 'https://hoshilu.app', 'content-type': 'application/json', 'user-agent': ua },
+        body: JSON.stringify({ event_type, source: 'instagram', medium: 'organic_social' })
+      }), env);
+      assert.equal(response.status, 202);
+      assert.equal(writes.at(-1).values[9], automated ? 'QA' : 'ATTRIBUTED', event_type);
+    }
+  }
+  assert.equal(writes.length, 8);
+  assert.doesNotMatch(JSON.stringify(writes), /SocialScreens|Mozilla|Safari/);
+});
+
 // 2026-09-15 指示書 §21: 「違う」を固定イベントとして受け付ける（候補名は送らない）
 test('result_confirmed / result_rejected are accepted fixed events', async () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'result_rejected', query: '候補名は保存しない' }).event_type, 'result_rejected');

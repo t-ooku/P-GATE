@@ -207,7 +207,10 @@ async function searchExecutionEventId(event) {
 const CRAWLER_USER_AGENT_PATTERN = /(?:googlebot|google-inspectiontool|adsbot-google|mediapartners-google|bingbot|bingpreview|yandex(?:bot|images)|duckduckbot|baiduspider|applebot|petalbot|ahrefsbot|semrushbot|mj12bot|dotbot|gptbot|oai-searchbot|claudebot|anthropic-ai|perplexitybot|bytespider|ccbot|amazonbot|facebookexternalhit|facebookcatalog|meta-externalagent|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp\/|pinterestbot|headlesschrome|lighthouse|chrome-lighthouse|gtmetrix|pingdom|uptimerobot|\bbot\b|crawler|spider)/iu;
 export function isCrawlerUserAgent(value) {
   const ua = String(value || '').slice(0, 512);
-  return ua ? CRAWLER_USER_AGENT_PATTERN.test(ua) : false;
+  // Our own screenshot browsers deliberately identify themselves. Exclude
+  // their future events from acquisition KPIs without retaining the UA or
+  // rewriting historical visits. Ordinary Safari/in-app browsers stay intact.
+  return ua ? CRAWLER_USER_AGENT_PATTERN.test(ua) || /\bHOSHILU-SocialScreens\/[0-9.]+/iu.test(ua) : false;
 }
 
 // 2026-09-22: shop_viewed が 9/19〜9/21 で 2,859 → 4,264 → 5,242 件に増え続けた。

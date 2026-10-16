@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  operationalDiagnostics, assertReadOnlySql, createCloudflareReadOnlyD1, readPublicHealth
+  operationalDiagnostics, assertReadOnlySql, createCloudflareReadOnlyD1, readPublicHealth,
+  instagramPublicationEvidence
 } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 function d1(sqlite) {
@@ -129,6 +130,24 @@ function setup() {
   `);
   return sqlite;
 }
+
+test('Instagram verification exports public ID/time and official permalinks only, missing URL stays null', async () => {
+  const sqlite = setup();
+  sqlite.exec(`INSERT INTO social_post_queue VALUES
+    ('private-internal-post','INSTAGRAM','PUBLISHED','18000000001',strftime('%Y-%m-%dT%H:%M:%fZ','now'),'', ''),
+    ('no-url','INSTAGRAM','PUBLISHED','18000000002',strftime('%Y-%m-%dT%H:%M:%fZ','now'),'', ''),
+    ('pending','INSTAGRAM','APPROVED','18000000003',strftime('%Y-%m-%dT%H:%M:%fZ','now'),'', '');
+    INSERT INTO social_post_performance VALUES
+    ('private-internal-post','https://www.instagram.com/p/public-example/',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('no-url','https://example.invalid/private-notes',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result = await instagramPublicationEvidence(d1(sqlite));
+  assert.equal(result.rows.length, 2);
+  assert.equal(result.rows.find(row=>row.external_post_id==='18000000001').public_url, 'https://www.instagram.com/p/public-example/');
+  assert.equal(result.rows.find(row=>row.external_post_id==='18000000002').public_url, null);
+  assert.doesNotMatch(JSON.stringify(result), /private-internal-post|private-notes|18000000003/);
+  const unavailable = await instagramPublicationEvidence({prepare(){throw Error('offline');}});
+  assert.equal(unavailable.status, 'UNAVAILABLE');
+});
 
 test('KPI成果物へ無人取得できる公開healthの最小情報だけを格納する', async () => {
   const healthy = await readPublicHealth(async () => Response.json({

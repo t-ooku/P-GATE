@@ -76,4 +76,4 @@ Xは停止維持。Reel #616は対象外で、旧素材の承認・再生成・�
 - 成果指標（D1 実測、20:20 JST、10/10 10:46 JST 以降・QA 除外）: 購入先クリック（marketplace_click）2件（Codex 担当範囲、参考値。最新 10/16 11:56 JST）。Seller 問い合わせ 累計4・10/10 以降0。有料契約 0（seller_billing_accounts 3件、Stripe サブスクあり0）。本件は素材の安全性の修正で、成果指標への効果は未計測。
 
 ## Codex 確認
-依頼を書き込み済み。受領・修正画像・本番確認は未完了。
+2026-10-17朝: ACKED/IN_PROGRESS→BLOCKED、#641/#654の実装配備を確認。最新20261017 manifestでもphoto_ocr=unavailableで、BLOCKEDは実態と一致。Codexが不足していたworkflowのtesseract導入・SOCIAL_SCREENS_REQUIRE_OCR=1を準備し、既存反映経路で進める。画像の最終確認はCodexが担当し、Claudeへ点検を丸投げしない。受信箱statusは確認完了までBLOCKEDのまま保持する。新規依頼・重複OCR実装・SNS公開・D1書込なし。
