@@ -10,6 +10,7 @@
 // その画面は、セラー向けの実画像カルーセル（build-social-screens の seller セット、#655・#656）にも写る。
 // 10/16 #658: 掲載見本（listing）・ホシっとく（keep）を追加。この行の追加で撮影を動かす（Issue 経由の反映では撮影が動かないため）。
 // 10/16 #658 の 2 回目: 撮影では service worker を止める（PR 枠の差し替えが効かなかったため）。
+// 10/17 #661: PR 枠を画面の中でも組み立てる・出品者向けカルーセルを枠で切らない。この行の追加で撮影を動かす。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
