@@ -23,8 +23,9 @@ export const LP_SHOTS = Object.freeze([
   // 2. 掲載見本（第一画面・相談フォーム）。2026-10-16 大隆さん指示「リアルな掲載見本を画面掲載して」。
   // 本番の検索結果の先頭 2 件を、撮る画面の中だけ「PR」枠へ移す（build-social-screens の samplePrResponse。店名は「あなたのお店（見本）」・価格なし）。
   // 件数の行（.unified-head）から下を撮る＝件数 → PR枠 → 通常の列、の順に写る。
+  // 10/16 の 2 回は応答の差し替えが効かず PR 枠が出なかった（pr=0）。件数の行が出たら、画面の中でも PR 枠を組み立てる（injectSamplePr）。
   // 以前の検索結果だけの画面（results、#647〜#653 の経緯）は撮らない。results.jpg は掲載見本が撮れるまでの代わりとして残す。
-  { id: 'listing', url: '/', selector: '.unified-pr-card', ready: '.unified-pr-card', section: '.unified-head', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 900, retries: 1, prSample: true },
+  { id: 'listing', url: '/', selector: '.unified-pr-card', ready: '.unified-head', section: '.unified-head', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 900, retries: 1, prSample: true },
   // 3. ホシっとく（見つからない物を保存 → 探されている需要としてお店に届く）。「探していた人を、呼び戻す」の横に載せる
   { id: 'keep', url: '/', selector: '#resultCards > .continuous-search-card', ready: '#resultCards > .continuous-search-card', section: '#resultCards > .continuous-search-card', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 760, retries: 1 },
   // 4. ホシルバズ（ジャンル別のいま売れている物）

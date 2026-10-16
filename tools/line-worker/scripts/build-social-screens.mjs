@@ -126,6 +126,9 @@ html{scroll-behavior:auto!important}`;
 const SELLER_REAL_CSS = '.real-screens-track{display:block!important;overflow:visible!important;margin:0!important;padding:0!important}'
   + '.real-screen{width:84%!important;margin:0 auto 28px!important}.real-swipe-hint{display:none!important}';
 
+// 出品者向けの撮影で使う検索語（固定の見本。利用者の検索ではない）。scripts/build-seller-lp-shots.mjs の SAMPLE_QUERY と同じ
+export const SELLER_SAMPLE_QUERY = '玄関に置ける スリムな傘立て';
+
 const SEARCH_SLIDE = Object.freeze({
   id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true,
   kicker: 'SEARCH', title: '名前が分からなくても、\nまとめて探せる。',
@@ -179,42 +182,48 @@ export const SCREEN_SETS = Object.freeze({
     },
     SEARCH_SLIDE
   ]),
+  // 2026-10-16 大隆さん「肝心なリアル画像が全ページ見切れてる」（20:15 の投稿を削除）: 出品者向けページをスマホ枠ごと撮ると、
+  // 中の実画面がカルーセルの枠で切れていた。本番の画面の「部品」だけ（PR 枠・ホシっとく・検索欄・売れ筋の棚・需要・料金・相談の流れ）を
+  // 上端から下端まで撮り、枠をその大きさに合わせる（fit）。どの画面も途中で切らない。
+  // 並び（1〜7 枚目）は予約済みの投稿（Threads は 1・3・4・5・6・7 枚目を 1 枚ずつ使う）に合わせて変えない。
   seller: Object.freeze([
     {
-      id: 'seller-hero', url: '/for-sellers', selector: 'main', min: 1, fromTop: true, mask: false,
+      // 掲載見本: 本番の検索結果の先頭 2 件を、撮る画面の中だけ PR 枠へ移す（店名「あなたのお店（見本）」・価格なし）
+      id: 'seller-hero', url: '/', selector: '.unified-pr-card', ready: '.unified-head', from: '.unified-head', extend: '.unified-pr', min: 1,
+      search: SELLER_SAMPLE_QUERY, hide: '#searchSuggestList', prSample: true, fit: true, maxHeight: 760,
       kicker: 'FOR SELLERS', title: '探している人の、\n目の前へ。',
-      body: 'Amazonや楽天の出店はそのまま。\n条件に合う検索で、検索結果の「PR」枠に。'
-    },
-    // 2026-10-16 大隆さん「せっかく改修したページだから販促増やして」: 出品者向けページの「これが、HOSHILUの実際の画面です。」
-    // （本番の検索結果・検索・ホシルバズの画面。他店の価格はぼかし済み）を 1 枚ずつ見せる。
-    {
-      // 10/16 掲載見本（第一画面の .seller-hero-real。本番の検索結果に見本の商品を PR 枠で入れた画面）
-      id: 'seller-real-results', url: '/for-sellers', selector: '.seller-hero-real .real-phone', min: 1, mask: false,
-      kicker: 'REAL SCREENS', title: 'お客さまの検索結果、\n一番上が「PR」枠。',
-      body: '条件にすべて合う検索で、お店の商品を最大2件。\n本番の画面です（PR枠の商品は見本）。'
+      body: '条件に合う検索で、一番上の「PR」枠に（最大2件）。\n本番の画面です（PR枠の商品は見本）。'
     },
     {
-      id: 'seller-real-search', url: '/for-sellers#screens', selector: '.real-screen', nth: 0, min: 2, mask: false, css: SELLER_REAL_CSS,
+      id: 'seller-real-results', url: '/', selector: '#resultCards > .continuous-search-card', ready: '#resultCards > .continuous-search-card', min: 1,
+      search: SELLER_SAMPLE_QUERY, hide: '#searchSuggestList', fit: true, maxHeight: 760,
+      kicker: 'REAL SCREENS', title: '見つからない物は、\n「ホシっとく」。',
+      body: '保存された条件は、お店に「探されている需要」として\n届きます（個人が分からない形・5人以上）。'
+    },
+    {
+      id: 'seller-real-search', url: '/', selector: '#knowledgeForm', extend: '#submitButton', min: 1,
+      typeOnly: SELLER_SAMPLE_QUERY, hide: '#searchSuggestList', fit: true, maxHeight: 760,
       kicker: 'REAL SCREENS', title: '名前が分からなくても、\n探される。',
       body: '「玄関に置ける スリムな傘立て」のような言葉で、\nお客さまが商品を探します。'
     },
     {
-      id: 'seller-real-buzz', url: '/for-sellers#screens', selector: '.real-screen', nth: 1, min: 2, mask: false, css: SELLER_REAL_CSS,
+      id: 'seller-real-buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 1, count: 1, fit: true, maxHeight: 760,
       kicker: 'REAL SCREENS', title: '売れ筋の棚と、\n「価格通知」。',
       body: '今すぐ買わないお客さまも、\n「気になる」「価格通知」で商品を残せます。'
     },
     {
-      id: 'seller-demand', url: '/for-sellers#demand-now', selector: '#demand-now', min: 1, mask: false,
+      id: 'seller-demand', url: '/for-sellers#demand-now', selector: '#demandNow > article', min: 1, count: 3, mask: false, fit: true, maxHeight: 760,
       kicker: 'FOR SELLERS', title: 'いま探されている物が、\n見える。',
       body: 'HOSHILUで探されて、見つからなかった需要を\n個人が分からない形でお見せします。'
     },
     {
-      id: 'seller-pricing', url: '/for-sellers#pricing', selector: '#pricing', min: 1, mask: false,
+      id: 'seller-pricing', url: '/for-sellers', selector: '.seller-showcase-hero .hero-price', min: 1, mask: false, fit: true, maxHeight: 760,
       kicker: 'FOR SELLERS', title: '料金は、\nページのとおり。',
       body: '無料期間・カード登録・自動更新の条件も\nこのページに書いてあります。'
     },
     {
-      id: 'seller-form', url: '/for-sellers#businessForm', selector: '#businessForm', min: 1, mask: false,
+      id: 'seller-form', url: '/for-sellers#businessForm', selector: '#businessForm .entry-summary', extend: '#businessForm .payment-note', min: 1,
+      mask: false, fit: true, maxHeight: 760,
       kicker: 'FOR SELLERS', title: 'まずは、\n掲載見本の相談から。',
       body: '相談フォームの送信だけでは課金されません。\nプロフィールのリンクから。'
     }
@@ -293,6 +302,49 @@ export function samplePrResponse(body, base = BASE) {
   return body;
 }
 
+// 掲載見本の PR 枠を、画面の中で組み立てる（応答の差し替えが効かないときの代わり）。本番の画面と同じ class
+// （unified-results-ui.mjs の prBlock と同じ形）で作るので、見た目は本番の PR 枠と同じ。通常の列の先頭 2 件を PR 枠へ移す。
+// page.evaluate に渡すので、外の変数は使わない。
+export function injectSamplePr(shop) {
+  if (document.querySelector('.unified-pr-card')) return document.querySelectorAll('.unified-pr-card').length;
+  const head = document.querySelector('.unified-head');
+  if (!head) return 0;
+  const cards = [...document.querySelectorAll('.unified-card:not(.unified-card-listing)')]
+    .filter((card) => card.querySelector('.unified-card-image img') && card.querySelector('.unified-card-name')).slice(0, 2);
+  if (!cards.length) return 0;
+  const make = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const box = make('section', 'unified-pr');
+  box.setAttribute('aria-label', 'PR：HOSHILU Seller の掲載商品');
+  const title = make('p', 'unified-pr-head');
+  title.append(make('span', 'unified-pr-badge', 'PR'), document.createTextNode('HOSHILU Seller の掲載商品'));
+  box.append(title);
+  const list = make('div', 'unified-pr-list');
+  for (const card of cards) {
+    const link = make('a', 'unified-pr-card');
+    const figure = make('div', 'unified-pr-image');
+    const img = document.createElement('img');
+    img.src = card.querySelector('.unified-card-image img').src;
+    img.alt = '';
+    figure.append(img, make('span', 'unified-pr-badge unified-pr-badge-on-image', 'PR'));
+    const body = make('div', 'unified-pr-body');
+    body.append(make('strong', 'unified-pr-name', card.querySelector('.unified-card-name').textContent));
+    body.append(make('span', 'unified-pr-shop', `${shop}・販売先`));
+    body.append(make('span', 'unified-pr-price unified-pr-price-unknown', '価格はリンク先で確認'));
+    body.append(make('span', 'unified-pr-open', '販売先で見る'));
+    link.append(figure, body);
+    list.append(link);
+    card.remove();
+  }
+  box.append(list);
+  head.after(box);
+  return cards.length;
+}
+
 export async function capture(page, slide) {
   if (slide.prSample) {
     await page.route('**/api/knowledge', async (route) => {
@@ -323,8 +375,11 @@ export async function capture(page, slide) {
       return r.width > 0 && r.height > 0;
     }), slide.ready, { timeout: 90_000 });
   }
+  if (slide.prSample) await page.evaluate(injectSamplePr, PR_SAMPLE_SHOP);
   await page.waitForSelector(slide.selector, { state: 'visible', timeout: slide.search ? 90_000 : 45_000 });
   await page.waitForTimeout(slide.search ? 4000 : 1500);
+  // 後から届く結果で一覧が描き直されたら、もう一度組み立てる
+  if (slide.prSample) await page.evaluate(injectSamplePr, PR_SAMPLE_SHOP);
   const found = await page.$$eval(slide.selector, (nodes) => nodes.filter((n) => n.getBoundingClientRect().height > 0).length);
   if (found < slide.min) throw new Error(`SCREEN_EMPTY:${slide.id}:${found}`);
   const nth = Number(slide.nth || 0);
@@ -382,9 +437,9 @@ export async function capture(page, slide) {
   if (photo.masked < photo.photos) throw new Error(`PHOTO_PRICE_NOT_MASKED:${slide.id}:${photo.masked}/${photo.photos}`);
   const blurred = masked + (slide.mask === false ? 0
     : await page.$$eval(PRICE_SELECTORS.join(','), (nodes) => nodes.filter((n) => getComputedStyle(n).filter.includes('blur')).length));
-  const box = await page.evaluate(({ selector, count, extend, section, fromTop, nth, labelFrom }) => {
+  const box = await page.evaluate(({ selector, count, extend, section, from, fromTop, nth, labelFrom }) => {
     const nodes = [...document.querySelectorAll(selector)].filter((n) => n.getBoundingClientRect().height > 0);
-    const first = section ? (document.querySelector(section) || nodes[nth]) : nodes[nth];
+    const first = section ? (document.querySelector(section) || nodes[nth]) : from ? (document.querySelector(from) || nodes[nth]) : nodes[nth];
     const lastIndex = Math.min(nodes.length, nth + (count || 1)) - 1;
     const last = extend ? (document.querySelector(extend) || nodes[lastIndex]) : nodes[lastIndex];
     const label = labelFrom ? String(first?.querySelector(labelFrom)?.textContent || '').replace(/\s+/gu, ' ').trim().slice(0, 24) : '';
@@ -396,7 +451,7 @@ export async function capture(page, slide) {
     const top = first.getBoundingClientRect().top + window.scrollY;
     const bottom = section ? top + window.innerHeight * 1.15 : last.getBoundingClientRect().bottom + window.scrollY;
     return { top: Math.max(0, Math.floor(top - 12)), height: Math.ceil(bottom - top + 24), label };
-  }, { selector: slide.selector, count: slide.count, extend: slide.extend, section: slide.section, fromTop: slide.fromTop, nth, labelFrom: slide.labelFrom });
+  }, { selector: slide.selector, count: slide.count, extend: slide.extend, section: slide.section, from: slide.from, fromTop: slide.fromTop, nth, labelFrom: slide.labelFrom });
   // 撮る位置へスクロールした後に読み込まれた写真にも下帯を掛け、撮影直前の状態で数え直す
   if (slide.mask !== false) {
     photo = await maskPhotos(page);
@@ -406,10 +461,23 @@ export async function capture(page, slide) {
   const clip = { x: 0, y: box.top, width: 390, height };
   const ocr = slide.mask === false || !photo.photos ? { ocr: 'skipped', full: 0 } : await ocrMaskPhotos(page, clip, slide.id);
   const shot = await page.screenshot({ type: 'png', clip, fullPage: true });
-  return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked, photoOcr: ocr.ocr, photoFullBlur: ocr.full };
+  return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked, photoOcr: ocr.ocr, photoFullBlur: ocr.full, size: { width: clip.width, height: clip.height } };
 }
 
-function slideHtml(slide, index, total, shotBase64, label = '') {
+// fit: 撮った部品の縦横に合わせて枠の大きさを決める（820×760 の中に全体が入る大きさ。はみ出して切れない）
+export function phoneBox(size) {
+  const width = Number(size?.width) || 390;
+  const height = Number(size?.height) || 0;
+  if (!height) return null;
+  const scale = Math.min(820 / width, 760 / height);
+  const w = Math.round(width * scale);
+  const h = Math.round(height * scale);
+  return { width: w, height: h, top: 520 + Math.round((760 - h) / 2) };
+}
+
+export function slideHtml(slide, index, total, shotBase64, label = '', size = null) {
+  const box = slide.fit ? phoneBox(size) : null;
+  const fitCss = box ? `.phone{width:${box.width}px;height:${box.height}px;top:${box.top}px}` : '';
   const lines = (value) => String(value).split('\n').map((line) => line.replace(/[&<>]/gu, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])).join('<br>');
   const kicker = label ? `${slide.kicker}｜${label}` : slide.kicker;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><style>
@@ -432,7 +500,7 @@ background:#fff;box-shadow:0 30px 70px rgba(64,40,140,.22),0 0 0 10px #14142a}
 <span class="kicker">${lines(kicker)}</span>
 <h1>${lines(slide.title)}</h1>
 <p class="body">${lines(slide.body)}</p>
-<div class="phone"><img src="data:image/png;base64,${shotBase64}" alt=""></div>
+${fitCss ? `<style>${fitCss}</style>` : ''}<div class="phone"><img src="data:image/png;base64,${shotBase64}" alt=""></div>
 </body></html>`;
 }
 
@@ -451,7 +519,7 @@ async function buildSet(browser, composer, page, setId, slides) {
   await mkdir(dir, { recursive: true });
   const files = [];
   for (const [index, slide] of slides.entries()) {
-    await composer.setContent(slideHtml(slide, index, slides.length, shots[index].shot.toString('base64'), shots[index].label), { waitUntil: 'load' });
+    await composer.setContent(slideHtml(slide, index, slides.length, shots[index].shot.toString('base64'), shots[index].label, shots[index].size), { waitUntil: 'load' });
     await writeFile(path.join(dir, `${index + 1}.jpg`), await composer.screenshot({ type: 'jpeg', quality: 88, clip: { x: 0, y: 0, width: 1080, height: 1350 } }));
     files.push({ file: `${setId}/${index + 1}.jpg`, id: slide.id, items: shots[index].found, blurred: shots[index].blurred, photos: shots[index].photos, photo_band_masked: shots[index].photoMasked, photo_ocr: shots[index].photoOcr, photo_full_blur: shots[index].photoFullBlur, label: shots[index].label });
   }
@@ -470,6 +538,8 @@ async function main() {
     viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: 'ja-JP', timezoneId: 'Asia/Tokyo', isMobile: true, hasTouch: true,
     // 本番は CSP（style-src 'self'）で差し込みの CSS を拒む。撮影用のぼかしだけを当てるため、この撮影ブラウザでは CSP を無視する。
     bypassCSP: true,
+    // 掲載見本の応答の差し替え（page.route）を service worker に邪魔させない
+    serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 HOSHILU-SocialScreens/1.0'
   });
   const composer = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });

@@ -5,7 +5,7 @@ import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow } fro
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
 import { readFileSync } from 'node:fs';
-import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText } from '../scripts/build-social-screens.mjs';
+import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText, phoneBox } from '../scripts/build-social-screens.mjs';
 
 // 2026-10-15 大隆さん指示「今後の投稿も、実画像を踏まえて投稿して」
 function d1(database) {
@@ -113,9 +113,33 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
   assert.doesNotMatch(SCREEN_POSTS.seller.caption, /ショップページ|クーポン|売上が上がる|必ず売れる/u);
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-demand-visible' }, '2026-10-17'), ['seller']);
   assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['notes', 'buzz']);
-  // 撮影側: セラー向けは HOSHILU 自身の料金を見せる（ぼかさない）。ユーザー向けはぼかす
-  assert.ok(SCREEN_SETS.seller.every((slide) => slide.mask === false));
+  // 撮影側: 出品者向けページ（HOSHILU 自身の料金）はぼかさない。本番の検索・売れ筋の画面（他店の価格が出る）はぼかす。ユーザー向けはぼかす
+  // 2026-10-16 大隆さん「肝心なリアル画像が全ページ見切れてる」: 出品者向けセットは本番の画面の部品を撮る（下の fit のテスト）
+  for (const slide of SCREEN_SETS.seller) {
+    if (slide.url.startsWith('/for-sellers')) assert.equal(slide.mask, false, slide.id);
+    else assert.notEqual(slide.mask, false, slide.id);
+  }
   assert.ok([...SCREEN_SETS.notes, ...SCREEN_SETS.buzz].every((slide) => slide.mask !== false));
+});
+
+test('出品者向けカルーセル: 実画面は枠で切らない（部品の上端〜下端を撮り、枠をその大きさに合わせる）', () => {
+  // 予約済みの投稿が 1〜7 枚目を使うので 7 枚のまま
+  assert.equal(SCREEN_SETS.seller.length, 7);
+  for (const slide of SCREEN_SETS.seller) {
+    assert.equal(slide.fit, true, slide.id);
+    assert.ok(!slide.fromTop && !slide.section, `${slide.id} はページの上から決まった高さで撮らない`);
+    assert.doesNotMatch(slide.selector, /^main$|\.real-screen$/u, `${slide.id} は出品者向けページをスマホ枠ごと撮らない`);
+  }
+  // 1 枚目は掲載見本（PR 枠）
+  assert.equal(SCREEN_SETS.seller[0].prSample, true);
+  // 枠は 820×760 の中に全体が入る（縦長は細く、横長は低く）
+  const tall = phoneBox({ width: 390, height: 700 });
+  assert.ok(tall.height <= 760 && tall.width <= 820);
+  assert.equal(tall.height, 760);
+  const short = phoneBox({ width: 390, height: 200 });
+  assert.equal(short.width, 820);
+  assert.ok(short.height < 760 && short.top > 520, '低い部品は縦の真ん中に置く');
+  assert.equal(Math.round(short.height / short.width * 390), 200, '縦横の比は変えない');
 });
 
 test('在庫監視（SLA）は実画像に差し替えたカルーセル行も数える', () => {
@@ -156,8 +180,9 @@ test('商品写真に焼き込まれた価格・割引率（例: 写真右下の
   // 撮影ページで動く関数は外部の変数に頼らない（page.evaluate で直列化される）
   assert.equal(typeof applyPhotoBands, 'function');
   assert.doesNotMatch(String(applyPhotoBands), /PHOTO_|BLUR_CSS|PRICE_/u);
-  // ユーザー向け（写真が写る）セットは全部ぼかし対象。セラー向け（HOSHILU 自身の料金）はぼかさない
-  assert.ok(SCREEN_SETS.seller.every((slide) => slide.mask === false));
+  // ユーザー向け（写真が写る）セットは全部ぼかし対象。セラー向けは出品者向けページ（HOSHILU 自身の料金）だけぼかさない
+  assert.ok(SCREEN_SETS.seller.filter((slide) => slide.url.startsWith('/for-sellers')).every((slide) => slide.mask === false));
+  assert.ok(SCREEN_SETS.seller.filter((slide) => !slide.url.startsWith('/for-sellers')).every((slide) => slide.mask !== false));
 });
 
 test('写真の下帯ぼかしが 1 枚でも効いていなければ、そのセットは出さない（撮影スクリプトの止め）', () => {
