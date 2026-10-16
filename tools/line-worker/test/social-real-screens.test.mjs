@@ -133,9 +133,11 @@ test('商品写真に焼き込まれた価格・割引率（例: 写真右下の
   // 2026-10-16 Codex 点検: screens/20261015/notes/2.jpg の写真内「10%OFF」が DOM のぼかしでは隠れなかった
   const media = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
   const buzz = readFileSync(new URL('../public/buzz-home.mjs', import.meta.url), 'utf8');
+  // 2026-10-16: 出品者向けページ用の検索結果（app.js の商品カードの写真枠）も対象
+  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   for (const selector of PHOTO_SELECTORS) {
     const name = selector.replace(/^\./u, '');
-    assert.ok(media.includes(`class="${name}"`) || buzz.includes(`'${name}'`), `撮影対象の写真枠 ${selector} が本番の画面に存在する`);
+    assert.ok(media.includes(`class="${name}"`) || buzz.includes(`'${name}'`) || app.includes(`className='${name}'`), `撮影対象の写真枠 ${selector} が本番の画面に存在する`);
   }
   for (const name of ['media-drop-figure', 'media-tile-figure', 'buzz-home-thumb']) assert.ok(PHOTO_SELECTORS.includes(`.${name}`), name);
   // 写真の下側 30% を必ず覆う（販促帯の位置）。写真全体は消さない

@@ -32,7 +32,8 @@ export const PRICE_TEXT = /(?:[¥￥]\s?\d[\d,]*|\d[\d,]*\s?円|\d+(?:\.\d+)?\s?
 // （backdrop-filter は撮影ブラウザでほとんど効かず、文字が読めたため不採用）。外部 OCR・課金なし。
 // 限界: 上側や中央に焼き込まれた文字はこの帯では隠れない（端末内 OCR も試したが、この代表例を読めず採用しなかった）。
 // 「未検出＝漏れなし」とはしないので、公開前の目視確認は残す。
-export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb']);
+// 2026-10-16: 出品者向けページ用の検索結果の撮影（scripts/build-seller-lp-shots.mjs）でも同じ下帯ぼかしを掛ける（.product-image-gallery）。
+export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb', '.product-image-gallery']);
 export const PHOTO_BAND_RATIO = 0.3;
 const PHOTO_RANK_SELECTORS = Object.freeze(['.media-drop-rank', '.media-tile-rank', '.buzz-home-rank']);
 export const BLUR_CSS = `${PRICE_SELECTORS.join(',')},.hoshilu-price-mask{filter:blur(9px)!important;user-select:none!important}
@@ -173,12 +174,25 @@ async function maskPhotos(page) {
   return page.evaluate(applyPhotoBands, PHOTO_SELECTORS);
 }
 
-async function capture(page, slide) {
+// 2026-10-16: 出品者向けページの実画像（scripts/build-seller-lp-shots.mjs）からも使う。
+export function setScreensBase(url) {
+  BASE = String(url || '').replace(/\/$/u, '');
+}
+
+export async function capture(page, slide) {
   // トップは常時通信があり networkidle にならない（10/15 CI で 60 秒超過）。load 後は waitForSelector で待つ。
   await page.goto(`${BASE}${slide.url}`, { waitUntil: 'load', timeout: 60_000 });
   await page.addStyleTag({ content: slide.mask === false ? LAYOUT_CSS : `${BLUR_CSS}\n${LAYOUT_CSS}` });
-  await page.waitForSelector(slide.selector, { state: 'visible', timeout: 45_000 });
-  await page.waitForTimeout(1500);
+  // 検索欄に言葉を入れる（typeOnly は入れるだけ、search は入れて検索する）。検索語は固定の見本（利用者の検索ではない）。
+  if (slide.hide) await page.addStyleTag({ content: `${slide.hide}{display:none!important}` });
+  const words = slide.search || slide.typeOnly;
+  if (words) {
+    await page.waitForSelector('#query', { state: 'visible', timeout: 45_000 });
+    await page.fill('#query', words);
+    if (slide.search) await page.click('#submitButton');
+  }
+  await page.waitForSelector(slide.selector, { state: 'visible', timeout: slide.search ? 90_000 : 45_000 });
+  await page.waitForTimeout(slide.search ? 4000 : 1500);
   const found = await page.$$eval(slide.selector, (nodes) => nodes.filter((n) => n.getBoundingClientRect().height > 0).length);
   if (found < slide.min) throw new Error(`SCREEN_EMPTY:${slide.id}:${found}`);
   const nth = Number(slide.nth || 0);
@@ -256,7 +270,7 @@ async function capture(page, slide) {
     photo = await maskPhotos(page);
     if (photo.masked < photo.photos) throw new Error(`PHOTO_PRICE_NOT_MASKED:${slide.id}:${photo.masked}/${photo.photos}`);
   }
-  const height = Math.min(box.height, 1100);
+  const height = Math.min(box.height, slide.maxHeight || 1100);
   const shot = await page.screenshot({ type: 'png', clip: { x: 0, y: box.top, width: 390, height }, fullPage: true });
   return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked };
 }
