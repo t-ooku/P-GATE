@@ -18,6 +18,9 @@ name: Build social carousels (Pillow) and deploy
 # 2026-10-15 大隆さん「今後の投稿も、実画像を踏まえて投稿して」: 毎日 17:30 JST に notes／buzz／seller の 3 セットを撮る。
 # 撮れたセットだけ manifest.json に載り、Worker（src/social-screens.mjs）がその日の未投稿のフィード投稿を差し替える。
 # 14 日より古い screens/<日付>/ は自動で外す（配信ファイル数を増やし続けない）。
+# 2026-10-16 大隆さん「セラー募集のLPは文字ばかり。推し機能を実際の画像で」: 出品者向けページ用の実画面
+# （public/for-sellers-shots/）を撮る。毎日は撮らず、月曜の定時・手動・スクリプト変更時だけ（画像を増やし続けない）。
+# 撮れなかった画面は前回の画像を残す。失敗・一部失敗は [CI-LOG] Issue に残す（日次の SNS 画像は止めない）。
 
 on:
   push:
@@ -26,6 +29,7 @@ on:
       - 'tools/line-worker/scripts/build-social-carousels.py'
       - 'tools/line-worker/ops/social/carousels-v3.json'
       - 'tools/line-worker/scripts/build-social-screens.mjs'
+      - 'tools/line-worker/scripts/build-seller-lp-shots.mjs'
       - '.github/workflows/build-social-carousels.yml'
   schedule:
     - cron: '30 8 * * *'
@@ -114,6 +118,31 @@ jobs:
           PY
           echo "day=${day}" >> "$GITHUB_OUTPUT"
 
+      - name: Capture the seller LP screenshots (Mondays / manual, prices blurred)
+        id: lpshots
+        continue-on-error: true
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          exec > >(tee -a /tmp/ci.log) 2>&1
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ "$(TZ=Asia/Tokyo date +%u)" != "1" ]; then
+            echo "lp shots: scheduled runs capture on Mondays only"
+            exit 0
+          fi
+          echo "ran=1" >> "$GITHUB_OUTPUT"
+          node scripts/build-seller-lp-shots.mjs public/for-sellers-shots --base https://hoshilu.app
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out = Path('public/for-sellers-shots')
+          m = json.loads((out / 'manifest.json').read_text())
+          for f in m['files']:
+              im = Image.open(out / f['file'])
+              assert im.size[0] == 780 and 400 <= im.size[1] <= 2200, (f, im.size)
+          print('lp shots verified:', [f['file'] for f in m['files']], 'skipped:', m.get('failures'))
+          PY
+
       - name: Commit the images
         id: commit
         run: |
@@ -131,6 +160,7 @@ jobs:
             fi
           done
           git add tools/line-worker/public/social/carousel tools/line-worker/public/social/screens
+          if [ -d tools/line-worker/public/for-sellers-shots ]; then git add tools/line-worker/public/for-sellers-shots; fi
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "carousel images unchanged"
@@ -185,6 +215,36 @@ jobs:
             echo "HEAD /social/screens/${day}/$f -> $code (try ${try})"
             test "$code" = "200"
           done
+          if [ -f tools/line-worker/public/for-sellers-shots/manifest.json ]; then
+            for f in $(python3 -c "import json,sys;print(' '.join(f['file'] for f in json.load(open(sys.argv[1]))['files']))" tools/line-worker/public/for-sellers-shots/manifest.json); do
+              for try in 1 2 3 4 5 6 7 8; do
+                code="$(curl -s -o /dev/null -w '%{http_code}' -I "https://hoshilu.app/for-sellers-shots/$f")"
+                [ "$code" = "200" ] && break
+                sleep 15
+              done
+              echo "HEAD /for-sellers-shots/$f -> $code (try ${try})"
+              test "$code" = "200"
+            done
+          fi
+
+      - name: Report seller LP screenshot problems to an issue
+        if: always() && (steps.lpshots.outputs.ran == '1' || steps.lpshots.outcome == 'failure')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let failures = {};
+            try { failures = JSON.parse(fs.readFileSync('tools/line-worker/public/for-sellers-shots/manifest.json', 'utf8')).failures || {}; } catch {}
+            const failed = '${{ steps.lpshots.outcome }}' === 'failure';
+            if (!failed && !Object.keys(failures).length) return;
+            let log = '';
+            try { log = fs.readFileSync('/tmp/ci.log', 'utf8'); } catch {}
+            const lines = log.split('\n').filter((line) => /lp shot|LP_SHOTS|Error|Timeout/.test(line)).join('\n').slice(-6000).replace(/```/g, "'''");
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: `[CI-LOG] seller-lp-shots ${failed ? 'failed' : 'partial'} ${context.sha.slice(0, 7)}`,
+              body: `run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nfailures: ${JSON.stringify(failures)}\n\n\`\`\`\n${lines}\n\`\`\``
+            });
 
       - name: Report the failure log to an issue (Claude/Cowork cannot read Actions logs)
         if: failure()
