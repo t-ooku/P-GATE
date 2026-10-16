@@ -69,7 +69,13 @@ async function main() {
       files.push({ file: `${shot.id}.jpg`, id: shot.id, width: 780, height, items: result.found, blurred: result.blurred, photos: result.photos, photo_masked: result.photoMasked });
       console.log(`lp shot ${shot.id}: items=${result.found} blurred=${result.blurred} photos=${result.photoMasked}/${result.photos} h=${height}`);
     } catch (error) {
-      failures[shot.id] = String(error?.message || error).split('\n')[0].slice(0, 300);
+      // 何が画面に出ていたかを残す（検索語は固定の見本なので利用者の情報は含まない）
+      const seen = await page.evaluate(() => {
+        const visible = (selector) => [...document.querySelectorAll(selector)].filter((n) => n.getBoundingClientRect().height > 0).length;
+        const text = (selector) => String(document.querySelector(selector)?.innerText || '').replace(/\s+/gu, ' ').trim().slice(0, 120);
+        return `resultsSection=${visible('#resultsSection')} cards=${visible('#resultCards > *')} product=${visible('.product-card')} msg=${text('#resultMessage')} status=${text('#searchStatus, .search-progress, [role="status"]')} classes=${[...document.querySelectorAll('#resultCards > *')].slice(0, 4).map((n) => n.className).join('|').slice(0, 160)}`;
+      }).catch((e) => `evaluate_failed:${String(e?.message || e).slice(0, 80)}`);
+      failures[shot.id] = `${String(error?.message || error).split('\n')[0].slice(0, 200)} / seen: ${seen}`;
       console.error(`lp shot ${shot.id} skipped: ${failures[shot.id]}`);
     } finally {
       await page.close();
