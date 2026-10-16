@@ -9,6 +9,7 @@
 // 掲載先: public/for-sellers.html の第一画面と「これが、HOSHILUの実際の画面です。」（#646）。
 // その画面は、セラー向けの実画像カルーセル（build-social-screens の seller セット、#655・#656）にも写る。
 // 10/16 #658: 掲載見本（listing）・ホシっとく（keep）を追加。この行の追加で撮影を動かす（Issue 経由の反映では撮影が動かないため）。
+// 10/16 #658 の 2 回目: 撮影では service worker を止める（PR 枠の差し替えが効かなかったため）。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -45,6 +46,9 @@ async function main() {
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'ja-JP', timezoneId: 'Asia/Tokyo', isMobile: true, hasTouch: true,
     bypassCSP: true,
+    // 10/16 #658 の初回: 掲載見本の PR 枠が出なかった（pr=0）。本番の画面は service worker を登録し、それが効いている画面の
+    // 通信は page.route で差し替えられない。撮影では service worker を止める（本番の画面の動きは変えない）。
+    serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 HOSHILU-SocialScreens/1.0'
   });
   const encoder = await browser.newPage({ viewport: { width: 780, height: 800 }, deviceScaleFactor: 1 });
@@ -53,6 +57,10 @@ async function main() {
   const failures = {};
   for (const shot of LP_SHOTS) {
     let page = await mobile.newPage();
+    // 検索の応答（/api/knowledge）が何回来たか（掲載見本が撮れなかったときの記録用。中身は残さない）
+    let knowledge = 0;
+    const countKnowledge = (response) => { if (response.url().includes('/api/knowledge')) knowledge += 1; };
+    page.on('response', countKnowledge);
     try {
       let result;
       for (let attempt = 0; ; attempt += 1) {
@@ -64,6 +72,7 @@ async function main() {
           console.error(`lp shot ${shot.id} retry ${attempt + 1}: ${String(error?.message || error).split('\n')[0].slice(0, 160)}`);
           await page.close();
           page = await mobile.newPage();
+          page.on('response', countKnowledge);
         }
       }
       // PNG（2 倍）を 780px 幅の JPEG にする（LP の表示幅に十分・軽い）
@@ -80,7 +89,7 @@ async function main() {
         const text = (selector) => String(document.querySelector(selector)?.innerText || '').replace(/\s+/gu, ' ').trim().slice(0, 120);
         return `resultsSection=${visible('#resultsSection')} cards=${visible('#resultCards > *')} product=${visible('.product-card')} pr=${visible('.unified-pr-card')} keep=${visible('.continuous-search-card')} msg=${text('#resultMessage')} status=${text('#searchStatus, .search-progress, [role="status"]')} classes=${[...document.querySelectorAll('#resultCards > *')].slice(0, 4).map((n) => n.className).join('|').slice(0, 160)}`;
       }).catch((e) => `evaluate_failed:${String(e?.message || e).slice(0, 80)}`);
-      failures[shot.id] = `${String(error?.message || error).split('\n')[0].slice(0, 200)} / seen: ${seen}`;
+      failures[shot.id] = `${String(error?.message || error).split('\n')[0].slice(0, 200)} / seen: ${seen} knowledge=${knowledge}`;
       console.error(`lp shot ${shot.id} skipped: ${failures[shot.id]}`);
     } finally {
       await page.close();
