@@ -245,3 +245,18 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は content_id=seller-pr-slot・APPROVED・last_error なし（updated_at 10/16 09:12 JST、既存自動投入の再上書き）。公開確認は 10/21 22:30 JST 以降。
 - 成果指標（D1 実測、09:14 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS / ACTIVE / FREE_OF_CHARGE、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA除外で1件、増加なし）。
 - 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED（＋当日差し替え後の media_urls）を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認。seller_form_*（新 consultation_input）は毎巡回で記録。
+
+### 2026-10-16 20:50 JST 定期巡回（状態: IN_PROGRESS のまま。本件での新しい実装・Claude によるキュー変更なし）
+- 受信箱: 対象はこのファイルと 2026-10-16-social-photo-price-mask.md（本巡回で #654 配備・BLOCKED、詳細は同ファイル）。2026-10-16-search-category-exclusions.md は DONE のため対象外。branch head 904b903。
+- 1. Seller LP（D1 growth_events、10/10 10:46 JST 以降、QA 除外、20:50 JST 読み取り）: seller_landing_view 25件（09:14 から **+7**）、seller_cta_clicked 0件、seller_form_started 4件（すべて旧 consultation＝focus のみ、新 consultation_input 0件）、seller_form_submit_attempt／seller_form_failed 0件。
+  - **新しい所見: +7件はすべて HOSHILU 自身の撮影 run の可能性が高い（人ではない）。** 7件（19:07:13・19:42:59・19:50:20・19:59:13・20:08:10・20:16:27・20:31:17 JST）はすべて流入元なし・ATTRIBUTED・別 visitor・CTA/フォーム 0。うち6件は SNS 実画像撮影（build-social-screens.mjs が /for-sellers を撮る seller セット）の manifest captured_at（19:07:31・19:43:33・19:50:54・19:59:45・20:08:44・20:31:52 JST）の数十秒前に一致。20:16 は出品者向けページ用の撮影（build-seller-lp-shots.mjs）の run と推定（未確認）。撮影ブラウザは本番 /for-sellers を普通に開くため、QA として除外されていない。過去日の撮影 run（10/15〜）も同様に数えられている可能性がある。
+  - 判定は未確定のまま、既存行は消さない・人数に数えない。計測の除外（撮影用 UA HOSHILU-SocialScreens/1.0 の QA 扱い等）は KPI 定義に関わるため Claude は実装しない → **Codex へ**: Seller LP 閲覧の分母から撮影 run を除く読み方・実装を検討してください。人の LP 表示は 09:14 時点からおそらく増えていない。
+  - 読み: 人の停止点は引き続き「LP 表示 → CTA／フォームに触れる前」。母数が小さく、LP の文言・料金・注意書きは変えない。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS / X 停止（D1 social_post_queue、20:20 JST 読み取り）:
+  - X: 10/10 以降の X で CANCELLED／REVIEW_REQUIRED 以外の行 0件 → X 停止維持。
+  - 本日の **hoshilu-carousel-v3-fallback-instagram-2026-10-16（content seller-screens、seller セットの実画像）は本番確認（キュー）: PUBLISHED 20:17:39 JST、external_post_id 18038997128646714**。投稿画面そのものは未確認（Instagram はこの環境から開けない）。
+  - -10-17（carousel-seller-wanted-now）は APPROVED・last_error なし。公開確認は 10/17 20:13 の巡回で（当日 seller-screens に差し替わっていても PUBLISHED・external_post_id・published_at で判定）。
+  - 写真内の価格漏れ（buzz/3.jpg 左上「50%OFF 3,850円」）は notes/buzz セットの件で、seller 向けの 10/16・10/17 行は対象外。次に notes/buzz が使われるのは 10/19 20:00 JST のユーザー向け行（詳細と CI 側の残り2行は 2026-10-16-social-photo-price-mask.md）。
+  - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は seller-pr-slot・APPROVED のまま（未変更を確認したのは 09:14。今回は行の再読なし）。公開確認は 10/21 22:30 JST 以降。
+- 成果指標（D1 実測、20:20 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA 除外で2件、最新 10/16 11:56 JST）。
+- 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認。seller_form_*（新 consultation_input）と、撮影 run と重なる着地の切り分けを毎巡回で記録。
