@@ -43,7 +43,11 @@ const PRODUCT_HEADS = Object.freeze([
   // 取れず、汎用語「ペン」に一致する無関係な商品(名入れボールペン等)を主名詞一致(強)として
   // 拾ってしまう。「名前ペン」を辞書に登録し、下のextractHeadNounsでlast(末尾トークン全体)
   // とも照合することで、より長く具体的な複合語を優先させる。
-  '名前ペン', '布用ペン'
+  '名前ペン', '布用ペン',
+  // 2026-10-16 固定QA ig_mattress: 本体(マットレス)を探す検索に「Mattress Topper」が本命で入った。
+  // トッパーは本体の上に重ねる別商品。商品名詞として登録し、「マットレス トッパー」「Mattress Topper」
+  // の「マットレス」を本体の出現とみなさない(直後に別の商品名詞が来る規則)。トッパー自体の検索は残す。
+  'トッパー', 'topper'
 ]);
 const HEAD_ALIASES = Object.freeze({
   '指輪': ['リング'], 'リング': ['指輪'], '靴': ['スニーカー', 'シューズ', 'サンダル', 'ブーツ', 'パンプス'], 'ワンピース': ['ワンピ'],
@@ -65,14 +69,15 @@ const HEAD_ALIASES = Object.freeze({
   // で除外されていた(occurrenceIsClean の「主名詞の直後に別の商品名詞」判定)。
   // マグカップ/マグは開口部が異なる別カテゴリのため対象外。
   '水筒': ['ボトル', 'タンブラー', '魔法瓶'], 'ボトル': ['水筒', 'タンブラー', '魔法瓶'],
-  'タンブラー': ['水筒', 'ボトル', '魔法瓶'], '魔法瓶': ['水筒', 'ボトル', 'タンブラー']
+  'タンブラー': ['水筒', 'ボトル', '魔法瓶'], '魔法瓶': ['水筒', 'ボトル', 'タンブラー'],
+  'トッパー': ['topper'], 'topper': ['トッパー']
 });
 // 主名詞に直接くっついた別の商品名詞(「こたつ毛布」「こたつ布団」「こたつカバー」)は、主名詞が
 // 用途を表す修飾語になっている付属品・関連商品。ただし「本体そのもの」を表す語(こたつテーブル・
 // こたつ本体)や、主名詞と同種の語は除く。辞書外の一般語も含めて固定で持つ。
 const ATTACHED_ACCESSORY_SUFFIXES = Object.freeze([
   '毛布', '布団', 'ふとん', '掛け布団', '敷き布団', '中掛け', '上掛け', '敷きパッド', '敷パッド', 'カバー', 'ケース', 'ホルダー', 'スタンド',
-  'コード', 'ヒーターユニット', '継ぎ脚', '継脚', '脚', 'リモコン', 'フィルター', 'ストラップ', '袋'
+  'コード', 'ヒーターユニット', '継ぎ脚', '継脚', '脚', 'リモコン', 'フィルター', 'ストラップ', '袋', 'トッパー'
 ]);
 const ATTACHED_BODY_SUFFIXES = Object.freeze(['テーブル', 'デスク', '本体', 'セット']);
 // 主名詞が別の語の一部として現れる誤一致(リップ→クリップ)。
@@ -178,7 +183,9 @@ function occurrenceIsClean(title, head, index, headTerms = new Set([head])) {
     const attached = after.split(TOKEN_SPLIT)[0] || '';
     const bodySuffix = ATTACHED_BODY_SUFFIXES.find((suffix) => attached.startsWith(suffix));
     const accessorySuffix = ATTACHED_ACCESSORY_SUFFIXES.find((suffix) => attached.startsWith(suffix));
-    if (!bodySuffix && accessorySuffix && !relatedToHeads(accessorySuffix, headTerms)) return false;
+    // 「マットレストッパー付き」「こたつ布団付き」のように付属品語に「付き」が続けば本体を含む商品
+    const withAccessory = accessorySuffix && /^\s*付/u.test(attached.slice(accessorySuffix.length));
+    if (!bodySuffix && accessorySuffix && !withAccessory && !relatedToHeads(accessorySuffix, headTerms)) return false;
   }
   // 主名詞の直後に別の商品名詞が来る(「ワンピース お玉」= 一体型のお玉)なら、
   // 主名詞は形状・種類の修飾語であって商品そのものではない。
@@ -238,6 +245,15 @@ export function headNounDetail(query, title, heads = extractHeadNouns(query)) {
   if (!weak) return { score: 0, position: 1 };
   const weakResult = evaluate(weak.term);
   if (!weakResult.matched || packaged) return { score: 0, position: 1 };
+  // 2026-10-16 固定QA dark_ink_name_pen: 強い主名詞が辞書の複合語(「名前ペン」「布用ペン」)で、弱い主名詞
+  // (「ペン」)が商品名では別の複合語(「ボールペン」「サインペン」)の一部としてしか出ないなら、種類の違う
+  // 商品(名入れボールペン)。辞書外の長い語(「トートバッグ」→「エコバッグ」)や「ボールペン」自体の検索は対象外。
+  if (strong && strong.term !== weak.term && strong.term.endsWith(weak.term) && PRODUCT_HEADS.includes(strong.term)
+    && KATAKANA.test(weak.term)) {
+    const before = normalizedTitle.slice(0, weakResult.index);
+    const prefix = before.match(/[\p{Script=Katakana}ー]+$/u)?.[0] || '';
+    if (prefix) return { score: 0, position: 1 };
+  }
   // 弱い一致は、商品名でそれより前に別の商品名詞(「コアラ Tシャツ … マットレス」)
   // が出ていれば、その商品はそちらだとみなす。
   const earlierOther = PRODUCT_HEADS.some((noun) => {

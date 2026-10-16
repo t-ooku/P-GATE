@@ -128,11 +128,53 @@ test('「お名前ペン」は末尾の「ペン」単独ではなく複合語�
   const query = 'お名前ペンで書いた文字がすぐ薄くなって読めない 濃く書ける お名前ペン';
   assert.deepEqual(extractHeadNouns(query).map((h) => h.term), ['名前ペン', 'ペン']);
   for (const [title, score] of [
-    ['名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン', 1],
+    // 2026-10-16: 弱い一致(1)でも本命に残ったため、別の複合語「ボールペン」の中の「ペン」は 0 に厳しくした
+    ['名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン', 0],
     ['濃く書ける お名前ペン 極細 太字 2本セット 布用 油性', 2],
     ['シヤチハタ お名前ペン にじまない 布用 太字', 2]
   ]) assert.equal(headNounScore(query, title), score, title);
   const genericPen = { product_name: '名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン' };
   const namePen = { product_name: '濃く書ける お名前ペン 極細 太字 2本セット 布用 油性' };
-  assert.deepEqual(applyHeadNounGate(query, [genericPen, namePen]), [namePen, genericPen]);
+  assert.deepEqual(applyHeadNounGate(query, [genericPen, namePen]), [namePen]);
+});
+
+// 2026-10-16 固定QA(07:22〜07:24)の意味判定で見つかった2件(Codex)。特定の商品名・店名ではなく語の関係で判定する。
+test('マットレス本体の検索でトッパーを本体扱いしない。トッパー検索・トッパー付き本体は残す', () => {
+  const query = 'Instagramで見たマットレス';
+  for (const [title, score] of [
+    ['Queen Mattress Topper / 3 Inch / Memory Foam Bed Topper', 0],
+    ['マットレス トッパー 3cm 高反発', 0],
+    ['マットレストッパー シングル', 0],
+    ['トッパー付きマットレス シングル', 2],
+    ['マットレス シングル トッパー付き', 2],
+    ['マットレストッパー付き 2層 シングル', 2],
+    ['高反発マットレス シングル 厚さ10cm', 2],
+    ['Napier Sportz Air Mattress', 2]
+  ]) assert.equal(headNounScore(query, title), score, title);
+  const topper = { product_name: 'Queen Mattress Topper / 3 Inch / Memory Foam Bed Topper' };
+  const body = { product_name: '高反発マットレス シングル 厚さ10cm' };
+  assert.deepEqual(applyHeadNounGate(query, [topper, body]), [body]);
+  // トッパーを明示的に探す検索では、トッパーが残り本体は外れる
+  for (const topperQuery of ['トッパー', 'マットレストッパー', 'mattress topper']) {
+    assert.ok(headNounScore(topperQuery, topper.product_name) >= 1, topperQuery);
+    assert.deepEqual(applyHeadNounGate(topperQuery, [body, topper]), [topper], topperQuery);
+  }
+});
+
+test('布用お名前ペンの検索で名入れボールペン・サインペンを弾き、通常のボールペン検索は壊さない', () => {
+  const query = 'お名前ペンで書いた文字がすぐ薄くなって読めない 濃く書ける お名前ペン';
+  const ballpoint = { product_name: '名入れ パイロット PILOT ボールペン アクロ1000 ブラック油性ボールペン' };
+  const fabricPen = { product_name: '布用 油性ペン 太字 名前書き' };
+  const namePen = { product_name: '濃く書ける お名前ペン 極細 太字 2本セット 布用 油性' };
+  assert.equal(headNounScore(query, ballpoint.product_name), 0);
+  assert.equal(headNounScore(query, 'サインペン 水性 10本'), 0);
+  assert.equal(headNounScore(query, fabricPen.product_name), 1);
+  assert.equal(headNounScore(query, namePen.product_name), 2);
+  // 正しい布用ペンが弱い一致しか無くても、名入れボールペンより前に出て、ボールペンは外れる
+  assert.deepEqual(applyHeadNounGate(query, [ballpoint, fabricPen]), [fabricPen]);
+  assert.deepEqual(applyHeadNounGate(query, [ballpoint, namePen, fabricPen]), [namePen, fabricPen]);
+  // 通常のボールペン・ペン検索ではボールペンは商品そのもの
+  for (const penQuery of ['ボールペン', '書きやすいボールペン', 'かわいいペン']) {
+    assert.equal(headNounScore(penQuery, 'ジェットストリーム ボールペン 0.5'), 2, penQuery);
+  }
 });

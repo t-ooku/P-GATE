@@ -27,7 +27,7 @@ const EMPTY_RETRY_PAUSE_MS = 5000;
 // 説明語で正しい本命を落としていた。別語の一部・付属品は H(主名詞スコア)が
 // 判定するので、reject は明確な別商品語だけにする。
 export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
-  { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー|Tシャツ|パッド/u },
+  { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー|Tシャツ|パッド|トッパー(?!付)|topper/iu },
   { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ\s*・?\s*マットレス|koala\s*mattress/iu, reject: /Tシャツ|シャツ|ぬいぐるみ|おもちゃ|枕|ピロー|保護カバー|プロテクター/u },
   { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: /ケース|ホルダー/u },
   { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: /純正|ピストン/u },
