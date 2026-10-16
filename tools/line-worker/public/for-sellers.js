@@ -27,10 +27,55 @@ function sendSellerEvent(event_type, extra = {}) {
   }).catch(() => {});
 }
 
-sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
-document.querySelectorAll('[data-seller-cta]').forEach((link) => link.addEventListener('click', () => {
+// 2026-10-16（#644 と同じ基準）: SNS 投稿の数分後に 2 件ずつ同時に来るリンク先取得が来訪に混ざっていた。
+// 画面に 1.5 秒出ていたか、人が触った（ホイール・タップ・キー入力。scroll はページの組み立てでも起きるので使わない）時に 1 回だけ数える。
+const SELLER_LANDING_VISIBLE_MS = 1500;
+(() => {
+  let sent = false;
+  let timer = 0;
+  const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
+  const fire = () => {
+    if (sent) return;
+    sent = true;
+    clearTimeout(timer);
+    document.removeEventListener('visibilitychange', arm);
+    for (const type of events) removeEventListener(type, fire, true);
+    sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
+  };
+  function arm() {
+    clearTimeout(timer);
+    if (document.visibilityState === 'visible') timer = setTimeout(fire, SELLER_LANDING_VISIBLE_MS);
+  }
+  document.addEventListener('visibilitychange', arm);
+  for (const type of events) addEventListener(type, fire, { capture: true, passive: true });
+  arm();
+})();
+
+// 2026-10-16 Cowork 依頼 §1・§2: 申込ボタンはフォームの説明の先頭に飛んでいて、スマホでは最初の入力欄が
+// 1.6 画面ぶん下だった。AI販促担当のボタンからも 1,980円の相談として送られ、どのプランか分からなかった。
+// ボタンを押したら最初の入力欄を画面の中に出し、AI販促担当のボタンなら関心プランを隠し欄に入れる。
+const CTA_PLAN = {
+  'pricing-light': ['PROMO_LIGHT', 'AI販促担当 Light の相談として送ります'],
+  'pricing-standard': ['PROMO_STANDARD', 'AI販促担当 Standard の相談として送ります']
+};
+export function ctaPlan(cta) {
+  return CTA_PLAN[String(cta || '')] || ['', ''];
+}
+const planInput = form?.querySelector('[name="plan_interest"]');
+const planNote = document.querySelector('#formPlanNote');
+const firstInput = form?.querySelector('[name="organization_name"]');
+document.addEventListener('click', (event) => {
+  const link = event.target instanceof Element ? event.target.closest('[data-seller-cta]') : null;
+  if (!link) return;
   sendSellerEvent('seller_cta_clicked', { content: link.dataset.sellerCta || 'unknown' });
-}));
+  if (link.getAttribute('href') !== '#businessForm' || !firstInput) return;
+  const [plan, note] = ctaPlan(link.dataset.sellerCta);
+  if (planInput) planInput.value = plan;
+  if (planNote) { planNote.textContent = note; planNote.hidden = !note; }
+  event.preventDefault();
+  firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  history.replaceState(null, '', '#businessForm');
+});
 
 // Focus alone can come from previews/autofocus. Count the first trusted edit,
 // without inspecting or transmitting field values. This is interaction evidence,

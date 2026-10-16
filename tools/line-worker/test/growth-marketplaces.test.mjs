@@ -21,6 +21,6 @@ test('landing_view は画面に 1.5 秒出ていたか、人が触った時に 1
   assert.match(source, /const LANDING_VIEW_VISIBLE_MS = 1500;/u);
   assert.doesNotMatch(source, /^send\('landing_view'\);$/mu, '読み込み直後に無条件で送らない');
   assert.match(source, /document\.visibilityState === 'visible'\) timer = setTimeout\(fire, LANDING_VIEW_VISIBLE_MS\)/u);
-  assert.match(source, /\['pointerdown', 'keydown', 'touchstart', 'scroll'\]/u);
+  assert.match(source, /\['pointerdown', 'keydown', 'touchstart', 'wheel'\]/u);
   assert.match(source, /if \(sent\) return;\n    sent = true;/u);
 });

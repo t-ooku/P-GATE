@@ -289,12 +289,12 @@ function collectMarketplaceImpressions(executionId) {
 // 2026-10-16 実測（D1、QA 除く）: Threads からの着地 57 件のうち 52 件は投稿の 40〜90 秒後に来ていて、
 // どれも着地 1 件だけで終わり、自動検索（1.5 秒待つ）にも届いていなかった。名前を名乗らない
 // リンク先取得が、ブラウザと同じ UA で数秒だけページを開いている。人の訪問として数えないよう、
-// 画面に 1.5 秒出ていたか、人が触った（スクロール・タップ・キー入力）時点で 1 回だけ数える。
+// 画面に 1.5 秒出ていたか、人が触った（ホイール・タップ・キー入力。scroll はページの組み立てでも起きるので使わない）時点で 1 回だけ数える。
 const LANDING_VIEW_VISIBLE_MS = 1500;
 (() => {
   let sent = false;
   let timer = 0;
-  const events = ['pointerdown', 'keydown', 'touchstart', 'scroll'];
+  const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
   const fire = () => {
     if (sent) return;
     sent = true;

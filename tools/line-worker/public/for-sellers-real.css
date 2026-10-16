@@ -86,3 +86,7 @@ main h2 span{display:inline-block}
   .seller-showcase-hero h1{font-size:clamp(32px,3.6vw,52px);line-height:1.2}
   .seller-showcase-hero h1 span{display:inline-block}
 }
+
+/* 2026-10-16: 固定ヘッダーの下に隠れないように。プランの案内は入力欄の上に小さく出す */
+#businessForm,#sellerBusinessForm label{scroll-margin-top:calc(var(--topbar-height,74px) + 16px)}
+.form-plan-note{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:#f3f0ff;color:#4b3bb8;font-weight:700;font-size:.92rem}
