@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-16T11:31:52.091Z",
+  "captured_at": "2026-10-16T11:54:50.035Z",
   "size": [
     1080,
     1350
@@ -15,6 +15,8 @@
           "blurred": 116,
           "photos": 21,
           "photo_band_masked": 21,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
@@ -24,6 +26,8 @@
           "blurred": 201,
           "photos": 24,
           "photo_band_masked": 24,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
@@ -33,6 +37,8 @@
           "blurred": 116,
           "photos": 33,
           "photo_band_masked": 33,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
@@ -42,6 +48,8 @@
           "blurred": 611,
           "photos": 95,
           "photo_band_masked": 95,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
@@ -51,6 +59,8 @@
           "blurred": 611,
           "photos": 30,
           "photo_band_masked": 30,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         }
       ]
@@ -64,6 +74,8 @@
           "blurred": 611,
           "photos": 93,
           "photo_band_masked": 93,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": "👗 レディースファッション"
         },
         {
@@ -73,6 +85,8 @@
           "blurred": 230,
           "photos": 104,
           "photo_band_masked": 104,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": "👕 メンズファッション"
         },
         {
@@ -82,6 +96,8 @@
           "blurred": 230,
           "photos": 116,
           "photo_band_masked": 116,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": "👟 靴・スニーカー"
         },
         {
@@ -91,6 +107,8 @@
           "blurred": 230,
           "photos": 126,
           "photo_band_masked": 126,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": "💄 コスメ"
         },
         {
@@ -100,6 +118,8 @@
           "blurred": 611,
           "photos": 30,
           "photo_band_masked": 30,
+          "photo_ocr": "unavailable",
+          "photo_full_blur": 0,
           "label": ""
         }
       ]
@@ -113,42 +133,74 @@
           "blurred": 0,
           "photos": 0,
           "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
           "file": "seller/2.jpg",
-          "id": "seller-included",
-          "items": 1,
+          "id": "seller-real-results",
+          "items": 4,
           "blurred": 0,
           "photos": 0,
           "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
           "file": "seller/3.jpg",
+          "id": "seller-real-search",
+          "items": 4,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/4.jpg",
+          "id": "seller-real-buzz",
+          "items": 4,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/5.jpg",
           "id": "seller-demand",
           "items": 1,
           "blurred": 0,
           "photos": 0,
           "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
-          "file": "seller/4.jpg",
+          "file": "seller/6.jpg",
           "id": "seller-pricing",
           "items": 1,
           "blurred": 0,
           "photos": 0,
           "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
           "label": ""
         },
         {
-          "file": "seller/5.jpg",
+          "file": "seller/7.jpg",
           "id": "seller-form",
           "items": 1,
           "blurred": 0,
           "photos": 0,
           "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
           "label": ""
         }
       ]
