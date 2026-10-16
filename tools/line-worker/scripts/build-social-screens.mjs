@@ -191,6 +191,8 @@ export async function capture(page, slide) {
     await page.fill('#query', words);
     if (slide.search) await page.click('#submitButton');
   }
+  // ready: 撮る範囲とは別に「中身がそろった」目印を待つ（検索結果は枠が先に出て、商品カードが後から入る）
+  if (slide.ready) await page.waitForSelector(slide.ready, { state: 'visible', timeout: 90_000 });
   await page.waitForSelector(slide.selector, { state: 'visible', timeout: slide.search ? 90_000 : 45_000 });
   await page.waitForTimeout(slide.search ? 4000 : 1500);
   const found = await page.$$eval(slide.selector, (nodes) => nodes.filter((n) => n.getBoundingClientRect().height > 0).length);

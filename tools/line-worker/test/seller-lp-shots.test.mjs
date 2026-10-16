@@ -15,3 +15,22 @@ test('出品者向けページの実画像: 4 画面とも商品の価格をぼ�
   // 検索結果の商品写真にも下帯ぼかしを掛ける
   assert.ok(PHOTO_SELECTORS.includes('.product-image-gallery'));
 });
+
+test('出品者向けページ: 第一画面と「実際の画面」に本番の実画面を載せ、撮れていない画像は枠ごと外す', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { applyPromoPlansToPublicPage } = await import('../src/seller-promo-public-pages.mjs');
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  for (const page of [html, applyPromoPlansToPublicPage('/for-sellers', html)]) {
+    assert.match(page, /<figure class="seller-hero-real">[\s\S]*?\/for-sellers-shots\/results\.jpg/u, '第一画面に検索結果の実画面');
+    assert.doesNotMatch(page, /seller-pr-visual/u, '灰色の箱の図は使わない');
+    for (const shot of LP_SHOTS) assert.ok(page.includes(`/for-sellers-shots/${shot.id}.jpg`), shot.id);
+    // 画像の説明（alt）は空にしない。説明文に他店の価格・割引率を書かない
+    const section = page.match(/<section class="real-screens"[\s\S]*?<\/section>/u)?.[0] || '';
+    assert.ok(section);
+    assert.doesNotMatch(section, /alt=""/u);
+    assert.doesNotMatch(section.replace(/<[^>]+>/gu, ''), /\d[\d,]*\s?円|\d+\s?[%％]|最安|必ず|保証します/u);
+    assert.match(page, /for-sellers-real\.css/u);
+  }
+  const js = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
+  assert.match(js, /\.real-screen img, \.seller-hero-real img/u);
+});

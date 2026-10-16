@@ -238,6 +238,18 @@ form?.addEventListener('submit', async event => {
   }
 });
 
+// 2026-10-16: 出品者向けページの実画面（/for-sellers-shots/）が撮れていない・読めないときは、空の枠を出さずに枠ごと外す。
+function dropBrokenRealScreen(img) {
+  const figure = img.closest('.real-screen, .seller-hero-real');
+  if (figure) figure.remove();
+}
+if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+  document.querySelectorAll('.real-screen img, .seller-hero-real img').forEach((img) => {
+    if (img.complete && img.naturalWidth === 0) dropBrokenRealScreen(img);
+    else img.addEventListener('error', () => dropBrokenRealScreen(img), { once: true });
+  });
+}
+
 // 2026-09-19 大隆さん指示 §8: LP に「今、HOSHILUで探されています」を実データで出す。
 // 架空件数は出さない。公開できる件数（同じ条件を5人以上）に達した需要だけ、検索文ではなく正規化した条件で表示する。
 (async () => {

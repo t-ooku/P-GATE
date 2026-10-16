@@ -15,11 +15,13 @@ export const SAMPLE_QUERY = '玄関に置ける スリムな傘立て';
 
 export const LP_SHOTS = Object.freeze([
   // 1. 名前が分からなくても、言葉で探せる（入力した状態のトップ）
-  { id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true, typeOnly: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 760 },
+  { id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true, typeOnly: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 700 },
   // 2. 検索結果（モール横断の商品カード。価格はぼかす）。条件に合う検索では、この一覧の一番上に「PR」枠が入る
-  { id: 'results', url: '/', selector: '#resultCards .product-card', min: 1, count: 2, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 900 },
+  // 10/16 初回は商品カード 1 枚だけを切り出して上下が欠けたため、商品カードがそろってから結果の枠ごと上から撮る
+  { id: 'results', url: '/', selector: '#resultsSection', ready: '#resultCards .product-card', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 1000 },
   // 3. ホシルバズ（ジャンル別のいま売れている物）
-  { id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 2, count: 1, maxHeight: 760 },
+  // 棚 2 つ分を縦長に撮る（LP のスマホ枠 9:16 に収まる長さ）
+  { id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 2, count: 2, maxHeight: 900 },
   // 4. 買い物ノートの値下がり（毎日の価格記録）
   { id: 'drops', url: '/media/price-drops', selector: '.media-drop:has(.media-drop-figure img)', min: 2, count: 2, maxHeight: 900 }
 ]);

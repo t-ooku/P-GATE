@@ -1,0 +1,43 @@
+/* 2026-10-16 大隆さん指示「セラー募集のLPは文字ばかりで実画像がないから全然だめ。人は視認性で判断する。
+   ホシルの訴求ポイントや推し機能を、実際の画像を掲載して。表示できない部分はぼかせばよい」。
+   HOSHILU 本番の画面写真（/for-sellers-shots/、scripts/build-seller-lp-shots.mjs が毎週月曜に撮る）をスマホの枠に入れて見せる。 */
+/* instagram-look.css が影（box-shadow）を全部消すので、スマホの縁は border で描く */
+.real-phone{position:relative;overflow:hidden;border:8px solid #14142a;border-radius:34px;background:#fff}
+.real-phone img{display:block;width:100%;height:auto}
+.real-pr-pin{position:absolute;z-index:2;top:12px;left:12px;right:12px;padding:9px 12px;border-radius:14px;background:linear-gradient(110deg,#ff4f9a,#7357ff);color:#fff;font-size:12px;font-weight:800;line-height:1.5;text-align:center}
+.real-pr-pin b{display:inline-block;margin:0 2px;padding:0 6px;border-radius:6px;background:#fff;color:#c2185b;font-weight:900}
+
+/* 第一画面（ヒーロー）の実画面。以前の図（.seller-pr-visual）の代わり */
+.seller-hero-real{position:relative;z-index:1;justify-self:center;width:min(340px,100%);margin:0}
+.seller-hero-real .real-phone{max-height:600px}
+.seller-hero-real figcaption{margin-top:16px;color:#5a5576;font-size:12px;line-height:1.6;text-align:center}
+
+/* 「HOSHILUの実際の画面」 */
+.real-screens{margin:0 0 72px}
+.real-screens h2 span{color:#5134c5}
+.real-screens .section-lead{max-width:760px}
+.real-screens-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px;margin-top:28px}
+.real-screen{display:flex;flex-direction:column;gap:16px;min-width:0;margin:0}
+.real-screen .real-phone{aspect-ratio:9/16}
+/* 画面の上から見せる（左右は切らない。長い画面は下だけ枠で隠れる） */
+.real-screen .real-phone img{width:100%;height:auto}
+.real-screen figcaption{display:grid;gap:6px;color:#3d3b55;font-size:13px;line-height:1.75}
+.real-screen figcaption strong{color:#221759;font-size:15px;line-height:1.5}
+.real-screen figcaption b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ff4f9a,#7357ff);color:#fff;font-size:13px}
+.real-screens-note{margin-top:18px;color:#5a5576;font-size:12px}
+.real-swipe-hint{display:none}
+
+@media(max-width:900px){
+  /* スマホは見出しのすぐ下に実画面を出す（文字より先に画面が目に入るように） */
+  .seller-showcase-hero .seller-hero-copy{display:contents}
+  .seller-showcase-hero .eyebrow{order:1;justify-self:start}
+  .seller-showcase-hero h1{order:2}
+  .seller-showcase-hero .seller-hero-real{order:3;width:min(300px,80%);margin:18px auto 10px}
+  .seller-showcase-hero .lead{order:4}
+  .seller-showcase-hero .hero-price{order:5}
+  .seller-showcase-hero .hero-actions{order:6}
+  .seller-hero-real .real-phone{max-height:430px}
+  .real-screens-track{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:72%;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px 10px 18px;margin:20px -10px 0;-webkit-overflow-scrolling:touch}
+  .real-screen{scroll-snap-align:start}
+  .real-swipe-hint{display:block;margin-top:6px;color:#7357ff;font-size:12px;font-weight:700}
+}
