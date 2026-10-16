@@ -20,7 +20,9 @@ export const LP_SHOTS = Object.freeze([
   // 2. 検索結果（モール横断の商品カード。価格はぼかす）。条件に合う検索では、この一覧の一番上に「PR」枠が入る
   // 10/16 初回は商品カード 1 枚だけを切り出して上下が欠けたため、商品カードがそろってから結果の枠ごと上から撮る
   // 10/16 2 回目は 90 秒以内に商品カードが出ず失敗（検索の混み具合で遅れる）。一覧（#resultCards）の上から撮り、失敗したら 1 回だけ撮り直す
-  { id: 'results', url: '/', selector: '#resultCards', ready: '#resultCards .product-card', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 1000, retries: 1 },
+  // 10/16 3 回目の記録（#649）: 結果は出ていた（result-row・商品カードあり）。最初に見つかる .product-card が畳まれた行の中で見えず待ち続けていた。
+  // 目印を「結果の行」（#resultCards > .result-row）にする
+  { id: 'results', url: '/', selector: '#resultCards', ready: '#resultCards > .result-row', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 1000, retries: 1 },
   // 3. ホシルバズ（ジャンル別のいま売れている物）
   // 棚 2 つ分を縦長に撮る（LP のスマホ枠 9:16 に収まる長さ）
   { id: 'buzz', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 2, count: 2, maxHeight: 900 },
