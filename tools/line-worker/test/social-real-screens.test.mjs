@@ -4,7 +4,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow } from '../src/social-screens.mjs';
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
-import { SCREEN_SETS } from '../scripts/build-social-screens.mjs';
+import { readFileSync } from 'node:fs';
+import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands } from '../scripts/build-social-screens.mjs';
 
 // 2026-10-15 大隆さん指示「今後の投稿も、実画像を踏まえて投稿して」
 function d1(database) {
@@ -126,4 +127,38 @@ test('在庫監視（SLA）は実画像に差し替えたカルーセル行も�
   };
   assert.equal(isEligibleSocialAiActressRow(row, { asOf: `${date}T09:30:00.000Z` }), true);
   assert.equal(isEligibleSocialAiActressRow({ ...row, queue_media_urls: JSON.stringify(screenMediaUrls(date, 'other')) }, { asOf: `${date}T09:30:00.000Z` }), false);
+});
+
+test('商品写真に焼き込まれた価格・割引率（例: 写真右下の「クーポン利用で10%OFF」）も、写真の下帯ぼかしで隠す', () => {
+  // 2026-10-16 Codex 点検: screens/20261015/notes/2.jpg の写真内「10%OFF」が DOM のぼかしでは隠れなかった
+  const media = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
+  const buzz = readFileSync(new URL('../public/buzz-home.mjs', import.meta.url), 'utf8');
+  for (const selector of PHOTO_SELECTORS) {
+    const name = selector.replace(/^\./u, '');
+    assert.ok(media.includes(`class="${name}"`) || buzz.includes(`'${name}'`), `撮影対象の写真枠 ${selector} が本番の画面に存在する`);
+  }
+  for (const name of ['media-drop-figure', 'media-tile-figure', 'buzz-home-thumb']) assert.ok(PHOTO_SELECTORS.includes(`.${name}`), name);
+  // 写真の下側 30% を必ず覆う（販促帯の位置）。写真全体は消さない
+  assert.ok(PHOTO_BAND_RATIO >= 0.25 && PHOTO_BAND_RATIO <= 0.4, String(PHOTO_BAND_RATIO));
+  const band = BLUR_CSS.match(/\.hoshilu-photo-band\{([^}]*)\}/u)?.[1] || '';
+  assert.match(band, /clip-path:inset\((\d+)% 0 0 0\)/u);
+  assert.equal(Number(band.match(/clip-path:inset\((\d+)%/u)[1]), Math.round((1 - PHOTO_BAND_RATIO) * 100));
+  // 端でぼかしが透けて元の文字が見えないよう、下地は不透明
+  assert.match(band, /background:#fff!important/u);
+  const copy = BLUR_CSS.match(/\.hoshilu-photo-band img\{([^}]*)\}/u)?.[1] || '';
+  assert.match(copy, /filter:blur\((\d+)px\)/u);
+  assert.ok(Number(copy.match(/blur\((\d+)px\)/u)[1]) >= 10, 'ぼかしが弱すぎると数字が読める');
+  assert.match(copy, /transform:scale\(1\.[1-9]/u, '複製を拡大して端の透けを外に出す');
+  // 撮影ページで動く関数は外部の変数に頼らない（page.evaluate で直列化される）
+  assert.equal(typeof applyPhotoBands, 'function');
+  assert.doesNotMatch(String(applyPhotoBands), /PHOTO_|BLUR_CSS|PRICE_/u);
+  // ユーザー向け（写真が写る）セットは全部ぼかし対象。セラー向け（HOSHILU 自身の料金）はぼかさない
+  assert.ok(SCREEN_SETS.seller.every((slide) => slide.mask === false));
+});
+
+test('写真の下帯ぼかしが 1 枚でも効いていなければ、そのセットは出さない（撮影スクリプトの止め）', () => {
+  const source = readFileSync(new URL('../scripts/build-social-screens.mjs', import.meta.url), 'utf8');
+  assert.match(source, /PHOTO_PRICE_NOT_MASKED/u);
+  assert.equal((source.match(/photo\.masked < photo\.photos\) throw/gu) || []).length, 2, '撮影前と撮影直前の 2 回数える');
+  assert.match(source, /photo_band_masked/u, 'manifest に写真の枚数と下帯ぼかし済みの枚数を残す');
 });

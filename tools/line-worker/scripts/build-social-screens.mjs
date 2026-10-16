@@ -5,7 +5,8 @@
 //   notes  … 買い物ノート（表紙・値下がり・ランキング×価格）＋ホシルバズ＋検索（ユーザー向け）
 //   buzz   … ホシルバズのジャンル棚 4 つ＋検索（ユーザー向け）
 //   seller … 出品者向けページ（/for-sellers）の第一画面・できること・需要・料金・相談（セラー向け）
-// - 商品の金額・値下がり率・差額は撮影前にぼかす（SNS に価格を載せない）。商品写真はそのまま（大隆さん判断）。
+// - 商品の金額・値下がり率・差額は撮影前にぼかす（SNS に価格を載せない）。商品写真は見せるが、写真に焼き込まれた販促文字
+//   （価格・割引率）が入りやすい下側の帯だけぼかす（2026-10-16、PHOTO_BAND_RATIO）。
 //   出品者向けページは HOSHILU 自身の料金（1,980円）なので、ぼかさない（従来のセラー向け画像と同じ）。
 // - 撮れなかった・中身が空のセットは出力しない（壊れた画像を投稿しない）。3 セットとも撮れなければ失敗。
 // - 出力: <出力フォルダ>/<セット>/<n>.jpg と <出力フォルダ>/manifest.json（撮れたセットだけ載る）。
@@ -25,8 +26,21 @@ export const PRICE_SELECTORS = Object.freeze([
 ]);
 // 商品名（店が付けた題名）にも金額・割引率が入る（例「79%OFF」「830円〜」「クーポンで1000円OFF」）。文字ごとにぼかす。
 export const PRICE_TEXT = /(?:[¥￥]\s?\d[\d,]*|\d[\d,]*\s?円|\d+(?:\.\d+)?\s?[%％](?:\s?(?:OFF|off|オフ))?|\d{1,3}(?:,\d{3})+)/gu;
-const BLUR_CSS = `${PRICE_SELECTORS.join(',')},.hoshilu-price-mask{filter:blur(9px)!important;user-select:none!important}
-.hoshilu-price-mask{display:inline-block}`;
+// 商品写真（店の画像）の中にも価格・割引率が焼き込まれている（2026-10-16 Codex 点検: notes/2.jpg の写真右下「クーポン利用で10%OFF」）。
+// DOM の文字ではないので上のぼかしは届かない。楽天・Yahoo! の商品画像の販促文字は下側の帯に入ることが多いため、
+// 写真の下側 PHOTO_BAND_RATIO を必ずぼかす（写真全体は消さない）。同じ写真の複製に blur を掛け、下帯だけ切り抜いて重ねる
+// （backdrop-filter は撮影ブラウザでほとんど効かず、文字が読めたため不採用）。外部 OCR・課金なし。
+// 限界: 上側や中央に焼き込まれた文字はこの帯では隠れない（端末内 OCR も試したが、この代表例を読めず採用しなかった）。
+// 「未検出＝漏れなし」とはしないので、公開前の目視確認は残す。
+export const PHOTO_SELECTORS = Object.freeze(['.media-drop-figure', '.media-tile-figure', '.buzz-home-thumb']);
+export const PHOTO_BAND_RATIO = 0.3;
+const PHOTO_RANK_SELECTORS = Object.freeze(['.media-drop-rank', '.media-tile-rank', '.buzz-home-rank']);
+export const BLUR_CSS = `${PRICE_SELECTORS.join(',')},.hoshilu-price-mask{filter:blur(9px)!important;user-select:none!important}
+.hoshilu-price-mask{display:inline-block}
+${PHOTO_SELECTORS.join(',')}{position:relative!important}
+.hoshilu-photo-band{position:absolute!important;inset:0!important;margin:0!important;overflow:hidden!important;background:#fff!important;clip-path:inset(${Math.round((1 - PHOTO_BAND_RATIO) * 100)}% 0 0 0)!important;z-index:1!important;pointer-events:none!important}
+.hoshilu-photo-band img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;filter:blur(12px) saturate(.7)!important;transform:scale(1.3)!important;transform-origin:50% 85%!important}
+${PHOTO_RANK_SELECTORS.join(',')}{z-index:2!important}`;
 const LAYOUT_CSS = `.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"],.seller-sticky-cta{display:none!important}
 .topbar,.seo-header{position:static!important}
 html{scroll-behavior:auto!important}`;
@@ -115,6 +129,50 @@ export const SCREEN_SETS = Object.freeze({
 // 互換: 10/15 の最初の版（notes 1 セット）
 export const SLIDES = SCREEN_SETS.notes;
 
+// 撮影ページの中で動く（page.evaluate に渡す）。写る商品写真ごとに、ぼかした複製を下帯だけ重ね、効いている枚数を返す。
+export function applyPhotoBands(selectors) {
+  const visible = [...document.querySelectorAll(selectors.join(','))].filter((n) => {
+    const r = n.getBoundingClientRect();
+    const source = n.querySelector('img:not(.hoshilu-photo-band img)');
+    // 読み込めなかった写真（何も写っていない）は数えない
+    return r.width > 0 && r.height > 0 && source && source.naturalWidth > 0;
+  });
+  for (const figure of visible) {
+    if (figure.querySelector(':scope > .hoshilu-photo-band')) continue;
+    const source = figure.querySelector('img:not(.hoshilu-photo-band img)');
+    // 不透明の下地＋ぼかした複製。写真の端でぼかしが透けて元の文字が見えないように、複製は拡大して端を外に出す
+    const band = document.createElement('span');
+    band.className = 'hoshilu-photo-band';
+    band.setAttribute('aria-hidden', 'true');
+    const copy = source.cloneNode(false);
+    copy.removeAttribute('loading');
+    copy.removeAttribute('width');
+    copy.removeAttribute('height');
+    copy.removeAttribute('class');
+    copy.alt = '';
+    copy.style.objectFit = getComputedStyle(source).objectFit;
+    band.append(copy);
+    figure.append(band);
+  }
+  const masked = visible.filter((figure) => {
+    const band = figure.querySelector(':scope > .hoshilu-photo-band');
+    const copy = band?.querySelector('img');
+    if (!copy) return false;
+    const bandStyle = getComputedStyle(band);
+    return copy.complete && copy.naturalWidth > 0 && /blur/u.test(getComputedStyle(copy).filter) && /inset/u.test(bandStyle.clipPath)
+      && bandStyle.backgroundColor === 'rgb(255, 255, 255)' && band.getBoundingClientRect().height >= figure.getBoundingClientRect().height * 0.9;
+  });
+  return { photos: visible.length, masked: masked.length };
+}
+
+async function maskPhotos(page) {
+  await page.evaluate(applyPhotoBands, PHOTO_SELECTORS);
+  // 複製の写真が描かれるまで待ってから数え直す（2 回目は複製を増やさない）
+  await page.waitForFunction(() => [...document.querySelectorAll('.hoshilu-photo-band img')].every((img) => img.complete), null, { timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  return page.evaluate(applyPhotoBands, PHOTO_SELECTORS);
+}
+
 async function capture(page, slide) {
   // トップは常時通信があり networkidle にならない（10/15 CI で 60 秒超過）。load 後は waitForSelector で待つ。
   await page.goto(`${BASE}${slide.url}`, { waitUntil: 'load', timeout: 60_000 });
@@ -173,6 +231,9 @@ async function capture(page, slide) {
       return count;
     }, PRICE_TEXT.source);
   }
+  // 写る商品写真がすべて下帯ぼかしになっているかを数える（1 枚でも外れていれば、そのセットは出さない）
+  let photo = slide.mask === false ? { photos: 0, masked: 0 } : await maskPhotos(page);
+  if (photo.masked < photo.photos) throw new Error(`PHOTO_PRICE_NOT_MASKED:${slide.id}:${photo.masked}/${photo.photos}`);
   const blurred = masked + (slide.mask === false ? 0
     : await page.$$eval(PRICE_SELECTORS.join(','), (nodes) => nodes.filter((n) => getComputedStyle(n).filter.includes('blur')).length));
   const box = await page.evaluate(({ selector, count, extend, section, fromTop, nth, labelFrom }) => {
@@ -190,9 +251,14 @@ async function capture(page, slide) {
     const bottom = section ? top + window.innerHeight * 1.15 : last.getBoundingClientRect().bottom + window.scrollY;
     return { top: Math.max(0, Math.floor(top - 12)), height: Math.ceil(bottom - top + 24), label };
   }, { selector: slide.selector, count: slide.count, extend: slide.extend, section: slide.section, fromTop: slide.fromTop, nth, labelFrom: slide.labelFrom });
+  // 撮る位置へスクロールした後に読み込まれた写真にも下帯を掛け、撮影直前の状態で数え直す
+  if (slide.mask !== false) {
+    photo = await maskPhotos(page);
+    if (photo.masked < photo.photos) throw new Error(`PHOTO_PRICE_NOT_MASKED:${slide.id}:${photo.masked}/${photo.photos}`);
+  }
   const height = Math.min(box.height, 1100);
   const shot = await page.screenshot({ type: 'png', clip: { x: 0, y: box.top, width: 390, height }, fullPage: true });
-  return { shot, blurred, found, label: box.label };
+  return { shot, blurred, found, label: box.label, photos: photo.photos, photoMasked: photo.masked };
 }
 
 function slideHtml(slide, index, total, shotBase64, label = '') {
@@ -226,7 +292,7 @@ async function buildSet(browser, composer, page, setId, slides) {
   const shots = [];
   for (const slide of slides) {
     const result = await capture(page, slide);
-    console.log(`captured ${setId}/${slide.id}: items=${result.found} blurred=${result.blurred} label=${result.label}`);
+    console.log(`captured ${setId}/${slide.id}: items=${result.found} blurred=${result.blurred} photos_masked=${result.photoMasked}/${result.photos} label=${result.label}`);
     shots.push(result);
   }
   // 商品の価格が出る画面（値下がり・ランキング）で、ぼかしが1つも効いていなければ止める
@@ -239,7 +305,7 @@ async function buildSet(browser, composer, page, setId, slides) {
   for (const [index, slide] of slides.entries()) {
     await composer.setContent(slideHtml(slide, index, slides.length, shots[index].shot.toString('base64'), shots[index].label), { waitUntil: 'load' });
     await writeFile(path.join(dir, `${index + 1}.jpg`), await composer.screenshot({ type: 'jpeg', quality: 88, clip: { x: 0, y: 0, width: 1080, height: 1350 } }));
-    files.push({ file: `${setId}/${index + 1}.jpg`, id: slide.id, items: shots[index].found, blurred: shots[index].blurred, label: shots[index].label });
+    files.push({ file: `${setId}/${index + 1}.jpg`, id: slide.id, items: shots[index].found, blurred: shots[index].blurred, photos: shots[index].photos, photo_band_masked: shots[index].photoMasked, label: shots[index].label });
   }
   return files;
 }
