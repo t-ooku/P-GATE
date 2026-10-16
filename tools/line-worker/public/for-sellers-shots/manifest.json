@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-16T12:08:57.280Z",
+  "captured_at": "2026-10-16T15:04:40.539Z",
   "query": "玄関に置ける スリムな傘立て",
   "files": [
     {
@@ -9,19 +9,19 @@
       "width": 780,
       "height": 1400,
       "items": 1,
-      "blurred": 611,
+      "blurred": 604,
       "photos": 30,
       "photo_masked": 30
     },
     {
-      "file": "results.jpg",
-      "id": "results",
+      "file": "keep.jpg",
+      "id": "keep",
       "width": 780,
-      "height": 2000,
+      "height": 1520,
       "items": 1,
-      "blurred": 712,
-      "photos": 31,
-      "photo_masked": 31
+      "blurred": 700,
+      "photos": 30,
+      "photo_masked": 30
     },
     {
       "file": "buzz.jpg",
@@ -29,9 +29,9 @@
       "width": 780,
       "height": 1524,
       "items": 22,
-      "blurred": 611,
-      "photos": 93,
-      "photo_masked": 93
+      "blurred": 604,
+      "photos": 89,
+      "photo_masked": 89
     },
     {
       "file": "drops.jpg",
@@ -44,5 +44,7 @@
       "photo_masked": 24
     }
   ],
-  "failures": {}
+  "failures": {
+    "listing": "page.waitForFunction: Timeout 90000ms exceeded. / seen: resultsSection=1 cards=7 product=1 pr=0 keep=1 msg= status= classes=|result-row result-row-confirmed|refinement-card marketplace-quick-strip|continuous-search-card"
+  }
 }
