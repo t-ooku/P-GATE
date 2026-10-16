@@ -286,7 +286,31 @@ function collectMarketplaceImpressions(executionId) {
   for (const delay of MARKETPLACE_IMPRESSION_DELAYS_MS) setTimeout(sweep, delay);
 }
 
-send('landing_view');
+// 2026-10-16 実測（D1、QA 除く）: Threads からの着地 57 件のうち 52 件は投稿の 40〜90 秒後に来ていて、
+// どれも着地 1 件だけで終わり、自動検索（1.5 秒待つ）にも届いていなかった。名前を名乗らない
+// リンク先取得が、ブラウザと同じ UA で数秒だけページを開いている。人の訪問として数えないよう、
+// 画面に 1.5 秒出ていたか、人が触った（スクロール・タップ・キー入力）時点で 1 回だけ数える。
+const LANDING_VIEW_VISIBLE_MS = 1500;
+(() => {
+  let sent = false;
+  let timer = 0;
+  const events = ['pointerdown', 'keydown', 'touchstart', 'scroll'];
+  const fire = () => {
+    if (sent) return;
+    sent = true;
+    clearTimeout(timer);
+    document.removeEventListener('visibilitychange', arm);
+    for (const type of events) removeEventListener(type, fire, true);
+    send('landing_view');
+  };
+  function arm() {
+    clearTimeout(timer);
+    if (document.visibilityState === 'visible') timer = setTimeout(fire, LANDING_VIEW_VISIBLE_MS);
+  }
+  document.addEventListener('visibilitychange', arm);
+  for (const type of events) addEventListener(type, fire, { capture: true, passive: true });
+  arm();
+})();
 if (location.pathname === '/login.html') send('registration_login_viewed');
 // 2026-09-21: shop_viewed はショップページの HTML 配信時にサーバーが記録しているため、
 // visitor_id / session_id が常に空で、実際の閲覧者と JS を実行しないクローラを構造的に
