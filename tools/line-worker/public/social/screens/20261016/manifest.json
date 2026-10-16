@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-16T10:43:33.646Z",
+  "captured_at": "2026-10-16T10:50:54.379Z",
   "size": [
     1080,
     1350
@@ -40,8 +40,8 @@
           "id": "buzz",
           "items": 22,
           "blurred": 611,
-          "photos": 93,
-          "photo_band_masked": 93,
+          "photos": 95,
+          "photo_band_masked": 95,
           "label": ""
         },
         {
