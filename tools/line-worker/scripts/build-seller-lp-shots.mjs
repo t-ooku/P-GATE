@@ -22,6 +22,7 @@ export const LP_SHOTS = Object.freeze([
   // 10/16 2 回目は 90 秒以内に商品カードが出ず失敗（検索の混み具合で遅れる）。一覧（#resultCards）の上から撮り、失敗したら 1 回だけ撮り直す
   // 10/16 3 回目の記録（#649）: 結果は出ていた（result-row・商品カードあり）。最初に見つかる .product-card が畳まれた行の中で見えず待ち続けていた。
   // 目印を「結果の行」（#resultCards > .result-row）にする。#resultCards 自体は箱を持たない（見える判定にならない）ので、撮る範囲は #resultsSection
+  // 目印は「どれか 1 つ見えれば進む」（build-social-screens の capture、#653）
   { id: 'results', url: '/', selector: '#resultsSection', ready: '#resultCards > .result-row', min: 1, search: SAMPLE_QUERY, hide: '#searchSuggestList', maxHeight: 1000, retries: 1 },
   // 3. ホシルバズ（ジャンル別のいま売れている物）
   // 棚 2 つ分を縦長に撮る（LP のスマホ枠 9:16 に収まる長さ）
