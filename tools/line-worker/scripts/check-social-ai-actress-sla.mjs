@@ -209,7 +209,7 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
       // 「在庫不足」と誤判定していた。版フォルダを1段だけ許す。
       // 2026-10-15: 当日の本番画面の実画像（/social/screens/<YYYYMMDD>/<notes|buzz|seller>/n.jpg）に差し替えた行も数える。
       && urls.every((url) => validHttpsUrl(url) && (/^\/social\/carousel\/(?:[a-z0-9-]+\/)?[a-z0-9-]+\/\d+\.jpg$/u.test(new URL(url).pathname)
-        || /^\/social\/screens\/\d{8}\/(?:notes|buzz|seller)\/\d+\.jpg$/u.test(new URL(url).pathname)));
+        || /^\/social\/screens\/\d{8}\/(?:notes|buzz|seller|drops)\/\d+\.jpg$/u.test(new URL(url).pathname)));
   }
   if (rowDate >= POLICY_V3_START && !runway) return false;
   if (runway) {
@@ -333,6 +333,7 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
   ]));
   const duplicateKeys = [];
   const futureMissing = [];
+  const futureUnready = [];
   const futurePairMismatch = [];
   let futureReady = 0;
 
@@ -346,7 +347,18 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
     const byPlatform = { X: xRows, INSTAGRAM: instagramRows };
     for (const [platform, eligible] of required.map((name) => [name, byPlatform[name]])) {
       futureReady += eligible.length === 1 ? 1 : 0;
-      if (eligible.length === 0) futureMissing.push(`${date}:${platform}`);
+      if (eligible.length === 0) {
+        futureMissing.push(`${date}:${platform}`);
+        // Explain the existing SELECT result without another inventory query,
+        // captions, internal IDs, error payloads or media URLs in the log.
+        const matching = rows.filter(row => effectiveJstDate(row) === date
+          && String(row.platform || '').toUpperCase() === platform);
+        const statuses = [...new Set(matching.map(row => {
+          const status = String(row.status || '').toUpperCase();
+          return ['APPROVED','PUBLISHING','PUBLISHED','CANCELLED','FAILED','DRAFT','REVIEW_REQUIRED'].includes(status) ? status : 'OTHER';
+        }))].sort();
+        futureUnready.push({ date, platform, rows: matching.length, statuses });
+      }
       if (eligible.length > 1) duplicateKeys.push(`${date}:${platform}`);
     }
     if (pairRequired && xRows.length === 1 && instagramRows.length === 1
@@ -447,6 +459,7 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
         .filter((date) => expectedFormatForDate(date) === 'CAROUSEL').length * required.length,
       expected_today: todayFormat || 'NONE',
       ready: futureReady,
+      unready: futureUnready,
       status: futurePassed ? 'PASS' : 'FAIL'
     },
     violations
@@ -572,6 +585,7 @@ function summaryFor(result) {
     `20:30 publication gate: ${result.publication_required ? result.today.publication : 'NOT_DUE'}`,
     ...platformLines,
     `Future inventory: ${result.future.ready}/${result.future.required} ready (${result.future.from} through ${result.future.to})`,
+    ...(result.future.unready || []).map(slot => `Future unready: ${slot.date}:${slot.platform} rows=${slot.rows} statuses=${slot.statuses.join(',') || 'NONE'}`),
     '',
     'Violations:',
     ...violations,

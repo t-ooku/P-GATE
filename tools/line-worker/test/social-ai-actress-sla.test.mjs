@@ -70,6 +70,26 @@ function runwayRow(date, platform, status = 'APPROVED') {
     runway_ai_disclosure_confirmed: 1
   };
 }
+
+test('approved real price-drop screens qualify while invalid sets and cancelled rows still fail', () => {
+  const rows = futureCarouselRows('2026-10-18').filter(r => r.platform === 'INSTAGRAM');
+  const drop = rows.find(r => r.jst_publish_date === '2026-10-19');
+  drop.content_id = 'screens-drops';
+  drop.queue_media_urls = JSON.stringify([1,2,3].map(n => `https://hoshilu.app/social/screens/20261019/drops/${n}.jpg`));
+  const evaluate = () => evaluateSocialAiActressSla({ rows, platforms:['INSTAGRAM'], now:'2026-10-17T23:00:00.000Z' });
+  assert.equal(evaluate().status, 'PASS');
+  drop.queue_media_urls = drop.queue_media_urls.replaceAll('/drops/', '/unknown/');
+  assert.equal(evaluate().status, 'FAIL');
+  drop.queue_media_urls = drop.queue_media_urls.replaceAll('/unknown/', '/drops/');
+  drop.status = 'CANCELLED';
+  drop.caption = 'never log this text';
+  const result = evaluate();
+  assert.equal(result.status, 'FAIL', 'cancellation is not publication or ready inventory');
+  assert.deepEqual(result.future.unready, [{date:'2026-10-19',platform:'INSTAGRAM',rows:1,statuses:['CANCELLED']}]);
+  assert.doesNotMatch(JSON.stringify(result.future), /never log|hoshilu\.app|post_id|caption/);
+  rows.splice(rows.indexOf(drop), 1);
+  assert.deepEqual(evaluate().future.unready, [{date:'2026-10-19',platform:'INSTAGRAM',rows:0,statuses:[]}]);
+});
 function runwayRows(date, status = 'APPROVED') {
   return ['X', 'INSTAGRAM'].map((platform) => runwayRow(date, platform, status));
 }
