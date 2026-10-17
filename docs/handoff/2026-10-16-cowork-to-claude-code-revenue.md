@@ -80,3 +80,15 @@
     Instagram 10/18（日）20:00・10/20（火）12:30（7 枚カルーセル）、Threads 10/17〜10/23 毎日 19:00（画像 1 枚、1 日 1 つの推し機能）。
     画像は `/social/screens/20261016/seller/1〜7.jpg`（10/31 の自動整理まで残る）。リンクは utm_campaign=hoshilu_seller_lp_real。
 - **案内メール**: 大隆さん「君がgmail送って」。営業メールは平日 9〜18 時の決まりのため、**10/19（月）9:05 JST に Cowork が送信**（フォロー 6・新規 9）。送信後に seller_outreach_contacts へ GMAIL_MANUAL で記録する。
+
+---
+
+## Claude Code の対応結果（2026-10-17 朝の点検）
+| 項目 | 対応 | PR |
+|---|---|---|
+| §1 申込ボタンで入力欄が出ない | 申込ボタン（`href="#businessForm"` のもの全部）で最初の入力欄（店舗名・会社名）を画面中央に出す。固定ヘッダーに隠れないよう `scroll-margin-top`。「相談時のお支払い登録は不要です」は文言を変えずに送信ボタンの上へ移した。390×664 で、押した後の入力欄は表示域の 311px の位置 | #662 |
+| §2 AI販促担当の相談が区別できない | 料金欄の Light／Standard のボタンからは隠し欄 `plan_interest` に `PROMO_LIGHT`／`PROMO_STANDARD` が入り、フォームの上に「AI販促担当 Light の相談として送ります」と出る。相談一覧の `plan_interest` で区別できる（列は TEXT のまま、migration なし） | #662 |
+| §3 セラー向けの来訪に自動取得が混ざる | `seller_landing_view` を #644 と同じ基準に（画面に 1.5 秒出ていたか、人が触った時に 1 回）。`seller_cta_clicked` はクリック、`seller_form_started` は人の入力だけなので、もともと混ざらない。**10/17 以降の `/for-sellers` 閲覧は人の数に近い値**（それ以前とは比べない）。あわせて、ページの組み立てで起きる scroll では数えないよう、#644 の基準も wheel に替えた | #662 |
+| Threads を半分に・買い物ノートの実データへ | 10/17 から: 9:30・12:30 は出さない。20:30 は買い物ノートへ（campaign `hoshilu-threads-media-v1`）。当日 17:00 以降はその時点の価格記録で「ここ2週間に値下がりした商品 N 件／下げ幅がいちばん大きい商品の最高値→今の価格（-X%、M/D確認）」を入れる（商品名の売り文句は外す）。22:30 のセラー向けは 1 日おき。止めた枠の未投稿の行は `CANCELLED`（`last_error=THREADS_HALVED_20261017`）。1 日 4 本 → 平均 1.5 本。`hoshilu-seller-lp-real-v1`（〜10/23）は触っていない | #663 |
+
+週次記録（月曜）では、Threads の数字を `hoshilu-threads-media-v1`（買い物ノート）と `hoshilu-threads-seller-v1`（セラー向け）に分けて書いてください。
