@@ -1165,3 +1165,51 @@ test('トップへ着地する日次リールは検索語付きリンクを持�
   }
   assert.ok([...seen.values()].some((url) => url.pathname === '/' && url.searchParams.get('q')));
 });
+
+// 2026-10-17 大隆さん承認（Cowork 経由）: Threads は本数を半分にして、買い物ノートの実データに寄せる。
+test('Threads は 10/17 から 9:30・12:30 を止め、20:30 は買い物ノート、22:30 のセラー向けは 1 日おき', async () => {
+  const { buildThreadsAmazonBoostPosts, threadsHalvedRemovedPostIds, threadsMediaFacts, threadsMediaCaption, threadsMediaProductName } = await import('../src/social-autopilot.mjs');
+  const now = new Date('2026-10-16T15:00:00.000Z'); // 10/17 0:00 JST
+  const posts = buildThreadsAmazonBoostPosts(now, 4);
+  const ids = posts.map((post) => post.post_id);
+  assert.ok(ids.every((id) => !/-am$/u.test(id)), '9:30 は出さない');
+  assert.ok(ids.every((id) => !/-\d{4}-\d{2}-\d{2}$/u.test(id)), '12:30 は出さない');
+  const evening = posts.filter((post) => /-pm$/u.test(post.post_id));
+  assert.equal(evening.length, 4);
+  assert.ok(evening.every((post) => post.campaign_id === 'hoshilu-threads-media-v1' && post.affiliate === false));
+  assert.ok(evening.every((post) => /^https:\/\/hoshilu\.app\/media(?:\/price-drops)?\?utm_source=threads&utm_medium=social&utm_campaign=hoshilu-threads-media-v1/u.test(post.link)));
+  assert.ok(evening.every((post) => post.scheduled_at.endsWith('T11:30:00.000Z')));
+  const night = posts.filter((post) => /-night$/u.test(post.post_id));
+  assert.equal(night.length, 2, 'セラー向けは 4 日で 2 本');
+  assert.equal(posts.length, 6, '1 日 4 本 → 平均 1.5 本');
+  for (const post of posts) assert.doesNotMatch(post.caption, /最安|必ず|保証します|\d+%OFF/u);
+  const removed = threadsHalvedRemovedPostIds(now, 4);
+  assert.ok(removed.includes('hoshilu-threads-amazon-boost-v1-2026-10-17-am'));
+  assert.ok(removed.includes('hoshilu-threads-amazon-boost-v1-2026-10-17'));
+  assert.equal(removed.filter((id) => id.endsWith('-night')).length, 2);
+  assert.ok(!removed.some((id) => id.endsWith('-pm')));
+  // 10/16 以前の枠には触らない
+  assert.equal(threadsHalvedRemovedPostIds(new Date('2026-10-14T15:00:00.000Z'), 2).length, 0);
+  assert.equal(buildThreadsAmazonBoostPosts(new Date('2026-10-14T15:00:00.000Z'), 1).length, 4);
+
+  // 数字はその日の 20:30 だけ。商品名から売り文句を外す
+  assert.equal(threadsMediaProductName('【楽天1位】送料無料 ふわふわ 毛布 シングル【クーポン配布中】'), 'ふわふわ 毛布 シングル');
+  assert.equal(threadsMediaProductName('【最安値挑戦】'), '');
+  const drops = [
+    { product_name: '【楽天1位】ふわふわ 毛布 シングル', latest_price: 2980, max_price: 3980, drop_rate: 25, latest_date: '2026-10-17' },
+    { product_name: 'b', latest_price: 1, max_price: 2, drop_rate: 50, latest_date: '2026-10-17' },
+    { product_name: 'c', latest_price: 1, max_price: 2, drop_rate: 50, latest_date: '2026-10-17' }
+  ];
+  const facts = threadsMediaFacts(drops);
+  assert.equal(threadsMediaFacts(drops.slice(0, 2)), null, '3 件未満は数字を出さない');
+  const caption = threadsMediaCaption(facts);
+  assert.match(caption, /値下がりした商品は3件。/u);
+  assert.match(caption, /「ふわふわ 毛布 シングル」で、¥3,980→¥2,980（-25%、10\/17確認）/u);
+  assert.match(caption, /今の価格は商品ページで確認してください。/u);
+  const withFacts = buildThreadsAmazonBoostPosts(new Date('2026-10-17T08:30:00.000Z'), 2, { mediaFacts: facts });
+  const today = withFacts.find((post) => post.post_id.endsWith('2026-10-17-pm'));
+  const tomorrow = withFacts.find((post) => post.post_id.endsWith('2026-10-18-pm'));
+  assert.match(today.caption, /値下がりした商品は3件。\s*下げ幅がいちばん大きかったのは「ふわふわ 毛布 シングル」で、¥3,980→¥2,980[（(]-25%、10\/17確認[）)]/u);
+  assert.equal(today.content_id, 'media-drops-today');
+  assert.doesNotMatch(tomorrow.caption, /¥3,980/u, '翌日分は当日の数字を使わない');
+});
