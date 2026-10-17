@@ -447,6 +447,29 @@ function individuallyVerifiedKoreanCandidates(candidates = []) {
   });
 }
 
+// 2026-10-17 大隆さん「若い人・主婦向け、流行ってるアパレルや生活雑貨も。特に韓国系とかもね」:
+// 韓国ファッションは棚を持たないので、Yahoo!ショッピング公式の商品検索（口コミ件数順・固定の検索語）で
+// 商品名に「韓国」とある物だけ、価格を記録する（値下がりの元データ。利用者の検索は使わない）。
+// 6 時間に 1 回まで（保存した一覧が新しい間は API を呼ばない）。画像とジャンルは保存した一覧から引く。
+export const KOREAN_FASHION_SOURCE = Object.freeze({ category: 'korean_fashion', query: '韓国ファッション レディース', ttlMs: 6 * 60 * 60 * 1000 });
+const KOREAN_NAME = /韓国|korea/iu;
+
+export async function recordKoreanFashionPrices(env, fetcher = fetch, now = Date.now()) {
+  if (!yahooShoppingApiConfigured(env)) return { recorded: 0, skipped: 'NOT_CONFIGURED' };
+  if (await readRankingCache(env, 'YAHOO_JP', KOREAN_FASHION_SOURCE.category, 'REVIEW_COUNT', now)) return { recorded: 0, skipped: 'FRESH' };
+  let candidates = [];
+  try {
+    candidates = await searchYahooShopping(env, KOREAN_FASHION_SOURCE.query, fetcher, { sort: '-review_count' });
+  } catch {
+    return { recorded: 0, skipped: 'FETCH_FAILED' };
+  }
+  const korean = (candidates || []).filter((candidate) => KOREAN_NAME.test(String(candidate?.display_name || candidate?.product_name || '')));
+  if (!korean.length) return { recorded: 0, skipped: 'NO_MATCH' };
+  await writeRankingCache(env, 'YAHOO_JP', KOREAN_FASHION_SOURCE.category, 'REVIEW_COUNT', korean, now, KOREAN_FASHION_SOURCE.ttlMs);
+  return recordPriceObservations(env, korean, { source: 'yahoo_korean_fashion', now: new Date(now) })
+    .catch(() => ({ recorded: 0, skipped: 'WRITE_FAILED' }));
+}
+
 export async function buildKoreanShelf(env, fetcher = fetch) {
   if (!yahooShoppingApiConfigured(env)) return null;
   let rankingType = 'HIGH_RATING_TREND';
@@ -497,6 +520,8 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   if (shouldWriteCache) {
     // 2026-10-05: 既定 5 分だと訪問のたびに Yahoo! の直列キュー（2.1 秒間隔）を待っていた。他の棚と同じ 20 分にして、15 分ごとの予熱で切らさない。
     await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
+    // 2026-10-17 大隆さん「値下がり中のリアル画像で販促。特に韓国系も」: 韓国コスメ棚の商品も価格を毎日記録する（値下がりの元データ）。
+    await recordPriceObservations(env, candidates, { source: 'yahoo_korean_beauty' }).catch(() => {});
   }
   const items = (candidates || [])
     .map(sanitizeShelfItem)
@@ -588,6 +613,8 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   ]);
   // トレンド先取り棚は主婦層ジャンル棚の後に取る（同じ楽天 API を 1 秒間隔で使うため、並列にしない）。
   const trendShelves = await buildTrendShelves(env, fetcher);
+  // 韓国ファッションの価格記録（棚には出さない。値下がりの元データ）。失敗しても棚は止めない。
+  await recordKoreanFashionPrices(env, fetcher, now).catch(() => {});
   // 予算別棚はテーマ棚＋主婦層ジャンル棚の全商品から（追加 API 呼び出しなし）。
   const budgetShelves = buildBudgetShelves([...genreShelves, ...homeGenreShelves]);
   // 同一商品が半数以上重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。

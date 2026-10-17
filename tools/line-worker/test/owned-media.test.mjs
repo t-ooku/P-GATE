@@ -123,7 +123,7 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=4/);
+  assert.match(html, /owned-media\.css\?v=5/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);

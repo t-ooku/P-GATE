@@ -167,3 +167,6 @@
 @media (prefers-reduced-motion: reduce) {
   .media-drop a, .media-tile a, .media-article-arrow, .media-article-text strong { transition: none; }
 }
+
+/* 2026-10-17 値下がりの商品にジャンル（韓国系・レディースファッション・日用品雑貨 など）を小さく出す */
+.media-page .media-drop-genre { justify-self: start; display: inline-block; margin-bottom: .2rem; padding: .12rem .5rem; border-radius: 999px; background: #f1ecff; color: #5134c5; font-size: .7rem; font-weight: 800; line-height: 1.5; }

@@ -29,10 +29,32 @@ export const SCREEN_POSTS = Object.freeze({
       'ホシルバズでは、ジャンル別のトレンドもチェックできます。',
       '（画像の価格はぼかしています。最新の価格は商品ページで確認してね）',
       '',
+      '欲しい物は、ホシルで検索してね。名前が分からなくても、言葉やスクショで探せます。',
       '気になった商品、コメントで教えてね。',
       'プロフィールのリンクから「買い物ノート」へ。',
       '',
       '#HOSHILU #ホシル #買い物ノート #値下がり #楽天市場 #お買い物好きな人と繋がりたい #お得情報 #購入品紹介'
+    ].join('\n')
+  }),
+  // 2026-10-17 大隆さん「価格履歴から、何%下がってる最中のリアル画像を販促に。デカデカとアピール。若い者向けや主婦向け、
+  // 流行ってるアパレルや生活雑貨も。特に韓国系。ホシルで検索するよう促しも入れて」。
+  // 割引率の書き方は大隆さん決定「記録の事実で書く」: セールの「◯%オフ」とは書かず、ホシルの記録で 14 日間の最高値から下がった率、と断る。
+  // 本文には数字（価格・率）を書かない（画像の記録と食い違わないように。数字は撮った日の画像の中だけ）。
+  drops: Object.freeze({
+    link_path: '/media/price-drops',
+    caption: [
+      '今、値下がり中の物を集めました。',
+      '',
+      'ホシルは楽天市場・Yahoo!ショッピングの価格を毎日記録しています。その記録で、14日間の最高値より下がっている物だけを選んでいます。',
+      'アパレル、生活雑貨、美容、韓国系などのジャンルから、日替わりで選んでいます。',
+      '画像の大きな数字は、ホシルの記録の最高値と比べた下がり幅です（撮影した日の時点）。セールの割引率ではありません。',
+      '価格は変わるので、買う前に商品ページで今の価格を確認してね。',
+      '',
+      '欲しい物は、ホシルで検索してね。名前が分からなくても、言葉やスクショで探せて、値下がりしたらお知らせもできます。',
+      '気になった商品、コメントで教えてね。',
+      'プロフィールのリンクから。登録なしで使えます。',
+      '',
+      '#HOSHILU #ホシル #値下がり #お得情報 #楽天市場 #プチプラ #主婦の味方 #購入品紹介'
     ].join('\n')
   }),
   buzz: Object.freeze({
@@ -46,6 +68,7 @@ export const SCREEN_POSTS = Object.freeze({
       '気になったら、そのまま、ほかのモールでも探したり、「価格通知」で値下がりを待ったり、過去の価格と比べたりできます。',
       '（画像の価格はぼかしています）',
       '',
+      '欲しい物は、ホシルで検索してね。値下がりしたらお知らせもできます。',
       'どのジャンルが気になる？コメントで教えてね。',
       'プロフィールのリンクから。登録なしで使えます。',
       '',
@@ -93,9 +116,12 @@ export function screenLink(platform, setId, dateKey) {
 export function screenSetsForRow(row = {}, dateKey = '') {
   const identity = `${row.content_id || ''} ${row.link || ''}`;
   if (/seller|for-sellers/iu.test(identity)) return ['seller'];
-  if (row.campaign_id === 'hoshilu-media-notes') return ['notes', 'buzz'];
+  // 2026-10-17 大隆さん「値下がり中のリアル画像で販促」: 値下がりの記事枠と、ユーザー向けの 3 日のうち 2 日は「値下がり中」を主役にする。
+  // 撮れていない日は次の候補（買い物ノート・ホシルバズ）。
+  if (row.campaign_id === 'hoshilu-media-notes') return /price-drops/u.test(identity) ? ['drops', 'notes', 'buzz'] : ['notes', 'buzz'];
   const dayNumber = Math.floor(Date.parse(`${dateKey}T00:00:00Z`) / DAY_MS);
-  return dayNumber % 2 === 0 ? ['buzz', 'notes'] : ['notes', 'buzz'];
+  const cycle = ((dayNumber % 3) + 3) % 3;
+  return cycle === 0 ? ['buzz', 'drops', 'notes'] : cycle === 1 ? ['drops', 'notes', 'buzz'] : ['drops', 'buzz', 'notes'];
 }
 
 export async function loadScreensManifest(env, dateKey) {

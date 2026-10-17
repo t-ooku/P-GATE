@@ -5,7 +5,7 @@ import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow } fro
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
 import { readFileSync } from 'node:fs';
-import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText, phoneBox } from '../scripts/build-social-screens.mjs';
+import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText, phoneBox, bigDropText } from '../scripts/build-social-screens.mjs';
 
 // 2026-10-15 大隆さん指示「今後の投稿も、実画像を踏まえて投稿して」
 function d1(database) {
@@ -102,7 +102,7 @@ test('Threads の買い物ノート枠は表紙 1 枚だけ実画像にし、本
 });
 
 test('実画像の本文: 商品の価格・割引率を書かない／セラー向けは現行条件の注意書きを含む', () => {
-  for (const id of ['notes', 'buzz']) {
+  for (const id of ['notes', 'buzz', 'drops']) {
     assert.doesNotMatch(SCREEN_POSTS[id].caption, /[¥￥]|\d+\s*円|\d+\s*[%％]|最安|必ず|保証/u, id);
   }
   assert.match(SCREEN_POSTS.seller.caption, /30日間無料/u);
@@ -112,7 +112,20 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
   assert.match(SCREEN_POSTS.seller.caption, /「PR」枠/u);
   assert.doesNotMatch(SCREEN_POSTS.seller.caption, /ショップページ|クーポン|売上が上がる|必ず売れる/u);
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-demand-visible' }, '2026-10-17'), ['seller']);
-  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['notes', 'buzz']);
+  // 2026-10-17 大隆さん「値下がり中のリアル画像で販促」: 値下がりの記事枠は「値下がり中」を先に、ユーザー向けは 3 日のうち 2 日が値下がり中
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['drops', 'notes', 'buzz']);
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['notes', 'buzz']);
+  const firsts = ['2026-10-17', '2026-10-18', '2026-10-19'].map((day) => screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, day)[0]);
+  assert.equal(firsts.filter((id) => id === 'drops').length, 2);
+  for (const day of ['2026-10-17', '2026-10-18', '2026-10-19']) {
+    assert.deepEqual([...screenSetsForRow({ content_id: 'carousel-user-x' }, day)].sort(), ['buzz', 'drops', 'notes'], '撮れていない日は他のセットへ');
+  }
+  // 値下がりの本文: 割引率と書かず、記録の事実（14 日間の最高値から・撮影日の時点）と、ホシルで検索の促し
+  assert.match(SCREEN_POSTS.drops.caption, /14日間の最高値/u);
+  assert.match(SCREEN_POSTS.drops.caption, /セールの割引率ではありません/u);
+  assert.match(SCREEN_POSTS.drops.caption, /ホシルで検索/u);
+  assert.doesNotMatch(SCREEN_POSTS.drops.caption, /オフ|OFF/iu);
+  for (const id of ['notes', 'buzz']) assert.match(SCREEN_POSTS[id].caption, /ホシルで検索/u, id);
   // 撮影側: 出品者向けページ（HOSHILU 自身の料金）はぼかさない。本番の検索・売れ筋の画面（他店の価格が出る）はぼかす。ユーザー向けはぼかす
   // 2026-10-16 大隆さん「肝心なリアル画像が全ページ見切れてる」: 出品者向けセットは本番の画面の部品を撮る（下の fit のテスト）
   for (const slide of SCREEN_SETS.seller) {
@@ -120,6 +133,29 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
     else assert.notEqual(slide.mask, false, slide.id);
   }
   assert.ok([...SCREEN_SETS.notes, ...SCREEN_SETS.buzz].every((slide) => slide.mask !== false));
+});
+
+test('値下がり中の投稿: 記録した価格と下がり幅はぼかさず大きく出す。店の商品名と写真の中の価格はぼかす', () => {
+  const drops = SCREEN_SETS.drops.filter((slide) => slide.id.startsWith('drop-'));
+  // 2026-10-17 大隆さん「商品名にぼかし入れて、いろんなパターンで」: 6 商品まで（5・6 枚目は足りない日は出さない）
+  assert.equal(drops.length, 6);
+  assert.deepEqual(drops.map((slide) => Boolean(slide.optional)), [false, false, false, false, true, true]);
+  assert.match(drops[0].css, /\.media-drop-body strong\{filter:blur/u, '店が付けた商品名は丸ごとぼかす');
+  assert.ok(Array.isArray(drops[0].bigNote) && drops[0].bigNote.length >= 2, '見出しの言い回しは日替わり');
+  for (const [index, slide] of drops.entries()) {
+    assert.equal(slide.url, '/media/price-drops');
+    assert.equal(slide.selector, `.media-drop[data-focus="${index + 1}"]`);
+    assert.notEqual(slide.mask, false, 'ぼかしは効かせたまま（店の商品名・写真）');
+    assert.deepEqual([...slide.unmask], ['.media-drop-prices', '.media-drop-rate']);
+    assert.equal(slide.fit, true);
+    assert.equal(slide.bigFrom, '.media-drop-rate');
+    assert.match(slide.body, /\{date\}.*14日間の最高値/u);
+    assert.match(slide.body, /ホシルで検索/u);
+  }
+  assert.match(SCREEN_SETS.drops.at(-1).title, /ホシルで検索/u);
+  assert.equal(bigDropText('-32%'), '-32%');
+  assert.equal(bigDropText(' -8% '), '-8%');
+  for (const bad of ['32%', '-100%', '¥1,980', '', '-3.5%']) assert.equal(bigDropText(bad), '', bad);
 });
 
 test('出品者向けカルーセル: 実画面は枠で切らない（部品の上端〜下端を撮り、枠をその大きさに合わせる）', () => {

@@ -22,7 +22,7 @@ export const MEDIA_NAME = 'ホシルの買い物ノート';
 export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
-export const MEDIA_TEMPLATE_VERSION = '4';
+export const MEDIA_TEMPLATE_VERSION = '5';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -60,6 +60,51 @@ function esc(value) {
 const yen = (n) => `¥${Math.round(Number(n) || 0).toLocaleString('ja-JP')}`;
 const daysAgo = (now, days) => jstDate(new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
 
+// 値下がりに載せてよい記録の元（どれも公開ランキング・固定の検索語。利用者の検索から記録した商品は載せない）。
+// 2026-10-17 大隆さん「特に韓国系とかもね」: 韓国コスメ棚・韓国ファッション（buzz-shelf.mjs）を足した。
+export const DROP_SOURCES = Object.freeze(['rakuten_ranking_api', 'yahoo_korean_beauty', 'yahoo_korean_fashion']);
+
+// 2026-10-17 大隆さん「値下がり中のリアル画像を、デカデカとアピール。若い者向けや主婦向け、流行ってるアパレルや生活雑貨も。特に韓国系」:
+// SNS の値下がり投稿に載せる順（data-focus）。韓国系 → アパレル → 生活雑貨 → 美容 の順に 1 つずつ回し、残りは下がり幅の大きい順。
+// 一覧ページの並び（下がり幅の大きい順）は変えない。
+const DROP_SEGMENTS = Object.freeze([
+  { id: 'korean', categories: ['buzz_korean_beauty', 'korean_fashion'] },
+  { id: 'apparel', categories: ['womens_fashion', 'mens_fashion', 'shoes', 'womens_sneakers', 'bags'] },
+  { id: 'daily', categories: ['daily_goods', 'kitchen', 'interior', 'kids_baby', 'pet'] },
+  { id: 'beauty', categories: ['beauty_cosme', 'skincare', 'face_wash', 'face_lotion', 'beauty_health_appliance'] }
+]);
+const EXTRA_CATEGORY_LABEL = { buzz_korean_beauty: '韓国コスメ', korean_fashion: '韓国ファッション' };
+export const DROP_FOCUS_LIMIT = 6;
+
+export function dropSegment(row = {}) {
+  const category = String(row.category_id || '');
+  if (/韓国/u.test(String(row.product_name || '')) && !DROP_SEGMENTS[0].categories.includes(category)) return { id: 'korean', label: '韓国系' };
+  const segment = DROP_SEGMENTS.find((item) => item.categories.includes(category));
+  const label = EXTRA_CATEGORY_LABEL[category] || SHELF_CATEGORY.get(category) || '';
+  return { id: segment?.id || 'other', label };
+}
+
+// rotate: 先頭のジャンルを日替わりにする（2026-10-17 大隆さん「いろんなパターンで出していこう」）。0 なら 韓国系 から。
+export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
+  if (!Array.isArray(drops)) return drops;
+  const rows = drops.map((row) => ({ ...row, segment: dropSegment(row) }));
+  const order = DROP_SEGMENTS.map((segment) => segment.id);
+  const shift = ((Number(rotate) || 0) % order.length + order.length) % order.length;
+  const pools = [...order.slice(shift), ...order.slice(0, shift), 'other']
+    .map((id) => rows.filter((row) => row.image_url && row.segment.id === id));
+  const picked = [];
+  while (picked.length < limit && pools.some((pool) => pool.length)) {
+    for (const pool of pools.slice(0, -1)) {
+      if (pool.length && picked.length < limit) picked.push(pool.shift());
+    }
+    if (!pools.slice(0, -1).some((pool) => pool.length)) {
+      while (pools.at(-1).length && picked.length < limit) picked.push(pools.at(-1).shift());
+    }
+  }
+  picked.forEach((row, index) => { row.focus = index + 1; });
+  return rows;
+}
+
 // 値下がりした商品（ホシルの価格記録だけで決める）。表が無い・読めない時は null（0 件とは区別する）。
 export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES } = {}) {
   const db = env?.PRODUCT_DB;
@@ -83,7 +128,7 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
       WHERE w.rn = 1 AND w.days >= ?3 AND w.observed_date >= ?4 AND w.stock_status <> 'OUT_OF_STOCK'
         AND w.price <= w.max_price * (1 - ?5) AND w.price >= w.max_price * (1 - ?6)
         AND EXISTS (SELECT 1 FROM price_observations r WHERE r.marketplace = w.marketplace
-          AND r.external_product_id = w.external_product_id AND r.source = 'rakuten_ranking_api')
+          AND r.external_product_id = w.external_product_id AND r.source IN (${DROP_SOURCES.map((source) => `'${source}'`).join(',')}))
       ORDER BY (w.max_price - w.price) * 1.0 / w.max_price DESC, w.observed_date DESC
       LIMIT ?7`).bind(since, today, rules.minDays, freshSince, rules.minDropRate, rules.maxDropRate, rules.limit).all();
     return results.map((row) => ({
@@ -119,13 +164,16 @@ export async function loadRankingImages(env, recordKeys = []) {
   const images = new Map();
   if (!db || !wanted.size) return images;
   try {
-    const { results = [] } = await db.prepare(`SELECT payload_json FROM marketplace_ranking_cache
+    const { results = [] } = await db.prepare(`SELECT category_id, payload_json FROM marketplace_ranking_cache
       WHERE marketplace_id IN ('RAKUTEN_JP','YAHOO_JP') ORDER BY updated_at DESC LIMIT 200`).all();
+    // 商品のジャンル（保存した一覧の category_id）も一緒に返す（SNS の値下がり投稿の並びとラベルに使う）
+    images.category = new Map();
     for (const row of results) {
       let items = [];
       try { items = JSON.parse(row.payload_json); } catch { items = []; }
       for (const item of Array.isArray(items) ? items : []) {
         const key = String(item?.record_key || '');
+        if (wanted.has(key) && row.category_id && !images.category.has(key)) images.category.set(key, String(row.category_id).replace(/^buzz_(?!korean)/u, ''));
         if (!wanted.has(key) || images.has(key)) continue;
         const image = largerImage(item?.image_url || (Array.isArray(item?.image_urls) ? item.image_urls[0] : ''));
         if (image) images.set(key, image);
@@ -160,7 +208,9 @@ export async function withImagesAndHistory(env, drops, { now = new Date() } = {}
   if (!Array.isArray(drops) || !drops.length) return drops;
   const keys = drops.map((row) => row.record_key);
   const [images, histories] = await Promise.all([loadRankingImages(env, keys), loadPriceHistories(env, keys, { now })]);
-  return drops.map((row) => ({ ...row, image_url: images.get(row.record_key) || '', history: histories.get(row.record_key) || [] }));
+  const dayNumber = Math.floor((now.getTime() + 9 * 60 * 60 * 1000) / 86_400_000);
+  return withDropFocus(drops.map((row) => ({ ...row, image_url: images.get(row.record_key) || '',
+    category_id: images.category?.get(row.record_key) || '', history: histories.get(row.record_key) || [] })), DROP_FOCUS_LIMIT, dayNumber);
 }
 
 // 小さな折れ線（価格履歴）。CSP（style-src 'self'）に合わせ、色や太さは CSS のクラスで付ける。
@@ -272,9 +322,10 @@ function dropCard(row, index) {
     ? `<img src="${esc(row.image_url)}" alt="" loading="${index < 2 ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" width="300" height="300">`
     : `<span class="media-drop-noimage" aria-hidden="true">${esc(String(row.product_name || '').slice(0, 1))}</span>`;
   const history = sparkline(row.history);
-  return `<li class="media-drop"><a href="${productLink(row)}">
+  const genre = row.segment?.label ? `<span class="media-drop-genre">${esc(row.segment.label)}</span>` : '';
+  return `<li class="media-drop"${row.focus ? ` data-focus="${row.focus}"` : ''}><a href="${productLink(row)}">
 <span class="media-drop-figure">${image}<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span><span class="media-drop-rank" aria-hidden="true">${rank}</span></span>
-<span class="media-drop-body"><strong>${esc(row.product_name)}</strong>
+<span class="media-drop-body">${genre}<strong>${esc(row.product_name)}</strong>
 <span class="media-drop-prices"><s>${yen(row.max_price)}</s><span aria-hidden="true">→</span><b>${yen(row.latest_price)}</b></span>
 ${history ? `<span class="media-drop-history"><span class="media-drop-history-label">価格の推移</span>${history}<span class="media-spark-axis"><span>${esc(shortDate(row.history[0].date))}</span><span>${esc(shortDate(row.history[row.history.length - 1].date))}</span></span></span>` : ''}
 <span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${row.days}日分の記録</span>
@@ -327,7 +378,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=4"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=5"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
