@@ -6,7 +6,8 @@ import { readBoundedJson } from './bounded-json.mjs';
 const TYPES = new Set(['CONSULTATION', 'ACCOUNT_APPLICATION']);
 const ORGANIZATION_TYPES = new Set(['MAKER', 'SELLER', 'BOTH', 'OTHER']);
 const ORDER_RANGES = new Set(['', 'BEFORE_LAUNCH', '1_49', '50_199', '200_999', '1000_PLUS']);
-const PLAN_INTERESTS = new Set(['', 'NATURAL_LISTING', 'PRIORITY_LISTING', 'BUSINESS', 'API', 'UNDECIDED']);
+// 2026-10-16: AI販促担当（Light／Standard）のボタンから来た相談を区別する（列は TEXT のまま、migration なし）。
+const PLAN_INTERESTS = new Set(['', 'NATURAL_LISTING', 'PRIORITY_LISTING', 'BUSINESS', 'API', 'UNDECIDED', 'PROMO_LIGHT', 'PROMO_STANDARD']);
 const PAYMENT_PREFERENCES = new Set(['', 'CARD', 'BANK_TRANSFER', 'INVOICE', 'UNDECIDED']);
 const MARKETPLACES = new Set(['AMAZON', 'RAKUTEN', 'YAHOO', 'QOO10', 'OWN_STORE', 'OTHER']);
 

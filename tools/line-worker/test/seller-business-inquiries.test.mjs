@@ -387,3 +387,21 @@ test('ショップURLは https:// 付け忘れ・http:// をブラウザで http
   assert.equal(normalizeSellerBusinessInquiry({ ...base, storefront_url: normalizeStorefrontUrl('http://shop.example.jp/a') }).value.storefront_url, 'https://shop.example.jp/a');
   assert.match(script, /tidyStorefront\(\);\n  sendSellerEvent\('seller_form_submit_attempt'/u);
 });
+
+// 2026-10-16 Cowork 依頼 §1・§2・§3: 申込ボタンで最初の入力欄を出す／AI販促担当の相談を区別する／来訪にリンク先取得を混ぜない
+test('AI販促担当のボタンから来た相談はプランを持ち、ボタンは最初の入力欄へ移る', async () => {
+  assert.equal(normalizeSellerBusinessInquiry({ plan_interest: 'PROMO_LIGHT' }).value.plan_interest, 'PROMO_LIGHT');
+  assert.equal(normalizeSellerBusinessInquiry({ plan_interest: 'PROMO_STANDARD' }).value.plan_interest, 'PROMO_STANDARD');
+  assert.equal(normalizeSellerBusinessInquiry({ plan_interest: 'PROMO_GOLD' }).value.plan_interest, '');
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(html, /<input type="hidden" name="plan_interest" value="">/u);
+  // 支払い不要の案内は送信ボタンのすぐ上（文言は変えない）
+  assert.match(html, /相談時のお支払い登録は不要です<\/strong>[^]*?<div id="turnstile"[^>]*><\/div><button class="submit"/u);
+  assert.equal((html.match(/相談時のお支払い登録は不要です/gu) || []).length, 1);
+  const js = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
+  assert.match(js, /'pricing-light': \['PROMO_LIGHT'/u);
+  assert.match(js, /'pricing-standard': \['PROMO_STANDARD'/u);
+  assert.match(js, /firstInput\.scrollIntoView\(\{ behavior: 'smooth', block: 'center' \}\)/u);
+  assert.match(js, /const SELLER_LANDING_VISIBLE_MS = 1500;/u);
+  assert.doesNotMatch(js, /^sendSellerEvent\('seller_landing_view'/mu, '読み込み直後に無条件で送らない');
+});
