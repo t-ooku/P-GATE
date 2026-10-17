@@ -1,5 +1,5 @@
 ---
-status: IN_PROGRESS
+status: DONE
 owner: Claude
 from: 大隆さん（朝ブリーフ決定）／Codex 管理
 created: 2026-10-10
@@ -286,3 +286,15 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - #614 の 10/21 22:30 seller-pr-slot（hoshilu-threads-amazon-boost-v1-2026-10-21-night）は #663（Threads 半減）で **CANCELLED（THREADS_HALVED_20261017）** になっていた。→ 本件の「10/21 夜に seller-pr-slot の公開確認」は対象消滅として残りから外す。
 - 成果指標（D1 実測、14:13 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS/ACTIVE/FREE_OF_CHARGE、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため参考値（marketplace_click、10/10 10:46 JST 以降 QA 除外で2件・2人、最新 10/16 11:56 JST、増加なし）。
 - 残り: 10/17 20:13 に Instagram 10/17 の PUBLISHED・external_post_id・published_at を確認したら SNS 分を DONE。seller_form_*（新 consultation_input）と人の着地を毎巡回で記録。Threads 再連携後の失敗行の扱いは Cowork 依頼どおり Claude Code 側の判断（本タスクでは出し直さない）。
+
+### 2026-10-17 20:13 JST 定期巡回（状態: **DONE**。Claude 担当2件の実行は完了、Seller の効果は未達＝新規問い合わせ0）
+- 受信箱: 対象はこのファイル1件のみ（他3件は DONE）。branch head 518511c。14:13 以降の新コミットは Threads トークン自動延長（5de1c18）・値下がり中の実画像投稿（c576899／db2e5ce／5fa56cf）・撮影の手動実行（673b2a2／3505514）・カルーセル再生成（bot）で、いずれも本件の外。触らない・重複しない。
+- 2. SNS 10/17 → **DONE**（D1 social_post_queue、20:15 JST 読み取り）:
+  - **キュー反映・公開（D1）**: hoshilu-carousel-v3-instagram-2026-10-17（content seller-screens）＝ **PUBLISHED、published_at 2026-10-17 20:02:50 JST、external_post_id 18196557208390365**、last_error なし。10/12 分（20:02 PUBLISHED、external_post_id 18117372193910682）と合わせ、受けた 10/12・10/17 の Instagram 2枠は公開まで確認。公開 URL（permalink）は未確認（D1 に列なし・Instagram はこの環境から開けない）。三要素の permalink は Codex の既存 SELECT 側で確認してください。
+  - X: hoshilu-carousel-v3-x-2026-10-17 は CANCELLED（X_PAUSED_BY_OWNER_2026-10-10）、10/17 14:00 JST 以降の新規 X 行 0 → X 停止維持。
+  - 参考（本件外）: hoshilu-price-drops-instagram-2026-10-17 も 20:12:50 JST PUBLISHED（17865999933680248）。Threads は 19:00 の hoshilu-seller-lp-real-threads-2026-10-17 が **FAILED THREADS_CREATE_401**（トークン検証エラー）、20:30 の -10-17-pm も APPROVED のまま同じく失敗見込み。Claude は行を変更していない。
+- 1. Seller LP → **DONE（実装・本番反映済み／効果は未達）**: 実装は #610（5604381、10/10 10:46 JST deploy/health success）。以後の観測は 10/16 の実行管理で「Seller 入力→送信の観測：Codex」と決まっているため、Claude の巡回記録はここで閉じる（重複観測をやめる）。
+  - D1 growth_events（10/10 10:46 JST 以降、QA/INTERNAL 除外、20:15 JST 読み取り）: seller_landing_view 37件（for-sellers 34／27人）＝14:13 から **+0**、seller_cta_clicked 0、seller_form_started 4（すべて旧 consultation＝focus のみ、新 consultation_input 0）、submit_attempt／failed 0。
+  - **計測の注意（未確定・Codex へ）**: QA/INTERNAL 以外のブラウザ発イベントが **10/17 08:05 JST 以降 全種類 0件**（約12時間）。同じ 09〜20 時 JST の窓は 10/11〜13 が 2〜7件、10/14〜16 が 99〜233件。QA のブラウザイベント（landing_view 59・marketplace_shown 117 等、最新 18:54 JST）は記録されているので受け口は動いている。同時間帯の server 側 search_tokenless_allowed 10件（IP ハッシュ6種、14:59〜18:52 JST）は一部が撮影 run（15:09／18:47 の手動撮影）の時刻と重なり、人の利用かは判定できない。677c592b の除外条件は `HOSHILU-SocialScreens/` UA だけで一般ブラウザを巻き込まないことをコードで確認、#662 の差分も landing_view の発火条件だけ。→「人の来訪が0」か「一般利用者のイベントだけ落ちている」かは、実ブラウザで本番を開ける Codex で切り分けてください（Claude はこの環境から hoshilu.app を開けない）。
+- 成果指標（D1 実測、20:15 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規 **0件**（最新 9/28）。有料契約 **0**（seller_billing_accounts 3件、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため参考値（marketplace_click、10/10 10:46 JST 以降 QA/INTERNAL 除外で 2件・2人、最新 10/16 11:56 JST、増加なし）。
+- 残り（Claude 側）: なし。Threads 再連携（大隆さん本人のみ）と失敗行の扱い、10/17 以降の SNS は他の担当の範囲。新しい依頼は受信箱に別ファイルで置いてください。
