@@ -1,3 +1,4 @@
+import { withThreadsToken } from './threads-token.mjs';
 import { assertSellerMarketingCurrent } from './seller-marketing-guard.mjs';
 import { socialTrialCaption } from '../public/seller-trial-policy.mjs';
 import {
@@ -994,6 +995,7 @@ async function deletePlatformPost(platform, externalId, env, fetchImpl) {
 }
 
 export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = fetch, { limit = 10, force = false } = {}) {
+  env = await withThreadsToken(env, { fetchImpl, now });
   const result = { checked: 0, retracted: 0, failed: 0, post_ids: [] };
   if (!env.PRODUCT_DB || String(env.SOCIAL_RETRACT_OLD_PRICING || '').toLowerCase() !== 'true') return result;
   let rows;
@@ -1026,6 +1028,8 @@ export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = 
 }
 
 export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch) {
+  // 2026-10-17: Threads は延長済みのトークン（threads-token.mjs）を使う
+  env = await withThreadsToken(env, { fetchImpl, now });
   if (!env.PRODUCT_DB) return { checked: 0, published: 0 };
   const resumableAfter = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   // A previous invocation can be terminated after persisting Meta's container
@@ -1239,6 +1243,7 @@ function threadsMetricValue(payload, name) {
 // updates that day's row in place instead of accumulating duplicates.
 // https://developers.facebook.com/docs/threads/insights
 export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fetch, onlyPostId = '') {
+  env = await withThreadsToken(env, { fetchImpl, now });
   if (!env.PRODUCT_DB) return { checked: 0, saved: 0, failed: 0 };
   if (!socialPublisherReadiness(env).THREADS) return { checked: 0, saved: 0, failed: 0 };
   const requestedPostId = clean(onlyPostId, 100);
