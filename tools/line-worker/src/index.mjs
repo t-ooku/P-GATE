@@ -107,7 +107,9 @@ import {
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
-import { expandSearchQuery, findExpansionRule, headNounGateQuery } from './query-expansion.mjs';
+import {
+  expandSearchQuery, findExpansionRule, headNounGateQuery, headNounGateQueryFor, expansionBroadKeyword
+} from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
@@ -140,7 +142,7 @@ import {
 import { runDeepCanaryCycle, runMarketplaceCanaryCatchup } from './deep-canary.mjs';
 import { runSearchQaCanary, runPrioritySearchQaCanary, searchQaCanaryDue } from './search-qa-canary.mjs';
 import { extractSearchOrigin, orderMarketplaceDestinations } from './search-origin.mjs';
-import { applyHeadNounGate } from './search-head-noun.mjs';
+import { applyHeadNounGate, hasHeadNounMatch } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 import { searchGoogleMalls, googleMallSearchConfigured, purgeGoogleMallSearchLog } from './google-mall-search.mjs';
@@ -1393,7 +1395,11 @@ export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
   // 再検索は最大3回に抑えつつ、AI変換語・AIが見つけた識別子の次に
   // 必ずAI前の検索条件へ到達できる順序にする。従来の商品語フォールバックは
   // AI変換が無い検索ではこれまでどおり第2候補に残る。
-  return [...new Set([expansionPrimary, verbatimRefined, primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
+  // 2026-10-17 固定QA dark_ink_name_pen: 展開規則の機能語＋カテゴリ語(「濃く書ける お名前ペン」)がモールで
+  // 0件・全件カテゴリ違いの時、次に試す語を規則のカテゴリ語(「お名前ペン」)にする(AI の短い変換語がある時はその次)。
+  // 以前は2番目が利用者の長い原文で、AND 検索ではほぼ0件だった。展開規則に当たらない検索の候補は変えない。
+  const expansionBroad = expansionPrimary ? (expansionBroadKeyword(query) || expansionBroadKeyword(fallbackQuery)) : '';
+  return [...new Set([expansionPrimary, verbatimRefined, expansionBroad, primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
 }
 
 // "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
@@ -1420,7 +1426,9 @@ export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = ''
   const organized = organizedApparelCandidate(query);
   const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
   const expansionPrimary = findExpansionRule(query)?.marketplaceKeywords || '';
-  return [...new Set([expansionPrimary, verbatimRefined, primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
+  // 2026-10-17: 展開規則のカテゴリ語を、機能語＋カテゴリ語の次の候補にする(buildRakutenSearchKeywordCandidates と同じ理由)。
+  const expansionBroad = expansionPrimary ? expansionBroadKeyword(query) : '';
+  return [...new Set([expansionPrimary, verbatimRefined, expansionBroad, primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
     String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 5);
 }
 
@@ -1516,17 +1524,32 @@ export async function searchMarketplaceApiWithFallback(
   // 1 候補目の結果（0件）で返し、段階全体を締め切りまで引き延ばさない。
   const deadlineAt = Number(options.deadlineAt) || 0;
   const nextVariantCostMs = Math.max(0, Number(options.nextVariantCostMs) || 0);
+  // 2026-10-17 固定QA dark_ink_name_pen: 採用できる結果でも、検索文の主名詞に一致する商品が1件も
+  // 無い(全件カテゴリ違い)なら控えにして次の語を試す。次の語でも一致が無い・試せない・失敗した時は
+  // 控え(最初の採用可能な結果)を返すので、従来より結果が減ることはない。
+  const gateQuery = query ? headNounGateQueryFor(query) : '';
+  let mismatchedFallback = null;
   for (const [index, keywords] of variants.entries()) {
     if (index > 0 && deadlineAt && Date.now() + nextVariantCostMs > deadlineAt) break;
     // A transport/provider rejection is not query-quality feedback. Stop
     // immediately instead of multiplying auth/rate/upstream failures across
     // alternate keywords.
-    const response = await searcher(keywords);
+    let response;
+    try {
+      response = await searcher(keywords);
+    } catch (error) {
+      if (mismatchedFallback) return mismatchedFallback;
+      throw error;
+    }
     const candidates = Array.isArray(response) ? response : [];
     if (!candidates.length) continue;
-    if (!query || filterSearchCandidatesWithFallback(query, fallbackQuery, candidates).length) return candidates;
+    if (!query) return candidates;
+    const accepted = filterSearchCandidatesWithFallback(query, fallbackQuery, candidates);
+    if (!accepted.length) continue;
+    if (hasHeadNounMatch(gateQuery, accepted)) return candidates;
+    mismatchedFallback ||= candidates;
   }
-  return [];
+  return mismatchedFallback || [];
 }
 
 function containsOfficialMarketplaceCandidate(candidates = [], marketplace = '') {

@@ -4,6 +4,8 @@ import {
 } from './rakuten-url-policy.mjs';
 import { filterCategoryMismatches } from './knowledge-search.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
+import { headNounGateQueryFor } from './query-expansion.mjs';
+import { hasHeadNounMatch } from './search-head-noun.mjs';
 
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 // The migrated Rakuten endpoint regularly needs more than 2.5 seconds before
@@ -175,6 +177,10 @@ export async function searchRakutenMarketplaceWithFallback(
   const outcomes = await Promise.allSettled(candidates.map((keywords) =>
     searchRakutenMarketplace(env, keywords, fetcher, requestId, options)));
   let firstFailure = null;
+  // 2026-10-17 固定QA dark_ink_name_pen: 採用できる結果でも主名詞に一致する商品が1件も無ければ
+  // 控えにして次の語の結果を見る。どの語でも一致が無ければ控え(最初の採用可能な結果)を返す。
+  const gateQuery = query ? headNounGateQueryFor(query) : '';
+  let mismatchedFallback = null;
   for (const outcome of outcomes) {
     if (outcome.status !== 'fulfilled') {
       firstFailure ||= outcome.reason;
@@ -182,11 +188,16 @@ export async function searchRakutenMarketplaceWithFallback(
     }
     const results = Array.isArray(outcome.value) ? outcome.value : [];
     if (!results.length) continue;
-    if (!query || filterCategoryMismatches(query, results).length) return results;
+    if (!query) return results;
+    let accepted = filterCategoryMismatches(query, results);
     // AI変換語に一致しない結果でも、AI前の検索条件には適合するなら採用する。
     // 原文とAI語をAND結合しないため、誤変換時にも正しい商品を救済できる。
-    if (fallbackQuery && fallbackQuery !== query && filterCategoryMismatches(fallbackQuery, results).length) return results;
+    if (!accepted.length && fallbackQuery && fallbackQuery !== query) accepted = filterCategoryMismatches(fallbackQuery, results);
+    if (!accepted.length) continue;
+    if (hasHeadNounMatch(gateQuery, accepted)) return results;
+    mismatchedFallback ||= results;
   }
+  if (mismatchedFallback) return mismatchedFallback;
   if (firstFailure && outcomes.every((outcome) => outcome.status === 'rejected')) throw firstFailure;
   return [];
 }

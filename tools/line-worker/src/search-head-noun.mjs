@@ -281,6 +281,19 @@ export function applyHeadNounGate(query, candidates = [], { titleOf = defaultTit
     .map(({ candidate }) => candidate);
 }
 
+// 2026-10-17 固定QA dark_ink_name_pen(候補取得): モール検索のキーワード候補を順に試す時、
+// 1つ目の語(「濃く書ける お名前ペン」)の結果が全件カテゴリ違い(名入れボールペン)でも
+// 「0件でない」だけで採用され、次の語(「お名前ペン」)へ進まなかった。最後の applyHeadNounGate は
+// 全件不一致なら元順序を残す(空にしない)ため、そのまま本命になっていた。
+// 候補の中に主名詞が商品そのもの/弱い一致(score>0)の商品が1件でもあるかを返す。主名詞が
+// 取れない検索文は判定しない(true)。
+export function hasHeadNounMatch(query, candidates = [], { titleOf = defaultTitle } = {}) {
+  const heads = extractHeadNouns(query);
+  if (!heads.length) return true;
+  return (Array.isArray(candidates) ? candidates : [])
+    .some((candidate) => (headNounDetail(query, titleOf(candidate), heads).score || 0) > 0);
+}
+
 function isExplicitAccessoryMismatch(query, title) {
   if (/上履き|上履|上靴/u.test(query) && !/バッグ|ケース|靴袋|中敷|ネット/u.test(query)) {
     return /シューズ(?:バッグ|ケース)|靴袋|洗濯ネット|中敷きのみ/u.test(title);

@@ -182,4 +182,21 @@ export function headNounGateQuery(expandedQuery) {
   return `${base} ${primary}`.trim();
 }
 
+// 2026-10-17 固定QA dark_ink_name_pen: モール検索の候補選択(index.mjs / rakuten-marketplace-api.mjs)で
+// 主名詞の一致を見るためのクエリ。展開済みの文字列を受け取っても、規則に当たれば primary を末尾に足す
+// (headNounGateQuery と同じ文字列)。
+export function headNounGateQueryFor(query) {
+  return headNounGateQuery(expandSearchQuery(query));
+}
+
+// 展開規則の受け皿(broad の1つ目、カテゴリ語)。機能語＋カテゴリ語の第1候補がモールで
+// 0件・全件カテゴリ違いだった時に試す次のキーワード。第1候補と同じなら返さない。
+export function expansionBroadKeyword(query) {
+  const rule = findExpansionRule(query);
+  const broad = String(rule?.broad?.[0] || '').normalize('NFKC').trim();
+  if (!broad || broad.length < 2) return '';
+  const primary = String(rule?.marketplaceKeywords || rule?.primary || '').normalize('NFKC').trim();
+  return broad === primary ? '' : broad;
+}
+
 export const queryExpansionRuleIds = Object.freeze(EXPANSION_RULES.map((rule) => rule.id));
