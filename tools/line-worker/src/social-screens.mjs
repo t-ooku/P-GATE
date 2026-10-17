@@ -181,6 +181,8 @@ function availableSet(manifest, setId) {
 }
 
 // 今日の未投稿のフィード投稿を実画像に差し替える。戻り値は差し替えた件数。
+export const SELLER_SCREENS_REPEAT_DAYS = 14;
+
 export async function applyRealScreens(env, now = new Date()) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false') return { enabled: false, updated: 0 };
   const dateKey = jstDateKey(now);
@@ -196,9 +198,22 @@ export async function applyRealScreens(env, now = new Date()) {
   const manifest = await loadScreensManifest(env, dateKey);
   if (!manifest) return { enabled: true, updated: 0, reason: 'no_screens_today' };
   let updated = 0;
+  let cancelled = 0;
+  // 2026-10-17 大隆さん「昨日と同じ投稿してたから削除した」: セラー向けの実画像（seller セット）は毎日ほぼ同じ画面になる。
+  // Instagram に直近 14 日で出していれば、その日のセラー向けの行は出さない（同じ画像の投稿を続けない）。
+  const sellerSince = new Date(now.getTime() - SELLER_SCREENS_REPEAT_DAYS * DAY_MS).toISOString();
+  const sellerRecent = await env.PRODUCT_DB.prepare(`SELECT post_id FROM social_post_queue WHERE platform='INSTAGRAM' AND status='PUBLISHED'
+      AND media_urls LIKE '%/social/screens/%/seller/%' AND published_at>=?1 LIMIT 1`).bind(sellerSince).first();
   for (const row of rows) {
     const setId = screenSetsForRow(row, dateKey).find((id) => availableSet(manifest, id));
     if (!setId) continue;
+    if (setId === 'seller' && row.platform === 'INSTAGRAM' && sellerRecent) {
+      const result = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='CANCELLED',last_error='SELLER_SCREENS_SHOWN_RECENTLY',updated_at=?2
+          WHERE post_id=?1 AND status='APPROVED' AND published_at='' AND external_post_id='' AND platform_job_id=''`)
+        .bind(row.post_id, now.toISOString()).run();
+      cancelled += Number(result?.meta?.changes || 0);
+      continue;
+    }
     const count = availableSet(manifest, setId);
     const urls = screenMediaUrls(dateKey, setId, count);
     if (row.platform === 'THREADS') {
@@ -228,5 +243,5 @@ export async function applyRealScreens(env, now = new Date()) {
       .bind(row.post_id, post.content_id, post.caption, post.link, post.media_urls, now.toISOString()).run();
     updated += Number(result?.meta?.changes || 0);
   }
-  return { enabled: true, updated };
+  return { enabled: true, updated, cancelled };
 }

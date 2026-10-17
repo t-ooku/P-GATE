@@ -31,7 +31,7 @@ function setup() {
     content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '', media_url TEXT NOT NULL DEFAULT '',
     media_urls TEXT NOT NULL DEFAULT '', scheduled_at TEXT NOT NULL, status TEXT NOT NULL, jst_publish_date TEXT NOT NULL DEFAULT '',
     platform_job_id TEXT NOT NULL DEFAULT '', external_post_id TEXT NOT NULL DEFAULT '', published_at TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`);
+    last_error TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`);
   return database;
 }
 
@@ -73,6 +73,30 @@ test('今日の未投稿のフィード投稿だけを、当日の実画像と�
   }
   // もう一度回しても二重に書き換えない
   assert.equal((await applyRealScreens(env, new Date('2026-10-17T09:05:00.000Z'))).updated, 0);
+});
+
+test('セラー向けの実画像を直近 14 日に Instagram で出していれば、同じ画像のセラー投稿は出さない（10/17 大隆さん「昨日と同じ投稿」）', async () => {
+  const database = setup();
+  insert(database, { post_id: 'seller-yesterday', content_id: 'seller-screens', status: 'PUBLISHED', published_at: '2026-10-16T15:47:40.000Z',
+    media_urls: '["https://hoshilu.app/social/screens/20261017/seller/1.jpg","https://hoshilu.app/social/screens/20261017/seller/2.jpg"]', jst_publish_date: '2026-10-17' });
+  insert(database, { post_id: 'seller-today', content_id: 'carousel-seller-wanted-now', link: 'https://hoshilu.app/for-sellers?utm_source=instagram' });
+  insert(database, { post_id: 'seller-threads', platform: 'THREADS', campaign_id: 'hoshilu-media-notes', content_id: 'seller-start-flow', media_url: 'https://hoshilu.app/social/carousel/x/1.jpg', media_urls: '' });
+  insert(database, { post_id: 'user-today', content_id: 'carousel-user-price-watch', scheduled_at: '2026-10-17T11:15:00.000Z' });
+  const env = { PRODUCT_DB: d1(database), ASSETS: assets(manifest(['drops', 'seller'])) };
+  const result = await applyRealScreens(env, new Date('2026-10-17T09:00:00.000Z'));
+  assert.equal(result.cancelled, 1);
+  const seller = database.prepare("SELECT * FROM social_post_queue WHERE post_id='seller-today'").get();
+  assert.equal(seller.status, 'CANCELLED');
+  assert.equal(seller.last_error, 'SELLER_SCREENS_SHOWN_RECENTLY');
+  assert.match(database.prepare("SELECT content_id FROM social_post_queue WHERE post_id='user-today'").get().content_id, /^screens-drops$/u);
+  // 15 日以上前なら出す
+  const database2 = setup();
+  insert(database2, { post_id: 'seller-old', content_id: 'seller-screens', status: 'PUBLISHED', published_at: '2026-10-02T11:00:00.000Z',
+    media_urls: '["https://hoshilu.app/social/screens/20261002/seller/1.jpg"]', jst_publish_date: '2026-10-02' });
+  insert(database2, { post_id: 'seller-today', content_id: 'carousel-seller-wanted-now', link: 'https://hoshilu.app/for-sellers?utm_source=instagram' });
+  const result2 = await applyRealScreens({ PRODUCT_DB: d1(database2), ASSETS: assets(manifest(['seller'])) }, new Date('2026-10-17T09:00:00.000Z'));
+  assert.equal(result2.cancelled, 0);
+  assert.equal(database2.prepare("SELECT content_id FROM social_post_queue WHERE post_id='seller-today'").get().content_id, 'seller-screens');
 });
 
 test('その日の実画像が無ければ、従来の画像のまま投稿する', async () => {
