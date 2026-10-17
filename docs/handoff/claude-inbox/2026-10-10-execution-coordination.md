@@ -260,3 +260,16 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - #614: hoshilu-threads-amazon-boost-v1-2026-10-21-night は seller-pr-slot・APPROVED のまま（未変更を確認したのは 09:14。今回は行の再読なし）。公開確認は 10/21 22:30 JST 以降。
 - 成果指標（D1 実測、20:20 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため Claude は集計しない（参考: marketplace_click は 10/10 10:46 JST 以降 QA 除外で2件、最新 10/16 11:56 JST）。
 - 残り: 10/17（土）20:13 に hoshilu-carousel-v3-instagram-2026-10-17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認。seller_form_*（新 consultation_input）と、撮影 run と重なる着地の切り分けを毎巡回で記録。
+
+### 2026-10-17 09:28 JST 定期巡回（状態: IN_PROGRESS のまま。本件での新しい実装・Claude によるキュー変更なし）
+- 受信箱: 対象はこのファイルと 2026-10-17-name-pen-candidate-fallback.md（本巡回で #665 配備・DONE、詳細は同ファイル）。search-category-exclusions・social-photo-price-mask は DONE で対象外。branch head 906e5e5。20:50 以降の他コミットは Codex の 677c592b（撮影 UA HOSHILU-SocialScreens を QA 分類）、写真マスク #641/#654 後続（Codex 引き取り・DONE）、#663（Threads 自動投稿を半分に）、#664（docs）。いずれも Claude 担当範囲の外で、触らない。
+- 1. Seller LP（D1 growth_events、10/10 10:46 JST 以降、09:20 JST 読み取り）: QA/INTERNAL 除外の seller_landing_view は 37件（for-sellers 34／visitor 27、他3）、seller_cta_clicked 0、seller_form_started 4（すべて旧 consultation＝focus のみ、新 consultation_input 0）、seller_form_submit_attempt／seller_form_failed 0。
+  - 20:50 以降の for-sellers 着地: ATTRIBUTED 11件（10/16 20:54・21:07・23:24、10/17 00:00:20／00:00:33・00:09:48／00:10:00・00:31:50／00:31:53・08:04:14／08:04:17 JST）、すべて流入元なし・CTA/フォーム 0。**08:13:58／08:14:01 の2件は traffic_class=QA**＝Codex の撮影 UA 分類（677c592b）が本番で効いていることを D1 で確認。2〜3秒差のペアが5組あり、撮影 UA 分類の配備前に動いた撮影 run の可能性があるが（未照合）、判定は未確定（既存行は消さない・人に数えない）。
+  - 読み: 人の停止点は引き続き「LP 表示 → CTA／フォームに触れる前」。母数が小さく、LP の文言・料金・注意書きは変えない。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS / X 停止（D1 social_post_queue、09:22 JST 読み取り）:
+  - X: hoshilu-carousel-v3-x-2026-10-17 は CANCELLED（X_PAUSED_BY_OWNER_2026-10-10）。10/16 20:00 JST 以降の新規 X 行 0件 → X 停止維持。
+  - Instagram: **hoshilu-carousel-v3-instagram-2026-10-17 は content_id=seller-screens（当日実画像に差し替え済み）・APPROVED・last_error なし、公開予定 20:00 JST**。公開確認（PUBLISHED・external_post_id・published_at）は 20:13 の巡回で記録。00:47 の別投稿を代用しない（Codex 記録と同じ扱い）。
+  - Threads（参考・#663 の半減）: 10/17 の am・昼・night は CANCELLED（THREADS_HALVED_20261017）、19:00 seller-lp-lp-renewal と 20:30 media-ranking-price は APPROVED。Claude は変更していない。
+  - #614: 10/21 22:30 の seller-pr-slot は今回行の再読なし。公開確認は 10/21 夜。
+- 成果指標（D1 実測、09:20 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため参考値（marketplace_click、10/10 10:46 JST 以降 QA/INTERNAL 除外で2件・2人、最新 10/16 11:56 JST）。
+- 残り: 10/17 20:13 に Instagram 10/17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認。seller_form_*（新 consultation_input）と、撮影 run の QA 分類後の人の着地を毎巡回で記録。
