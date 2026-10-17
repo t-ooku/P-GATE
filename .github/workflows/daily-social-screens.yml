@@ -1,0 +1,19 @@
+name: Daily social screens (17:30 JST)
+
+# 2026-10-17: 毎日 17:30 JST の実画面の撮影（値下がり中・ホシルバズ・買い物ノート・セラー向け）が一度も定時で動いていなかった。
+# schedule は既定ブランチ（main）に置いた定義しか動かないため（seller-promo-weekly-record.yml と同じ事情）。
+# 中身は feature/ui-search-v2 の build-social-carousels.yml（workflow_call）をそのまま呼ぶ。撮影・コミット・デプロイ・
+# 失敗時の [CI-LOG] Issue はすべて向こうの定義どおり。ここには時刻だけを置く（定義を二重に持たない）。
+
+on:
+  schedule:
+    # 08:30 UTC = 17:30 JST。値下がり中の投稿（21:00 JST）は、この撮影の後に Worker が予約に入れる
+    - cron: '30 8 * * *'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+      issues: write
+    uses: t-ooku/P-GATE/.github/workflows/build-social-carousels.yml@feature/ui-search-v2
+    secrets: inherit
