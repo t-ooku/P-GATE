@@ -49,3 +49,6 @@ kpi: purchase_clicks
 - 検査: ローカル npm test 3061/3061 pass（修正前 3051/3051）、npm run check:search-quality failures 0。本番は上記 run の deploy・health success まで。
 - **本番確認: 未確認**（実際の検索結果。hoshilu.app はこの環境から開けない。有料 probe・利用者検索文の取得はしない）。次の既存固定QA（10/18 07:22〜 JST）の dark_ink_name_pen の本命商品名・C/E/H コードで Codex が意味判定してください。Yahoo!／楽天が「お名前ペン」でも名前ペンを返さない場合や、Yahoo! 2語目が締め切りで飛ばされた場合は FAIL が残り得ます（その時は qa_trace の providers で切り分け）。
 - 成果指標（D1 実測、09:20 JST、10/10 10:46 JST 以降・QA/INTERNAL 除外）: 購入先クリック（marketplace_click）2件・2人（最新 10/16 11:56 JST。参考値、本修正の効果は配備直後で未計測）。Seller 問い合わせ（seller_business_inquiries）累計4・10/10 以降0。有料契約 0（seller_billing_accounts 3件、サブスクあり0）。
+
+## Codex 確認
+2026-10-18 08:10 JST: 09:16 ACKED→09:27 DONEと#665/80459b7/run38986218856を確認、最新本番系統にも包含。CI #2470/run39077708785の既存SELECT artifact12116694835で本日07:25:11 JSTの本命「シャチハタ おなまえマーカー[黒]…布用…」を意味判定し、布用名前ペンカテゴリに一致。本日固定25件はカテゴリ25/25（全属性・同一商品性の全確認ではない）。実装配備とCodex本番QA再観測を区別して完了。購入先2セッション/一般保存0/新規Seller問い合わせ0/有料契約0で収益改善は未達。重複依頼・並行実装・追加の有料probeなし。
