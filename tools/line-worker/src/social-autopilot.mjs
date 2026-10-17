@@ -11,6 +11,7 @@ import {
 import { buzzThemeFor } from './buzz-shelf.mjs';
 import { policyV3Allows, seedCarouselQueue, seedMediaQueue, seedReelFallbackQueue } from './social-weekly-plan-v3.mjs';
 import { applyRealScreens } from './social-screens.mjs';
+import { loadPriceDrops } from './owned-media.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const NEW_SEARCH_LAUNCH_UTM_CAMPAIGN = 'hoshilu-new-search-launch-20260829';
@@ -658,6 +659,77 @@ const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 使用許諾 → 見本の確認・承認 → カード登録と自動更新への同意 → 商品公開。\nパスワードやAPIキーは最初の相談では求めません。相談や見本の段階では無料期間は始まりません。体験開始は準備中です。' }
 ]);
 
+// 2026-10-17 大隆さん承認（Cowork 経由、docs/handoff/2026-10-16-cowork-to-claude-code-revenue.md「本数を半分にして、
+// 買い物ノートの実データに寄せる」）。10/16 の実測では Threads の着地 57 件のうち 52 件が投稿 40〜90 秒後のリンク先取得で、
+// 1 日 4 本（9:30・12:30・20:30・22:30）出しても人はほとんど来ていなかった。
+// この日から: 9:30・12:30 は出さない。20:30 は /media の価格記録を使う投稿に替える。22:30 のセラー向けは 1 日おき。
+const THREADS_HALVED_FROM = '2026-10-17';
+const THREADS_MEDIA_CAMPAIGN_ID = 'hoshilu-threads-media-v1';
+// 20:30 の投稿に数字を入れるのは、その日の 17:00 JST 以降（投稿前の最新の記録を使う。15 分ごとに上書きされる）。
+const THREADS_MEDIA_FACTS_FROM_HOUR = 17;
+const THREADS_MEDIA_GENERIC = Object.freeze([
+  { id: 'media-drops-daily', path: '/media/price-drops', caption: 'ホシルは毎日、楽天市場の公式ランキングに入った商品の価格を記録しています。\nその記録の中で、ここ2週間に値下がりした商品を毎日まとめています。今の価格は商品ページで確認してください。' },
+  { id: 'media-ranking-price', path: '/media', caption: 'いま売れている物、値段は動いてる？\nジャンル別のランキング上位を、ホシルの価格記録の折れ線と一緒に並べています。' },
+  { id: 'media-check-before-buy', path: '/media', caption: '買う前に、最近の値段を見ておく。\nホシルの買い物ノートは、記録した日の価格だけで推移を描いています（値段の予想はしません）。' }
+]);
+
+// 楽天の商品名には【楽天1位】や送料無料などの売り文句が入るので、投稿には商品そのものの名前だけを使う。
+export function threadsMediaProductName(name) {
+  const cleaned = String(name || '')
+    .replace(/【[^】]*】|［[^］]*］|\[[^\]]*\]|＜[^＞]*＞|<[^>]*>|★[^★]*★/gu, ' ')
+    .replace(/最安[値]?|No\.?\s*1|１位|1位|ランキング|ポイント\s*\d*\s*倍|送料無料|クーポン|SALE|セール|限定|激安/giu, ' ')
+    .replace(/\s+/gu, ' ').trim();
+  if (cleaned.length < 4) return '';
+  return cleaned.length > 30 ? `${cleaned.slice(0, 30)}…` : cleaned;
+}
+
+export function threadsMediaFacts(drops = []) {
+  const list = Array.isArray(drops) ? drops : [];
+  if (list.length < 3) return null;
+  const top = list[0];
+  const name = threadsMediaProductName(top.product_name);
+  const [, month, day] = String(top.latest_date || '').split('-');
+  if (!name || !month || !day || !(top.max_price > top.latest_price)) return null;
+  return {
+    count: list.length,
+    capped: list.length >= 30,
+    name,
+    max_price: top.max_price,
+    latest_price: top.latest_price,
+    drop_rate: top.drop_rate,
+    checked: `${Number(month)}/${Number(day)}`
+  };
+}
+
+export function threadsMediaCaption(facts) {
+  if (!facts) return '';
+  const yen = (value) => `¥${Number(value).toLocaleString('ja-JP')}`;
+  return `ここ2週間、ホシルの価格記録で値下がりした商品は${facts.count}件${facts.capped ? '以上' : ''}。\n`
+    + `下げ幅がいちばん大きかったのは「${facts.name}」で、${yen(facts.max_price)}→${yen(facts.latest_price)}（-${facts.drop_rate}%、${facts.checked}確認）。\n`
+    + '今の価格は商品ページで確認してください。';
+}
+
+function threadsMediaLink(path, contentId, key) {
+  const params = new URLSearchParams({ utm_source: 'threads', utm_medium: 'social', utm_campaign: THREADS_MEDIA_CAMPAIGN_ID, utm_content: `${contentId}_${key.replace(/-/gu, '')}` });
+  return `https://hoshilu.app${path}?${params}`;
+}
+
+// 止めた枠の post_id（既に積まれている未投稿の行を取り消すため）。
+export function threadsHalvedRemovedPostIds(now = new Date(), days = 15) {
+  const ids = [];
+  const start = new Date(now.getTime() + JST_OFFSET_MS);
+  start.setUTCHours(0, 0, 0, 0);
+  for (let offset = 0; offset < days; offset += 1) {
+    const parts = jstDateParts(new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS));
+    const key = dateKey(parts);
+    if (key < THREADS_HALVED_FROM) continue;
+    const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
+    ids.push(`${THREADS_AMAZON_CAMPAIGN_ID}-${key}-am`, `${THREADS_AMAZON_CAMPAIGN_ID}-${key}`);
+    if (positiveModulo(dayIndex, 2) === 1) ids.push(`${THREADS_AMAZON_CAMPAIGN_ID}-${key}-night`);
+  }
+  return ids;
+}
+
 const pad = value => String(value).padStart(2, '0');
 
 function positiveModulo(value, size) {
@@ -801,7 +873,7 @@ function threadsAmazonLink(content) {
 // 依頼2(Threads publisher)と同じ180日/3件のAmazon適格販売という制約に対する
 // 施策なので、13モール汎用ローテーションとは別の関数に分けている。1日1本、
 // THREADS_AMAZON_POSTSを順番に繰り返す。
-export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
+export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14, { mediaFacts = null } = {}) {
   const posts = [];
   const start = new Date(now.getTime() + JST_OFFSET_MS);
   start.setUTCHours(0, 0, 0, 0);
@@ -811,7 +883,31 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
     const key = dateKey(parts);
     const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
     const userSlots = THREADS_AMAZON_SLOTS.filter((slot) => !slot.seller);
+    const halved = key >= THREADS_HALVED_FROM;
+    const todayKey = dateKey(jstDateParts(now));
     THREADS_AMAZON_SLOTS.forEach((slot) => {
+      if (halved && (slot.suffix === '-am' || slot.suffix === '')) return;
+      if (halved && slot.seller && positiveModulo(dayIndex, 2) === 1) return;
+      if (halved && slot.suffix === '-pm') {
+        // 2026-10-17: 20:30 は買い物ノート（/media）の価格記録を使う。数字は当日 17:00 以降に、その時点の記録で入れる。
+        const facts = key === todayKey ? mediaFacts : null;
+        const generic = THREADS_MEDIA_GENERIC[positiveModulo(dayIndex, THREADS_MEDIA_GENERIC.length)];
+        const content = facts
+          ? { id: 'media-drops-today', path: '/media/price-drops', caption: threadsMediaCaption(facts) }
+          : generic;
+        posts.push(normalizeSocialPost({
+          post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,
+          content_id: content.id,
+          platform: 'THREADS',
+          campaign_id: THREADS_MEDIA_CAMPAIGN_ID,
+          caption: content.caption,
+          link: threadsMediaLink(content.path, content.id, key),
+          affiliate: false,
+          scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
+          status: 'APPROVED'
+        }));
+        return;
+      }
       if (slot.seller) {
         // 2026-09-19: 夜枠はセラー募集（日替わり 10 本）。post_id の接頭辞は既存キュー行を上書きするため据え置く。
         const content = THREADS_SELLER_POSTS[positiveModulo(dayIndex, THREADS_SELLER_POSTS.length)];
@@ -947,9 +1043,19 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   ));
   // Amazon適格販売3件を優先する専用ローテーション。Threadsの認証情報とは
   // 独立に、他の常設シリーズと同じ「明示的な自動運用オプトイン」を要求する。
-  const threadsAmazonBoost = buildThreadsAmazonBoostPosts(now).filter(() => (
-    env.THREADS_EVERGREEN_AUTOPILOT_ENABLED === 'true'
-  ));
+  const threadsEnabled = env.THREADS_EVERGREEN_AUTOPILOT_ENABLED === 'true';
+  let mediaFacts = null;
+  const jstHour = new Date(now.getTime() + JST_OFFSET_MS).getUTCHours();
+  if (threadsEnabled && jstHour >= THREADS_MEDIA_FACTS_FROM_HOUR && jstHour <= 20) {
+    try { mediaFacts = threadsMediaFacts(await loadPriceDrops(env, { now })); } catch { mediaFacts = null; }
+  }
+  const threadsAmazonBoost = buildThreadsAmazonBoostPosts(now, 14, { mediaFacts }).filter(() => threadsEnabled);
+  // 止めた枠で既に積まれている未投稿の行は取り消す（投稿済みの行・他のキャンペーンは触らない）。
+  if (threadsEnabled) try {
+    await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='CANCELLED', last_error='THREADS_HALVED_20261017', updated_at=?2
+      WHERE status='APPROVED' AND scheduled_at>?2 AND post_id IN (SELECT value FROM json_each(?1))`)
+      .bind(JSON.stringify(threadsHalvedRemovedPostIds(now)), now.toISOString()).run();
+  } catch {}
   const xPublishingSafety = xPublishingSafetyReadiness(env);
   // 2026-09-17 大隆さん決定（SNS 方針 v3）: 旧方針の投稿（毎日 v2 女優リール・火木土の Instagram 案内・
   // リール日/カルーセル日の X 案内）は投入しない。カルーセルは seedCarouselQueue、リールは auto-runway-reel。
