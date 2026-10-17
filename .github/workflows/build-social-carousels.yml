@@ -31,8 +31,10 @@ on:
       - 'tools/line-worker/scripts/build-social-screens.mjs'
       - 'tools/line-worker/scripts/build-seller-lp-shots.mjs'
       - '.github/workflows/build-social-carousels.yml'
-  schedule:
-    - cron: '30 8 * * *'
+  # 2026-10-17: schedule は既定ブランチ（main）の定義しか動かない。毎日 17:30 JST の撮影は
+  # main の daily-social-screens.yml（cron '30 8 * * *'）がこのファイルを workflow_call で呼ぶ。
+  # 呼ばれた時の github.event_name は呼び出し元の 'schedule' なので、LP 撮影の「月曜だけ」もそのまま効く。
+  workflow_call:
   workflow_dispatch:
 
 permissions:
