@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow } from '../src/social-screens.mjs';
+import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow, seedDailyDropsPost, DROPS_DAILY } from '../src/social-screens.mjs';
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
 import { readFileSync } from 'node:fs';
@@ -112,11 +112,11 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
   assert.match(SCREEN_POSTS.seller.caption, /「PR」枠/u);
   assert.doesNotMatch(SCREEN_POSTS.seller.caption, /ショップページ|クーポン|売上が上がる|必ず売れる/u);
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-demand-visible' }, '2026-10-17'), ['seller']);
-  // 2026-10-17 大隆さん「値下がり中のリアル画像で販促」: 値下がりの記事枠は「値下がり中」を先に、ユーザー向けは 3 日のうち 2 日が値下がり中
-  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['drops', 'notes', 'buzz']);
-  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['notes', 'buzz']);
+  // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中）に変えていこう」: ユーザー向けは毎日「値下がり中」が先
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['drops', 'buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['drops', 'buzz', 'notes']);
   const firsts = ['2026-10-17', '2026-10-18', '2026-10-19'].map((day) => screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, day)[0]);
-  assert.equal(firsts.filter((id) => id === 'drops').length, 2);
+  assert.deepEqual(firsts, ['drops', 'drops', 'drops']);
   for (const day of ['2026-10-17', '2026-10-18', '2026-10-19']) {
     assert.deepEqual([...screenSetsForRow({ content_id: 'carousel-user-x' }, day)].sort(), ['buzz', 'drops', 'notes'], '撮れていない日は他のセットへ');
   }
@@ -257,4 +257,45 @@ test('写真の上側に焼き込まれた価格（例: 20261016/buzz/3.jpg 左�
   assert.match(source, /photo_ocr: shots\[index\]\.photoOcr/u);
   assert.doesNotMatch(source, /https?:\/\/[^'"`\s]*(?:ocr|vision)/iu);
   assert.match(source, /ocr: 'unavailable'/u);
+});
+
+// 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じに変えていこう」
+test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影の drops を、1 日 1 本だけ Instagram に足す', async () => {
+  const database = new DatabaseSync(':memory:');
+  database.exec(`CREATE TABLE social_post_queue (post_id TEXT PRIMARY KEY, platform TEXT NOT NULL, campaign_id TEXT NOT NULL DEFAULT '',
+    content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '', media_url TEXT NOT NULL DEFAULT '',
+    scheduled_at TEXT NOT NULL, status TEXT NOT NULL, affiliate INTEGER NOT NULL DEFAULT 0, external_post_id TEXT NOT NULL DEFAULT '',
+    last_error TEXT NOT NULL DEFAULT '', approved_at TEXT, published_at TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+    platform_job_id TEXT NOT NULL DEFAULT '', creative_asset_id TEXT NOT NULL DEFAULT '', content_format TEXT NOT NULL DEFAULT '',
+    creative_policy TEXT NOT NULL DEFAULT '', jst_publish_date TEXT NOT NULL DEFAULT '', ai_generated INTEGER NOT NULL DEFAULT 0,
+    crosspost_group_id TEXT NOT NULL DEFAULT '', media_urls TEXT NOT NULL DEFAULT '')`);
+  const body = (captured, sets = ['drops']) => ({ captured_at: captured, sets: Object.fromEntries(sets.map((id) => [id, { files: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ file: `${id}/${n}.jpg` })) }])) });
+  const env = (manifestBody) => ({ PRODUCT_DB: d1(database), ASSETS: assets(manifestBody) });
+  // 17:30 の撮影より前（手動の撮り直し）は使わない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-17T06:13:59Z')), new Date('2026-10-17T07:00:00Z'))).reason, 'before_daily_capture');
+  // drops が撮れていない日は足さない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z', ['notes'])), new Date('2026-10-17T08:50:00Z'))).reason, 'no_drops_today');
+  const first = await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z')), new Date('2026-10-17T08:50:00Z'));
+  assert.equal(first.inserted, 1);
+  const again = await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z')), new Date('2026-10-17T09:05:00Z'));
+  assert.equal(again.inserted, 0, '1 日 1 本だけ');
+  const row = database.prepare("SELECT * FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-10-17'").get();
+  assert.equal(row.platform, 'INSTAGRAM');
+  assert.equal(row.status, 'APPROVED');
+  assert.equal(row.campaign_id, DROPS_DAILY.campaign_id);
+  assert.equal(row.scheduled_at, '2026-10-17T12:00:00.000Z', '21:00 JST');
+  assert.equal(row.jst_publish_date, '2026-10-17');
+  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-10-17', 'drops', 7));
+  assert.match(row.caption, /ホシルで検索/u);
+  assert.match(row.link, /^https:\/\/hoshilu\.app\/media\/price-drops\?/u);
+  // 予約の 10 分前を過ぎたら、その日は足さない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-18T08:40:00Z')), new Date('2026-10-18T11:55:00Z'))).reason, 'too_late');
+  assert.equal((await seedDailyDropsPost({ ...env(body('2026-10-18T08:40:00Z')), SOCIAL_DROPS_DAILY_ENABLED: 'false' }, new Date('2026-10-18T09:00:00Z'))).enabled, false);
+  // 同じ日のユーザー向けカルーセルが drops に差し替わっていれば、21:00 は足さない（同じ画像を 2 回出さない）
+  database.prepare(`INSERT INTO social_post_queue (post_id,platform,campaign_id,content_id,caption,scheduled_at,status,created_at,updated_at,jst_publish_date,media_urls)
+    VALUES ('hoshilu-carousel-v3-instagram-2026-10-19','INSTAGRAM','hoshilu-carousel-v3','screens-drops','x','2026-10-19T11:00:00.000Z','APPROVED','t','t','2026-10-19',?)`)
+    .run(JSON.stringify(screenMediaUrls('2026-10-19', 'drops', 7)));
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-19T08:40:00Z')), new Date('2026-10-19T08:50:00Z'))).reason, 'drops_already_today');
+  const source = readFileSync(new URL('../src/social-autopilot.mjs', import.meta.url), 'utf8');
+  assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now\)/u);
 });

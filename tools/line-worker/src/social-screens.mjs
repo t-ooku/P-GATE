@@ -94,6 +94,46 @@ export const SCREEN_POSTS = Object.freeze({
   })
 });
 
+// 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じに変えていこう」: ユーザー向けの Instagram に、
+// 毎日 21:00 JST の「値下がり中」投稿を 1 本足す（その日 17:30 JST の撮影でできた drops セット）。
+// 決まった post_id で 1 日 1 本だけ（何度呼ばれても増えない）。撮影より前の撮り直し（手動）は使わない（枚数が変わると URL がずれる）。
+export const DROPS_DAILY = Object.freeze({
+  campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '08:25'
+});
+
+export async function seedDailyDropsPost(env, now = new Date()) {
+  if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
+  const dateKey = jstDateKey(now);
+  const scheduledAt = new Date(`${dateKey}T${DROPS_DAILY.publish_utc}:00.000Z`);
+  // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
+  if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
+  const manifest = await loadScreensManifest(env, dateKey);
+  const count = availableSet(manifest, 'drops');
+  if (!count) return { enabled: true, inserted: 0, reason: 'no_drops_today' };
+  if (!(Date.parse(manifest.captured_at || '') >= Date.parse(`${dateKey}T${DROPS_DAILY.daily_capture_utc}:00.000Z`))) {
+    return { enabled: true, inserted: 0, reason: 'before_daily_capture' };
+  }
+  const postId = `hoshilu-price-drops-instagram-${dateKey}`;
+  // 同じ日のユーザー向けカルーセル（20:00）が、すでに今日の drops に差し替わっていれば足さない（同じ画像を 2 回出さない）
+  const day = dateKey.replaceAll('-', '');
+  const already = await env.PRODUCT_DB.prepare(`SELECT post_id FROM social_post_queue WHERE jst_publish_date=?1 AND platform='INSTAGRAM'
+      AND post_id<>?2 AND status IN ('APPROVED','PUBLISHING','PUBLISHED') AND media_urls LIKE ?3 LIMIT 1`)
+    .bind(dateKey, postId, `%/social/screens/${day}/drops/%`).first();
+  if (already) return { enabled: true, inserted: 0, reason: 'drops_already_today', post_id: already.post_id };
+  const post = normalizeSocialPost({
+    post_id: postId, platform: 'INSTAGRAM', campaign_id: DROPS_DAILY.campaign_id, content_id: DROPS_DAILY.content_id,
+    caption: SCREEN_POSTS.drops.caption, link: screenLink('INSTAGRAM', 'drops', dateKey), media_url: '',
+    media_urls: screenMediaUrls(dateKey, 'drops', count), scheduled_at: scheduledAt.toISOString(), status: 'APPROVED', content_format: 'IMAGE'
+  });
+  const at = now.toISOString();
+  const result = await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO social_post_queue
+      (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,external_post_id,last_error,approved_at,published_at,
+       created_at,updated_at,platform_job_id,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,media_urls)
+      VALUES (?1,'INSTAGRAM',?2,?3,?4,?5,'',?6,'APPROVED',0,'','',?7,'',?7,?7,'','','IMAGE','',?8,0,'',?9)`)
+    .bind(postId, DROPS_DAILY.campaign_id, post.content_id, post.caption, post.link, scheduledAt.toISOString(), at, dateKey, post.media_urls).run();
+  return { enabled: true, inserted: Number(result?.meta?.changes || 0), post_id: postId, slides: count };
+}
+
 export function jstDateKey(now = new Date()) {
   return new Date(now.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
 }
@@ -116,12 +156,10 @@ export function screenLink(platform, setId, dateKey) {
 export function screenSetsForRow(row = {}, dateKey = '') {
   const identity = `${row.content_id || ''} ${row.link || ''}`;
   if (/seller|for-sellers/iu.test(identity)) return ['seller'];
-  // 2026-10-17 大隆さん「値下がり中のリアル画像で販促」: 値下がりの記事枠と、ユーザー向けの 3 日のうち 2 日は「値下がり中」を主役にする。
-  // 撮れていない日は次の候補（買い物ノート・ホシルバズ）。
-  if (row.campaign_id === 'hoshilu-media-notes') return /price-drops/u.test(identity) ? ['drops', 'notes', 'buzz'] : ['notes', 'buzz'];
-  const dayNumber = Math.floor(Date.parse(`${dateKey}T00:00:00Z`) / DAY_MS);
-  const cycle = ((dayNumber % 3) + 3) % 3;
-  return cycle === 0 ? ['buzz', 'drops', 'notes'] : cycle === 1 ? ['drops', 'notes', 'buzz'] : ['drops', 'buzz', 'notes'];
+  // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中の実画像）に変えていこう」:
+  // ユーザー向けは毎日「値下がり中」を主役にする。撮れていない日だけ次の候補（ホシルバズ・買い物ノート）。
+  void dateKey;
+  return ['drops', 'buzz', 'notes'];
 }
 
 export async function loadScreensManifest(env, dateKey) {

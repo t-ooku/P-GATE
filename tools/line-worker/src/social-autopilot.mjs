@@ -10,7 +10,7 @@ import {
 } from './social-publisher.mjs';
 import { buzzThemeFor } from './buzz-shelf.mjs';
 import { policyV3Allows, seedCarouselQueue, seedMediaQueue, seedReelFallbackQueue } from './social-weekly-plan-v3.mjs';
-import { applyRealScreens } from './social-screens.mjs';
+import { applyRealScreens, seedDailyDropsPost } from './social-screens.mjs';
 import { loadPriceDrops } from './owned-media.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
@@ -1255,9 +1255,16 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   } catch (error) {
     realScreens = { enabled: true, updated: 0, error: String(error?.message || error).slice(0, 120) };
   }
+  // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じに」: 毎日 21:00 JST の「値下がり中」投稿（Instagram）を 1 本足す
+  let dropsDaily;
+  try {
+    dropsDaily = await seedDailyDropsPost(env, now);
+  } catch (error) {
+    dropsDaily = { enabled: true, inserted: 0, error: String(error?.message || error).slice(0, 120) };
+  }
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
   // 2026-09-19 大隆さん指示: 旧料金（9,800円・送客料のみ）の公開済み投稿を取り下げる（SOCIAL_RETRACT_OLD_PRICING=true の間）
   const retracted = await retractOldPricingPosts(env, now, fetchImpl);
-  return { seeded, carousels, reelFallback, media, realScreens, published, permalinks, threadsInsights, retracted };
+  return { seeded, carousels, reelFallback, media, realScreens, dropsDaily, published, permalinks, threadsInsights, retracted };
 }
