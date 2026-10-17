@@ -74,7 +74,7 @@ const DROP_SEGMENTS = Object.freeze([
   { id: 'beauty', categories: ['beauty_cosme', 'skincare', 'face_wash', 'face_lotion', 'beauty_health_appliance'] }
 ]);
 const EXTRA_CATEGORY_LABEL = { buzz_korean_beauty: '韓国コスメ', korean_fashion: '韓国ファッション' };
-export const DROP_FOCUS_LIMIT = 6;
+export const DROP_FOCUS_LIMIT = 8;
 
 export function dropSegment(row = {}) {
   const category = String(row.category_id || '');

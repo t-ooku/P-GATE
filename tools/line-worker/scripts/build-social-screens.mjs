@@ -227,9 +227,11 @@ export const SCREEN_SETS = Object.freeze({
   // ホシルが記録した価格と下がり幅はぼかさず、下がり幅は大きく出す。書き方は「記録の事実」（14 日間の最高値から・撮影日の時点）。
   drops: Object.freeze([
     // 2026-10-17 大隆さん「リアル画像をいろんなパターンで出していこう。商品は半無限にあるわけだから」: 1 投稿に 6 商品まで。
-    // 5・6 枚目は、その日の値下がりが足りなければ出さない（optional）。先頭のジャンルは日替わり（withDropFocus の rotate）。
-    ...[1, 2, 3, 4, 5, 6].map((focus) => Object.freeze({
-      id: `drop-${focus}`, url: '/media/price-drops', selector: `.media-drop[data-focus="${focus}"]`, min: 1, count: 1, optional: focus > 4,
+    // 候補は 8 つ。写真に焼き込まれた価格で写真全体がぼけた商品（何の商品か見えない）は飛ばし、次の候補を使う。
+    // 3 商品に満たない日はセットごと出さない（他のセットへ）。先頭のジャンルは日替わり（withDropFocus の rotate）。
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map((focus) => Object.freeze({
+      id: `drop-${focus}`, url: '/media/price-drops', selector: `.media-drop[data-focus="${focus}"]`, min: 1, count: 1,
+      optional: true, rejectFullBlur: true, group: 'drop', groupMax: 6, groupMin: 3,
       unmask: Object.freeze(['.media-drop-prices', '.media-drop-rate']), css: DROP_CARD_CSS, fit: true, maxHeight: 760,
       labelFrom: '.media-drop-genre', bigFrom: '.media-drop-rate', bigNote: Object.freeze(['値下がり中', '下がってる今', '最高値から↓']),
       kicker: 'PRICE DROP', title: '今、\n値下がり中。',
@@ -590,11 +592,15 @@ async function buildSet(browser, composer, page, setId, allSlides) {
   const shots = [];
   const slides = [];
   for (const slide of allSlides) {
+    // group: 同じ組（値下がりの商品）は groupMax 枚まで。足りた後の候補は撮らない
+    if (slide.group && slides.filter((item) => item.group === slide.group).length >= Number(slide.groupMax || Infinity)) continue;
     let result;
     try {
       result = await capture(page, slide);
+      // 写真に焼き込まれた価格で写真全体をぼかした商品は、何の商品か見えないので使わない（rejectFullBlur）
+      if (slide.rejectFullBlur && Number(result.photoFullBlur) > 0) throw new Error(`PHOTO_FULLY_BLURRED:${slide.id}`);
     } catch (error) {
-      // optional の枚（その日の商品が足りない時の 5・6 枚目など）は出さずに進む
+      // optional の枚（その日の商品が足りない時・写真が見えない時）は出さずに進む
       if (!slide.optional) throw error;
       console.log(`skipped optional ${setId}/${slide.id}: ${String(error?.message || error).split('\n')[0].slice(0, 120)}`);
       continue;
@@ -602,6 +608,11 @@ async function buildSet(browser, composer, page, setId, allSlides) {
     console.log(`captured ${setId}/${slide.id}: items=${result.found} blurred=${result.blurred} photos_masked=${result.photoMasked}/${result.photos} ocr=${result.photoOcr} full_blur=${result.photoFullBlur} label=${result.label}`);
     shots.push(result);
     slides.push(slide);
+  }
+  for (const group of new Set(allSlides.map((slide) => slide.group).filter(Boolean))) {
+    const need = Math.max(...allSlides.filter((slide) => slide.group === group).map((slide) => Number(slide.groupMin || 0)));
+    const got = slides.filter((slide) => slide.group === group).length;
+    if (got < need) throw new Error(`GROUP_TOO_FEW:${setId}/${group}:${got}<${need}`);
   }
   // 商品の価格が出る画面（値下がり・ランキング）で、ぼかしが1つも効いていなければ止める
   for (const [index, slide] of slides.entries()) {

@@ -137,9 +137,17 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
 
 test('値下がり中の投稿: 記録した価格と下がり幅はぼかさず大きく出す。店の商品名と写真の中の価格はぼかす', () => {
   const drops = SCREEN_SETS.drops.filter((slide) => slide.id.startsWith('drop-'));
-  // 2026-10-17 大隆さん「商品名にぼかし入れて、いろんなパターンで」: 6 商品まで（5・6 枚目は足りない日は出さない）
-  assert.equal(drops.length, 6);
-  assert.deepEqual(drops.map((slide) => Boolean(slide.optional)), [false, false, false, false, true, true]);
+  // 2026-10-17 大隆さん「商品名にぼかし入れて、いろんなパターンで」: 候補 8 から 6 商品まで。写真全体がぼけた商品は飛ばす。3 未満ならセットを出さない
+  assert.equal(drops.length, 8);
+  for (const slide of drops) {
+    assert.equal(slide.optional, true);
+    assert.equal(slide.rejectFullBlur, true);
+    assert.equal(slide.groupMax, 6);
+    assert.equal(slide.groupMin, 3);
+  }
+  const source = readFileSync(new URL('../scripts/build-social-screens.mjs', import.meta.url), 'utf8');
+  assert.match(source, /PHOTO_FULLY_BLURRED/u);
+  assert.match(source, /GROUP_TOO_FEW/u);
   assert.match(drops[0].css, /\.media-drop-body strong\{filter:blur/u, '店が付けた商品名は丸ごとぼかす');
   assert.ok(Array.isArray(drops[0].bigNote) && drops[0].bigNote.length >= 2, '見出しの言い回しは日替わり');
   for (const [index, slide] of drops.entries()) {
