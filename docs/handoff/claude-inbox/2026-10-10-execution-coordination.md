@@ -273,3 +273,16 @@ Codex 担当（PC・スマホ購入導線、価格グラフ、Seller PR枠の本
   - #614: 10/21 22:30 の seller-pr-slot は今回行の再読なし。公開確認は 10/21 夜。
 - 成果指標（D1 実測、09:20 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため参考値（marketplace_click、10/10 10:46 JST 以降 QA/INTERNAL 除外で2件・2人、最新 10/16 11:56 JST）。
 - 残り: 10/17 20:13 に Instagram 10/17 の PUBLISHED を確認したら SNS 分を DONE。10/21 夜に seller-pr-slot の PUBLISHED とその後の着地を確認。seller_form_*（新 consultation_input）と、撮影 run の QA 分類後の人の着地を毎巡回で記録。
+
+### 2026-10-17 14:13 JST 定期巡回（状態: IN_PROGRESS のまま。本件での新しい実装・Claude によるキュー変更なし）
+- 受信箱: 対象はこのファイル1件のみ（他3件は DONE）。branch head 46a9b7a。09:28 以降の新コミットは Cowork の週次記録（e6e4045）と Cowork→Claude Code 依頼（46a9b7a、`docs/handoff/2026-10-17-cowork-to-claude-code-revenue.md`）。後者は受信箱の外・宛先は Claude Code 側で、送客計測（marketplace_click）と seller_outreach_contacts の書き込みを含むため、本タスクでは実行しない（重複・担当外）。
+- 1. Seller LP（D1 growth_events、10/10 10:46 JST 以降、14:13 JST 読み取り）: QA 除外の seller_landing_view 37件（for-sellers 34／visitor 27、他3）＝09:20 から **+0**。seller_cta_clicked 0、seller_form_started 4（すべて旧 consultation、新 consultation_input 0）、submit_attempt／failed 0。最新の人の for-sellers 着地は 10/17 08:04 JST。
+  - 気づき（未確定）: **QA 以外の growth_events が 10/17 09:00〜14:13 JST に全種類で 0件**（QA の監視・canary・heartbeat は毎時記録あり＝受け口は動いている）。同じ時間帯の過去実績は 10/11〜13 が 2〜3件、10/15・16 が 54〜78件で、土曜の来訪なしでも説明はつく。#662（09:08 JST、着地計測の scroll→wheel）の差分は着地1種の発火条件だけで、全種類を止める内容ではないことをコードで確認。原因は断定しない。→ **Codex へ**: 朝ブリーフの計測点検で、QA 以外 0 が夜まで続くか確認してください（Cowork 依頼 §1 でも同じ指摘あり）。
+  - 読み: 人の停止点は引き続き「LP 表示 → CTA／フォームに触れる前」。LP の文言・料金・注意書きは変えない。実画面は未確認（hoshilu.app はこの環境から開けない）。
+- 2. SNS / X 停止（D1 social_post_queue、14:13 JST 読み取り）:
+  - X: 10/16 20:00 JST 以降の新規 X 行 0件。-10-17・-10-18 の X は CANCELLED（X_PAUSED_BY_OWNER_2026-10-10）→ X 停止維持。
+  - Instagram: **hoshilu-carousel-v3-instagram-2026-10-17 は seller-screens・APPROVED・last_error なし、公開予定 20:00 JST**。公開確認は 20:13 の巡回で記録（未確認＝公開前）。
+  - **Threads はトークン切れで失敗中**: 10/16 20:30（-10-16-pm）・22:30（-10-16-night）が FAILED `THREADS_CREATE_401`（アクセストークン検証エラー）。本日 19:00（seller-lp-real-threads-2026-10-17）・20:30（-10-17-pm）も APPROVED のまま、再連携が無ければ同じく失敗する見込み。再連携は大隆さんのみ可能（Cowork から伝達済み）。Claude は行を変更していない。
+  - #614 の 10/21 22:30 seller-pr-slot（hoshilu-threads-amazon-boost-v1-2026-10-21-night）は #663（Threads 半減）で **CANCELLED（THREADS_HALVED_20261017）** になっていた。→ 本件の「10/21 夜に seller-pr-slot の公開確認」は対象消滅として残りから外す。
+- 成果指標（D1 実測、14:13 JST）: Seller 問い合わせ（seller_business_inquiries）累計4件・10/10 以降の新規0件（最新 9/28）。有料契約: 0（seller_billing_accounts 3件とも BUSINESS/ACTIVE/FREE_OF_CHARGE、stripe_subscription_id あり 0件）。購入先クリック: Codex 担当範囲のため参考値（marketplace_click、10/10 10:46 JST 以降 QA 除外で2件・2人、最新 10/16 11:56 JST、増加なし）。
+- 残り: 10/17 20:13 に Instagram 10/17 の PUBLISHED・external_post_id・published_at を確認したら SNS 分を DONE。seller_form_*（新 consultation_input）と人の着地を毎巡回で記録。Threads 再連携後の失敗行の扱いは Cowork 依頼どおり Claude Code 側の判断（本タスクでは出し直さない）。
