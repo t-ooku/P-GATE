@@ -1,14 +1,18 @@
-name: Daily social screens (17:30 JST)
+name: Daily social screens (15:07 / 18:07 JST)
 
-# 2026-10-17: 毎日 17:30 JST の実画面の撮影（値下がり中・ホシルバズ・買い物ノート・セラー向け）が一度も定時で動いていなかった。
+# 2026-10-17: 毎日の実画面の撮影（値下がり中・ホシルバズ・買い物ノート・セラー向け）が一度も定時で動いていなかった。
 # schedule は既定ブランチ（main）に置いた定義しか動かないため（seller-promo-weekly-record.yml と同じ事情）。
 # 中身は feature/ui-search-v2 の build-social-carousels.yml（workflow_call）をそのまま呼ぶ。撮影・コミット・デプロイ・
 # 失敗時の [CI-LOG] Issue はすべて向こうの定義どおり。ここには時刻だけを置く（定義を二重に持たない）。
+# 2026-10-18: 08:30 UTC の 1 回だけだと、GitHub の定時の遅れ（数時間のことがある）で 21:00 JST の値下がり投稿に間に合わない。
+# 06:07 UTC（15:07 JST）と 09:07 UTC（18:07 JST）の 2 回にする。2 回目は、今日 15:00 JST 以降に撮れていれば撮り直さない
+# （予約済みの投稿の画像を変えない。判定は feature 側の workflow）。値下がり中の投稿は、撮影の後に Worker が 21:00 JST に予約する。
 
 on:
   schedule:
-    # 08:30 UTC = 17:30 JST。値下がり中の投稿（21:00 JST）は、この撮影の後に Worker が予約に入れる
-    - cron: '30 8 * * *'
+    - cron: '7 6 * * *'
+    - cron: '7 9 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
