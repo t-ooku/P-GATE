@@ -295,8 +295,8 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
     crosspost_group_id TEXT NOT NULL DEFAULT '', media_urls TEXT NOT NULL DEFAULT '')`);
   const body = (captured, sets = ['drops']) => ({ captured_at: captured, sets: Object.fromEntries(sets.map((id) => [id, { files: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ file: `${id}/${n}.jpg` })) }])) });
   const env = (manifestBody) => ({ PRODUCT_DB: d1(database), ASSETS: assets(manifestBody) });
-  // 17:30 の撮影より前（手動の撮り直し）は使わない
-  assert.equal((await seedDailyDropsPost(env(body('2026-10-17T06:13:59Z')), new Date('2026-10-17T07:00:00Z'))).reason, 'before_daily_capture');
+  // その日の定時の撮影（06:00 UTC = 15:00 JST 以降）より前の撮り直しは使わない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-17T05:40:00Z')), new Date('2026-10-17T07:00:00Z'))).reason, 'before_daily_capture');
   // drops が撮れていない日は足さない
   assert.equal((await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z', ['notes'])), new Date('2026-10-17T08:50:00Z'))).reason, 'no_drops_today');
   const first = await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z')), new Date('2026-10-17T08:50:00Z'));
@@ -312,6 +312,12 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
   assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-10-17', 'drops', 7));
   assert.match(row.caption, /ホシルで検索/u);
   assert.match(row.link, /^https:\/\/hoshilu\.app\/media\/price-drops\?/u);
+  // 予約後に撮り直して枚数が変わったら、投稿前なら URL を合わせ直す（10/18）
+  const fewer = (captured) => ({ captured_at: captured, sets: { drops: { files: [1, 2, 3, 4, 5].map((n) => ({ file: `drops/${n}.jpg` })) } } });
+  const resync = await seedDailyDropsPost(env(fewer('2026-10-17T09:10:00Z')), new Date('2026-10-17T09:15:00Z'));
+  assert.equal(resync.synced, 1);
+  assert.equal(JSON.parse(database.prepare("SELECT media_urls FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-10-17'").get().media_urls).length, 5);
+  assert.equal((await seedDailyDropsPost(env(fewer('2026-10-17T09:10:00Z')), new Date('2026-10-17T09:20:00Z'))).synced, 0, '同じなら書かない');
   // 予約の 10 分前を過ぎたら、その日は足さない
   assert.equal((await seedDailyDropsPost(env(body('2026-10-18T08:40:00Z')), new Date('2026-10-18T11:55:00Z'))).reason, 'too_late');
   assert.equal((await seedDailyDropsPost({ ...env(body('2026-10-18T08:40:00Z')), SOCIAL_DROPS_DAILY_ENABLED: 'false' }, new Date('2026-10-18T09:00:00Z'))).enabled, false);

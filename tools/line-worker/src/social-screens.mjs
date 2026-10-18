@@ -96,9 +96,12 @@ export const SCREEN_POSTS = Object.freeze({
 
 // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じに変えていこう」: ユーザー向けの Instagram に、
 // 毎日 21:00 JST の「値下がり中」投稿を 1 本足す（その日 17:30 JST の撮影でできた drops セット）。
-// 決まった post_id で 1 日 1 本だけ（何度呼ばれても増えない）。撮影より前の撮り直し（手動）は使わない（枚数が変わると URL がずれる）。
+// 決まった post_id で 1 日 1 本だけ（何度呼ばれても増えない）。その日の定時の撮影より前の撮り直し（手動）は使わない。
+// 2026-10-18: GitHub の定時実行は数時間遅れることがあるため、撮影を 15:07／18:07 JST の 2 回にした（main の daily-social-screens.yml）。
+// それに合わせて「その日の撮影」とみなす時刻を 06:00 UTC（15:00 JST）にした。予約後に撮り直して枚数が変わったら、
+// 投稿前（APPROVED のまま）なら画像の URL をその日の撮影に合わせ直す（10/18: 予約後に撮り直した）。
 export const DROPS_DAILY = Object.freeze({
-  campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '08:25'
+  campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '06:00'
 });
 
 export async function seedDailyDropsPost(env, now = new Date()) {
@@ -131,7 +134,15 @@ export async function seedDailyDropsPost(env, now = new Date()) {
        created_at,updated_at,platform_job_id,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,media_urls)
       VALUES (?1,'INSTAGRAM',?2,?3,?4,?5,'',?6,'APPROVED',0,'','',?7,'',?7,?7,'','','IMAGE','',?8,0,'',?9)`)
     .bind(postId, DROPS_DAILY.campaign_id, post.content_id, post.caption, post.link, scheduledAt.toISOString(), at, dateKey, post.media_urls).run();
-  return { enabled: true, inserted: Number(result?.meta?.changes || 0), post_id: postId, slides: count };
+  const inserted = Number(result?.meta?.changes || 0);
+  let synced = 0;
+  if (!inserted) {
+    const sync = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET media_urls=?2,updated_at=?3
+        WHERE post_id=?1 AND status='APPROVED' AND published_at='' AND external_post_id='' AND platform_job_id='' AND media_urls<>?2`)
+      .bind(postId, post.media_urls, at).run();
+    synced = Number(sync?.meta?.changes || 0);
+  }
+  return { enabled: true, inserted, synced, post_id: postId, slides: count };
 }
 
 export function jstDateKey(now = new Date()) {
