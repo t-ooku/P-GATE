@@ -49,6 +49,7 @@ test('値下がりの SNS 用の並び: 同じジャンルの中も日替わり�
   assert.deepEqual(focus.sort(), ['a', 'c']);
   const source = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
   assert.match(source, /SELECT w\.marketplace, w\.seller_id, w\.record_key/u);
+  assert.match(source, /seller_id: String\(row\.seller_id \|\| ''\)/u, '読んだ seller_id を落とさない');
 });
 
 test('値下がりページ: カードにジャンルと data-focus を付ける。載せてよい記録の元は公開ランキングと固定の検索語だけ', () => {

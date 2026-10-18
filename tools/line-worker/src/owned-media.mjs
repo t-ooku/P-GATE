@@ -22,7 +22,7 @@ export const MEDIA_NAME = 'ホシルの買い物ノート';
 export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
-export const MEDIA_TEMPLATE_VERSION = '6';
+export const MEDIA_TEMPLATE_VERSION = '7';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -150,6 +150,8 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
     return results.map((row) => ({
       record_key: String(row.record_key || ''),
       marketplace: String(row.marketplace || ''),
+      // 1 投稿に同じお店は 1 つまで（withDropFocus）。画面には出さない（#673 で読むようにしたが、ここで落としていた）
+      seller_id: String(row.seller_id || ''),
       product_name: String(row.product_name || '').replace(/\s+/gu, ' ').trim().slice(0, 90),
       latest_price: Number(row.latest_price) || 0,
       latest_date: String(row.latest_date || ''),
@@ -394,7 +396,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=6"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=7"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
