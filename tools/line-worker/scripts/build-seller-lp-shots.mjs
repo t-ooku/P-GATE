@@ -15,6 +15,7 @@
 // 10/17 #666: 値下がり中のセット（drops）を撮って確かめる。この行の追加で撮影を動かす。
 // 10/18: main の定時（daily-social-screens.yml）が動かなかったため、この行の追加で撮影を動かす。
 // 10/18 #673: 値下がり中の投稿を日替わりにした（同じ商品・同じお店が続かない）。この行の追加で撮り直す。
+// 10/18 #676: 同じお店の判定が効いていなかったのを直した。この行の追加で撮り直す。
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
