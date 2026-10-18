@@ -22,7 +22,7 @@ export const MEDIA_NAME = 'ホシルの買い物ノート';
 export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
-export const MEDIA_TEMPLATE_VERSION = '5';
+export const MEDIA_TEMPLATE_VERSION = '6';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -90,15 +90,31 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
   const rows = drops.map((row) => ({ ...row, segment: dropSegment(row) }));
   const order = DROP_SEGMENTS.map((segment) => segment.id);
   const shift = ((Number(rotate) || 0) % order.length + order.length) % order.length;
+  // 2026-10-18 10/17 と 10/18 の投稿で 6 商品中 4 つが同じだった（大隆さん 10/17「昨日と同じ投稿」）:
+  // ジャンルの中の並びも日替わりで 2 つずつずらす（下がり幅の大きい順を起点に、毎日ちがう商品から選ぶ）。
+  const dayOffset = Math.max(0, Math.floor(Number(rotate) || 0)) * 2;
   const pools = [...order.slice(shift), ...order.slice(0, shift), 'other']
-    .map((id) => rows.filter((row) => row.image_url && row.segment.id === id));
+    .map((id) => rows.filter((row) => row.image_url && row.segment.id === id))
+    .map((pool) => (pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool));
+  // 1 投稿に同じお店の商品は 1 つまで（10/18: 同じ店の同じファンデーションの本品と詰め替えが 2 枚並んだ）
+  const shops = new Set();
+  const take = (pool) => {
+    while (pool.length) {
+      const row = pool.shift();
+      const shop = row.seller_id ? `${row.marketplace || ''}:${row.seller_id}` : '';
+      if (shop && shops.has(shop)) continue;
+      if (shop) shops.add(shop);
+      return row;
+    }
+    return null;
+  };
   const picked = [];
   while (picked.length < limit && pools.some((pool) => pool.length)) {
     for (const pool of pools.slice(0, -1)) {
-      if (pool.length && picked.length < limit) picked.push(pool.shift());
+      if (pool.length && picked.length < limit) { const row = take(pool); if (row) picked.push(row); }
     }
     if (!pools.slice(0, -1).some((pool) => pool.length)) {
-      while (pools.at(-1).length && picked.length < limit) picked.push(pools.at(-1).shift());
+      while (pools.at(-1).length && picked.length < limit) { const row = take(pools.at(-1)); if (row) picked.push(row); }
     }
   }
   picked.forEach((row, index) => { row.focus = index + 1; });
@@ -119,7 +135,7 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
           MAX(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS max_price,
           COUNT(*) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS days
         FROM price_observations WHERE observed_date >= ?1 AND observed_date <= ?2)
-      SELECT w.marketplace, w.record_key, w.product_name, w.observed_date AS latest_date, w.price AS latest_price,
+      SELECT w.marketplace, w.seller_id, w.record_key, w.product_name, w.observed_date AS latest_date, w.price AS latest_price,
         w.max_price, w.days,
         (SELECT MAX(m.observed_date) FROM price_observations m WHERE m.marketplace = w.marketplace
           AND m.external_product_id = w.external_product_id AND m.seller_id = w.seller_id
@@ -378,7 +394,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=5"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=6"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>

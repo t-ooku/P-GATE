@@ -33,6 +33,24 @@ test('値下がりの SNS 用の並び: 韓国系 → アパレル → 生活雑
   assert.deepEqual(rotated, ['w', 'd', 's', 'k', 'e']);
 });
 
+test('値下がりの SNS 用の並び: 同じジャンルの中も日替わりで 2 つずつずらす・1 投稿に同じお店は 1 つまで（10/18）', () => {
+  const daily = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6'].map((key, i) => row(key, 'kitchen', `台所 ${key}`, 40 - i));
+  const pick = (rotate) => withDropFocus(daily, 2, rotate).filter((item) => item.focus).sort((a, b) => a.focus - b.focus).map((item) => item.record_key);
+  assert.deepEqual(pick(0), ['d1', 'd2']);
+  assert.deepEqual(pick(1), ['d3', 'd4'], '翌日はちがう商品');
+  assert.deepEqual(pick(2), ['d5', 'd6']);
+  assert.deepEqual(pick(3), ['d1', 'd2'], '一巡したら最初から');
+  const shop = [
+    { ...row('a', 'buzz_korean_beauty', 'ファンデ 本品', 50), marketplace: 'YAHOO_JP', seller_id: 'shop1' },
+    { ...row('b', 'buzz_korean_beauty', 'ファンデ 詰め替え', 50), marketplace: 'YAHOO_JP', seller_id: 'shop1' },
+    { ...row('c', 'buzz_korean_beauty', 'リップ', 30), marketplace: 'YAHOO_JP', seller_id: 'shop2' }
+  ];
+  const focus = withDropFocus(shop, 6, 0).filter((item) => item.focus).map((item) => item.record_key);
+  assert.deepEqual(focus.sort(), ['a', 'c']);
+  const source = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
+  assert.match(source, /SELECT w\.marketplace, w\.seller_id, w\.record_key/u);
+});
+
 test('値下がりページ: カードにジャンルと data-focus を付ける。載せてよい記録の元は公開ランキングと固定の検索語だけ', () => {
   const html = renderPriceDrops({ drops: withDropFocus([row('k', 'korean_fashion', '韓国 ブラウス', 20)]), now: new Date('2026-10-17T03:00:00Z') });
   assert.match(html, /<li class="media-drop" data-focus="1">/u);
