@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-18T10:38:56.278Z",
+  "captured_at": "2026-10-18T11:09:25.649Z",
   "size": [
     1080,
     1350
@@ -211,9 +211,9 @@
           "file": "seller/1.jpg",
           "id": "seller-hero",
           "items": 2,
-          "blurred": 697,
-          "photos": 34,
-          "photo_band_masked": 34,
+          "blurred": 737,
+          "photos": 42,
+          "photo_band_masked": 42,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -222,9 +222,9 @@
           "file": "seller/2.jpg",
           "id": "seller-real-results",
           "items": 1,
-          "blurred": 701,
-          "photos": 31,
-          "photo_band_masked": 31,
+          "blurred": 703,
+          "photos": 32,
+          "photo_band_masked": 32,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -245,8 +245,8 @@
           "id": "seller-real-buzz",
           "items": 22,
           "blurred": 230,
-          "photos": 88,
-          "photo_band_masked": 88,
+          "photos": 89,
+          "photo_band_masked": 89,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
