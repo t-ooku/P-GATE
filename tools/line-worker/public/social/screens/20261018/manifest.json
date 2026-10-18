@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-18T11:09:25.649Z",
+  "captured_at": "2026-10-18T11:29:20.576Z",
   "size": [
     1080,
     1350
@@ -153,17 +153,6 @@
           "id": "drop-4",
           "items": 1,
           "blurred": 84,
-          "photos": 20,
-          "photo_band_masked": 20,
-          "photo_ocr": "tesseract",
-          "photo_full_blur": 0,
-          "label": "韓国コスメ"
-        },
-        {
-          "file": "drops/4.jpg",
-          "id": "drop-5",
-          "items": 1,
-          "blurred": 84,
           "photos": 27,
           "photo_band_masked": 27,
           "photo_ocr": "tesseract",
@@ -171,8 +160,8 @@
           "label": "レディースファッション"
         },
         {
-          "file": "drops/5.jpg",
-          "id": "drop-6",
+          "file": "drops/4.jpg",
+          "id": "drop-5",
           "items": 1,
           "blurred": 84,
           "photos": 28,
@@ -180,6 +169,17 @@
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "キッズ・ベビー・マタニティ"
+        },
+        {
+          "file": "drops/5.jpg",
+          "id": "drop-6",
+          "items": 1,
+          "blurred": 84,
+          "photos": 31,
+          "photo_band_masked": 31,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "インテリア・寝具・収納"
         },
         {
           "file": "drops/6.jpg",
@@ -190,7 +190,7 @@
           "photo_band_masked": 31,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
-          "label": "インテリア・寝具・収納"
+          "label": "ワイヤレスイヤホン"
         },
         {
           "file": "drops/7.jpg",
