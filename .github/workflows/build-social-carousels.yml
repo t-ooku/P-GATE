@@ -31,8 +31,8 @@ on:
       - 'tools/line-worker/scripts/build-social-screens.mjs'
       - 'tools/line-worker/scripts/build-seller-lp-shots.mjs'
       - '.github/workflows/build-social-carousels.yml'
-  # 2026-10-17: schedule は既定ブランチ（main）の定義しか動かない。毎日 17:30 JST の撮影は
-  # main の daily-social-screens.yml（cron '30 8 * * *'）がこのファイルを workflow_call で呼ぶ。
+  # 2026-10-17: schedule は既定ブランチ（main）の定義しか動かない。毎日の撮影は
+  # main の daily-social-screens.yml（10/18 から cron '7 6 * * *' と '7 9 * * *'）がこのファイルを workflow_call で呼ぶ。
   # 呼ばれた時の github.event_name は呼び出し元の 'schedule' なので、LP 撮影の「月曜だけ」もそのまま効く。
   workflow_call:
   workflow_dispatch:
@@ -103,7 +103,15 @@ jobs:
           exec > >(tee -a /tmp/ci.log) 2>&1
           day="$(TZ=Asia/Tokyo date +%Y%m%d)"
           out="public/social/screens/${day}"
-          SOCIAL_SCREENS_REQUIRE_OCR=1 node scripts/build-social-screens.mjs "$out" --base https://hoshilu.app
+          # 2026-10-18: 定時は 15:07／18:07 JST の 2 回（main の daily-social-screens.yml。GitHub の定時は数時間遅れることがある）。
+          # 定時の起動で、今日 15:00 JST（06:00 UTC）以降にもう撮れていれば撮り直さない（予約済みの投稿の画像を変えない）。
+          since="$(TZ=Asia/Tokyo date +%Y-%m-%d)T06:00:00"
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ -f "$out/manifest.json" ] \
+            && python3 -c "import json,sys;sys.exit(0 if str(json.load(open(sys.argv[1])).get('captured_at',''))>=sys.argv[2] else 1)" "$out/manifest.json" "$since"; then
+            echo "screens: already captured today after ${since}Z; scheduled re-run keeps them"
+          else
+            SOCIAL_SCREENS_REQUIRE_OCR=1 node scripts/build-social-screens.mjs "$out" --base https://hoshilu.app
+          fi
           python3 - "$out" <<'PY'
           import json, sys
           from pathlib import Path
