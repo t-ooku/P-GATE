@@ -1224,12 +1224,12 @@ function jstDateKey(date) {
   return new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-// Threads publishes a numeric value per named metric rather than the flat
-// object shape Instagram/TikTok use, e.g.
+// Threads and Instagram media insights publish a numeric value per named
+// metric rather than a flat object, e.g.
 // { data: [{ name: 'views', values: [{ value: 42 }] }, ...] }. Missing or
 // non-finite metrics are recorded as null (matches the rest of this table's
 // "unknown stays NULL, never 0" convention) rather than defaulting to 0.
-function threadsMetricValue(payload, name) {
+function insightMetricValue(payload, name) {
   const entry = (payload?.data || []).find(item => item?.name === name);
   const raw = entry?.values?.[0]?.value ?? entry?.total_value?.value;
   return Number.isFinite(raw) && raw >= 0 ? Math.trunc(raw) : null;
@@ -1279,11 +1279,11 @@ export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fet
       });
       if (!insightsResponse.ok) throw new Error(`THREADS_INSIGHTS_${insightsResponse.status}`);
       const insightsPayload = await insightsResponse.json();
-      const views = threadsMetricValue(insightsPayload, 'views');
-      const replies = threadsMetricValue(insightsPayload, 'replies');
-      const reposts = threadsMetricValue(insightsPayload, 'reposts');
-      const quotes = threadsMetricValue(insightsPayload, 'quotes');
-      const sharesMetric = threadsMetricValue(insightsPayload, 'shares');
+      const views = insightMetricValue(insightsPayload, 'views');
+      const replies = insightMetricValue(insightsPayload, 'replies');
+      const reposts = insightMetricValue(insightsPayload, 'reposts');
+      const quotes = insightMetricValue(insightsPayload, 'quotes');
+      const sharesMetric = insightMetricValue(insightsPayload, 'shares');
       const shareComponents = [reposts, quotes, sharesMetric].filter(value => value !== null);
       const shares = shareComponents.length ? shareComponents.reduce((sum, value) => sum + value, 0) : null;
       const utm = trackingFields(row.link);
@@ -1301,6 +1301,96 @@ export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fet
     } catch (error) {
       failed += 1;
       console.error('THREADS_INSIGHTS_SYNC_FAILED', row.post_id, clean(error?.message || error, 200));
+    }
+  }
+  return { checked: rows.length, saved, failed };
+}
+
+// Instagram insights (2026-10-19 Cowork 依頼: 買い物ノート投稿のリーチ・保存が空).
+// syncInstagramPublishedPermalinks only stores the permalink once, so nothing
+// ever filled reach/saves. This takes a JST-daily snapshot like Threads, for
+// posts from the last 7 days that already have their permalink row (so the AI
+// label check there always runs first), at most once every 3 hours per post.
+// Needs instagram_business_manage_insights; without it the API refuses and the
+// post is only counted as failed.
+// https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights
+const INSTAGRAM_INSIGHTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const INSTAGRAM_INSIGHTS_REFRESH_MS = 3 * 60 * 60 * 1000;
+
+export async function syncInstagramInsights(env, now = new Date(), fetchImpl = fetch, onlyPostId = '') {
+  if (!env.PRODUCT_DB) return { checked: 0, saved: 0, failed: 0 };
+  const requestedPostId = clean(onlyPostId, 100);
+  const snapshotDay = jstDateKey(now);
+  let due;
+  try {
+    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.external_post_id,q.published_at,q.link,q.content_format,p.public_url
+      FROM social_post_queue q
+      JOIN social_post_performance p ON p.snapshot_id='published:'||q.post_id
+      WHERE (?1='' OR q.post_id=?1)
+      AND q.platform='INSTAGRAM' AND q.status='PUBLISHED'
+      AND q.external_post_id<>'' AND q.published_at>=?2
+      AND p.public_url IS NOT NULL AND p.public_url<>''
+      AND NOT EXISTS (SELECT 1 FROM social_post_performance s
+        WHERE s.snapshot_id='instagram:'||q.post_id||':'||?3 AND s.updated_at>=?4)
+      ORDER BY q.published_at DESC LIMIT 6`)
+      .bind(requestedPostId,
+        new Date(now.getTime() - INSTAGRAM_INSIGHTS_WINDOW_MS).toISOString(),
+        snapshotDay,
+        new Date(now.getTime() - INSTAGRAM_INSIGHTS_REFRESH_MS).toISOString()).all();
+  } catch (error) {
+    console.error('INSTAGRAM_INSIGHTS_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
+    return { checked: 0, saved: 0, failed: 1 };
+  }
+  const rows = due.results || [];
+  if (!rows.length) return { checked: 0, saved: 0, failed: 0 };
+  let credential;
+  try {
+    credential = await getInstagramPublishCredentials(env, fetchImpl);
+  } catch (error) {
+    console.error('INSTAGRAM_INSIGHTS_SYNC_AUTH_FAILED', clean(error?.message || error, 200));
+    return { checked: rows.length, saved: 0, failed: rows.length };
+  }
+  const headers = { authorization: `Bearer ${credential.accessToken}` };
+  const timestamp = now.toISOString();
+  let saved = 0;
+  let failed = 0;
+  for (const row of rows) {
+    try {
+      const mediaId = encodeURIComponent(row.external_post_id);
+      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${mediaId}/insights?metric=reach,views,saved,shares,comments`, {
+        redirect: 'manual', headers
+      });
+      if (!response.ok) throw new Error(`INSTAGRAM_INSIGHTS_${response.status}`);
+      const payload = await response.json();
+      // profile_visits exists only for feed posts (not reels) and the API
+      // rejects the whole request for an unsupported metric, so ask separately.
+      let profileViews = null;
+      if (clean(row.content_format, 20).toUpperCase() !== 'REEL') {
+        const profileResponse = await fetchImpl(`https://graph.instagram.com/v24.0/${mediaId}/insights?metric=profile_visits`, {
+          redirect: 'manual', headers
+        });
+        if (profileResponse.ok) profileViews = insightMetricValue(await profileResponse.json(), 'profile_visits');
+      }
+      const utm = trackingFields(row.link);
+      const publishedAt = clean(row.published_at, 40) || timestamp;
+      await env.PRODUCT_DB.prepare(`INSERT INTO social_post_performance
+        (snapshot_id,post_id,platform,snapshot_at,published_at,public_url,
+         utm_source,utm_medium,utm_campaign,utm_content,reach,impressions,saves,shares,comments,profile_views,
+         traffic_class,created_at,updated_at)
+        VALUES (?1,?2,'INSTAGRAM',?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,'ATTRIBUTED',?16,?16)
+        ON CONFLICT(snapshot_id) DO UPDATE SET snapshot_at=excluded.snapshot_at,
+          reach=excluded.reach,impressions=excluded.impressions,saves=excluded.saves,
+          shares=excluded.shares,comments=excluded.comments,profile_views=excluded.profile_views,
+          updated_at=excluded.updated_at`)
+        .bind(`instagram:${row.post_id}:${snapshotDay}`, row.post_id, timestamp, publishedAt,
+          row.public_url, utm.source, utm.medium, utm.campaign, utm.content,
+          insightMetricValue(payload, 'reach'), insightMetricValue(payload, 'views'),
+          insightMetricValue(payload, 'saved'), insightMetricValue(payload, 'shares'),
+          insightMetricValue(payload, 'comments'), profileViews, timestamp).run();
+      saved += 1;
+    } catch (error) {
+      failed += 1;
+      console.error('INSTAGRAM_INSIGHTS_SYNC_FAILED', row.post_id, clean(error?.message || error, 200));
     }
   }
   return { checked: rows.length, saved, failed };
