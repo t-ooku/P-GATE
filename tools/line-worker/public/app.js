@@ -33,7 +33,7 @@ const copy = {
 // 2026-09-03 大隆さん指示: 第一画面から「名前が分からなくても探せます。」の
 // 1行を削除し、その役割は検索欄のプレースホルダへ移す。
 // 検索例はタップで即検索(画像が要る例は画像選択を開く)。
-Object.assign(copy.JA,{hero:'探さなくていい。|ホシっといて。',heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しい？',examples:['韓国っぽいブラウス 3000円以内','玄関に置ける スリムな傘立て','子ども用水筒 500ml 食洗機OK','洗える厚手のラグ 2畳','A4が入る 軽いトートバッグ','乾燥肌向けの韓国コスメ 化粧水','オフィスで履ける 白のきれいめスニーカー','ノイキャン付き ワイヤレスイヤホン 1万円以下','排水口のゴミ受け ステンレス']});
+Object.assign(copy.JA,{hero:'探さなくていい。|ホシっといて。',heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しい？',examples:['韓国っぽいブラウス 3000円以内','きれいめワンピース 通勤 5000円以内','乾燥肌向けの韓国コスメ 化粧水','A4が入る 軽いトートバッグ','オフィスで履ける 白のきれいめスニーカー','玄関に置ける スリムな傘立て','秋のカーディガン 韓国風 ゆったり','洗える ワイドパンツ 黒','メンズ 白シャツ アイロン不要']});
 Object.assign(copy.EN,{hero:'Stop searching. |Leave it to HOSHILU.',heroSub:'A screenshot, a social post, a vague memory. HOSHILU finds it.\nIf it is not out there yet, HOSHILU keeps looking.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'What are you looking for?',examples:['a white bag I saw on Instagram','a Korean-style silver ring','the mattress in this screenshot','a leather tote that stands up on its own','something like these shoes','a pink lip tint I saw on social media']});
 Object.assign(copy.ZH,{hero:'不用自己找了。|交给 HOSHILU。',heroSub:'截图、社交帖子、模糊的记忆都可以。HOSHILU 帮你找到。\n现在没有的话，会一直找下去。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
 Object.assign(copy.KO,{hero:'직접 찾지 않아도 돼요.|HOSHILU에 맡기세요.',heroSub:'스크린샷도, SNS도, 어렴풋한 기억도. HOSHILU가 찾아드립니다.\n없으면 찾을 때까지 계속 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요?',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});
@@ -265,6 +265,7 @@ function renderQuickExamples(language=elements.language.value||'JA'){
   elements.quick.classList.toggle('hidden',Boolean(memberSession));
   if(memberSession)return;
   // 2026-10-19 大隆さん OK（入口の改善案 1）: 例は検索窓のすぐ下に置き、日本語は 9 個から日替わりで 3 個だけ出す
+  // 同日「服に寄せる」: 9 個のうち 7 個を服・バッグ・靴に（3 個ずつの組は 服 2 + ほか 1、服 2 + ほか 1、服 3）。
   // （文字だけで探せる例。押すとそのまま検索が始まる）。
   const pool=(copy[language]||copy.JA).examples||[];
   const examples=language==='JA'?dailyExamples(pool):pool;

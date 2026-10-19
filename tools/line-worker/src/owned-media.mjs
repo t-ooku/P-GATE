@@ -22,7 +22,8 @@ export const MEDIA_NAME = 'ホシルの買い物ノート';
 export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
-export const MEDIA_TEMPLATE_VERSION = '7';
+// 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
+export const MEDIA_TEMPLATE_VERSION = '8';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -62,40 +63,50 @@ const daysAgo = (now, days) => jstDate(new Date(now.getTime() - days * 24 * 60 *
 
 // 値下がりに載せてよい記録の元（どれも公開ランキング・固定の検索語。利用者の検索から記録した商品は載せない）。
 // 2026-10-17 大隆さん「特に韓国系とかもね」: 韓国コスメ棚・韓国ファッション（buzz-shelf.mjs）を足した。
-export const DROP_SOURCES = Object.freeze(['rakuten_ranking_api', 'yahoo_korean_beauty', 'yahoo_korean_fashion']);
+// 2026-10-19 大隆さん「服に寄せる」: 楽天の服（ジャンル固定・口コミ件数順の公式商品検索）を足した（buzz-shelf.mjs recordRakutenFashionPrices）。
+export const DROP_SOURCES = Object.freeze(['rakuten_ranking_api', 'yahoo_korean_beauty', 'yahoo_korean_fashion', 'rakuten_fashion_review']);
 
 // 2026-10-17 大隆さん「値下がり中のリアル画像を、デカデカとアピール。若い者向けや主婦向け、流行ってるアパレルや生活雑貨も。特に韓国系」:
 // SNS の値下がり投稿に載せる順（data-focus）。韓国系 → アパレル → 生活雑貨 → 美容 の順に 1 つずつ回し、残りは下がり幅の大きい順。
 // 一覧ページの並び（下がり幅の大きい順）は変えない。
+// 2026-10-19 大隆さん「もっと売上増やそう」→「服に寄せる」（楽天で売れているのは服のお店）:
+// 服（韓国ファッション・レディース・メンズ・靴・バッグ）を先頭に、1 巡ごとに服 2 つ → 服以外 1 つ（韓国コスメ・生活雑貨・美容を日替わりで回す）。
+// 服が尽きたら残りのジャンルを 1 つずつ回し、最後は下がり幅の大きい順。一覧ページの並び（下がり幅の大きい順）は変えない。
 const DROP_SEGMENTS = Object.freeze([
-  { id: 'korean', categories: ['buzz_korean_beauty', 'korean_fashion'] },
-  { id: 'apparel', categories: ['womens_fashion', 'mens_fashion', 'shoes', 'womens_sneakers', 'bags'] },
+  { id: 'fashion', categories: ['korean_fashion', 'womens_fashion', 'mens_fashion', 'shoes', 'womens_sneakers', 'bags'] },
+  { id: 'korean', categories: ['buzz_korean_beauty'] },
   { id: 'daily', categories: ['daily_goods', 'kitchen', 'interior', 'kids_baby', 'pet'] },
   { id: 'beauty', categories: ['beauty_cosme', 'skincare', 'face_wash', 'face_lotion', 'beauty_health_appliance'] }
 ]);
 const EXTRA_CATEGORY_LABEL = { buzz_korean_beauty: '韓国コスメ', korean_fashion: '韓国ファッション' };
 export const DROP_FOCUS_LIMIT = 8;
+export const DROP_FASHION_PER_ROUND = 2;
 
 export function dropSegment(row = {}) {
   const category = String(row.category_id || '');
-  if (/韓国/u.test(String(row.product_name || '')) && !DROP_SEGMENTS[0].categories.includes(category)) return { id: 'korean', label: '韓国系' };
   const segment = DROP_SEGMENTS.find((item) => item.categories.includes(category));
   const label = EXTRA_CATEGORY_LABEL[category] || SHELF_CATEGORY.get(category) || '';
+  // 商品名に「韓国」とあってジャンルの分からない物（服でも美容でもない）は韓国系として回す
+  if (!segment && /韓国/u.test(String(row.product_name || ''))) return { id: 'korean', label: label || '韓国系' };
   return { id: segment?.id || 'other', label };
 }
 
-// rotate: 先頭のジャンルを日替わりにする（2026-10-17 大隆さん「いろんなパターンで出していこう」）。0 なら 韓国系 から。
+// rotate: 日替わりの番号。服以外のジャンルの順番と、各ジャンルの中の並び（2 つずつずらす）を日替わりにする。
 export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
   if (!Array.isArray(drops)) return drops;
   const rows = drops.map((row) => ({ ...row, segment: dropSegment(row) }));
-  const order = DROP_SEGMENTS.map((segment) => segment.id);
-  const shift = ((Number(rotate) || 0) % order.length + order.length) % order.length;
+  const others = DROP_SEGMENTS.slice(1).map((segment) => segment.id);
+  const shift = ((Number(rotate) || 0) % others.length + others.length) % others.length;
   // 2026-10-18 10/17 と 10/18 の投稿で 6 商品中 4 つが同じだった（大隆さん 10/17「昨日と同じ投稿」）:
   // ジャンルの中の並びも日替わりで 2 つずつずらす（下がり幅の大きい順を起点に、毎日ちがう商品から選ぶ）。
   const dayOffset = Math.max(0, Math.floor(Number(rotate) || 0)) * 2;
-  const pools = [...order.slice(shift), ...order.slice(0, shift), 'other']
-    .map((id) => rows.filter((row) => row.image_url && row.segment.id === id))
-    .map((pool) => (pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool));
+  const poolOf = (id) => {
+    const pool = rows.filter((row) => row.image_url && row.segment.id === id);
+    return pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool;
+  };
+  const fashion = poolOf('fashion');
+  const otherPools = [...others.slice(shift), ...others.slice(0, shift)].map(poolOf);
+  const rest = poolOf('other');
   // 1 投稿に同じお店の商品は 1 つまで（10/18: 同じ店の同じファンデーションの本品と詰め替えが 2 枚並んだ）
   const shops = new Set();
   const take = (pool) => {
@@ -109,14 +120,21 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
     return null;
   };
   const picked = [];
-  while (picked.length < limit && pools.some((pool) => pool.length)) {
-    for (const pool of pools.slice(0, -1)) {
-      if (pool.length && picked.length < limit) { const row = take(pool); if (row) picked.push(row); }
-    }
-    if (!pools.slice(0, -1).some((pool) => pool.length)) {
-      while (pools.at(-1).length && picked.length < limit) { const row = take(pools.at(-1)); if (row) picked.push(row); }
+  const push = (pool) => { if (pool.length && picked.length < limit) { const row = take(pool); if (row) { picked.push(row); return true; } } return false; };
+  let next = 0;
+  while (picked.length < limit && (fashion.length || otherPools.some((pool) => pool.length))) {
+    for (let i = 0; i < DROP_FASHION_PER_ROUND; i += 1) push(fashion);
+    // 服以外は 1 巡に 1 つ（空のジャンルは飛ばす）。服が尽きたら服以外を 1 つずつ回す
+    const rounds = fashion.length ? 1 : otherPools.length;
+    for (let r = 0; r < rounds; r += 1) {
+      for (let tries = 0; tries < otherPools.length; tries += 1) {
+        const pool = otherPools[next % otherPools.length];
+        next += 1;
+        if (push(pool)) break;
+      }
     }
   }
+  while (rest.length && picked.length < limit) push(rest);
   picked.forEach((row, index) => { row.focus = index + 1; });
   return rows;
 }
@@ -396,7 +414,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=7"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=8"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>

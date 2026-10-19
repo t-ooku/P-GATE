@@ -356,11 +356,14 @@ export async function recordBuzzSnapshots(env, fetcher = fetch, now = Date.now()
 
 // 2026-09-20: 15 分ごとの cron から呼び、BUZZ 棚の D1 キャッシュ（20 分）を温める。
 // 訪問者が来た時に楽天へ 17 回行かないための予熱。失敗しても他の cron を止めない。
-export async function warmBuzzShelves(env, fetcher = fetch, now = Date.now()) {
+export async function warmBuzzShelves(env, fetcher = fetch, now = Date.now(), options = {}) {
   try {
     const result = await buzzShelfResult(env, fetcher, now);
     const stored = await storeBuzzShelfResult(env, result, now);
-    return { warmed: result.shelf_count, stored };
+    // 2026-10-19 楽天の服（レディース・バッグ・スニーカー・メンズ）の価格記録（棚には出さない。値下がりの元データ）。
+    // 定時の予熱のときだけ（訪問では呼ばない）。棚の後に順に呼ぶ（楽天 API の間隔を守る）。失敗しても予熱は止めない。
+    const fashion = await recordRakutenFashionPrices(env, fetcher, now, options).catch(() => ({ recorded: 0 }));
+    return { warmed: result.shelf_count, stored, fashion_recorded: Number(fashion?.recorded || 0) };
   } catch (error) {
     return { warmed: 0, error: String(error?.message || 'BUZZ_WARM_FAILED').slice(0, 80) };
   }
@@ -468,6 +471,40 @@ export async function recordKoreanFashionPrices(env, fetcher = fetch, now = Date
   await writeRankingCache(env, 'YAHOO_JP', KOREAN_FASHION_SOURCE.category, 'REVIEW_COUNT', korean, now, KOREAN_FASHION_SOURCE.ttlMs);
   return recordPriceObservations(env, korean, { source: 'yahoo_korean_fashion', now: new Date(now) })
     .catch(() => ({ recorded: 0, skipped: 'WRITE_FAILED' }));
+}
+
+// 2026-10-19 大隆さん「もっと売上増やそう」→「服に寄せる」: 楽天で売れているのは服のお店（10 月 売上 1 件・クリック 40）。
+// 値下がりの元データに服を増やす。楽天市場の公式商品検索（ジャンル固定・口コミ件数順＝毎日ほぼ同じ商品）で価格を記録し、
+// 3 日以上記録が並んだ物から値下がりを見つける。利用者の検索は使わない。各ジャンル 6 時間に 1 回まで・API は 1 秒以上あけて順に呼ぶ。
+export const RAKUTEN_FASHION_SOURCE = Object.freeze({
+  source: 'rakuten_fashion_review', rankingType: 'FASHION_REVIEW', ttlMs: 6 * 60 * 60 * 1000,
+  categories: Object.freeze(['womens_fashion', 'bags', 'womens_sneakers', 'mens_fashion'])
+});
+
+export async function recordRakutenFashionPrices(env, fetcher = fetch, now = Date.now(), { wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
+  if (!String(env?.RAKUTEN_APPLICATION_ID || '').trim() || !String(env?.RAKUTEN_ACCESS_KEY || '').trim()) return { recorded: 0, called: 0, skipped: 'NOT_CONFIGURED' };
+  let recorded = 0;
+  let called = 0;
+  for (const id of RAKUTEN_FASHION_SOURCE.categories) {
+    const category = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === id);
+    if (!category?.genre_id) continue;
+    if (await readRankingCache(env, 'RAKUTEN_JP', id, RAKUTEN_FASHION_SOURCE.rankingType, now)) continue;
+    // 直前の棚づくりも同じ楽天 API を使うので、1 回目の前もあける
+    await wait(1100);
+    called += 1;
+    let candidates = [];
+    try {
+      candidates = await fetchRakutenReviewRanking(env, category, fetcher);
+    } catch (error) {
+      if (/NOT_CONFIGURED/u.test(String(error?.message || ''))) return { recorded, skipped: 'NOT_CONFIGURED' };
+      continue;
+    }
+    if (!candidates.length) continue;
+    await writeRankingCache(env, 'RAKUTEN_JP', id, RAKUTEN_FASHION_SOURCE.rankingType, candidates, now, RAKUTEN_FASHION_SOURCE.ttlMs);
+    const result = await recordPriceObservations(env, candidates, { source: RAKUTEN_FASHION_SOURCE.source, now: new Date(now) }).catch(() => ({ recorded: 0 }));
+    recorded += Number(result?.recorded || 0);
+  }
+  return { recorded, called };
 }
 
 export async function buildKoreanShelf(env, fetcher = fetch) {

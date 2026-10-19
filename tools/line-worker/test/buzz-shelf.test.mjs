@@ -670,7 +670,7 @@ function memoryRankingCacheDb() {
 test('BUZZ: 予熱が結果全体を置き、訪問はそれを読むだけで楽天へ行かない', async () => {
   const db = memoryRankingCacheDb();
   const now = Date.parse('2026-10-05T20:15:00+09:00');
-  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, rankingFetcher(), now);
+  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, rankingFetcher(), now, { wait: async () => {} });
   assert.equal(warmed.stored, true);
   const stored = db.rows.get('HOSHILU|buzz_shelf_result|RESULT');
   assert.ok(stored, '結果全体が 1 行で置かれる');
@@ -690,7 +690,7 @@ test('BUZZ: 予熱が結果全体を置き、訪問はそれを読むだけで�
 test('BUZZ: 商品が 1 件も無い結果は置かない（空の棚を 20 分見せない）', async () => {
   const db = memoryRankingCacheDb();
   const failing = async () => new Response('down', { status: 503 });
-  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, failing, Date.parse('2026-10-05T20:15:00+09:00'));
+  const warmed = await warmBuzzShelves({ ...env, PRODUCT_DB: db }, failing, Date.parse('2026-10-05T20:15:00+09:00'), { wait: async () => {} });
   assert.equal(warmed.stored, false);
   assert.equal(db.rows.has('HOSHILU|buzz_shelf_result|RESULT'), false);
 });

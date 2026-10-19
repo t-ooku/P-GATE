@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { withDropFocus, dropSegment, DROP_SOURCES, renderPriceDrops } from '../src/owned-media.mjs';
-import { recordKoreanFashionPrices, KOREAN_FASHION_SOURCE } from '../src/buzz-shelf.mjs';
+import { recordKoreanFashionPrices, KOREAN_FASHION_SOURCE, recordRakutenFashionPrices, RAKUTEN_FASHION_SOURCE } from '../src/buzz-shelf.mjs';
 
 // 2026-10-17 大隆さん「値下がり中のリアル画像を、デカデカとアピール。若い者向けや主婦向け、流行ってるアパレルや生活雑貨も。特に韓国系とかもね」
 const row = (key, category, name = '商品', rate = 20, image = true) => ({
@@ -10,27 +10,36 @@ const row = (key, category, name = '商品', rate = 20, image = true) => ({
   latest_price: 800, max_price: 1000, days: 5, image_url: image ? 'https://img.example/a.jpg' : '', history: []
 });
 
-test('値下がりの SNS 用の並び: 韓国系 → アパレル → 生活雑貨 → 美容 を 1 つずつ回し、写真の無い物は選ばない', () => {
+// 2026-10-19 大隆さん「服に寄せる」（楽天で売れているのは服のお店）: 服 2 → 服以外 1（韓国コスメ・生活雑貨・美容を日替わり）
+test('値下がりの SNS 用の並び: 服を 2 つ → 服以外を 1 つ の順で回し、写真の無い物は選ばない（10/19 服に寄せる）', () => {
   const drops = withDropFocus([
     row('e', 'wireless_earphones', 'イヤホン', 40),
     row('w', 'womens_fashion', 'ニット', 15),
-    row('k', 'womens_fashion', '韓国風 ニット', 12),
+    row('k', 'korean_fashion', '韓国風 ブラウス', 12),
     row('d', 'kitchen', 'フライパン', 30),
     row('s', 'skincare', '化粧水', 11),
+    row('b', 'buzz_korean_beauty', 'クッションファンデ', 20),
+    row('sh', 'shoes', 'スニーカー', 18),
     row('m', 'mens_fashion', 'ジャケット', 25, false)
   ]);
-  const focus = drops.filter((item) => item.focus).sort((a, b) => a.focus - b.focus).map((item) => item.record_key);
-  assert.deepEqual(focus, ['k', 'w', 'd', 's', 'e']);
+  const order = (list) => list.filter((item) => item.focus).sort((a, b) => a.focus - b.focus).map((item) => item.record_key);
+  assert.deepEqual(order(drops), ['w', 'k', 'b', 'sh', 'd', 's', 'e']);
   assert.equal(drops.find((item) => item.record_key === 'm').focus, undefined, '写真の無い物は SNS に出さない');
   // 一覧の並び（下がり幅の大きい順）は変えない
-  assert.deepEqual(drops.map((item) => item.record_key), ['e', 'w', 'k', 'd', 's', 'm']);
-  assert.deepEqual(dropSegment({ category_id: 'korean_fashion' }), { id: 'korean', label: '韓国ファッション' });
+  assert.deepEqual(drops.map((item) => item.record_key), ['e', 'w', 'k', 'd', 's', 'b', 'sh', 'm']);
+  // トップの「今日の値下がり」3 つ（1〜3 番目）は服が 2 つ
+  assert.deepEqual(order(drops).slice(0, 3).map((key) => drops.find((item) => item.record_key === key).segment.id), ['fashion', 'fashion', 'korean']);
+  assert.deepEqual(dropSegment({ category_id: 'korean_fashion' }), { id: 'fashion', label: '韓国ファッション' });
   assert.deepEqual(dropSegment({ category_id: 'buzz_korean_beauty' }), { id: 'korean', label: '韓国コスメ' });
+  assert.equal(dropSegment({ category_id: 'womens_fashion', product_name: '韓国風 ニット' }).id, 'fashion', '韓国風の服は服として数える');
+  assert.equal(dropSegment({ category_id: '', product_name: '韓国 何か' }).id, 'korean');
+  assert.equal(dropSegment({ category_id: 'bags' }).id, 'fashion');
   assert.equal(dropSegment({ category_id: 'daily_goods' }).id, 'daily');
   assert.equal(withDropFocus(null), null);
-  // 先頭のジャンルは日替わり（rotate 1 ならアパレルから）
-  const rotated = withDropFocus(drops, 6, 1).filter((item) => item.focus).sort((a, b) => a.focus - b.focus).map((item) => item.record_key);
-  assert.deepEqual(rotated, ['w', 'd', 's', 'k', 'e']);
+  // 服以外のジャンルの順番は日替わり（rotate 1 なら生活雑貨から）。服の中も 2 つずつずれる
+  assert.deepEqual(order(withDropFocus(drops, 8, 1)), ['sh', 'w', 'd', 'k', 's', 'b', 'e']);
+  // 服が無い日は従来どおり 1 つずつ回す
+  assert.deepEqual(order(withDropFocus([row('d', 'kitchen'), row('s', 'skincare'), row('b', 'buzz_korean_beauty'), row('e', 'wireless_earphones')], 8, 0)), ['b', 'd', 's', 'e']);
 });
 
 test('値下がりの SNS 用の並び: 同じジャンルの中も日替わりで 2 つずつずらす・1 投稿に同じお店は 1 つまで（10/18）', () => {
@@ -56,7 +65,7 @@ test('値下がりページ: カードにジャンルと data-focus を付ける
   const html = renderPriceDrops({ drops: withDropFocus([row('k', 'korean_fashion', '韓国 ブラウス', 20)]), now: new Date('2026-10-17T03:00:00Z') });
   assert.match(html, /<li class="media-drop" data-focus="1">/u);
   assert.match(html, /<span class="media-drop-genre">韓国ファッション<\/span>/u);
-  assert.deepEqual([...DROP_SOURCES], ['rakuten_ranking_api', 'yahoo_korean_beauty', 'yahoo_korean_fashion']);
+  assert.deepEqual([...DROP_SOURCES], ['rakuten_ranking_api', 'yahoo_korean_beauty', 'yahoo_korean_fashion', 'rakuten_fashion_review']);
   assert.ok(!DROP_SOURCES.includes('search'), '利用者の検索から記録した商品は載せない');
   const source = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
   assert.match(source, /r\.source IN \(\$\{DROP_SOURCES/u);
@@ -131,4 +140,47 @@ test('トップの「今日の値下がり」: 値下がりページと同じ並
   const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
   assert.match(analytics, /#quickQueries button\.chip'\)\) send\('search_example_clicked'\)/);
   assert.match(analytics, /#topDrops a\.top-drop-card'\)\) send\('top_drop_clicked'\)/);
+});
+
+// 2026-10-19 大隆さん「服に寄せる」
+test('楽天の服の価格記録: ジャンル固定・口コミ件数順の公式商品検索だけ・各ジャンル 6 時間に 1 回まで・1 秒以上あけて順に呼ぶ', async () => {
+  const cache = new Map();
+  const observations = [];
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...args) {
+          return {
+            async first() {
+              if (!/FROM marketplace_ranking_cache/u.test(sql)) return null;
+              return cache.get(args.join('|')) || null;
+            },
+            async run() {
+              if (/INSERT INTO marketplace_ranking_cache/u.test(sql)) cache.set(args.slice(0, 3).join('|'), { payload_json: args[3], expires_at: args[4] });
+              return {};
+            },
+            sql, args
+          };
+        }
+      };
+    },
+    async batch(statements) { observations.push(...statements.map((statement) => statement.args)); return []; }
+  };
+  const env = { PRODUCT_DB: db, RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'key' };
+  const calls = [];
+  const waits = [];
+  const fetcher = async (url) => {
+    calls.push(new URL(url));
+    return Response.json({ Items: [{ itemName: 'きれいめ ワンピース', itemCode: 'shop:one', itemUrl: 'https://item.rakuten.co.jp/shop/one/', itemPrice: 3980, mediumImageUrls: ['https://thumbnail.image.rakuten.co.jp/a.jpg'] }] });
+  };
+  const now = Date.parse('2026-10-19T12:00:00Z');
+  const first = await recordRakutenFashionPrices(env, fetcher, now, { wait: async (ms) => { waits.push(ms); } });
+  assert.equal(first.called, RAKUTEN_FASHION_SOURCE.categories.length);
+  assert.deepEqual(calls.map((url) => url.searchParams.get('sort')), RAKUTEN_FASHION_SOURCE.categories.map(() => '-reviewCount'));
+  assert.ok(calls.every((url) => url.searchParams.get('genreId') && !url.searchParams.get('keyword')), '固定のジャンルだけ（検索語は使わない）');
+  assert.ok(waits.length === calls.length && waits.every((ms) => ms >= 1000), '楽天 API は 1 秒以上あける');
+  assert.ok(observations.length >= 1 && observations.every((args) => args.includes('rakuten_fashion_review')));
+  const second = await recordRakutenFashionPrices(env, fetcher, now + 60 * 1000, { wait: async () => {} });
+  assert.equal(second.called, 0, '保存が新しい間は API を呼ばない');
+  assert.equal((await recordRakutenFashionPrices({ PRODUCT_DB: db }, fetcher, now + 7 * 3600e3, { wait: async () => {} })).skipped, 'NOT_CONFIGURED');
 });
