@@ -400,8 +400,9 @@ export const dealGuideInputs = {
     ]
   },
   'sale-notification-only-for-malls-you-use': {
-    title: 'Amazonのセール通知を受け取る方法：楽天・Qoo10も使うモールだけ選べる',
-    description: 'Amazonのセールやクーポンを見逃さないために、通知を受け取る設定を説明します。楽天市場・Qoo10なども普段使うモールだけに絞れるので、通知が多すぎて読まなくなることがありません。',
+    // 2026-10-19 Search Console:「amazon セール 通知」7.5 位・表示 19 回でクリック 0。大隆さん OK で見出しと説明を検索語に寄せた
+    title: 'Amazonのセール通知を受け取る方法｜見逃さない設定と、楽天・Qoo10もまとめる方法',
+    description: 'Amazonのセールやクーポンを見逃さないための通知の受け取り方。HOSHILUなら楽天市場・Qoo10など普段使うモールだけを選んで、セール情報をまとめて受け取れます。通知が多すぎて読まなくなるのも防げます。',
     conclusion: '通知は多いほど見なくなります。普段買っているモール2〜3か所だけを選び、それ以外は受け取らないほうが、来た通知を実際に開けます。HOSHILUのSALE RADARでは、トップのモールのタイルを押すと受け取るモールを選ぶ画面が開き、選んだモールのセール・クーポン情報だけ届きます。',
     updatedAt: UPDATED,
     featurePath: '/',
