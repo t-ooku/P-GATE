@@ -23,6 +23,7 @@ export const MEDIA_PATHS = ['/media', '/media/price-drops'];
 const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
+// （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
 export const MEDIA_TEMPLATE_VERSION = '8';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
