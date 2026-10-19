@@ -145,7 +145,19 @@ function fromCandidate(candidate, index) {
     asin: text(candidate?.asin, 20),
     // HOSHILU 商品だけ価格を出す。確認できた金額が無ければ出さない（0 と書かない）。
     price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
-    listed_price_jpy: null
+    listed_price_jpy: null,
+    // A positive total alone does not prove that delivery is included. Keep
+    // evidence attached to the offer supplying the amount, not the link offer.
+    price_shipping_included: (priceOffer?.shipping_fee_confirmed === true || priceOffer?.shipping_fee_confirmed === 1)
+      && Number.isFinite(Number(priceOffer?.shipping_fee)) && priceOffer?.shipping_fee != null
+      && Number(priceOffer.shipping_fee) >= 0 && Number(priceOffer?.price) > 0
+      && Number(priceOffer?.total_cost) === Number(priceOffer.price) + Number(priceOffer.shipping_fee),
+    price_marketplace: text(priceOffer?.marketplace, 32),
+    price_observed_at: (() => {
+      const value = priceOffer?.observed_at || priceOffer?.fetched_at;
+      return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/u.test(value) && Number.isFinite(Date.parse(value))
+        ? new Date(value).toISOString() : '';
+    })()
   };
 }
 
@@ -362,6 +374,9 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     marketplace: row.marketplace,
     record_key: row.record_key || '',
     price_jpy: row.price_jpy,
+    price_shipping_included: row.price_shipping_included === true,
+    price_marketplace: row.price_marketplace || '',
+    price_observed_at: row.price_observed_at || '',
     listed_price_jpy: row.listing ? null : (row.listed_price_jpy ?? null),
     listing: row.listing === true,
     candidate_index: row.source === 'WEB' ? null : (Number.isInteger(row.candidate_index) ? row.candidate_index : null),

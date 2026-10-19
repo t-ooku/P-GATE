@@ -2196,7 +2196,8 @@ async function handleHoshiluRankingApi(request, env) {
 function sanitizePublicOffer(offer) {
   const shippingFeeConfirmed = offer?.shipping_fee_confirmed === true
     || Number(offer?.shipping_fee_confirmed) === 1
-    || (offer?.shipping_fee !== undefined && offer?.shipping_fee !== null
+    || (offer?.shipping_fee_confirmed !== false && offer?.shipping_fee_confirmed !== 0
+      && offer?.shipping_fee !== undefined && offer?.shipping_fee !== null
       && offer?.total_cost !== undefined && offer?.total_cost !== null);
   // 楽天/Yahoo!内のモール公式店(ZOZOTOWN・ハンズ・マツキヨ・@cosme・
   // ABC-MART)なら、その旨をUI表示用に付ける。順位には使わない。
@@ -2209,6 +2210,10 @@ function sanitizePublicOffer(offer) {
     total_cost: shippingFeeConfirmed
       ? Number(offer?.total_cost ?? (Number(offer?.price || 0) + Number(offer?.shipping_fee || 0))) : 0,
     shipping_fee_confirmed: shippingFeeConfirmed,
+    ...(typeof (offer?.observed_at || offer?.fetched_at) === 'string'
+      && /^\d{4}-\d{2}-\d{2}T/u.test(offer.observed_at || offer.fetched_at)
+      && Number.isFinite(Date.parse(offer.observed_at || offer.fetched_at))
+      ? { observed_at: new Date(offer.observed_at || offer.fetched_at).toISOString() } : {}),
     currency: String(offer?.currency || 'JPY'),
     stock_status: String(offer?.stock_status || 'UNKNOWN'),
     delivery_days: Number(offer?.delivery_days || 0),

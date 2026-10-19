@@ -54,3 +54,24 @@ test('a hidden preload does not become a visit; a later visible interaction stil
   b.dispatch({type:'wheel'});b.dispatch({type:'wheel'});
   assert.equal(b.events.filter(e=>e.event_type==='landing_view').length,1);
 });
+
+test('watch entry and notification revisit reach mall click without leaking product or notification details', () => {
+  const b = browser();
+  const button = (selector) => {
+    const element = new b.Element();
+    Object.assign(element, { tagName: 'BUTTON', dataset: {}, classList: { contains: () => false },
+      closest: (value) => value === selector ? element : null, matches: () => false });
+    return element;
+  };
+  b.dispatch({ type: 'click', target: button('.watch-settings-button') });
+  b.dispatch({ type: 'click', target: button('.watch-save-button') });
+  b.dispatch({ type: 'notification-destination-opened', detail: {
+    marketplace: 'RAKUTEN_JP', notification_id: 'private-fixture', product_name: 'private-product-fixture'
+  } });
+  assert.deepEqual(b.events.map((event) => event.event_type), [
+    'target_price_watch_started', 'target_price_watch_save_clicked', 'notification_opened', 'marketplace_click'
+  ]);
+  assert.equal(b.events.at(-1).marketplace, 'RAKUTEN_JP');
+  assert.doesNotMatch(JSON.stringify(b.events), /private-fixture|private-product-fixture|notification_id|product_name/u);
+  assert.equal(b.events.some((event) => event.event_type === 'target_price_watch_set'), false, 'completion belongs to server, not button click');
+});

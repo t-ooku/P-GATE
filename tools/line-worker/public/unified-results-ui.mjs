@@ -54,6 +54,18 @@ const PAGE = 12;
 // 2026-10-01 大隆さん指示「ホシルの商品提示も、楽天市場やYahoo!ショッピングと表記して」。
 // HOSHILU が API で確認した商品は、バッジを「HOSHILU」ではなく販売先のモール名にする。モール名は文字だけ（ロゴは使わない）。
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング', AMAZON_JP: 'Amazon' };
+export function priceEvidenceText(item) {
+  if (item?.source === 'WEB' || !(Number(item?.price_jpy) > 0)) return '';
+  const parts = [item.price_shipping_included === true ? '送料込み' : '送料未確認'];
+  if (item.price_marketplace && item.price_marketplace !== item.marketplace) {
+    parts.push(`価格元：${MALL_LABEL[item.price_marketplace] || '別の販売先'}`);
+  }
+  const observed = item.price_observed_at;
+  if (typeof observed === 'string' && /^\d{4}-\d{2}-\d{2}T/u.test(observed) && Number.isFinite(Date.parse(observed))) {
+    parts.push(`${new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(observed))}確認`);
+  } else parts.push('確認時刻不明');
+  return parts.join('・');
+}
 function badgeText(item) {
   if (item.source === 'HOSHILU' && MALL_LABEL[item.marketplace]) return MALL_LABEL[item.marketplace];
   return COPY.badge[item.source] || COPY.badge.WEB;
@@ -244,6 +256,7 @@ function card(item) {
   // HOSHILU が API で確認できた価格は、そのまま出す。
   if (Number(item.price_jpy) > 0) {
     priceRow.append(el('strong', 'unified-card-price', `¥${Number(item.price_jpy).toLocaleString('ja-JP')}`));
+    body.append(el('small', 'unified-card-price-note', priceEvidenceText(item)));
   } else if (Number(item.listed_price_jpy) > 0) {
     // 2026-09-22 大隆さん報告「価格もでてない」。Web の数字はページに書いてあっただけの
     // ものなので、確認済みの価格とは別の見た目にして「参考価格・検索時点」と断る。
@@ -446,6 +459,11 @@ export function render(unified, candidates = []) {
   // （消えると元の2つの棚へ戻り、「1本にまとめた」約束が崩れる）
   // 最初は選ばれている並び順の先頭12件だけ描く。
   paint(host, list);
+
+  const guide = el('details', 'unified-note');
+  guide.append(el('summary', '', '価格を比べるときの確認点'));
+  guide.append(el('p', '', '型番・サイズ・色・数量が同じか確認してください。送料未確認は送料無料ではありません。価格・在庫・送料は販売先で購入前にご確認ください。希望価格の通知は購入や在庫の確保を保証するものではありません。'));
+  host.append(guide);
 
   if (unified.truncated) host.append(el('p', 'unified-note', COPY.narrow));
 }
