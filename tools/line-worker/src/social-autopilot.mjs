@@ -6,6 +6,7 @@ import {
   socialPublisherReadinessWithStoredCredentials,
   syncInstagramPublishedPermalinks,
   syncThreadsInsights,
+  syncInstagramInsights,
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 import { buzzThemeFor } from './buzz-shelf.mjs';
@@ -1264,7 +1265,8 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   }
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
+  const instagramInsights = await syncInstagramInsights(env, now, fetchImpl);
   // 2026-09-19 大隆さん指示: 旧料金（9,800円・送客料のみ）の公開済み投稿を取り下げる（SOCIAL_RETRACT_OLD_PRICING=true の間）
   const retracted = await retractOldPricingPosts(env, now, fetchImpl);
-  return { seeded, carousels, reelFallback, media, realScreens, dropsDaily, published, permalinks, threadsInsights, retracted };
+  return { seeded, carousels, reelFallback, media, realScreens, dropsDaily, published, permalinks, threadsInsights, instagramInsights, retracted };
 }

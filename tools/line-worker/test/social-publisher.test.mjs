@@ -8,6 +8,7 @@ import {
   xPublishingSafetyReadiness,
   syncInstagramPublishedPermalinks,
   syncThreadsInsights,
+  syncInstagramInsights,
   handleSocialAdminRoutes,
   socialPublisherTest
 } from '../src/social-publisher.mjs';
@@ -1551,6 +1552,87 @@ test('Threadsインサイト取り込みは同じJST日内の再実行で同一�
   await syncThreadsInsights(env, new Date('2026-08-17T09:00:00.000Z'), fetchImpl);
   await syncThreadsInsights(env, new Date('2026-08-17T13:00:00.000Z'), fetchImpl); // 同じJST日(18:00-22:00)の後刻
   assert.deepEqual(upserts, ['threads:threads-post-1:2026-08-17', 'threads:threads-post-1:2026-08-17']);
+});
+
+function instagramInsightsEnv(rows, writes, binds = []) {
+  return {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM social_post_queue')) {
+          return { bind: (...values) => { binds.push(values); return { all: async () => ({ results: rows }) }; } };
+        }
+        return {
+          bind(...values) {
+            return { run: async () => { writes.push({ sql, values }); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+}
+
+test('Instagramインサイト取り込みはリーチ・保存などをJST日次スナップショットへ保存する', async () => {
+  const writes = [];
+  const binds = [];
+  const env = instagramInsightsEnv([{
+    post_id: 'ig-post-1', external_post_id: 'ig-media-1', published_at: '2026-10-15T11:00:00.000Z',
+    link: 'https://hoshilu.app/media?utm_source=instagram&utm_medium=social&utm_campaign=hoshilu-media-notes&utm_content=c1',
+    content_format: 'CAROUSEL', public_url: 'https://www.instagram.com/p/Example/'
+  }], writes, binds);
+  const requests = [];
+  const now = new Date('2026-10-19T03:00:00.000Z');
+  const result = await syncInstagramInsights(env, now, async (url, options) => {
+    requests.push(url);
+    assert.equal(options.headers.authorization, 'Bearer token');
+    assert.equal(options.redirect, 'manual');
+    if (url.includes('metric=profile_visits')) {
+      return Response.json({ data: [{ name: 'profile_visits', values: [{ value: 4 }] }] });
+    }
+    return Response.json({ data: [
+      { name: 'reach', values: [{ value: 210 }] },
+      { name: 'views', values: [{ value: 340 }] },
+      { name: 'saved', values: [{ value: 12 }] },
+      { name: 'shares', values: [{ value: 3 }] },
+      { name: 'comments', values: [{ value: 1 }] }
+    ] });
+  });
+  assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
+  assert.deepEqual(binds[0], ['', '2026-10-12T03:00:00.000Z', '2026-10-19', '2026-10-19T00:00:00.000Z']);
+  assert.equal(requests[0], 'https://graph.instagram.com/v24.0/ig-media-1/insights?metric=reach,views,saved,shares,comments');
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].values, [
+    'instagram:ig-post-1:2026-10-19', 'ig-post-1', '2026-10-19T03:00:00.000Z', '2026-10-15T11:00:00.000Z',
+    'https://www.instagram.com/p/Example/', 'instagram', 'social', 'hoshilu-media-notes', 'c1',
+    210, 340, 12, 3, 1, 4, '2026-10-19T03:00:00.000Z'
+  ]);
+});
+
+test('Instagramインサイト取り込みはリールにprofile_visitsを聞かず、権限不足は失敗として数えるだけ', async () => {
+  const writes = [];
+  const reelEnv = instagramInsightsEnv([{
+    post_id: 'ig-reel-1', external_post_id: 'ig-media-2', published_at: '2026-10-18T11:00:00.000Z',
+    link: '', content_format: 'REEL', public_url: 'https://www.instagram.com/reel/Example/'
+  }], writes);
+  const requests = [];
+  await syncInstagramInsights(reelEnv, new Date('2026-10-19T03:00:00.000Z'), async (url) => {
+    requests.push(url);
+    return Response.json({ data: [{ name: 'reach', values: [{ value: 5 }] }] });
+  });
+  assert.equal(requests.length, 1);
+  assert.equal(writes[0].values[14], null);
+  assert.equal(writes[0].values[11], null);
+
+  const deniedWrites = [];
+  const deniedEnv = instagramInsightsEnv([{
+    post_id: 'ig-post-2', external_post_id: 'ig-media-3', published_at: '2026-10-18T11:00:00.000Z',
+    link: '', content_format: 'IMAGE', public_url: 'https://www.instagram.com/p/Example2/'
+  }], deniedWrites);
+  const result = await syncInstagramInsights(deniedEnv, new Date('2026-10-19T03:00:00.000Z'),
+    async () => Response.json({ error: { code: 10 } }, { status: 403 }));
+  assert.deepEqual(result, { checked: 1, saved: 0, failed: 1 });
+  assert.equal(deniedWrites.length, 0);
 });
 
 test('Threads未設定時はDBへ問い合わせずに0件を返す', async () => {
