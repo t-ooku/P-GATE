@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-10-19T10:06:07.982Z",
+  "captured_at": "2026-10-19T12:56:42.459Z",
   "query": "玄関に置ける スリムな傘立て",
   "files": [
     {
@@ -29,9 +29,9 @@
       "width": 780,
       "height": 1520,
       "items": 1,
-      "blurred": 622,
-      "photos": 30,
-      "photo_masked": 30
+      "blurred": 722,
+      "photos": 32,
+      "photo_masked": 32
     },
     {
       "file": "buzz.jpg",
