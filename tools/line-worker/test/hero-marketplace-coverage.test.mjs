@@ -99,7 +99,7 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 // 削除し、その役割は検索欄のプレースホルダ「何が欲しい？名前が分からなくても
 // 大丈夫」へ移す。要素ごと消すので、言語切替の代入も残さない。
 // 2026-09-15 指示書「探さなくていい。ホシっといて。」§12: 第一画面の言葉を統一。
-test('第一画面は「欲しい値段を、先に決めておく。」と補足コピー（2026-09-19 値下がり待ちを主役に）、検索例は6件', async () => {
+test('第一画面は「欲しい値段を、先に決めておく。」と補足コピー（2026-09-19 値下がり待ちを主役に）、検索例は9件から日替わり3件（2026-10-19 入口の改善案）', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
@@ -123,9 +123,19 @@ test('第一画面は「欲しい値段を、先に決めておく。」と補�
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
   // 入力欄の文言は app.js の setLanguage が起動時に上書きする（HTML 側の初期値は据え置き）。
   assert.match(app, /placeholder:'何が欲しい？'/);
-  for (const example of ['インスタで見た白いバッグ', '韓国っぽいシルバーリング', 'このスクショのマットレス', '自立する本革トート', 'この靴に似たもの', 'SNSで見たピンクのリップ']) {
+  // 2026-10-19 大隆さん OK（入口の改善案 1）: 文字だけで探せる例 9 件から、日本語は日替わりで 3 件（押すとそのまま検索）
+  for (const example of ['韓国っぽいブラウス 3000円以内', '玄関に置ける スリムな傘立て', '子ども用水筒 500ml 食洗機OK', '洗える厚手のラグ 2畳', 'A4が入る 軽いトートバッグ', '乾燥肌向けの韓国コスメ 化粧水', 'オフィスで履ける 白のきれいめスニーカー', 'ノイキャン付き ワイヤレスイヤホン 1万円以下', '排水口のゴミ受け ステンレス']) {
     assert.ok(app.includes(`'${example}'`), `example missing: ${example}`);
   }
+  assert.match(app, /const examples=language==='JA'\?dailyExamples\(pool\):pool;/);
+  const dailyExamples = new Function(`${app.match(/function dailyExamples\([^]*?\n/u)[0]}; return dailyExamples;`)();
+  const pool = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+  const day = (iso) => Date.parse(iso);
+  const first = dailyExamples(pool, 3, day('2026-10-19T03:00:00Z'));
+  const next = dailyExamples(pool, 3, day('2026-10-20T03:00:00Z'));
+  assert.equal(first.length, 3);
+  assert.equal(new Set([...first, ...next]).size, 6, '翌日は別の 3 件');
+  assert.deepEqual(dailyExamples(pool, 3, day('2026-10-19T00:00:00Z')), dailyExamples(pool, 3, day('2026-10-19T14:59:00Z')), '日本時間の同じ日は同じ 3 件');
   // 画像が前提の例は文字だけで検索せず、画像選択を開く
   assert.match(app, /elements\.screenshot\.click\(\);/);
   const assets = await read('assets-v147/app.js');

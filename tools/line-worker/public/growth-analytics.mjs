@@ -333,6 +333,13 @@ document.addEventListener('submit', event => {
   if (event.target?.id === 'knowledgeForm') send('search_started');
 });
 
+// 2026-10-19 大隆さん OK（入口の改善案 3）: 検索窓の下の例を押した回数と、トップの「今日の値下がり」から商品を開いた回数。
+// 押した例の文言・商品は送らない（回数だけ）。例を押すとそのまま search_started も送られる。
+document.addEventListener('click', event => {
+  if (event.target?.closest?.('#quickQueries button.chip')) send('search_example_clicked');
+  else if (event.target?.closest?.('#topDrops a.top-drop-card')) send('top_drop_clicked');
+}, true);
+
 // search_started is emitted only after the browser accepts a submit. Keep a
 // separate attempt signal so malformed optional URL input and any future
 // native validation can be distinguished from a user who never pressed the

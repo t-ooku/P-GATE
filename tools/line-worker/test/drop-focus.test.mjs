@@ -94,3 +94,41 @@ test('韓国ファッションの価格記録: 固定の検索語・商品名に
   const second = await recordKoreanFashionPrices(env, fetcher, Date.now());
   assert.equal(second.skipped, 'FRESH', '保存が新しい間は API を呼ばない');
 });
+
+// 2026-10-19 大隆さん OK（入口の改善案 2・3）
+test('トップの「今日の値下がり」: 値下がりページと同じ並びの 1〜3 番目だけ、画像のある物を返す。押した回数を数える', async () => {
+  const { topDropItems, handleTopDropsApi, TOP_DROPS_PATH } = await import('../src/owned-media.mjs');
+  const drops = withDropFocus([
+    { ...row('k', 'korean_fashion', '韓国 ブラウス', 30), image_url: 'https://img.example/k.jpg', latest_price: 1980, max_price: 2980 },
+    { ...row('w', 'womens_fashion', 'ニット', 20), image_url: 'https://img.example/w.jpg' },
+    { ...row('d', 'kitchen', 'フライパン', 25), image_url: 'https://img.example/d.jpg' },
+    { ...row('s', 'skincare', '化粧水', 15), image_url: 'https://img.example/s.jpg' },
+    { ...row('x', 'kitchen', '画像なし', 50, false) }
+  ]);
+  const items = topDropItems(drops);
+  assert.equal(items.length, 3);
+  assert.deepEqual(items.map((item) => item.name), ['韓国 ブラウス', 'ニット', 'フライパン']);
+  assert.equal(items[0].genre, '韓国ファッション');
+  assert.equal(items[0].href, '/product?key=k&from=top');
+  assert.deepEqual([items[0].latest_price, items[0].max_price], [1980, 2980]);
+  assert.ok(items.every((item) => item.image_url.startsWith('https://')));
+  assert.deepEqual(Object.keys(items[0]).sort(), ['drop_rate', 'genre', 'href', 'image_url', 'latest_price', 'mall', 'max_price', 'name'], '記録の事実だけ（検索文・利用者の情報は無い）');
+  assert.deepEqual(topDropItems(null), []);
+  assert.equal(TOP_DROPS_PATH, '/api/media/top-drops');
+  assert.equal(await handleTopDropsApi(new Request('https://hoshilu.app/api/other'), {}), null);
+  const response = await handleTopDropsApi(new Request(`https://hoshilu.app${TOP_DROPS_PATH}`), {}, { cache: null });
+  const body = await response.json();
+  assert.equal(body.ok, false, 'D1 が無いときは ok:false（トップは枠ごと出さない）');
+  assert.deepEqual(body.items, []);
+  const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(index, /const topDropsResponse = await handleTopDropsApi\(request, env\);/);
+  const front = readFileSync(new URL('../public/top-drops.mjs', import.meta.url), 'utf8');
+  assert.match(front, /fetch\('\/api\/media\/top-drops'/);
+  assert.doesNotMatch(front, /innerHTML/, '商品名は textContent で入れる');
+  const events = readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
+  assert.match(events, /'search_example_clicked'/);
+  assert.match(events, /'top_drop_clicked'/);
+  const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(analytics, /#quickQueries button\.chip'\)\) send\('search_example_clicked'\)/);
+  assert.match(analytics, /#topDrops a\.top-drop-card'\)\) send\('top_drop_clicked'\)/);
+});

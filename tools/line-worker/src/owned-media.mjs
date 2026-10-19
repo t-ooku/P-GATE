@@ -474,6 +474,45 @@ ${AD_NOTE}</article>`;
   });
 }
 
+// 2026-10-19 大隆さん OK（入口の改善案 2）: トップの検索窓のすぐ下に「今日の値下がり」を 3 つ出す。
+// 値下がりページ（/media/price-drops）と同じ記録・同じ並び（data-focus の 1〜3）。商品名・記録した価格・下がり幅・画像だけを返す。
+// 検索文や利用者の情報は使わない。30 分キャッシュ（値下がりページと同じ）。
+export const TOP_DROPS_PATH = '/api/media/top-drops';
+export const TOP_DROPS_LIMIT = 3;
+export function topDropItems(drops, limit = TOP_DROPS_LIMIT) {
+  if (!Array.isArray(drops)) return [];
+  return drops.filter((row) => row.focus && row.image_url && /^https:\/\//u.test(String(row.image_url)))
+    .sort((a, b) => a.focus - b.focus).slice(0, limit)
+    .map((row) => ({
+      name: String(row.product_name || '').slice(0, 60),
+      genre: String(row.segment?.label || ''),
+      image_url: String(row.image_url),
+      drop_rate: Number(row.drop_rate) || 0,
+      max_price: Number(row.max_price) || 0,
+      latest_price: Number(row.latest_price) || 0,
+      mall: MALL_LABEL[row.marketplace] || '',
+      href: `/product?key=${encodeURIComponent(row.record_key)}&from=top`
+    }));
+}
+export async function handleTopDropsApi(request, env, { now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
+  if (request.method !== 'GET') return null;
+  const url = new URL(request.url);
+  if (url.pathname !== TOP_DROPS_PATH) return null;
+  const cacheKey = new Request(`${ORIGIN}${TOP_DROPS_PATH}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
+  if (cache) {
+    try { const hit = await cache.match(cacheKey); if (hit) return hit; } catch {}
+  }
+  const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
+  const body = { ok: drops !== null, date: jstDate(now), items: topDropItems(drops), note: 'ホシルの記録で、14日間の最高値から下がった幅です。価格は変わります。' };
+  const response = new Response(JSON.stringify(body), {
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-content-type-options': 'nosniff' }
+  });
+  if (cache && drops !== null) {
+    try { await cache.put(cacheKey, response.clone()); } catch {}
+  }
+  return response;
+}
+
 // GET /media・/media/price-drops。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
 export async function handleOwnedMediaRoutes(request, env, { headers = {}, now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
   if (!['GET', 'HEAD'].includes(request.method)) return null;

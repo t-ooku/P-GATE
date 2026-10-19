@@ -127,7 +127,7 @@ import {
 } from './runway-generation.mjs';
 import { handleRunwayMediaRoute } from './social-media-r2.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
-import { MEDIA_PATHS, handleOwnedMediaRoutes } from './owned-media.mjs';
+import { MEDIA_PATHS, handleOwnedMediaRoutes, handleTopDropsApi } from './owned-media.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import {
   classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure,
@@ -3992,6 +3992,9 @@ export default {
     // 2026-10-14 大隆さん指示「オウンドメディア作って」: ホシルの買い物ノート（/media・/media/price-drops）。
     const ownedMediaResponse = await handleOwnedMediaRoutes(request, env, { headers: DOCUMENT_SECURITY_HEADERS });
     if (ownedMediaResponse) return ownedMediaResponse;
+    // 2026-10-19 大隆さん OK: トップの「今日の値下がり」3 つ（値下がりページと同じ記録・並び）
+    const topDropsResponse = await handleTopDropsApi(request, env);
+    if (topDropsResponse) return topDropsResponse;
     if (request.method === 'GET' || request.method === 'HEAD') {
       const seoPage = renderSeoPage(url.pathname, env);
       if (seoPage) return new Response(request.method === 'HEAD' ? null : seoPage, {

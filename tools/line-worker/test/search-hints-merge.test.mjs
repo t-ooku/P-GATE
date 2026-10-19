@@ -10,18 +10,27 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 // レンダリング関数自体は分けたまま、DOM上は1つの入れ物(#searchHintsSection)
 // にまとめ、検索履歴も検索例と同じチップ調のスタイルへ揃える。
 
-test('検索履歴と検索例は#searchHintsSectionという1つの入れ物にまとまっている', async () => {
+test('検索履歴は#searchHintsSectionに、検索例は検索窓のすぐ下にある（2026-10-19 入口の改善案）', async () => {
   const html = await read('index.html');
   const wrapStart = html.indexOf('id="searchHintsSection"');
   assert.notEqual(wrapStart, -1);
-  const wrapEnd = html.indexOf('</div>', html.indexOf('id="quickQueries"', wrapStart));
+  const wrapEnd = html.indexOf('</form>', wrapStart);
   const wrapSection = html.slice(wrapStart, wrapEnd);
   assert.match(wrapSection, /id="searchHistorySection"/);
   assert.match(wrapSection, /id="searchHistoryList"/);
   assert.match(wrapSection, /id="deleteAllSearchHistory"/);
-  assert.match(wrapSection, /id="quickQueries"/);
-  // 検索履歴(過去の検索)を先に、検索例(次の提案)を後に表示する。
-  assert.ok(html.indexOf('id="searchHistorySection"') < html.indexOf('id="quickQueries"'));
+  // 2026-10-19 大隆さん OK: 訪問の 16% しか検索を始めていない。押すだけで探せる例を、検索窓（.query-field）の直後・検索ボタンより前へ
+  const field = html.indexOf('<div class="query-field">');
+  const quick = html.indexOf('id="quickQueries"');
+  assert.ok(field !== -1 && quick > field, '検索窓の後');
+  assert.ok(quick < html.indexOf('id="searchCluesDetails"'), '写真・SNS投稿の開閉より前');
+  assert.ok(quick < html.indexOf('id="submitButton"'), '検索ボタンより前');
+  const formStart = html.indexOf('<form id="knowledgeForm">');
+  const formEnd = html.indexOf('</form>', formStart);
+  assert.ok(quick > formStart && quick < formEnd, 'フォームの中（押すとそのまま検索）');
+  // 「今日の値下がり」はフォームのすぐ後
+  const drops = html.indexOf('id="topDrops"');
+  assert.ok(drops > formEnd && drops < html.indexOf('class="panel-heading-details"'));
 });
 
 test('検索履歴の各行は検索例と同じ丸みのあるチップ調に統一され、×削除ボタンを内包する', async () => {

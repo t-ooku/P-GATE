@@ -43,6 +43,9 @@ const EVENTS = new Set([
   // 検索開始前にブラウザの入力検証で止まる場合もあるため、押した瞬間
   // (search_attempted)と検証で止められた瞬間(search_blocked)を分けて記録する。
   // 検索文そのものは保存しない。
+  // 2026-10-19 大隆さん OK（入口の改善案 3）: 例を押して始めた検索と、トップの値下がりから商品を開いた回数（中身は送らない）
+  'search_example_clicked',
+  'top_drop_clicked',
   'search_attempted',
   'search_blocked',
   'search_started',

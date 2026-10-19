@@ -671,7 +671,7 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${e
   });
   document.querySelectorAll('.coupon-code').forEach(function(node){node.addEventListener('click',function(){navigator.clipboard&&navigator.clipboard.writeText(node.dataset.code).then(function(){node.textContent='コピーしました';setTimeout(function(){node.textContent=node.dataset.code;},1200);});});});
 })();
-</script><script type="module" src="/growth-analytics.mjs?v=20"></script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=21"></script></body></html>`;
 }
 
 // ---- Seller 専用商品ページ（2026-09-19 大隆さん指示 §10〜§11） ------------------------------
@@ -725,7 +725,7 @@ ${demandHtml}
 </main>
 <script>
 (function(){document.querySelectorAll('a[data-track]').forEach(function(a){a.addEventListener('click',function(){var t=a.getAttribute('data-track');if(!t||t===a.getAttribute('href'))return;try{fetch(t,{mode:'no-cors',keepalive:true,redirect:'manual',credentials:'omit'}).catch(function(){});}catch(e){}});});})();
-</script><script type="module" src="/growth-analytics.mjs?v=20"></script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=21"></script></body></html>`;
 }
 
 // ---- ルーティング ----------------------------------------------------------------
