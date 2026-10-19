@@ -264,6 +264,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
       COUNT(*) AS count,COUNT(DISTINCT NULLIF(visitor_id,'')) AS observed_visitors
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
       AND event_type IN ('landing_view','seo_article_view','seo_search_transition','search_started',
+        'search_example_clicked','top_drop_clicked',
         'target_price_watch_started','target_price_watch_set','marketplace_click','notification_opened')
       GROUP BY event_type,traffic_class,origin`),
     read(`WITH sessions AS (
@@ -287,6 +288,8 @@ export async function operationalDiagnostics(db, internalIds = []) {
     read(`WITH sessions AS (
       SELECT session_id,
         MIN(CASE WHEN event_type='landing_view' THEN occurred_at END) AS landed_at,
+        MIN(CASE WHEN event_type='search_example_clicked' THEN occurred_at END) AS example_clicked_at,
+        MIN(CASE WHEN event_type='top_drop_clicked' THEN occurred_at END) AS top_drop_clicked_at,
         MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS searched_at,
         MIN(CASE WHEN event_type='target_price_watch_started' THEN occurred_at END) AS watch_started_at,
         MIN(CASE WHEN event_type='target_price_watch_set' THEN occurred_at END) AS watch_set_at,
@@ -298,6 +301,11 @@ export async function operationalDiagnostics(db, internalIds = []) {
     ) SELECT
       SUM(CASE WHEN landed_at IS NOT NULL THEN 1 ELSE 0 END) AS landing_sessions,
       SUM(CASE WHEN searched_at>=landed_at THEN 1 ELSE 0 END) AS search_sessions,
+      SUM(CASE WHEN example_clicked_at IS NOT NULL THEN 1 ELSE 0 END) AS search_example_clicked_sessions,
+      SUM(CASE WHEN searched_at>=example_clicked_at AND example_clicked_at>=landed_at THEN 1 ELSE 0 END) AS example_to_search_sessions,
+      SUM(CASE WHEN mall_click_at>=searched_at AND searched_at>=example_clicked_at AND example_clicked_at>=landed_at THEN 1 ELSE 0 END) AS example_to_mall_click_sessions,
+      SUM(CASE WHEN top_drop_clicked_at IS NOT NULL THEN 1 ELSE 0 END) AS top_drop_clicked_sessions,
+      SUM(CASE WHEN mall_click_at>=top_drop_clicked_at AND top_drop_clicked_at>=landed_at THEN 1 ELSE 0 END) AS top_drop_to_mall_click_sessions,
       SUM(CASE WHEN watch_started_at>=searched_at AND searched_at>=landed_at THEN 1 ELSE 0 END) AS watch_started_sessions,
       SUM(CASE WHEN watch_set_at>=searched_at AND searched_at>=landed_at THEN 1 ELSE 0 END) AS watch_set_sessions,
       SUM(CASE WHEN notification_return_at IS NOT NULL THEN 1 ELSE 0 END) AS notification_return_sessions,

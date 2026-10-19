@@ -174,6 +174,11 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
   assert.deepEqual(result.site_watch_journey_7d.rows.map(row => ({ ...row })), [{
     landing_sessions: 2,
     search_sessions: 1,
+    search_example_clicked_sessions: 0,
+    example_to_search_sessions: 0,
+    example_to_mall_click_sessions: 0,
+    top_drop_clicked_sessions: 0,
+    top_drop_to_mall_click_sessions: 0,
     watch_started_sessions: 1,
     watch_set_sessions: 1,
     notification_return_sessions: 1,
@@ -246,6 +251,32 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     'private trace text', 'private-query-id', '0002_private_name.sql']) {
     assert.equal(serialized.includes(forbidden), false, `aggregate diagnostics must omit ${forbidden}`);
   }
+});
+
+test('トップ入口は重複クリックを1セッションにまとめ、順序逆転・別セッション・QAを送客成果にしない', async () => {
+  const sqlite = setup();
+  const at = minutes => new Date(Date.now() + minutes * 60_000).toISOString();
+  const insert = sqlite.prepare(`INSERT INTO growth_events(event_type,traffic_class,source,visitor_id,session_id,occurred_at)
+    VALUES(?,?,'direct','private-entry-visitor',?,?)`);
+  for (const [session, traffic, events] of [
+    ['example-good', 'ATTRIBUTED', [['landing_view', -30], ['search_example_clicked', -29], ['search_example_clicked', -28], ['search_started', -27], ['marketplace_click', -26]]],
+    ['example-reversed', 'ATTRIBUTED', [['landing_view', -30], ['search_started', -29], ['search_example_clicked', -28], ['marketplace_click', -26]]],
+    ['example-without-search', 'UNATTRIBUTED', [['landing_view', -30], ['search_example_clicked', -29]]],
+    ['different-session-search', 'UNATTRIBUTED', [['search_started', -27], ['marketplace_click', -26]]],
+    ['drop-good', 'UNATTRIBUTED', [['landing_view', -30], ['top_drop_clicked', -29], ['marketplace_click', -26]]],
+    ['drop-reversed', 'ATTRIBUTED', [['landing_view', -30], ['marketplace_click', -29], ['top_drop_clicked', -28]]],
+    ...['QA', 'INTERNAL'].map(traffic => [`excluded-${traffic}`, traffic, [['landing_view', -30], ['search_example_clicked', -29], ['top_drop_clicked', -29], ['search_started', -27], ['marketplace_click', -26]]])
+  ]) for (const [event, minute] of events) insert.run(event, traffic, session, at(minute));
+  const result = await operationalDiagnostics(d1(sqlite), ['internal-1']);
+  const row = result.site_watch_journey_7d.rows[0];
+  assert.equal(result.site_watch_journey_7d.status, 'AVAILABLE');
+  assert.equal(row.search_example_clicked_sessions, 3);
+  assert.equal(row.example_to_search_sessions, 1);
+  assert.equal(row.example_to_mall_click_sessions, 1);
+  assert.equal(row.top_drop_clicked_sessions, 2);
+  assert.equal(row.top_drop_to_mall_click_sessions, 1);
+  assert.equal(JSON.stringify(result.site_watch_journey_7d).includes('private-entry-visitor'), false);
+  assert.equal(JSON.stringify(result.site_watch_journey_7d).includes('example-good'), false);
 });
 
 test('過去日付のThreads再試行とStoryを匿名集計し、未接続をゼロとしない', async () => {
