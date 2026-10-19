@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-10-19T16:47+09:00
@@ -29,4 +29,7 @@ X再開、追加頻度、新規契約・課金、料金変更、既存キューU
 
 ## Claude 記録
 
-未受領。
+### 2026-10-19 20:16 JST 受領（定期巡回）
+- 受領: ACKED → IN_PROGRESS。
+- 担当範囲の理解: 既存の月・水・土20:00 JSTのInstagram通常ユーザー枠のうち未投入の1枠に、年末希望価格カルーセル（JSON 4枚・キャプション）を実画面込みの最終素材で通常経路から1件投入し、公開後の三要素と集計取得可否を記録する。X・頻度追加・既存行UPDATE/DELETE・10/19 APPROVED・10/21/26 CANCELLED枠には触れない。
+- 着手: 既存キュー・投入経路・撮影manifestの確認中。結果は本巡回中に追記する。
