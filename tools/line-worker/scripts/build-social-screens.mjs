@@ -337,6 +337,14 @@ async function maskPhotos(page) {
   return page.evaluate(applyPhotoBands, PHOTO_SELECTORS);
 }
 
+// 2026-10-19 バリューコマースの統計で、10/15（撮影を始めた日）から表示だけが毎日数百回（クリック 0）。
+// 撮影ブラウザが本番の画面を開くたびに LinkSwitch（vcdal.js）が商品リンクの表示を数えていた。
+// 自動の撮影はアフィリエイトの計測に入れない（実際のお客さまの数字を水増ししない）。
+export const AFFILIATE_TRACKING_URL = /^https?:\/\/(?:[a-z0-9-]+\.)*valuecommerce\.(?:com|ne\.jp)(?:[/:?]|$)/iu;
+export async function blockAffiliateTracking(context) {
+  await context.route(AFFILIATE_TRACKING_URL, (route) => route.abort());
+}
+
 // 2026-10-16: 出品者向けページの実画像（scripts/build-seller-lp-shots.mjs）からも使う。
 export function setScreensBase(url) {
   BASE = String(url || '').replace(/\/$/u, '');
@@ -645,6 +653,7 @@ async function main() {
     serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 HOSHILU-SocialScreens/1.0'
   });
+  await blockAffiliateTracking(mobile);
   const composer = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });
   await mkdir(outDir, { recursive: true });
   const sets = {};

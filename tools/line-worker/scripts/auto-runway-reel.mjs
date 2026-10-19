@@ -138,6 +138,8 @@ async function captureUi(dir) {
     const browser = await chromium.launch();
     try {
       const context = await browser.newContext({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 2, locale: 'ja-JP', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 HOSHILU-auto-reel' });
+      // 2026-10-19: 自動の撮影はバリューコマースの表示の計測（LinkSwitch）に入れない
+      await context.route(/^https?:\/\/(?:[a-z0-9-]+\.)*valuecommerce\.(?:com|ne\.jp)(?:[/:?]|$)/iu, (route) => route.abort());
       const page = await context.newPage();
       // networkidle は解析ビーコン等で成立しないことがある（初回実行で撮影失敗→旧スクショに退避した）。
       // load 完了 + 主要要素の描画待ちに変更し、失敗時も理由をログに残す。

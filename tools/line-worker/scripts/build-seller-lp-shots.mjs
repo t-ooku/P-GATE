@@ -19,7 +19,7 @@
 // 使い方: node scripts/build-seller-lp-shots.mjs <出力フォルダ> [--base https://hoshilu.app]
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { capture, setScreensBase } from './build-social-screens.mjs';
+import { blockAffiliateTracking, capture, setScreensBase } from './build-social-screens.mjs';
 
 export const SAMPLE_QUERY = '玄関に置ける スリムな傘立て';
 
@@ -58,6 +58,8 @@ async function main() {
     serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 HOSHILU-SocialScreens/1.0'
   });
+  // 10/19: 撮影はバリューコマースの表示の計測に入れない（build-social-screens の blockAffiliateTracking）
+  await blockAffiliateTracking(mobile);
   const encoder = await browser.newPage({ viewport: { width: 780, height: 800 }, deviceScaleFactor: 1 });
   await mkdir(outDir, { recursive: true });
   const files = [];

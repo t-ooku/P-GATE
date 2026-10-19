@@ -5,7 +5,7 @@ import { SCREEN_POSTS, applyRealScreens, screenMediaUrls, screenSetsForRow, seed
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { isEligibleSocialAiActressRow } from '../scripts/check-social-ai-actress-sla.mjs';
 import { readFileSync } from 'node:fs';
-import { SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText, phoneBox, bigDropText } from '../scripts/build-social-screens.mjs';
+import { AFFILIATE_TRACKING_URL, blockAffiliateTracking, SCREEN_SETS, BLUR_CSS, PHOTO_SELECTORS, PHOTO_BAND_RATIO, applyPhotoBands, PHOTO_OCR_TEXT, photoIndexesWithPriceText, phoneBox, bigDropText } from '../scripts/build-social-screens.mjs';
 
 // 2026-10-15 大隆さん指示「今後の投稿も、実画像を踏まえて投稿して」
 function d1(database) {
@@ -328,4 +328,20 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
   assert.equal((await seedDailyDropsPost(env(body('2026-10-19T08:40:00Z')), new Date('2026-10-19T08:50:00Z'))).reason, 'drops_already_today');
   const source = readFileSync(new URL('../src/social-autopilot.mjs', import.meta.url), 'utf8');
   assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now\)/u);
+});
+
+test('自動の撮影はバリューコマースの表示の計測に入れない（10/19: 撮影の日だけ表示が数百回・クリック 0）', async () => {
+  for (const url of ['https://aml.valuecommerce.com/vcdal.js', 'https://dalr.valuecommerce.com/vcdal?x=1', 'https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=1', 'https://ad.jp.ap.valuecommerce.com/servlet/gifbanner']) {
+    assert.match(url, AFFILIATE_TRACKING_URL, url);
+  }
+  for (const url of ['https://hoshilu.app/', 'https://valuecommerce.com.example.org/x', 'https://shopping.yahoo.co.jp/']) {
+    assert.doesNotMatch(url, AFFILIATE_TRACKING_URL, url);
+  }
+  const routes = [];
+  await blockAffiliateTracking({ route: async (pattern, handler) => { routes.push(pattern); let aborted = false; await handler({ abort: async () => { aborted = true; } }); assert.ok(aborted); } });
+  assert.deepEqual(routes, [AFFILIATE_TRACKING_URL]);
+  for (const file of ['../scripts/build-social-screens.mjs', '../scripts/build-seller-lp-shots.mjs', '../scripts/auto-runway-reel.mjs']) {
+    const source = readFileSync(new URL(file, import.meta.url), 'utf8');
+    assert.match(source, /blockAffiliateTracking\(mobile\)|valuecommerce\\\.\(\?:com\|ne\\\.jp\)/u, file);
+  }
 });
