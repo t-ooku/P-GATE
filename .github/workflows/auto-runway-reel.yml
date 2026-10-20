@@ -25,12 +25,20 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 # 再実行しても job_id が日付で固定なので二重生成・二重投稿にならない。既に生成済み
 # （GENERATED_REVIEW_REQUIRED）のジョブがあれば、そのまま後処理・自動QA・承認まで進む。
 #
+# 2026-10-20 大隆さん決定「チャットで確認・承認」: PC で Actions を開かなくても承認できるようにした。
+#  - 不合格（本人一致の確認待ち）のとき、contact-sheet.jpg を reel-review ブランチ（デプロイされない）に置き、Issue に画像を載せる。
+#  - Claude がその画像を大隆さんにチャットで見せ、「OK」なら Issue に `/approve` とコメントする。
+#    リポジトリ所有者（OWNER）の `/approve` コメントだけで、Issue 本文の job_id を承認して再実行する（approve_job_id と同じ動き）。
+#  - 10/2〜10/20 は承認が来ず、確認待ちが次の枠を止めて 2 週間以上リールが出なかった（#689 で次の枠は止めないように直した）。
+#
 # 再実行履歴: 2026-09-06 #220/#221（同枠のAI女優日次リールを競合扱いしていた誤判定と、
 # 実画面撮影の networkidle 依存）を修正し、9/7 月曜分の生成物を回収するため再実行。
 
 # Workflow edits must not run a production QA/generation pass. Scheduled and
 # explicitly dispatched runs are the only execution paths.
 on:
+  issue_comment:
+    types: [created]
   schedule:
     # 火・金 06:00 JST = 月・木 21:00 UTC（2026-09-17 SNS 方針 v3）
     - cron: '0 21 * * 1,4'
@@ -54,17 +62,24 @@ on:
         default: ''
 
 permissions:
-  contents: read
+  # contents: write は contact-sheet を reel-review ブランチに置くため（本番のブランチには書かない）
+  contents: write
   issues: write
-
-concurrency:
-  group: auto-runway-reel
-  cancel-in-progress: false
 
 jobs:
   reel:
+    # Issue コメントで動くのは [AUTO-REEL] の Issue に、リポジトリ所有者が `/approve` と書いたときだけ
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (startsWith(github.event.issue.title, '[AUTO-REEL]') &&
+       startsWith(github.event.comment.body, '/approve') &&
+       github.event.comment.author_association == 'OWNER')
     runs-on: ubuntu-latest
     timeout-minutes: 110
+    # 同時実行の制限はジョブに置く（ほかの Issue へのコメントで起きた「何もしない実行」が、承認の実行を押し出さないように）
+    concurrency:
+      group: auto-runway-reel
+      cancel-in-progress: false
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -77,6 +92,26 @@ jobs:
           test -n "${CLOUDFLARE_API_TOKEN}" || { echo "::error::CLOUDFLARE_API_TOKEN missing"; exit 1; }
           test -n "${CLOUDFLARE_ACCOUNT_ID}" || { echo "::error::CLOUDFLARE_ACCOUNT_ID missing"; exit 1; }
           test -n "${GOOGLE_CLOUD_VISION_API_KEY}" || echo "::warning::GOOGLE_CLOUD_VISION_API_KEY missing - face check will fail closed"
+
+      - name: Resolve approve job_id (Run workflow input or `/approve` comment)
+        id: approve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_JOB: ${{ github.event.inputs.approve_job_id }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+          job=""
+          if [ "$EVENT_NAME" = "issue_comment" ]; then
+            job="$(printf '%s' "$ISSUE_BODY" | grep -oE 'job_id: runway-auto-[a-z0-9-]+' | head -1 | sed 's/^job_id: //')" || true
+            [ -n "$job" ] || { echo "::error::Issue 本文に job_id が見つかりません"; exit 1; }
+          else
+            job="${INPUT_JOB}"
+          fi
+          if [ -n "$job" ] && ! printf '%s' "$job" | grep -qE '^runway-auto-[a-z0-9-]+$'; then
+            echo "::error::approve_job_id は runway-auto-<型>-<yyyymmdd> の形だけ受け付けます"; exit 1
+          fi
+          echo "job_id=$job" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         with:
@@ -125,12 +160,8 @@ jobs:
           [ -n "${{ github.event.inputs.slot }}" ] && extra="$extra --slot=${{ github.event.inputs.slot }}"
           [ -n "${{ github.event.inputs.theme }}" ] && extra="$extra --theme=${{ github.event.inputs.theme }}"
           [ -n "${{ github.event.inputs.publish_at }}" ] && extra="$extra --publish_at=${{ github.event.inputs.publish_at }}"
-          if [ -n "${{ github.event.inputs.approve_job_id }}" ]; then
-            case "${{ github.event.inputs.approve_job_id }}" in
-              runway-auto-*) extra="$extra --approve_job_id=${{ github.event.inputs.approve_job_id }}" ;;
-              *) echo "::error::approve_job_id は runway-auto-<型>-<yyyymmdd> の形だけ受け付けます"; exit 1 ;;
-            esac
-          fi
+          # job_id は前の段で ^runway-auto-[a-z0-9-]+$ を確かめ済み
+          [ -n "${{ steps.approve.outputs.job_id }}" ] && extra="$extra --approve_job_id=${{ steps.approve.outputs.job_id }}"
           node scripts/auto-runway-reel.mjs $extra
 
       - name: Report to an issue (success = closed record, failure = open for follow-up)
@@ -145,6 +176,21 @@ jobs:
             gh issue create --title "[AUTO-REEL] 実行失敗（report.json なし） run=${{ github.run_id }}" \
               --body "auto-runway-reel が report.json を残さずに終了しました。ログ: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             exit 0
+          fi
+          # 本人一致の確認待ちなら、contact-sheet を reel-review ブランチに置いて Issue に画像で載せる（チャットで見せるため）
+          export SHEET_URL=""
+          job="$(node -e "console.log(require('$report').outcome?.job_id || '')")"
+          sheet="$(find "${AUTO_REEL_WORKDIR}" -name contact-sheet.jpg -print -quit 2>/dev/null || true)"
+          if [ -n "$job" ] && [ -n "$sheet" ] && grep -q identity_check_unavailable "$report"; then
+            if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/reel-review" >/dev/null 2>&1; then
+              base_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq .object.sha || true)"
+              gh api -X POST "repos/${GITHUB_REPOSITORY}/git/refs" -f ref=refs/heads/reel-review -f sha="$base_sha" >/dev/null || true
+            fi
+            sheet_path="contact-sheets/${job}-${{ github.run_id }}.jpg"
+            node -e "const fs=require('node:fs');fs.writeFileSync('sheet.json',JSON.stringify({message:'review: contact sheet ${job}',branch:'reel-review',content:fs.readFileSync(process.argv[1]).toString('base64')}))" "$sheet"
+            if gh api -X PUT "repos/${GITHUB_REPOSITORY}/contents/${sheet_path}" --input sheet.json >/dev/null; then
+              export SHEET_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/reel-review/${sheet_path}"
+            fi
           fi
           node - "$report" <<'NODE' > issue-body.md
           const fs = require('node:fs');
@@ -170,6 +216,9 @@ jobs:
             lines.push('');
             lines.push('**大隆さんの操作（本人一致の人手確認）**: 上のログ/成果物 → Artifacts → contact-sheet.jpg を開き、承認済み女優（https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg）と同じ人物なら、');
             lines.push(`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/workflows/auto-runway-reel.yml → 「Run workflow」→ approve_job_id に \`${o.job_id}\` を貼って実行（投稿 20:15 JST の 20 分前まで）。別人なら何もしない（その日はカルーセルが代替投稿されます）。`);
+            lines.push('');
+            lines.push('**チャットでの承認（2026-10-20〜）**: この Issue に `/approve` とコメントすると、上の job_id を本人一致確認済みとして再実行します（リポジトリ所有者のコメントだけ。19:15 JST まで）。');
+            if (process.env.SHEET_URL) { lines.push(''); lines.push(`contact-sheet: ${process.env.SHEET_URL}`); lines.push(''); lines.push(`![contact sheet](${process.env.SHEET_URL})`); }
           }
           lines.push(`- ログ/成果物: ${process.env.RUN_URL}`);
           lines.push('');
@@ -178,6 +227,12 @@ jobs:
           NODE
           ok="$(node -e "console.log(require('$report').outcome?.ok ? 'yes' : 'no')")"
           slot="$(node -e "const r=require('$report');console.log((r.slot?.date_key||'')+' '+(r.slot?.slot||''))")"
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            # `/approve` で再実行したときは、元の Issue に結果を書く（合格なら閉じる）
+            gh issue comment "${{ github.event.issue.number }}" --body-file issue-body.md
+            [ "$ok" = "yes" ] && gh issue close "${{ github.event.issue.number }}" --reason completed
+            exit 0
+          fi
           if [ "$ok" = "yes" ]; then
             url="$(gh issue create --title "[AUTO-REEL] ${slot} 合格・投稿キュー済み" --body-file issue-body.md)"
             gh issue close "$url" --reason completed
