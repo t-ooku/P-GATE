@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyHeadNounGate, extractHeadNouns, headNounScore } from '../src/search-head-noun.mjs';
+import { applyHeadNounGate, extractHeadNouns, hasHeadNounMatch, headNounScore } from '../src/search-head-noun.mjs';
 
 test('本番で確認した猫砂マットとマットレス保護カバーは単独候補でも本体検索へ戻さない', () => {
   const cases = [
@@ -159,6 +159,40 @@ test('マットレス本体の検索でトッパーを本体扱いしない。�
     assert.ok(headNounScore(topperQuery, topper.product_name) >= 1, topperQuery);
     assert.deepEqual(applyHeadNounGate(topperQuery, [body, topper]), [topper], topperQuery);
   }
+});
+
+// 2026-10-20 固定QA(07:23)の意味判定で見つかった1件(Codex)。ブランド名の Mattress で英語 Bed Frame を本体扱いしない。
+test('マットレス本体の検索で英語のBed Frame商品を本体扱いしない。本体・ブランド入り本体・セット・フレーム検索は残す', () => {
+  const query = 'Instagramで見たマットレス';
+  const frame = { product_name: 'Best Price Mattress Twin Bed Frame 12 Soild Wood Platform Bed Frame w/CLASSIC Wo' };
+  for (const [title, score] of [
+    [frame.product_name, 0],
+    ['Zinus 14 Inch Metal Platform Bed Frame with Wood Slat Support, Queen', 0],
+    ['Best Price Mattress 10 Inch Memory Foam Mattress, Queen', 2],
+    ['Best Price Mattress 8 Inch Pocket Spring Mattress, Twin', 2],
+    ['Zinus 12 Inch Green Tea Memory Foam Mattress, Fits Any Bed Frame', 2],
+    ['Twin Memory Foam Mattress for Platform Bed Frame, Medium Firm', 2],
+    ['Queen Mattress, Bed Frame Not Included', 2],
+    ['Platform Bed Frame with 10 Inch Mattress, Twin', 2],
+    ['Full Size Bed Frame and Mattress Set', 2],
+    ['Napier Sportz Air Mattress', 2],
+    ['高反発マットレス シングル 厚さ10cm', 2],
+    ['ベッドフレーム マットレス付き シングル', 2],
+    ['コアラマットレス オリジナル シングル', 2]
+  ]) assert.equal(headNounScore(query, title), score, title);
+  // ブランド入りのコアラマットレス検索でも同じ判定
+  assert.equal(headNounScore('コアラマットレス', 'Koala Mattress Platform Bed Frame Queen'), 0);
+  assert.ok(headNounScore('コアラマットレス', 'Koala Mattress Original Queen') >= 1);
+  // ゲート: 本体があればフレームは外れ、全件フレームなら空にせず元順序を保つ
+  const body = { product_name: 'Best Price Mattress 10 Inch Memory Foam Mattress, Queen' };
+  assert.deepEqual(applyHeadNounGate(query, [frame, body]), [body]);
+  const frame2 = { product_name: 'Zinus 14 Inch Metal Platform Bed Frame with Wood Slat Support, Queen' };
+  assert.deepEqual(applyHeadNounGate(query, [frame, frame2]), [frame, frame2]);
+  // フレームだけの候補群は「一致なし」として次のキーワード候補へ進む
+  assert.equal(hasHeadNounMatch(query, [frame, frame2]), false);
+  assert.equal(hasHeadNounMatch(query, [frame, body]), true);
+  // 検索文自体がフレームに触れている時は、このルールでは外さない(従来どおり)
+  assert.equal(headNounScore('フレーム付きマットレス', frame.product_name), 2);
 });
 
 test('布用お名前ペンの検索で名入れボールペン・サインペンを弾き、通常のボールペン検索は壊さない', () => {

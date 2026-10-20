@@ -211,6 +211,7 @@ export function headNounDetail(query, title, heads = extractHeadNouns(query)) {
   if (!normalizedTitle) return { score: 0, position: 1 };
   const normalizedQuery = normalize(query);
   if (isExplicitAccessoryMismatch(normalizedQuery, normalizedTitle)) return { score: 0, position: 1 };
+  if (isBedFrameForMattressQuery(heads, normalizedQuery, normalizedTitle)) return { score: 0, position: 1 };
   const queryHasAccessory = ACCESSORY_WORDS.test(normalizedQuery);
   const packaged = PACKAGING.test(normalizedTitle)
     && !heads.some(({ term }) => PACKAGING_OK_HEADS.has(term)) && !PACKAGING.test(normalizedQuery);
@@ -305,6 +306,22 @@ function isExplicitAccessoryMismatch(query, title) {
     return /マットレス\s*(?:保護)?\s*(?:カバー|プロテクター|シーツ)/u.test(title);
   }
   return false;
+}
+
+// 2026-10-20 固定QA ig_mattress: 本命が「Best Price Mattress Twin Bed Frame 12 Soild Wood Platform Bed Frame」。
+// ブランド名の Mattress が主名詞に一致して本体扱い(2)になったが、商品は英語の Bed Frame / Platform Bed Frame。
+// マットレス本体を探す検索で、英語の bed frame が商品名にあり、マットレスが「付属・セット」でも
+// 「〜用/対応のフレーム」の説明でもない時は本体候補にしない。frame という語全体は禁止しない
+// (box spring / picture frame 等は対象外)。フレームを探す検索・日本語の商品名は従来どおり。
+const EN_BED_FRAME = /\b(?:platform\s+)?bed\s*-?\s*frames?\b/u;
+const EN_MATTRESS_SET = /(?:\b(?:with|w\/|incl(?:udes?|uding)?|plus|and)\s+(?:[a-z0-9"'-]+\s+){0,3}mattress\b|[+&]\s*(?:[a-z0-9"'-]+\s+){0,3}mattress\b|\bmattress\s+(?:included|set|bundle|combo)\b|\bmattress\s*(?:and|&|\+)\s*(?:[a-z0-9"'-]+\s+){0,2}(?:platform\s+)?bed\s*-?\s*frames?\s+(?:set|bundle|combo)\b|マットレス\s*(?:付|セット))/u;
+const EN_FRAME_COMPATIBLE = /\b(?:for|fits?|fit\s+for|fits?\s+(?:most|any|all|standard)|compatible\s+with|works?\s+with|on|no)\s+(?:[a-z0-9"'-]+\s+){0,3}(?:platform\s+)?bed\s*-?\s*frames?\b|\bbed\s*-?\s*frames?\s+(?:not\s+included|sold\s+separately)\b/u;
+function isBedFrameForMattressQuery(heads, query, title) {
+  if (!heads.some(({ term }) => term === 'マットレス' || term.endsWith('マットレス') || term === 'mattress')) return false;
+  if (/フレーム|frame|ベッド\s*(?:本体)?$/u.test(query)) return false;
+  if (!EN_BED_FRAME.test(title)) return false;
+  if (EN_MATTRESS_SET.test(title) || EN_FRAME_COMPATIBLE.test(title)) return false;
+  return true;
 }
 
 function defaultTitle(candidate) {
