@@ -186,3 +186,11 @@
 - **本番確認済み（KPI集計）**: commit35f89f407f48082c1ac3f51d8ebfe19edfe21f1c、CI#2488 test/deploy成功、Version0cfa61e4-8f11-4b5a-9c24-0691d38e16cf、既存health08:06:58 ok/missing0/weak0。08:06:54成果物で検索例0→検索0→送客0、トップ値下がり0→送客0を取得、QA例押下2件は除外。7日購入先3/一般希望価格0/新規Seller問い合わせ0は不変。入口の効果は未達。
 - **不具合あり/新依頼記録済み・未受領**: 本日07:23〜25の固定QAは自動25PASSだが意味24/25（先頭9件8/9）。ig_mattressの本命がBest Price Mattress Twin Bed Frameで、ブランド名に引かれたフレーム混入。既存inboxはDONEで別の新再発。[局所修正依頼](claude-inbox/2026-10-20-mattress-bed-frame-exclusion.md)を1件OPENで保存、年末描画patch案より優先。Codexは並行修正せず受領/実装/既存QAでの再観測を管理。名前ペン・コアラ本体は一致。
 - 最大Bは維持し、次の入口修正対象は一般押下0の検索例1箇所に絞る。ただし検索品質の局所不一致の対応を先行し、未観測の因果効果を断定しない。#369、将来在庫1/3、Threads認証は未復旧。Seller原稿DONE・年末patch案OPEN・新検索依頼OPENと公開未完了を分け、本人への中継依頼なし。
+
+
+## 2026-10-21 Codex 進捗
+
+- **本番確認済み（既存証拠再利用）**: HEAD`2eec8b96`、Daily screens run39437191940でWorker3094/Chrome6・deploy・health成功、Version`438509fd-fc54-40d8-b41e-aa64d7ef5fd2`。monitor run39496912505（06:01 JST）はhealth/実利用検索SLI PASS、SNS将来在庫2/3 FAIL（10/26 Instagram CANCELLED）で[#369](https://github.com/t-ooku/P-GATE/issues/369)継続。query_structurer deep canaryは1回TIMEOUTだがpending incidentなし。二重probe/再実行なし。
+- **成果未達／最大B**: 05:26 artifactは7日LP263→検索42（差221、16.0%）、完了38、購入先3セッション、一般希望価格0、新規Seller問い合わせ0、Seller LP31→CTA0。検索例0→検索0→送客0、値下がり入口0→送客0。契約現在値・ASP成果は未計測。次は検索例1箇所だが、10/21 07:23以降の固定QA artifactが無いためBed Frame本命解消の実測を先に待つ。
+- **依頼管理**: マットレス修正は09:14受領→09:25 DONE、commit93dbc6b/#685・配備済み。本日本命再観測は未計測。Seller原稿DONE・未公開。年末テストはpatch下書き完成だが11/02枠済みでBLOCKED、既存枠差し替えを選ばず11/07以降の未作成ユーザー枠候補へ移す。D1予約・公開・patch本番反映は本点検で行わない。#616旧素材レビュー待ち、X停止。
+- **公開記録／未復旧**: Instagram10/20公開2件のID/日時/URLを確認（17982982185102872・18083481764339235）。Threads FAILED25（+3）、再認証未確認。長期放置35件（#590が新規該当）。SNS/営業送信・D1書込・新記事・料金/注意書き変更なし。詳細は[本日日報](2026-10-21-codex-selfcheck.md)。
