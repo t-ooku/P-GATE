@@ -219,3 +219,20 @@ test('approve_job_id から枠・型・20:15 JST を復元し、投稿時刻に�
   assert.match(script, /reason: 'biometric_face_match_not_implemented'[\s\S]*?problems\.push\('identity_check_unavailable'\)/u);
   assert.match(script, /slotFromApprovedJobId\(approvedJobId, themes, now\)/u);
 });
+
+// 2026-10-20 大隆さん「動画投稿は何故止まってるの？再開できない？」
+test('確認待ちのまま投稿日を過ぎたジョブは次の枠の生成を止めない（生成中・課金中は止める）', async () => {
+  const { activePipelineBlockers } = await import('../scripts/auto-runway-reel-lib.mjs');
+  const rows = [
+    { job_id: 'runway-auto-seller-demand-visible-20261002', status: 'GENERATED_REVIEW_REQUIRED' },
+    { job_id: 'runway-auto-price-drop-notice-20261020-r2', status: 'GENERATED_REVIEW_REQUIRED' },
+    { job_id: 'runway-auto-want-at-price-20261013', status: 'PROCESSING' }
+  ];
+  assert.deepEqual(activePipelineBlockers(rows, '20261023').map((row) => row.job_id), ['runway-auto-want-at-price-20261013']);
+  assert.deepEqual(activePipelineBlockers(rows, '20261020').map((row) => row.job_id), ['runway-auto-price-drop-notice-20261020-r2', 'runway-auto-want-at-price-20261013'], '同じ日の確認待ちは止める');
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(script, /activePipelineBlockers\(d1\(/u);
+  // Whisper は PyAV で音声を読まない（10/20 に CI で落ちた）。WAV を標準ライブラリで読んで配列で渡す
+  assert.match(script, /model\.transcribe\(audio, language="ja"/u);
+  assert.match(script, /'-c:a', 'pcm_s16le', wav\]/u);
+});

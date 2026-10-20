@@ -79,3 +79,22 @@ test('トップの「今日の値下がり」: 季節の一言を返す（期間
   const front = readFileSync(new URL('../public/top-drops.mjs', import.meta.url), 'utf8');
   assert.match(front, /el\('p', 'top-drops-season', seasonText\)/u, '季節の一言は textContent で入れる');
 });
+
+// 2026-10-20 大隆さん「週1回は割引のフィード広告じゃない投稿して」
+test('週 1 回（木曜）は割引ではない投稿: ホシルバズに差し替え、値下がり投稿は足さない。本文に値下がり・セールの一言を入れない', async () => {
+  const { isWeeklyTrendDay, screenSetsForRow, seedDailyDropsPost } = await import('../src/social-screens.mjs');
+  assert.equal(isWeeklyTrendDay('2026-10-22'), true, '10/22 は木曜');
+  assert.equal(isWeeklyTrendDay('2026-10-21'), false);
+  assert.deepEqual(screenSetsForRow({ content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-price-watch' }, '2026-10-21'), ['drops', 'buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-x', link: 'https://hoshilu.app/for-sellers' }, '2026-10-22'), ['seller']);
+  const result = await seedDailyDropsPost({ PRODUCT_DB: {} }, new Date('2026-10-22T03:00:00Z'));
+  assert.equal(result.reason, 'weekly_trend_day');
+  for (const season of SEASON_CALENDAR) {
+    assert.doesNotMatch(`${season.trend_hook} ${season.trend_tags}`, /値下|割引|セール価格|お得|最安|%|％|[0-9０-９]/u, season.id);
+    assert.match(season.trend_tags, /^(#[^\s#]+ ?)+$/u);
+  }
+  const caption = screenCaption('buzz', new Date('2026-10-22T03:00:00Z'));
+  assert.equal(caption.split('\n')[1], SEASON_CALENDAR[0].trend_hook);
+  assert.ok(caption.split('\n').at(-1).endsWith(SEASON_CALENDAR[0].trend_tags));
+});

@@ -109,6 +109,8 @@ export const DROPS_DAILY = Object.freeze({
 export async function seedDailyDropsPost(env, now = new Date()) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
   const dateKey = jstDateKey(now);
+  // 週 1 回の割引ではない日（木曜）は値下がり投稿を足さない（その日の投稿はホシルバズ）
+  if (isWeeklyTrendDay(dateKey)) return { enabled: true, inserted: 0, reason: 'weekly_trend_day' };
   const scheduledAt = new Date(`${dateKey}T${DROPS_DAILY.publish_utc}:00.000Z`);
   // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
   if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
@@ -155,12 +157,15 @@ export function jstDateKey(now = new Date()) {
 // 一言は season-calendar.mjs の季節の話だけ（数字・セールの日付・約束は書かない）。期間外は従来の本文のまま。
 export function screenCaption(setId, now = new Date()) {
   const base = SCREEN_POSTS[setId]?.caption || '';
-  const season = setId === 'drops' ? seasonFor(now) : null;
+  const season = setId === 'drops' || setId === 'buzz' ? seasonFor(now) : null;
   if (!season) return base;
+  // ホシルバズ（週 1 回の割引ではない投稿）は、値下がり・セールの言葉を使わない一言とタグ
+  const hook = setId === 'buzz' ? season.trend_hook : season.hook;
+  const tags = setId === 'buzz' ? season.trend_tags : season.tags;
   const lines = base.split('\n');
-  lines.splice(1, 0, season.hook);
+  lines.splice(1, 0, hook);
   const last = lines.length - 1;
-  if (lines[last].startsWith('#')) lines[last] = `${lines[last]} ${season.tags}`;
+  if (lines[last].startsWith('#')) lines[last] = `${lines[last]} ${tags}`;
   return lines.join('\n');
 }
 
@@ -182,10 +187,18 @@ export function screenLink(platform, setId, dateKey) {
 export function screenSetsForRow(row = {}, dateKey = '') {
   const identity = `${row.content_id || ''} ${row.link || ''}`;
   if (/seller|for-sellers/iu.test(identity)) return ['seller'];
+  // 2026-10-20 大隆さん「週1回は割引のフィード広告じゃない投稿して」: 木曜は「いま売れている物」（ホシルバズ）。値下がりは出さない。
+  if (isWeeklyTrendDay(dateKey)) return ['buzz', 'notes'];
   // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中の実画像）に変えていこう」:
   // ユーザー向けは毎日「値下がり中」を主役にする。撮れていない日だけ次の候補（ホシルバズ・買い物ノート）。
-  void dateKey;
   return ['drops', 'buzz', 'notes'];
+}
+
+// 週 1 回の「割引ではない」投稿の曜日（日本時間の木曜。0=日曜）。木曜は買い物ノートの枠（hoshilu-media-notes）が毎週ある。
+export const WEEKLY_TREND_WEEKDAY = 4;
+export function isWeeklyTrendDay(dateKey = '') {
+  const time = Date.parse(`${String(dateKey).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).getUTCDay() === WEEKLY_TREND_WEEKDAY;
 }
 
 export async function loadScreensManifest(env, dateKey) {

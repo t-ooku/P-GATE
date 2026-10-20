@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'no
 import path from 'node:path';
 import process from 'node:process';
 import {
-  REQUIRED_QA_CHECKS, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
+  REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
   evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId
 } from './auto-runway-reel-lib.mjs';
@@ -88,7 +88,7 @@ async function ensureGenerated(attempt) {
     if (preflight.blocking.length) {
       throw new Error(`AUTO_REEL_COMPETING_SLOT_PRECHECK:${preflight.blocking.map((row) => `${row.post_id}=${row.status}`).join(',')}`);
     }
-    const blockers = d1(`SELECT job_id,status FROM runway_generation_jobs WHERE status IN ('BUDGET_RESERVED','SUBMITTING','PROCESSING','AMBIGUOUS_SUBMISSION','GENERATED_REVIEW_REQUIRED');`);
+    const blockers = activePipelineBlockers(d1(`SELECT job_id,status FROM runway_generation_jobs WHERE status IN ('BUDGET_RESERVED','SUBMITTING','PROCESSING','AMBIGUOUS_SUBMISSION','GENERATED_REVIEW_REQUIRED');`), slot.date_key);
     if (blockers.length) throw new Error(`AUTO_REEL_PIPELINE_BUSY:${blockers.map((b) => `${b.job_id}=${b.status}`).join(',')}`);
     const month = now.toISOString().slice(0, 7);
     const used = d1(`SELECT COALESCE(SUM(credits),0) AS credits FROM runway_cost_reservations WHERE scope='MONTH' AND period_key='${month}' AND status IN ('SETTLED','HELD');`)[0]?.credits || 0;
@@ -195,12 +195,17 @@ async function visionFrames(frames) {
 
 function transcribe(raw, dir, durationA) {
   const wav = path.join(dir, 'speech.wav');
-  run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-t', String(durationA), '-vn', '-ac', '1', '-ar', '16000', wav]);
+  run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-t', String(durationA), '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', wav]);
   const py = `
-import json,sys
+import json,sys,wave
+import numpy as np
 from faster_whisper import WhisperModel
+# 2026-10-20: faster_whisper の音声読み込み（PyAV）が CI で落ち、10/20 のリールが speech_check_unavailable で不合格になった。
+# ffmpeg で作った 16kHz・モノラル・16bit の WAV を標準ライブラリで読み、数値の配列で渡す（PyAV を使わない）。
+with wave.open(sys.argv[1], "rb") as w:
+    audio = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768.0
 model = WhisperModel("small", device="cpu", compute_type="int8")
-segments, info = model.transcribe(sys.argv[1], language="ja", beam_size=5, vad_filter=False)
+segments, info = model.transcribe(audio, language="ja", beam_size=5, vad_filter=False)
 text = "".join(s.text for s in segments)
 print(json.dumps({"text": text, "language": info.language, "language_probability": info.language_probability}, ensure_ascii=False))
 `;

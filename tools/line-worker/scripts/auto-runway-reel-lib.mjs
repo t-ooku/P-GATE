@@ -78,6 +78,17 @@ export function buildJobId(themeKey, dateKey, attempt = 1) {
   return `runway-auto-${key}-${dateKey}${attempt > 1 ? `-r${attempt}` : ''}`;
 }
 
+// 2026-10-20: 人の確認待ち（GENERATED_REVIEW_REQUIRED）のまま投稿日を過ぎたジョブが、次の枠の生成を止め続けていた
+// （10/2 の分が残り 10/6・10/9・10/13・10/16 の 4 回が AUTO_REEL_PIPELINE_BUSY で生成されなかった）。
+// 投稿日（job_id の日付）が今回の枠より前の確認待ちは止める理由にしない（行はそのまま残す）。生成中・課金中の行は従来どおり止める。
+export function activePipelineBlockers(rows = [], dateKey = '') {
+  return rows.filter((row) => {
+    if (row.status !== 'GENERATED_REVIEW_REQUIRED') return true;
+    const date = String(row.job_id || '').match(/-(\d{8})(?:-r\d+)?$/u)?.[1] || '';
+    return !date || !dateKey || date >= String(dateKey);
+  });
+}
+
 export function buildPostId(jobId) {
   return jobId.replace(/^runway-auto-/, 'hoshilu-runway-auto-');
 }

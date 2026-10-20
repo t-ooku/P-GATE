@@ -137,8 +137,10 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
   assert.doesNotMatch(SCREEN_POSTS.seller.caption, /ショップページ|クーポン|売上が上がる|必ず売れる/u);
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-demand-visible' }, '2026-10-17'), ['seller']);
   // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中）に変えていこう」: ユーザー向けは毎日「値下がり中」が先
-  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-22'), ['drops', 'buzz', 'notes']);
-  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['drops', 'buzz', 'notes']);
+  // 2026-10-20 大隆さん「週1回は割引のフィード広告じゃない投稿して」: 木曜（10/22・10/29）はホシルバズ
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-29'), ['buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-price-watch' }, '2026-10-24'), ['drops', 'buzz', 'notes']);
   const firsts = ['2026-10-17', '2026-10-18', '2026-10-19'].map((day) => screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, day)[0]);
   assert.deepEqual(firsts, ['drops', 'drops', 'drops']);
   for (const day of ['2026-10-17', '2026-10-18', '2026-10-19']) {
