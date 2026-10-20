@@ -259,6 +259,9 @@ function updateDiscoveryExample(){const language=elements.language.value||'JA';c
 // 止めると、利用者が次の操作を探すことになり「1タップで試せる」という
 // 利点が消えるため。
 function dailyExamples(pool,count=3,now=Date.now()){const list=Array.isArray(pool)?pool:[];if(list.length<=count)return list.slice();const day=Math.floor((now+9*60*60*1000)/86400000);const start=(day*count)%list.length;return Array.from({length:count},(_,index)=>list[(start+index)%list.length]);}
+// 2026-10-20 大隆さん「販促は季節やトレンドを読むこと大切よ」: 時期ごとの例（src/season-calendar.mjs と同じ。テストで一致を確かめる）。期間外は従来の例。
+const SEASON_EXAMPLES=[['10-15','10-31',['ツイード風 ショートカーディガン','中綿ベスト ハイネック レディース','乾燥肌向けの韓国コスメ 化粧水','チェック柄 ボリュームマフラー','モカブラウン フレアスカート','卓上 加湿器 おしゃれ','ショートブーツ 歩きやすい 黒','ボーダー タートルニット','ハロウィン 仮装 大人 簡単']],['11-01','11-15',['ショート丈 中綿ジャケット','裏起毛 ワイドパンツ 黒','電気毛布 洗える','ボアフリース ジャケット レディース','ムートンブーツ 軽い','加湿器 寝室 静か','メンズ ダウンベスト 薄手','シャギーニット カーディガン','ハンドクリーム ギフト 韓国']],['11-16','11-30',['ウールコート ロング 黒','冬用 スニーカー 防水 レディース','ホットカーペット 2畳','ニットワンピース 韓国風','A4が入る 通勤トート 軽い','洗濯洗剤 まとめ買い','メンズ 裏起毛 パーカー','ファーバッグ 小さめ','韓国コスメ クッションファンデ']],['12-01','12-25',['マフラー カシミヤ風 ギフト','手袋 スマホ対応 レディース','韓国コスメ コフレ','ネックレス 華奢 ゴールド','パーティー ワンピース 冬','大掃除 便利グッズ','メンズ 財布 二つ折り ギフト','ニット帽 韓国風','クリスマスプレゼント 5000円以内']],['12-26','12-31',['ロングコート 黒 レディース','スノーブーツ 防水 軽い','大掃除 洗剤 まとめ買い','ニット カーディガン 白','メンズ ダウンジャケット 軽量','お正月 飾り 玄関','マフラー 大判 チェック','手袋 スマホ対応 メンズ','乾燥肌向けの韓国コスメ 化粧水']]];
+function seasonExamples(now=Date.now()){const date=new Date(now+9*60*60*1000).toISOString().slice(5,10);const found=SEASON_EXAMPLES.find(([from,to])=>from<=date&&date<=to);return found?found[2]:null;}
 function renderQuickExamples(language=elements.language.value||'JA'){
   elements.quick.replaceChildren();
   // ログイン会員には検索履歴が別途出るので、この枠ごと隠す(重複表示を避ける)。
@@ -267,7 +270,7 @@ function renderQuickExamples(language=elements.language.value||'JA'){
   // 2026-10-19 大隆さん OK（入口の改善案 1）: 例は検索窓のすぐ下に置き、日本語は 9 個から日替わりで 3 個だけ出す
   // 同日「服に寄せる」: 9 個のうち 7 個を服・バッグ・靴に（3 個ずつの組は 服 2 + ほか 1、服 2 + ほか 1、服 3）。
   // （文字だけで探せる例。押すとそのまま検索が始まる）。
-  const pool=(copy[language]||copy.JA).examples||[];
+  const pool=(language==='JA'&&seasonExamples())||(copy[language]||copy.JA).examples||[];
   const examples=language==='JA'?dailyExamples(pool):pool;
   for(const example of examples){
     const chip=document.createElement('button');

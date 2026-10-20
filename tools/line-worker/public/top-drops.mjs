@@ -48,6 +48,9 @@ async function main() {
     if (!data?.ok || !items.length) return;
     list.replaceChildren(...items.slice(0, 3).map(topDropCard));
     if (note) note.textContent = String(data.note || '');
+    // 2026-10-20 季節の一言（「衣替えの季節。ニット・羽織りものもチェック」など）。無い時期は出さない
+    const seasonText = String(data.season || '').slice(0, 60);
+    if (seasonText && !root.querySelector('.top-drops-season')) root.querySelector('.top-drops-head')?.after(el('p', 'top-drops-season', seasonText));
     root.classList.remove('hidden');
   } catch {}
 }

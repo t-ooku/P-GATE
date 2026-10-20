@@ -13,6 +13,7 @@
 // - 価格は「確認した時点」のもの。現在の価格と在庫は商品ページ（/product）で、いま API に取りに行って出す。
 // - 将来の価格は予言しない。「最安」「今が買い時」とは書かない。
 // - 広告（アフィリエイト）を含むことを明記する。掲載と並び順は価格の記録だけで決める。
+import { isSeasonalProduct, seasonFor } from './season-calendar.mjs';
 import { seoArticleCard } from './seo-pages.mjs';
 import { jstDate } from './price-observations.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from './marketplace-ranking.mjs';
@@ -93,7 +94,8 @@ export function dropSegment(row = {}) {
 }
 
 // rotate: 日替わりの番号。服以外のジャンルの順番と、各ジャンルの中の並び（2 つずつずらす）を日替わりにする。
-export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
+// season: その時期の季節（season-calendar.mjs）。商品名が季節の目印に合う物を、各ジャンルの中で先に出す（2026-10-20 大隆さん「季節やトレンドを読む」）。
+export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0, season = null) {
   if (!Array.isArray(drops)) return drops;
   const rows = drops.map((row) => ({ ...row, segment: dropSegment(row) }));
   const others = DROP_SEGMENTS.slice(1).map((segment) => segment.id);
@@ -101,9 +103,12 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0) {
   // 2026-10-18 10/17 と 10/18 の投稿で 6 商品中 4 つが同じだった（大隆さん 10/17「昨日と同じ投稿」）:
   // ジャンルの中の並びも日替わりで 2 つずつずらす（下がり幅の大きい順を起点に、毎日ちがう商品から選ぶ）。
   const dayOffset = Math.max(0, Math.floor(Number(rotate) || 0)) * 2;
+  const turn = (pool) => (pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool);
   const poolOf = (id) => {
     const pool = rows.filter((row) => row.image_url && row.segment.id === id);
-    return pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool;
+    // 季節の物を先に（季節の物どうし・それ以外どうしの中では、従来どおり日替わりでずらす）
+    const seasonal = pool.filter((row) => isSeasonalProduct(row.product_name, season));
+    return [...turn(seasonal), ...turn(pool.filter((row) => !seasonal.includes(row)))];
   };
   const fashion = poolOf('fashion');
   const otherPools = [...others.slice(shift), ...others.slice(0, shift)].map(poolOf);
@@ -247,7 +252,7 @@ export async function withImagesAndHistory(env, drops, { now = new Date() } = {}
   const [images, histories] = await Promise.all([loadRankingImages(env, keys), loadPriceHistories(env, keys, { now })]);
   const dayNumber = Math.floor((now.getTime() + 9 * 60 * 60 * 1000) / 86_400_000);
   return withDropFocus(drops.map((row) => ({ ...row, image_url: images.get(row.record_key) || '',
-    category_id: images.category?.get(row.record_key) || '', history: histories.get(row.record_key) || [] })), DROP_FOCUS_LIMIT, dayNumber);
+    category_id: images.category?.get(row.record_key) || '', history: histories.get(row.record_key) || [] })), DROP_FOCUS_LIMIT, dayNumber, seasonFor(now));
 }
 
 // 小さな折れ線（価格履歴）。CSP（style-src 'self'）に合わせ、色や太さは CSS のクラスで付ける。
@@ -522,7 +527,8 @@ export async function handleTopDropsApi(request, env, { now = new Date(), cache 
     try { const hit = await cache.match(cacheKey); if (hit) return hit; } catch {}
   }
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
-  const body = { ok: drops !== null, date: jstDate(now), items: topDropItems(drops), note: 'ホシルの記録で、14日間の最高値から下がった幅です。価格は変わります。' };
+  // 2026-10-20 季節の一言（season-calendar.mjs。期間外は空）
+  const body = { ok: drops !== null, date: jstDate(now), season: seasonFor(now)?.top_line || '', items: topDropItems(drops), note: 'ホシルの記録で、14日間の最高値から下がった幅です。価格は変わります。' };
   const response = new Response(JSON.stringify(body), {
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-content-type-options': 'nosniff' }
   });

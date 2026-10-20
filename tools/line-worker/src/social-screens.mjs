@@ -6,6 +6,7 @@
 // - セット: セラー向けの行 → seller、木曜の買い物ノート → notes、ユーザー向けの行 → 日ごとに notes / buzz を交互。
 // - 本文はセットに合わせて差し替える（画像と本文を食い違わせない）。商品の価格・割引率は本文にも書かない。
 import { normalizeSocialPost } from './social-publisher.mjs';
+import { seasonFor } from './season-calendar.mjs';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -46,7 +47,8 @@ export const SCREEN_POSTS = Object.freeze({
       '今、値下がり中の物を集めました。',
       '',
       'ホシルは楽天市場・Yahoo!ショッピングの価格を毎日記録しています。その記録で、14日間の最高値より下がっている物だけを選んでいます。',
-      'アパレル、生活雑貨、美容、韓国系などのジャンルから、日替わりで選んでいます。',
+      // 2026-10-19 大隆さん「服に寄せる」（値下がりの並びは服 2 → ほか 1）に合わせた
+      '服（韓国系も）を中心に、生活雑貨や美容などから日替わりで選んでいます。',
       '画像の大きな数字は、ホシルの記録の最高値と比べた下がり幅です（撮影した日の時点）。セールの割引率ではありません。',
       '価格は変わるので、買う前に商品ページで今の価格を確認してね。',
       '',
@@ -125,7 +127,7 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   if (already) return { enabled: true, inserted: 0, reason: 'drops_already_today', post_id: already.post_id };
   const post = normalizeSocialPost({
     post_id: postId, platform: 'INSTAGRAM', campaign_id: DROPS_DAILY.campaign_id, content_id: DROPS_DAILY.content_id,
-    caption: SCREEN_POSTS.drops.caption, link: screenLink('INSTAGRAM', 'drops', dateKey), media_url: '',
+    caption: screenCaption('drops', now), link: screenLink('INSTAGRAM', 'drops', dateKey), media_url: '',
     media_urls: screenMediaUrls(dateKey, 'drops', count), scheduled_at: scheduledAt.toISOString(), status: 'APPROVED', content_format: 'IMAGE'
   });
   const at = now.toISOString();
@@ -147,6 +149,19 @@ export async function seedDailyDropsPost(env, now = new Date()) {
 
 export function jstDateKey(now = new Date()) {
   return new Date(now.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// 2026-10-20 大隆さん「販促は季節やトレンドを読むこと大切よ」: 値下がり投稿の本文に、その時期の一言（2 行目）とタグを足す。
+// 一言は season-calendar.mjs の季節の話だけ（数字・セールの日付・約束は書かない）。期間外は従来の本文のまま。
+export function screenCaption(setId, now = new Date()) {
+  const base = SCREEN_POSTS[setId]?.caption || '';
+  const season = setId === 'drops' ? seasonFor(now) : null;
+  if (!season) return base;
+  const lines = base.split('\n');
+  lines.splice(1, 0, season.hook);
+  const last = lines.length - 1;
+  if (lines[last].startsWith('#')) lines[last] = `${lines[last]} ${season.tags}`;
+  return lines.join('\n');
 }
 
 export function screenMediaUrls(dateKey, setId, count = 5) {
@@ -241,7 +256,7 @@ export async function applyRealScreens(env, now = new Date()) {
       platform: row.platform,
       campaign_id: row.campaign_id,
       content_id: setId === 'seller' ? 'seller-screens' : `screens-${setId}`,
-      caption: SCREEN_POSTS[setId].caption,
+      caption: screenCaption(setId, now),
       link: screenLink(row.platform, setId, dateKey),
       media_url: '',
       media_urls: urls,

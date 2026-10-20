@@ -10,6 +10,7 @@
 .top-drops-head h2{margin:0;font-size:17px;letter-spacing:0;color:#17172b}
 .top-drops-more{flex:none;color:#5140ba;font-size:12px;font-weight:800;text-decoration:none}
 .top-drops-more::after{content:" →"}
+.top-drops-season{margin:-4px 0 10px;color:#5140ba;font-size:12px;font-weight:700;line-height:1.5}
 .top-drops-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
 .top-drop{min-width:0}
 .top-drop-card{display:flex;flex-direction:column;height:100%;border:1px solid #ece6f8;border-radius:14px;background:#fff;color:#17172b;text-decoration:none;overflow:hidden}

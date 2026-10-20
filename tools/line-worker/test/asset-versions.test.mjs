@@ -12,7 +12,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 
 // index.html が参照している版。UI を変えたらここを上げる。
 const EXPECTED = Object.freeze({
-  'assets-v147/app.js': '206',
+  'assets-v147/app.js': '207',
   'assets-v126/ai-search-layout-fix.css': '135',
   'mywatch.css': '12',
   'tab-nav.css': '5',
@@ -34,8 +34,8 @@ const EXPECTED = Object.freeze({
   'unified-results-ui.css': '13',
   'unified-results-ui.mjs': '22',
   'instagram-look.css': '11',
-  'top-drops.css': '1',
-  'top-drops.mjs': '1'
+  'top-drops.css': '2',
+  'top-drops.mjs': '2'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {
