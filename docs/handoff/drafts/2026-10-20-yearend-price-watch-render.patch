@@ -1,0 +1,141 @@
+From e238c972eea9f556427c245c3cee05ea167e3691 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 00:24:20 +0000
+Subject: [PATCH] =?UTF-8?q?feat(social):=20=E5=B9=B4=E6=9C=AB=E3=81=AE?=
+ =?UTF-8?q?=E5=B8=8C=E6=9C=9B=E4=BE=A1=E6=A0=BC=E3=83=86=E3=82=B9=E3=83=88?=
+ =?UTF-8?q?=E3=81=AE4=E6=9E=9A=E3=82=92=E5=AE=9F=E7=94=BB=E9=9D=A2?=
+ =?UTF-8?q?=E5=85=A5=E3=82=8A=E3=81=A7=E6=8F=8F=E3=81=8F=EF=BC=88=E4=B8=8B?=
+ =?UTF-8?q?=E6=9B=B8=E3=81=8D=E3=83=BB=E6=9C=AA=E5=8F=8D=E6=98=A0=EF=BC=89?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+実験JSON（ops/social/experiments/*.json）の4枚の文字構成に、既存の撮影先（ホシルバズの棚・検索フォーム）
+の実画面を組み合わせる `build-social-screens.mjs --experiment <json>`。価格ぼかし・写真の下帯・OCR は既存の
+capture() のまま。見出しは文言を変えず改行だけ詰めて2行に（収まらなければ作らない）。
+content_id=experiment-… の行は毎日の実画面差し替え（applyRealScreens）の対象外にする。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01FK5p9L9fuSzoFBJvWjLpLV
+---
+ .../scripts/build-social-screens.mjs          | 57 +++++++++++++++++--
+ tools/line-worker/src/social-screens.mjs      |  3 +
+ .../test/social-real-screens.test.mjs         | 24 ++++++++
+ 3 files changed, 80 insertions(+), 4 deletions(-)
+
+diff --git a/tools/line-worker/scripts/build-social-screens.mjs b/tools/line-worker/scripts/build-social-screens.mjs
+index 619ad0a..99fc906 100644
+--- a/tools/line-worker/scripts/build-social-screens.mjs
++++ b/tools/line-worker/scripts/build-social-screens.mjs
+@@ -15,3 +15,3 @@
+ // 使い方: node scripts/build-social-screens.mjs <出力フォルダ> [--base https://hoshilu.app]
+-import { mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises';
++import { mkdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+ import { execFile } from 'node:child_process';
+@@ -639,8 +639,56 @@ async function buildSet(browser, composer, page, setId, allSlides) {
+ 
++// 2026-10-20 年末の希望価格テスト（docs/handoff/2026-10-19-yearend-price-watch-experiment.md）の下書き:
++// 実験 JSON（ops/social/experiments/*.json）の4枚の文字構成に、その日の本番の実画面を組み合わせる。
++// 撮る場所は既存セットと同じ（ホシルバズの棚・検索フォーム）。価格ぼかし・写真の下帯・OCR は capture() のまま。
++// 出力は <outDir>/experiment-<set id>/ に 1.jpg〜4.jpg。毎日の差し替え（src/social-screens.mjs）の対象外。
++const EXPERIMENT_SHOTS = Object.freeze([
++  Object.freeze({ url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 4, nth: 0, labelFrom: 'h3' }),
++  Object.freeze({ url: SEARCH_SLIDE.url, selector: SEARCH_SLIDE.selector, min: SEARCH_SLIDE.min, fromTop: true }),
++  // 「🔔 価格通知」ボタン（.buzz-home-watch）が並ぶ棚
++  Object.freeze({ url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 4, nth: 1, labelFrom: 'h3' }),
++  Object.freeze({ url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 4, nth: 2, labelFrom: 'h3' })
++]);
++// 共通のスライド（slideHtml）は見出し2行・本文2行の枠。3行の見出しは、文言を変えずに改行だけ詰めて2行にする
++// （1行14字・66px で 952px の幅に収まる）。詰めても収まらなければ作らない（はみ出した素材を出さない）。
++const EXPERIMENT_LINE_MAX = 14;
++export function fitTwoLines(text, code) {
++  const lines = String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
++  while (lines.length > 2) {
++    let best = -1;
++    for (let i = 0; i < lines.length - 1; i += 1) {
++      const merged = lines[i].length + lines[i + 1].length;
++      if (merged <= EXPERIMENT_LINE_MAX && (best < 0 || merged < lines[best].length + lines[best + 1].length)) best = i;
++    }
++    if (best < 0) throw new Error(code);
++    lines.splice(best, 2, `${lines[best]}${lines[best + 1]}`);
++  }
++  if (lines.some((line) => line.length > EXPERIMENT_LINE_MAX * 2)) throw new Error(code);
++  return lines.join('\n');
++}
++export function experimentScreenSet(experiment, setIndex = 0) {
++  const set = experiment?.sets?.[setIndex];
++  if (!set || !/^[a-z0-9-]{3,80}$/u.test(String(set.id || ''))) throw new Error('EXPERIMENT_SET_INVALID');
++  const slides = Array.isArray(set.slides) ? set.slides : [];
++  if (slides.length !== EXPERIMENT_SHOTS.length) throw new Error(`EXPERIMENT_SLIDES_${slides.length}`);
++  return {
++    setId: `experiment-${set.id}`,
++    slides: slides.map((slide, index) => Object.freeze({
++      ...EXPERIMENT_SHOTS[index],
++      id: `${set.id}-${index + 1}`,
++      kicker: String(slide.kicker || ''),
++      title: fitTwoLines(slide.headline, `EXPERIMENT_HEADLINE_TOO_LONG:${index + 1}`),
++      body: fitTwoLines(slide.body, `EXPERIMENT_BODY_TOO_LONG:${index + 1}`)
++    }))
++  };
++}
++
+ async function main() {
+   const args = process.argv.slice(2);
+-  outDir = args.find((value, index) => !value.startsWith('--') && args[index - 1] !== '--base') || '';
+   const baseIndex = args.indexOf('--base');
+   if (baseIndex >= 0) BASE = String(args[baseIndex + 1] || '').replace(/\/$/u, '');
+-  if (!outDir || !/^https?:\/\//u.test(BASE)) throw new Error('usage: build-social-screens.mjs <outDir> [--base URL]');
++  const experimentIndex = args.indexOf('--experiment');
++  const experimentPath = experimentIndex >= 0 ? String(args[experimentIndex + 1] || '') : '';
++  outDir = args.find((value, index) => !value.startsWith('--') && !['--base', '--experiment'].includes(args[index - 1])) || '';
++  if (!outDir || !/^https?:\/\//u.test(BASE)) throw new Error('usage: build-social-screens.mjs <outDir> [--base URL] [--experiment JSON]');
++  const experiment = experimentPath ? experimentScreenSet(JSON.parse(await readFile(experimentPath, 'utf8'))) : null;
+   const { chromium } = await import('playwright');
+@@ -660,3 +708,4 @@ async function main() {
+   const failures = {};
+-  for (const [setId, slides] of Object.entries(SCREEN_SETS)) {
++  const targets = experiment ? { [experiment.setId]: experiment.slides } : SCREEN_SETS;
++  for (const [setId, slides] of Object.entries(targets)) {
+     const page = await mobile.newPage();
+diff --git a/tools/line-worker/src/social-screens.mjs b/tools/line-worker/src/social-screens.mjs
+index 189a168..7ed94f8 100644
+--- a/tools/line-worker/src/social-screens.mjs
++++ b/tools/line-worker/src/social-screens.mjs
+@@ -167,2 +167,5 @@ export function screenLink(platform, setId, dateKey) {
+ export function screenSetsForRow(row = {}, dateKey = '') {
++  // 2026-10-20 年末の希望価格テスト（下書き）: 実験の行（content_id=experiment-…）は、実画面入りの素材を
++  // 先に作って入れる。その日の notes / buzz / drops に差し替えない（実験の4枚と本文を残す）。
++  if (/^experiment-/u.test(String(row.content_id || ''))) return [];
+   const identity = `${row.content_id || ''} ${row.link || ''}`;
+diff --git a/tools/line-worker/test/social-real-screens.test.mjs b/tools/line-worker/test/social-real-screens.test.mjs
+index 17d0091..72ec07f 100644
+--- a/tools/line-worker/test/social-real-screens.test.mjs
++++ b/tools/line-worker/test/social-real-screens.test.mjs
+@@ -347 +347,25 @@ test('自動の撮影はバリューコマースの表示の計測に入れな
+ });
++
++test('年末の希望価格テスト（下書き）: 実験JSONの4枚を実画面の撮影先に対応づけ、毎日の差し替えの対象外にする', async () => {
++  const { experimentScreenSet } = await import('../scripts/build-social-screens.mjs');
++  const experiment = JSON.parse(readFileSync(new URL('../ops/social/experiments/yearend-price-watch-20261019.json', import.meta.url), 'utf8'));
++  const { setId, slides } = experimentScreenSet(experiment);
++  assert.equal(setId, 'experiment-user-yearend-price-watch-20261019');
++  assert.equal(slides.length, 4);
++  for (const [index, slide] of slides.entries()) {
++    // 文言は変えない（改行だけ詰めて見出し・本文とも2行以内）
++    assert.equal(slide.title.replace(/\n/gu, ''), experiment.sets[0].slides[index].headline.replace(/\n/gu, ''));
++    assert.equal(slide.body.replace(/\n/gu, ''), experiment.sets[0].slides[index].body.replace(/\n/gu, ''));
++    assert.ok(slide.title.split('\n').length <= 2 && slide.body.split('\n').length <= 2, slide.id);
++    assert.ok(slide.url && slide.selector, slide.id);
++    // 価格ぼかし・写真の下帯を外す指定（mask:false / unmask）は持たない
++    assert.equal(slide.mask, undefined);
++    assert.equal(slide.unmask, undefined);
++  }
++  assert.equal(slides[0].title, '年末の買い物、\n先に予算を決めておく。');
++  assert.throws(() => experimentScreenSet({ sets: [{ id: 'x-y-z', slides: [{}, {}] }] }), /EXPERIMENT_SLIDES_2/u);
++  assert.throws(() => experimentScreenSet({ sets: [{ id: 'x-y-z', slides: [{ headline: 'あいうえおかきくけこ\nさしすせそたちつてと\nなにぬねのはひふへほ' }, {}, {}, {}] }] }), /EXPERIMENT_HEADLINE_TOO_LONG:1/u);
++  assert.throws(() => experimentScreenSet({ sets: [{ id: '../bad', slides: [] }] }), /EXPERIMENT_SET_INVALID/u);
++  assert.deepEqual(screenSetsForRow({ content_id: 'experiment-user-yearend-price-watch-20261019', link: 'https://hoshilu.app/' }, '2026-11-02'), []);
++  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-price-watch' }, '2026-11-02'), ['drops', 'buzz', 'notes']);
++});
+-- 
+2.43.0
