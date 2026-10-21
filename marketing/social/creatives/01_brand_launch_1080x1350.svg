@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1080" y2="1350"><stop stop-color="#fff8fd"/><stop offset=".52" stop-color="#f5f1ff"/><stop offset="1" stop-color="#edf7ff"/></linearGradient>
+    <linearGradient id="brand" x1="180" y1="250" x2="880" y2="900"><stop stop-color="#f238b5"/><stop offset=".5" stop-color="#8a4cf4"/><stop offset="1" stop-color="#258cff"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#fff3a8" stop-opacity=".95"/><stop offset="1" stop-color="#ffd66d" stop-opacity="0"/></radialGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#5935bd" flood-opacity=".18"/></filter>
+  </defs>
+  <rect width="1080" height="1350" rx="44" fill="url(#bg)"/>
+  <circle cx="870" cy="190" r="260" fill="#f238b5" opacity=".06"/><circle cx="150" cy="1120" r="310" fill="#258cff" opacity=".07"/>
+  <g transform="translate(315 155) scale(.22)" filter="url(#shadow)">
+    <path d="M430 1575V610C430 513 548 465 616 534L945 865C989 909 1059 909 1103 865L1432 534C1500 465 1618 513 1618 610V1575" fill="none" stroke="url(#brand)" stroke-width="270" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="1300" cy="1450" rx="260" ry="230" fill="url(#glow)"/>
+    <path d="M1080 1250L1372 1082V1552L1080 1692Z" fill="url(#brand)" stroke="#fff" stroke-opacity=".25" stroke-width="8"/>
+    <path d="M1372 1082L1480 1175V1500L1372 1552Z" fill="#ffe19a" opacity=".55"/><circle cx="1272" cy="1425" r="25" fill="#fff"/>
+  </g>
+  <text x="540" y="610" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="84" font-weight="800" fill="#111c4e" letter-spacing="5">MYGATE</text>
+  <text x="540" y="730" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="58" font-weight="800" fill="#111c4e">自分の欲しいを、</text>
+  <text x="540" y="810" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="58" font-weight="800" fill="url(#brand)">ちゃんと見つける。</text>
+  <rect x="130" y="900" width="820" height="172" rx="48" fill="#fff" stroke="#dcd4ff" stroke-width="3" filter="url(#shadow)"/>
+  <text x="540" y="970" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="36" font-weight="700" fill="#222b54">商品名が分からなくても大丈夫。</text>
+  <text x="540" y="1028" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="32" fill="#535b7d">形・色・使いたい場面を話すだけ。</text>
+  <text x="540" y="1195" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="42" font-weight="800" fill="#7449e9">今日は、何が欲しい？</text>
+</svg>

@@ -1,0 +1,164 @@
+.hero h1 {
+  font-size: clamp(30px, 7vw, 72px);
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.feature-pills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 560px);
+}
+
+.feature-pills span {
+  display: grid;
+  min-height: 38px;
+  place-items: center;
+  padding-inline: 12px;
+  text-align: center;
+}
+
+#searchTitle {
+  font-size: clamp(12px, 2.4vw, 23px);
+  line-height: 1.65;
+}
+
+#searchTitle span {
+  display: block;
+  white-space: nowrap;
+}
+
+.mywish-copy {
+  font-size: clamp(14px, 1.8vw, 16px);
+  line-height: 1.8;
+}
+
+.mywish-copy span {
+  display: block;
+  white-space: nowrap;
+}
+
+.search-journey {
+  display: grid;
+  grid-template-columns: minmax(220px, .8fr) minmax(0, 1.7fr);
+  gap: clamp(20px, 4vw, 48px);
+  margin: -8px 0 24px;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid #e2dcff;
+  border-radius: 26px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.94), rgba(248,245,255,.88)),
+    url('/hoshilu-search-agent-products-v1.webp') center / cover no-repeat;
+  box-shadow: 0 20px 60px #30236610;
+}
+
+.journey-heading h2 { font-size: clamp(24px, 3vw, 36px); }
+.journey-heading h2 span,
+.journey-heading > p:last-child span { display: block; }
+.journey-heading > p:last-child { color: var(--muted); line-height: 1.7; }
+.journey-steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.journey-steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; padding: 13px; border-radius: 16px; background: #ffffffc7; }
+.journey-steps li > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, var(--pink), var(--violet)); font-size: 12px; font-weight: 900; }
+.journey-steps strong { display: block; margin: 1px 0 4px; font-size: 13px; }
+.journey-steps p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+
+@media (max-width: 420px) {
+  .hero h1 {
+    font-size: clamp(28px, 8vw, 34px);
+    letter-spacing: -0.06em;
+  }
+
+  .search-panel h2 {
+    font-size: clamp(11px, 3.05vw, 13px);
+    line-height: 1.75;
+    letter-spacing: -0.035em;
+  }
+
+  .mywish-copy {
+    font-size: clamp(11px, 3.05vw, 13px);
+    letter-spacing: -0.035em;
+  }
+
+  .seller-hero h1 {
+    font-size: clamp(27px, 7.6vw, 32px);
+  }
+}
+
+@media (max-width: 760px) {
+  .search-journey,
+  .journey-heading,
+  .journey-steps,
+  .journey-steps li,
+  .journey-steps li > div {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .hero h1 {
+    white-space: normal;
+  }
+
+  html:lang(ja) .hero h1 {
+    white-space: nowrap;
+  }
+
+  .mywish-copy span {
+    white-space: normal;
+  }
+
+  .search-journey {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 20px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,245,255,.86)),
+      url('/hoshilu-search-agent-products-v1.webp') center / cover no-repeat;
+  }
+  .journey-heading h2 { font-size: clamp(22px, 6.5vw, 32px); white-space: normal; }
+  .journey-heading h2 span { display: inline; }
+  .journey-heading > p:last-child {
+    margin: 6px 0 0;
+    font-size: clamp(11px, 3.15vw, 14px);
+    white-space: normal;
+  }
+  html:lang(ja) .journey-heading h2,
+  html:lang(ja) .journey-heading > p:last-child { white-space: nowrap; }
+  .journey-heading > p:last-child span { display: inline; }
+  .journey-steps { gap: 4px; }
+  .journey-steps li { grid-template-columns: 23px 1fr; gap: 7px; padding: 6px 8px; border-radius: 11px; }
+  .journey-steps li > span { width: 23px; height: 23px; font-size: 10px; }
+  .journey-steps strong { margin: 0 0 2px; font-size: 11px; }
+  .journey-steps p { font-size: 9px; line-height: 1.35; }
+  html:lang(ja) #journeyStep1Body {
+    font-size: clamp(8px, 2.25vw, 9px);
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+  }
+  #searchTitle {
+    font-size: clamp(10px, 2.75vw, 12px);
+    line-height: 1.65;
+    letter-spacing: -0.08em;
+  }
+  #searchTitle span {
+    display: block;
+    white-space: normal;
+  }
+  html:lang(ja) #searchTitle span {
+    white-space: nowrap;
+  }
+  .search-panel .panel-heading {
+    margin-bottom: 14px;
+    min-width: 0;
+    width: 100%;
+  }
+  .search-panel .panel-heading > div {
+    min-width: 0;
+    width: 100%;
+  }
+  #insightTitle { font-size: clamp(21px, 6vw, 30px); white-space: normal; }
+  html:lang(ja) #insightTitle { white-space: nowrap; }
+}

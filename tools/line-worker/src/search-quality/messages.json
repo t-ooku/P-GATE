@@ -1,0 +1,59 @@
+{
+  "zero_result": {
+    "REQUIRED_ATTRIBUTE_MISSING": {
+      "ja": "「{required_attribute}」の{product_type}は見つかりませんでした。条件を少しゆるめて探してみますか？",
+      "en": "We couldn't find a {product_type} confirmed to be {required_attribute}. Want to loosen the condition and try again?",
+      "ko": "'{required_attribute}' 조건에 맞는 {product_type}을(를) 찾지 못했어요. 조건을 조금 완화해서 다시 찾아볼까요?",
+      "zh": "没有找到确认符合“{required_attribute}”的{product_type}。要不要放宽一点条件再找找看？"
+    },
+    "EXCLUDED_ATTRIBUTE_MATCHED": {
+      "ja": "「{excluded_attribute}」を含まない{product_type}は見つかりませんでした。別の言い方で説明してもらえますか？",
+      "en": "We couldn't find a {product_type} without {excluded_attribute}. Could you describe it differently?",
+      "ko": "'{excluded_attribute}'가 없는 {product_type}을(를) 찾지 못했어요. 다른 방식으로 설명해주실 수 있나요?",
+      "zh": "没有找到不含“{excluded_attribute}”的{product_type}。可以换个说法再描述一下吗？"
+    },
+    "ACCESSORY_ONLY": {
+      "ja": "{product_type}本体は見つからず、関連アクセサリーだけでした。もう少し詳しく教えてください。",
+      "en": "We found accessories only, not the {product_type} itself. Please give us a little more detail.",
+      "ko": "{product_type} 본체는 못 찾고 관련 액세서리만 나왔어요. 조금 더 자세히 알려주세요.",
+      "zh": "只找到了配件，没有找到{product_type}本体。请再告诉我们一点细节。"
+    },
+    "COMPATIBILITY_MISMATCH": {
+      "ja": "「{compatibility}」対応を確認できる{product_type}は見つかりませんでした。対応機種の記載がある商品だけを表示します。",
+      "en": "We couldn't confirm a {product_type} that supports {compatibility}. We show only items where support is stated.",
+      "ko": "'{compatibility}' 지원이 확인된 {product_type}을(를) 찾지 못했어요. 지원 기종이 명시된 상품만 표시해요.",
+      "zh": "没有找到确认支持“{compatibility}”的{product_type}。我们只展示明确标注支持型号的商品。"
+    },
+    "CONTRADICTORY_QUERY": {
+      "ja": "「{required_attribute}」と「{excluded_attribute}」は両立しない可能性があります。どちらを優先しますか？",
+      "en": "{required_attribute} and excluding {excluded_attribute} may conflict. Which matters more?",
+      "ko": "'{required_attribute}'와 '{excluded_attribute}' 제외 조건이 충돌할 수 있어요. 어느 쪽이 더 중요하세요?",
+      "zh": "“{required_attribute}”和排除“{excluded_attribute}”可能冲突。你更看重哪一个？"
+    },
+    "EVIDENCE_INSUFFICIENT": {
+      "ja": "「{attribute}」と明記された{product_type}は見つかりませんでした。画像だけでは判断せず、確認できた商品だけを表示します。",
+      "en": "We couldn't find a {product_type} clearly stating {attribute}. We don't decide from images alone.",
+      "ko": "'{attribute}'가 명시된 {product_type}을(를) 찾지 못했어요. 이미지만으로 판단하지 않아요.",
+      "zh": "没有找到明确标注“{attribute}”的{product_type}。我们不会只凭图片判断。"
+    }
+  },
+  "clarification_question": {
+    "PRODUCT_TYPE_UNKNOWN": {
+      "ja": "どんな種類のものか、もう少しヒントをもらえますか？",
+      "en": "Could you give us another hint about what kind of item it is?",
+      "ko": "어떤 종류의 물건인지 힌트를 조금 더 주실 수 있나요?",
+      "zh": "可以再提示一下这是什么类型的东西吗？"
+    },
+    "COMPATIBILITY_UNKNOWN": {
+      "ja": "どの機種・製品用に探していますか？",
+      "en": "What device or product is this for?",
+      "ko": "어떤 기종이나 제품용으로 찾고 계신가요?",
+      "zh": "是要给哪个型号或产品使用呢？"
+    }
+  },
+  "evidence_badge": {
+    "confirmed": {"ja":"商品情報で確認済み","en":"Confirmed in product details","ko":"상품 정보에서 확인됨","zh":"已在商品详情中确认"},
+    "inferred": {"ja":"商品情報から推測","en":"Inferred from listing","ko":"상품 정보에서 추정","zh":"根据商品信息推测"},
+    "unknown": {"ja":"画像のみ・未確認","en":"Image only, unconfirmed","ko":"이미지만 있음・미확인","zh":"仅凭图片・未确认"}
+  }
+}

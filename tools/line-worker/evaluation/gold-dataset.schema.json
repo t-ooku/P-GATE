@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HOSHILU ambiguous-search gold dataset",
+  "type": "array",
+  "minItems": 90,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "case_id",
+      "target_id",
+      "query",
+      "information_level",
+      "correct_product_ids",
+      "acceptable_category_ids",
+      "synonyms",
+      "query_types",
+      "contains_personal_data"
+    ],
+    "properties": {
+      "case_id": { "type": "string", "minLength": 1 },
+      "target_id": { "type": "string", "minLength": 1 },
+      "query": { "type": "string", "minLength": 1 },
+      "locale": {
+        "type": "string",
+        "pattern": "^(ja|en|zh|ko)([-_][A-Za-z0-9]+)?$",
+        "default": "ja-JP"
+      },
+      "information_level": {
+        "enum": ["rich", "ambiguous", "ultra_ambiguous"]
+      },
+      "correct_product_ids": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "type": "string", "minLength": 1 },
+        "uniqueItems": true
+      },
+      "acceptable_category_ids": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "uniqueItems": true
+      },
+      "synonyms": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "uniqueItems": true
+      },
+      "query_types": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "enum": [
+            "shape_function",
+            "category_branch",
+            "color_package",
+            "social_context",
+            "usage_scene",
+            "compatibility",
+            "place_memory",
+            "sensory_memory",
+            "era_memory",
+            "price_fragment"
+          ]
+        },
+        "uniqueItems": true
+      },
+      "expected_behavior": {
+        "enum": ["answer", "clarify", "save_to_wish"]
+      },
+      "forbidden_result_patterns": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "uniqueItems": true
+      },
+      "contains_personal_data": { "const": false },
+      "label_source": {
+        "enum": ["itg_catalog", "verified_order_history", "manual_verified"]
+      },
+      "notes": { "type": "string" }
+    }
+  }
+}

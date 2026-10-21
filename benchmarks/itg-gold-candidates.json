@@ -1,0 +1,362 @@
+{
+  "generated_at": "2026-07-23T17:00:42.533Z",
+  "tenant": "itg",
+  "source": "hoshilu-products D1",
+  "candidates": [
+    {
+      "seed": "seed-1",
+      "rows": []
+    },
+    {
+      "seed": "humidifier",
+      "rows": [
+        {
+          "seed": "humidifier",
+          "asin": "B003KVEJOE",
+          "product_name": "Honeywell 32001621-001 Humidifier Water Panel Frame",
+          "manufacturer": "RESIDEO",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-3",
+      "rows": []
+    },
+    {
+      "seed": "usb fan",
+      "rows": [
+        {
+          "seed": "usb fan",
+          "asin": "B00MWH4FL4",
+          "product_name": "AC Infinity MULTIFAN S4 静音 140mm USB Fan 冷却ファン UL認定済み 受信機 DVR プレイステーション Xbox パソコン キャビネット 冷却 デュアルバージョン",
+          "manufacturer": "AC Infinity",
+          "stock": 99
+        },
+        {
+          "seed": "usb fan",
+          "asin": "B00G059G86",
+          "product_name": "AC Infinity MULTIFAN S1 静音 80mm USB Fan 冷却ファン UL認定済み 受信機 DVR プレイステーション Xbox パソコン キャビネット 冷却 デュアルバージョン",
+          "manufacturer": "AC Infinity",
+          "stock": 99
+        },
+        {
+          "seed": "usb fan",
+          "asin": "B00IJ2J2K0",
+          "product_name": "AC Infinity MULTIFAN S5 静音 2台1組 80mm USB Fan 冷却ファン UL認定済み 受信機 DVR プレイステーション パソコン キャビネット 冷却 デュアルバージョン",
+          "manufacturer": "AC Infinity",
+          "stock": 99
+        },
+        {
+          "seed": "usb fan",
+          "asin": "B09J52ZT1M",
+          "product_name": "Fanvil H3W Wi-Fi IP 電話 ホワイト ワイヤレス 内蔵 2.4Ghz USB VoIP 電話 ホテル/病院の充電用 (ホワイト)",
+          "manufacturer": "Fanvil",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-5",
+      "rows": []
+    },
+    {
+      "seed": "toner lotion",
+      "rows": [
+        {
+          "seed": "toner lotion",
+          "asin": "B00C9KAGYY",
+          "product_name": "Dell H513C High Yield Cyan Toner Cartridge 9K Yield by Dell",
+          "manufacturer": "Dell",
+          "stock": 99
+        },
+        {
+          "seed": "toner lotion",
+          "asin": "B0096EKYN4",
+          "product_name": "Genuine Xerox Cyan Toner for the Phaser 7100 2-Pack 106R02602 by Xerox",
+          "manufacturer": "Xerox",
+          "stock": 99
+        },
+        {
+          "seed": "toner lotion",
+          "asin": "B000N1ONYK",
+          "product_name": "XEROX PHASER 6180 TONER CARTRIDGE CYAN",
+          "manufacturer": "Xerox",
+          "stock": 99
+        },
+        {
+          "seed": "toner lotion",
+          "asin": "B0015YCS1O",
+          "product_name": "Toner Yellow ColorSphere",
+          "manufacturer": "HP",
+          "stock": 99
+        },
+        {
+          "seed": "toner lotion",
+          "asin": "B07ZZWPYD7",
+          "product_name": "ROYALL MUSKE by Royall Fragrances All Purpose Lotion/Cologne 8 oz Men",
+          "manufacturer": "ROYALL LYME",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-7",
+      "rows": []
+    },
+    {
+      "seed": "jelly gummy",
+      "rows": [
+        {
+          "seed": "jelly gummy",
+          "asin": "B004U9CLTA",
+          "product_name": "Brachs Black Jelly Bird Eggs Candy",
+          "manufacturer": "Brachs",
+          "stock": 99
+        },
+        {
+          "seed": "jelly gummy",
+          "asin": "B005SRWY0E",
+          "product_name": "ジェリーベリーソーダポップ3.5オズ",
+          "manufacturer": "Jelly Belly",
+          "stock": 99
+        },
+        {
+          "seed": "jelly gummy",
+          "asin": "B0000CFO5P",
+          "product_name": "Taylor Precision Products Candy/Deep Fry/Jelly Thermometer by Taylor Precision Products",
+          "manufacturer": "Taylor",
+          "stock": 99
+        },
+        {
+          "seed": "jelly gummy",
+          "asin": "B0923MZMSG",
+          "product_name": "SteepLab ネオン蛍光ペンケース iPhone SE (2020、4.7インチスクリーン) & iPhone 8 & iPhone 7用 - Grippy Jelly ケース 保護エアポケット付き(目立つネオンイエロー)",
+          "manufacturer": "SteepLab",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-9",
+      "rows": []
+    },
+    {
+      "seed": "tumbler",
+      "rows": [
+        {
+          "seed": "tumbler",
+          "asin": "B086Z6ZB7R",
+          "product_name": "NATIONAL GEOGRAPHIC Hobby Rock Tumbler Kit ? Durable Leak-Proof Rock Polisher with 7-Day Timer ? Complete Rock Tumbling Kit ? Geology Hobby for Kids Educational STEM Science Kit Rock Collection",
+          "manufacturer": "Blue Marble",
+          "stock": 99
+        },
+        {
+          "seed": "tumbler",
+          "asin": "B002P8EDXA",
+          "product_name": "Dornbracht 83400780-00 Mem Wall-Mounted Tumbler Set In Polished Chro",
+          "manufacturer": "Dornbracht",
+          "stock": 99
+        },
+        {
+          "seed": "tumbler",
+          "asin": "B000CB0DN6",
+          "product_name": "Beck Arnley 201-1736 Ignition Key And Tumbler",
+          "manufacturer": "Beck/Arnley",
+          "stock": 99
+        },
+        {
+          "seed": "tumbler",
+          "asin": "B015WGM68K",
+          "product_name": "Corkcicle Tumbler Insulated Stainless Steel Bottle/ 16 oz Matte Black by Corkcicle",
+          "manufacturer": "Corkcicle",
+          "stock": 99
+        },
+        {
+          "seed": "tumbler",
+          "asin": "B009FO0OYO",
+          "product_name": "Yankee Candle Lサイズジャーキャンドル Large 2-Wick Tumbler Candle レッド 1244656Z",
+          "manufacturer": "Yankee Candle",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-11",
+      "rows": []
+    },
+    {
+      "seed": "seed-12",
+      "rows": []
+    },
+    {
+      "seed": "seed-13",
+      "rows": []
+    },
+    {
+      "seed": "seed-14",
+      "rows": []
+    },
+    {
+      "seed": "seed-15",
+      "rows": []
+    },
+    {
+      "seed": "magnetic memo",
+      "rows": [
+        {
+          "seed": "magnetic memo",
+          "asin": "B00BT2PC5Q",
+          "product_name": "unv43734 ? Magnetic Dry Erase Board",
+          "manufacturer": "Universal",
+          "stock": 99
+        },
+        {
+          "seed": "magnetic memo",
+          "asin": "B000ZGTR0S",
+          "product_name": "Luxor Double Sided Magnetic Reversible Whiteboard with 4 Casters",
+          "manufacturer": "Luxor",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-17",
+      "rows": []
+    },
+    {
+      "seed": "seed-18",
+      "rows": []
+    },
+    {
+      "seed": "pet water fountain",
+      "rows": [
+        {
+          "seed": "pet water fountain",
+          "asin": "B0002DJW1I",
+          "product_name": "JW Pet Insight Clean Water Silo Waterer Tall Secure Horizontal Vertical Cages",
+          "manufacturer": "JW",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-20",
+      "rows": []
+    },
+    {
+      "seed": "car cushion",
+      "rows": [
+        {
+          "seed": "car cushion",
+          "asin": "B00CEGSZ6Y",
+          "product_name": "Hamilton Buhl Sack-O-Phones 10 HA2 Personal Headsets Foam Ear Cushions in a Carry Bag by Hamilton Buhl",
+          "manufacturer": "HamiltonBuhl",
+          "stock": 99
+        },
+        {
+          "seed": "car cushion",
+          "asin": "B016P9EINE",
+          "product_name": "Hamilton Buhl Disposable Ear Cushion Covers Black 2.5 Personal Master Carton 12 boxes by Hamilton Buhl",
+          "manufacturer": "HamiltonBuhl",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-22",
+      "rows": []
+    },
+    {
+      "seed": "seed-23",
+      "rows": []
+    },
+    {
+      "seed": "retro radio",
+      "rows": [
+        {
+          "seed": "retro radio",
+          "asin": "B07SR5HC2H",
+          "product_name": "Redondo Radio RT。 ブラック RED-M4F-RT-B-280",
+          "manufacturer": "Retro Manufacturing",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "seed-25",
+      "rows": []
+    },
+    {
+      "seed": "seed-26",
+      "rows": []
+    },
+    {
+      "seed": "seed-27",
+      "rows": []
+    },
+    {
+      "seed": "seed-28",
+      "rows": []
+    },
+    {
+      "seed": "pink lip tint",
+      "rows": [
+        {
+          "seed": "pink lip tint",
+          "asin": "B003N3VQS6",
+          "product_name": "NYX Slim Lip Pencil Nude Pink (並行輸入品)",
+          "manufacturer": "NYX PROFESSIONAL MAKEUP",
+          "stock": 99
+        },
+        {
+          "seed": "pink lip tint",
+          "asin": "B002R23GCI",
+          "product_name": "NYX Slim Lip Pencil Pinky (並行輸入品)",
+          "manufacturer": "NYX PROFESSIONAL MAKEUP",
+          "stock": 99
+        },
+        {
+          "seed": "pink lip tint",
+          "asin": "B01N045BU6",
+          "product_name": "Pink Lips Pinata Bachelorette Party Favour",
+          "manufacturer": "A Pinata 4 U",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "storage container",
+      "rows": [
+        {
+          "seed": "storage container",
+          "asin": "B002L1IH4M",
+          "product_name": "Pit Pal 143 Horizontal Gear Case Storage Rack",
+          "manufacturer": "Pit Pal",
+          "stock": 99
+        },
+        {
+          "seed": "storage container",
+          "asin": "B0051XS4UO",
+          "product_name": "Quantum QUS984MOB Plastic Storage Stacking Hulk Container 30-Inch by 16-Inch by 14-Inch Yellow Case of 1 by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "stock": 99
+        },
+        {
+          "seed": "storage container",
+          "asin": "B009G6AHIO",
+          "product_name": "Corning Pyrex Borosilicate Glass Cylindrical Wide Mouth Media Storage Bottle with GLS80 Screw Cap 1000ml Capacity (Case of 10)",
+          "manufacturer": "Pyrex",
+          "stock": 99
+        },
+        {
+          "seed": "storage container",
+          "asin": "B005LAHBQU",
+          "product_name": "Quantum Storage Systems COV91000CO Cover for Dividable Grid Container DG91035 and DG91050 Black Conductive 10-Pack by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "stock": 99
+        }
+      ]
+    }
+  ]
+}

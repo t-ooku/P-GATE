@@ -1,0 +1,6 @@
+{
+  "extensionName": { "message": "HOSHILU — 找到你想要的" },
+  "extensionShortName": { "message": "HOSHILU" },
+  "extensionDescription": { "message": "使用当前页面的商品名或选中文字，安全地向HOSHILU咨询。" },
+  "actionTitle": { "message": "向HOSHILU咨询" }
+}

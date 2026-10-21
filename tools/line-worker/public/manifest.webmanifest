@@ -1,15 +1,19 @@
 {
-  "name": "P-GATE｜欲しい商品への近道",
-  "short_name": "P-GATE",
-  "description": "日本語・英語・中国語・韓国語・ローマ字で商品を相談できるKnowledgeアプリ",
+  "name": "ホシル — 欲しいを、ちゃんと見つける。",
+  "short_name": "ホシル",
+  "id": "/",
+  "description": "商品名が分からなくても、会話から欲しいものを探して、気になったらほしっとくできるサービス。",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f7f7f9",
-  "theme_color": "#e83267",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "categories": ["shopping", "lifestyle"],
+  "background_color": "#f7f5ff",
+  "theme_color": "#7357ff",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icons/hoshilu-v2-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/hoshilu-v2-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

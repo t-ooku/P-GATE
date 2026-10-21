@@ -1,0 +1,2098 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-01T04:34:41.046Z",
+  "source": {
+    "tenant": "itg",
+    "database": "hoshilu-products",
+    "rule": "Only ASINs confirmed in the ITG D1 candidate snapshot are valid labels."
+  },
+  "privacy": "No customer names, account identifiers, or order data.",
+  "targets": [
+    {
+      "target_id": "T01",
+      "tenant": "itg",
+      "correct_asins": [
+        "B000G1VER6"
+      ],
+      "correct_product_ids": [
+        "itg:B000G1VER6"
+      ],
+      "product_name": "Klein Tools 600-12 1/2-Inch Keystone Screwdriver 12-Inch Shank",
+      "manufacturer": "KLEIN TOOLS",
+      "allowed_categories": [
+        "hand-tool",
+        "screwdriver"
+      ],
+      "synonyms": [
+        "ドライバー",
+        "ねじ回し",
+        "screwdriver",
+        "keystone screwdriver"
+      ],
+      "variants": [
+        {
+          "case_id": "T01-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Klein Toolsの全長12インチ、軸長12インチのキーストーン型マイナスドライバー",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T01-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "黄色と黒の持ち手で長い軸のマイナスドライバー",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T01-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "工具みたいな細長いやつ",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T02",
+      "tenant": "itg",
+      "correct_asins": [
+        "B085CMYZ6B"
+      ],
+      "correct_product_ids": [
+        "itg:B085CMYZ6B"
+      ],
+      "product_name": "LEGO 40周年限定 40370 Steam Engine (188 Pcs)",
+      "manufacturer": "LEGO",
+      "allowed_categories": [
+        "toy",
+        "building-block"
+      ],
+      "synonyms": [
+        "レゴ",
+        "LEGO",
+        "蒸気機関車",
+        "steam engine",
+        "building blocks"
+      ],
+      "variants": [
+        {
+          "case_id": "T02-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "LEGOの40周年限定40370、188ピースの蒸気機関車セット",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T02-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "黒い蒸気機関車を組み立てる限定レゴ",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T02-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "SNSで見た黒い乗り物のおもちゃ",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T02-en-1", "locale": "en", "information_level": "ambiguous",
+          "query": "a limited LEGO set for building a black steam locomotive",
+          "query_types": ["category_branch", "social_context"]
+        },
+        {
+          "case_id": "T02-zh-1", "locale": "zh", "information_level": "ambiguous",
+          "query": "可以拼装黑色蒸汽机车的限定乐高积木",
+          "query_types": ["category_branch", "social_context"]
+        },
+        {
+          "case_id": "T02-ko-1", "locale": "ko", "information_level": "ambiguous",
+          "query": "검은색 증기 기관차를 조립하는 한정 레고 세트",
+          "query_types": ["category_branch", "social_context"]
+        }
+      ]
+    },
+    {
+      "target_id": "T03",
+      "tenant": "itg",
+      "correct_asins": [
+        "B01J4PDR1A"
+      ],
+      "correct_product_ids": [
+        "itg:B01J4PDR1A"
+      ],
+      "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+      "manufacturer": "Mrs. MEYERS",
+      "allowed_categories": [
+        "home-fragrance",
+        "candle"
+      ],
+      "synonyms": [
+        "キャンドル",
+        "ろうそく",
+        "soy candle",
+        "lavender candle"
+      ],
+      "variants": [
+        {
+          "case_id": "T03-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Mrs. Meyers Clean Dayのラベンダー香、7.2オンスのソイキャンドル2個セット",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T03-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "ラベンダーの香りがする大豆ワックスのキャンドル",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T03-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "いい匂いの容器に入った火をつけるやつ",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T03-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a lavender scented soy candle in a glass jar",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T03-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "玻璃罐装的薰衣草香味大豆蜡烛",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T03-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "유리병에 담긴 라벤더 향 소이 캔들",
+          "query_types": [
+            "sensory",
+            "color_package"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T04",
+      "tenant": "itg",
+      "correct_asins": [
+        "B001CLUL32"
+      ],
+      "correct_product_ids": [
+        "itg:B001CLUL32"
+      ],
+      "product_name": "HamiltonBuhl Ear Bud Headphone",
+      "manufacturer": "HamiltonBuhl",
+      "allowed_categories": [
+        "audio",
+        "earphones"
+      ],
+      "synonyms": [
+        "イヤホン",
+        "イヤーバッド",
+        "earbud",
+        "headphones"
+      ],
+      "variants": [
+        {
+          "case_id": "T04-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "HamiltonBuhlの耳に入れるタイプのイヤーバッドヘッドホン",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "小さくて耳に入れる有線ヘッドホン",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "音を聞く小さいやつ",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "small wired earbuds that fit inside the ear",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-en-2",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "wired earbuds, not wireless ones",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "小巧的有线入耳式耳机",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-zh-2",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "想找有线耳机，不要无线的",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "귀에 넣는 작은 유선 이어폰",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-ko-2",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "무선 말고 유선 이어폰을 찾아줘",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T05",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00NNEL72K"
+      ],
+      "correct_product_ids": [
+        "itg:B00NNEL72K"
+      ],
+      "product_name": "(XL-20 L Black) - Evoc FR TRAIL BLACKLINE 20l - Backpack for cycling with back protector 20 Litres",
+      "manufacturer": "EVOC",
+      "allowed_categories": [
+        "bag",
+        "cycling-backpack"
+      ],
+      "synonyms": [
+        "リュック",
+        "バックパック",
+        "cycling backpack",
+        "back protector"
+      ],
+      "variants": [
+        {
+          "case_id": "T05-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Evoc FR TRAIL BLACKLINE、20Lで背中のプロテクター付きサイクリング用バックパック",
+          "query_types": [
+            "usage_scene",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T05-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "自転車用で背中を守る黒い20Lリュック",
+          "query_types": [
+            "usage_scene",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T05-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "外で背負う黒いやつ",
+          "query_types": [
+            "usage_scene",
+            "shape_function"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T06",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00AFTTQ8I"
+      ],
+      "correct_product_ids": [
+        "itg:B00AFTTQ8I"
+      ],
+      "product_name": "Fossil Mens FS4813 Grant Stainless Steel Watch with Brown Leather Band",
+      "manufacturer": "Fossil",
+      "allowed_categories": [
+        "fashion",
+        "wristwatch"
+      ],
+      "synonyms": [
+        "腕時計",
+        "watch",
+        "Fossil Grant",
+        "leather band"
+      ],
+      "variants": [
+        {
+          "case_id": "T06-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "FossilのメンズFS4813 Grant、ステンレスケースと茶色レザーバンドの腕時計",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T06-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "茶色い革ベルトと金属ケースの男性用時計",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T06-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "インスタで見た茶色と銀色のアクセサリー",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T07",
+      "tenant": "itg",
+      "correct_asins": [
+        "B0BSSVR7HZ"
+      ],
+      "correct_product_ids": [
+        "itg:B0BSSVR7HZ"
+      ],
+      "product_name": "[Yirui] LXL a94TitanFlex Thor Grip Heavy Duty Black Industrial Nitrile Gloves with Raised Diamond Texture 8-mil Latex Free 100-ct Box",
+      "manufacturer": "TitanFlex",
+      "allowed_categories": [
+        "protective-equipment",
+        "nitrile-gloves"
+      ],
+      "synonyms": [
+        "ニトリル手袋",
+        "作業用手袋",
+        "nitrile gloves",
+        "diamond texture"
+      ],
+      "variants": [
+        {
+          "case_id": "T07-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "TITANflex Thor Grip、黒、8mil、ダイヤモンド凹凸付きの使い捨てニトリル手袋100枚",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T07-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "黒くて表面に滑り止めの凹凸がある厚手作業手袋",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T07-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "手につける黒い消耗品",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T08",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00B4R8HW6"
+      ],
+      "correct_product_ids": [
+        "itg:B00B4R8HW6"
+      ],
+      "product_name": "Spectralink SPL 8400 DUAL CHARGER KIT",
+      "manufacturer": "Spectralink",
+      "allowed_categories": [
+        "electronics",
+        "battery-charger"
+      ],
+      "synonyms": [
+        "充電器",
+        "charger",
+        "dual charger",
+        "Spectralink 8400"
+      ],
+      "variants": [
+        {
+          "case_id": "T08-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Spectralink 8400用デュアル充電器キット",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T08-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "機器を2台置ける黒い充電台",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T08-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "職場で機械を置いていた黒いやつ",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T08-en-1", "locale": "en", "information_level": "ambiguous",
+          "query": "a black charging dock that holds two devices at once",
+          "query_types": ["compatibility", "usage_scene"]
+        },
+        {
+          "case_id": "T08-zh-1", "locale": "zh", "information_level": "ambiguous",
+          "query": "可以同时放两台设备的黑色双充电座",
+          "query_types": ["compatibility", "usage_scene"]
+        },
+        {
+          "case_id": "T08-ko-1", "locale": "ko", "information_level": "ambiguous",
+          "query": "기기 두 대를 동시에 올리는 검은색 듀얼 충전 거치대",
+          "query_types": ["compatibility", "usage_scene"]
+        }
+      ]
+    },
+    {
+      "target_id": "T09",
+      "tenant": "itg",
+      "correct_asins": [
+        "B07WW7QP26"
+      ],
+      "correct_product_ids": [
+        "itg:B07WW7QP26"
+      ],
+      "product_name": "AXIS P5655-E PTZ Network Camera 01682-001",
+      "manufacturer": "AXIS",
+      "allowed_categories": [
+        "camera",
+        "network-camera"
+      ],
+      "synonyms": [
+        "ネットワークカメラ",
+        "監視カメラ",
+        "PTZ camera",
+        "AXIS P5655-E"
+      ],
+      "variants": [
+        {
+          "case_id": "T09-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "AXIS P5655-E、型番01682-001のPTZネットワークカメラ",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T09-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "首振りできる白いドーム型ネットワークカメラ",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T09-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "天井についていた白い丸いやつ",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T09-en-1", "locale": "en", "information_level": "ambiguous",
+          "query": "a white dome network camera that can pan and tilt",
+          "query_types": ["compatibility", "shape_function"]
+        },
+        {
+          "case_id": "T09-zh-1", "locale": "zh", "information_level": "ambiguous",
+          "query": "可以云台转动的白色球形网络摄像头",
+          "query_types": ["compatibility", "shape_function"]
+        },
+        {
+          "case_id": "T09-ko-1", "locale": "ko", "information_level": "ambiguous",
+          "query": "회전할 수 있는 흰색 돔형 네트워크 카메라",
+          "query_types": ["compatibility", "shape_function"]
+        }
+      ]
+    },
+    {
+      "target_id": "T10",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00BBUCCKO"
+      ],
+      "correct_product_ids": [
+        "itg:B00BBUCCKO"
+      ],
+      "product_name": "Logitech Gaming Keyboard G105 Call of Duty: MW3 Edition【並行輸入品】",
+      "manufacturer": "Logitech G",
+      "allowed_categories": [
+        "computer-accessory",
+        "keyboard"
+      ],
+      "synonyms": [
+        "キーボード",
+        "gaming keyboard",
+        "Logitech G105",
+        "MW3"
+      ],
+      "variants": [
+        {
+          "case_id": "T10-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Logitech G105 Call of Duty MW3 Editionのゲーミングキーボード",
+          "query_types": [
+            "compatibility",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T10-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "ゲーム用の黒いLogitechキーボード",
+          "query_types": [
+            "compatibility",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T10-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "配信で見た光る入力する板",
+          "query_types": [
+            "compatibility",
+            "social_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T11",
+      "tenant": "itg",
+      "correct_asins": [
+        "B08RMZKYTL"
+      ],
+      "correct_product_ids": [
+        "itg:B08RMZKYTL"
+      ],
+      "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+      "manufacturer": "Logitech G",
+      "allowed_categories": [
+        "computer-accessory",
+        "mouse"
+      ],
+      "synonyms": [
+        "マウス",
+        "wireless mouse",
+        "gaming mouse",
+        "Logitech G PRO X Superlight"
+      ],
+      "variants": [
+        {
+          "case_id": "T11-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Logitech G PRO X Superlight、黒のワイヤレスゲーミングマウス",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "すごく軽い黒い無線ゲーミングマウス",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "パソコンで動かす黒い小さいやつ",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a very lightweight black wireless gaming mouse for a computer",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "电脑用的超轻黑色无线游戏鼠标",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "컴퓨터용 초경량 검정 무선 게이밍 마우스",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T12",
+      "tenant": "itg",
+      "correct_asins": [
+        "B076DLN9BM"
+      ],
+      "correct_product_ids": [
+        "itg:B076DLN9BM"
+      ],
+      "product_name": "Dicky Chug Big Sports Bottle - 20 oz Glow in the Dark",
+      "manufacturer": "Hott Products",
+      "allowed_categories": [
+        "drinkware",
+        "sports-bottle"
+      ],
+      "synonyms": [
+        "水筒",
+        "スポーツボトル",
+        "sports bottle",
+        "glow in the dark"
+      ],
+      "variants": [
+        {
+          "case_id": "T12-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Dicky Chug Big、20オンスで暗闇で光るスポーツボトル",
+          "query_types": [
+            "shape_function",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T12-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "暗い場所で光る大きめの水筒",
+          "query_types": [
+            "shape_function",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T12-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "TikTokで見た光るボトル",
+          "query_types": [
+            "shape_function",
+            "social_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T13",
+      "tenant": "itg",
+      "correct_asins": [
+        "B000V6IO9M"
+      ],
+      "correct_product_ids": [
+        "itg:B000V6IO9M"
+      ],
+      "product_name": "Lite Source LS-20073AQUA Pepita Table Lamp Aqua Glass with Fabric Shade by Lite Source",
+      "manufacturer": "Lite Source",
+      "allowed_categories": [
+        "lighting",
+        "table-lamp"
+      ],
+      "synonyms": [
+        "テーブルランプ",
+        "卓上照明",
+        "table lamp",
+        "aqua glass"
+      ],
+      "variants": [
+        {
+          "case_id": "T13-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Lite Source Pepita LS-20073AQUA、アクア色ガラスと布シェードのテーブルランプ",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T13-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "水色のガラス土台と布の傘がある卓上ライト",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T13-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "部屋に置く青っぽく光るやつ",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T13-en-1", "locale": "en", "information_level": "ambiguous",
+          "query": "an aqua table lamp with a glass base and fabric shade",
+          "query_types": ["color_package", "shape_function"]
+        },
+        {
+          "case_id": "T13-zh-1", "locale": "zh", "information_level": "ambiguous",
+          "query": "水蓝色玻璃底座和布艺灯罩的台灯",
+          "query_types": ["color_package", "shape_function"]
+        },
+        {
+          "case_id": "T13-ko-1", "locale": "ko", "information_level": "ambiguous",
+          "query": "아쿠아색 유리 받침과 패브릭 갓이 있는 탁상 조명",
+          "query_types": ["color_package", "shape_function"]
+        }
+      ]
+    },
+    {
+      "target_id": "T14",
+      "tenant": "itg",
+      "correct_asins": [
+        "B0778VN76T"
+      ],
+      "correct_product_ids": [
+        "itg:B0778VN76T"
+      ],
+      "product_name": "HEATGENE Hot Towel Warmer for Bath Heated Drying Rack 8 Square Bar Brush Finish",
+      "manufacturer": "HEATGENE",
+      "allowed_categories": [
+        "bathroom",
+        "towel-warmer"
+      ],
+      "synonyms": [
+        "タオルウォーマー",
+        "乾燥ラック",
+        "heated towel rack",
+        "towel warmer"
+      ],
+      "variants": [
+        {
+          "case_id": "T14-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "HEATGENE、角型バー8本の浴室用加熱タオルウォーマー乾燥ラック",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T14-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "浴室でタオルを掛けて温める銀色のラック",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T14-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "お風呂場の壁にある温かくなる棒",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T14-en-1", "locale": "en", "information_level": "ultra_ambiguous",
+          "query": "the warm metal bars mounted on a bathroom wall",
+          "query_types": ["shape_function", "usage_scene"]
+        },
+        {
+          "case_id": "T14-zh-1", "locale": "zh", "information_level": "ultra_ambiguous",
+          "query": "浴室墙上会发热的金属杆",
+          "query_types": ["shape_function", "usage_scene"]
+        },
+        {
+          "case_id": "T14-ko-1", "locale": "ko", "information_level": "ultra_ambiguous",
+          "query": "욕실 벽에 달린 따뜻해지는 금속 막대",
+          "query_types": ["shape_function", "usage_scene"]
+        }
+      ]
+    },
+    {
+      "target_id": "T15",
+      "tenant": "itg",
+      "correct_asins": [
+        "B005LFO2DA"
+      ],
+      "correct_product_ids": [
+        "itg:B005LFO2DA"
+      ],
+      "product_name": "Suave Men 3-in-1 Shampoo Conditioner & Body Wash 28 oz 2 pk by Suave [並行輸入品]",
+      "manufacturer": "Suave",
+      "allowed_categories": [
+        "personal-care",
+        "shampoo"
+      ],
+      "synonyms": [
+        "シャンプー",
+        "3-in-1",
+        "shampoo conditioner body wash",
+        "Suave Men"
+      ],
+      "variants": [
+        {
+          "case_id": "T15-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Suave Men 3-in-1、シャンプー・コンディショナー・ボディウォッシュ28ozの2本組",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "男性用で髪と体を一本で洗える大きなボトル2本",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "お風呂で使う男性用の液体",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "men’s 3-in-1 shampoo conditioner and body wash, two large bottles",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "男士三合一洗发水护发素沐浴露大瓶两件装",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "남성용 샴푸 컨디셔너 바디워시 3-in-1 대용량 두 병 세트",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T16",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00K5F816K"
+      ],
+      "correct_product_ids": [
+        "itg:B00K5F816K"
+      ],
+      "product_name": "WIND SONG 4 OZ PERFUMED DUSTING POWDER by Prince Matchabelli",
+      "manufacturer": "Prince Matchabelli",
+      "allowed_categories": [
+        "fragrance",
+        "body-powder"
+      ],
+      "synonyms": [
+        "香水パウダー",
+        "ボディパウダー",
+        "perfumed dusting powder",
+        "Wind Song"
+      ],
+      "variants": [
+        {
+          "case_id": "T16-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Prince Matchabelli Wind Song、4オンスの香り付きダスティングパウダー",
+          "query_types": [
+            "sensory",
+            "memory"
+          ]
+        },
+        {
+          "case_id": "T16-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "香水みたいな香りのする粉状ボディパウダー",
+          "query_types": [
+            "sensory",
+            "memory"
+          ]
+        },
+        {
+          "case_id": "T16-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "母が使っていたいい匂いの粉",
+          "query_types": [
+            "sensory",
+            "memory"
+          ]
+        },
+        {
+          "case_id": "T16-en-1", "locale": "en", "information_level": "ultra_ambiguous",
+          "query": "the nice-smelling powder my mother used",
+          "query_types": ["sensory", "memory"]
+        },
+        {
+          "case_id": "T16-zh-1", "locale": "zh", "information_level": "ultra_ambiguous",
+          "query": "妈妈以前用的有香味的粉",
+          "query_types": ["sensory", "memory"]
+        },
+        {
+          "case_id": "T16-ko-1", "locale": "ko", "information_level": "ultra_ambiguous",
+          "query": "엄마가 쓰던 향기 좋은 파우더",
+          "query_types": ["sensory", "memory"]
+        }
+      ]
+    },
+    {
+      "target_id": "T17",
+      "tenant": "itg",
+      "correct_asins": [
+        "B0C1ZZ9L2W"
+      ],
+      "correct_product_ids": [
+        "itg:B0C1ZZ9L2W"
+      ],
+      "product_name": "Diamond Select Toys インディ・ジョーンズとレイダーズ・オブ・ザ・ロストアーク:インディ1:6スケール バスト",
+      "manufacturer": "Diamond Select Toys",
+      "allowed_categories": [
+        "collectible",
+        "character-bust"
+      ],
+      "synonyms": [
+        "胸像",
+        "フィギュア",
+        "Indiana Jones bust",
+        "1:6 scale bust"
+      ],
+      "variants": [
+        {
+          "case_id": "T17-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Diamond Select Toysのインディ・ジョーンズ、1:6スケール胸像",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T17-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "映画の男性キャラクターの上半身だけの置物",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T17-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "SNSで見た茶色い帽子の人形",
+          "query_types": [
+            "category_branch",
+            "social_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T18",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00OUXQW2I"
+      ],
+      "correct_product_ids": [
+        "itg:B00OUXQW2I"
+      ],
+      "product_name": "HEYE Puzzle ヘイパズル 29693 Marino Degano : Funky Zoo Nile Habitat (1000 pieces)",
+      "manufacturer": "Heye",
+      "allowed_categories": [
+        "toy",
+        "jigsaw-puzzle"
+      ],
+      "synonyms": [
+        "ジグソーパズル",
+        "1000ピース",
+        "HEYE puzzle",
+        "Funky Zoo Nile"
+      ],
+      "variants": [
+        {
+          "case_id": "T18-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "HEYE 29693 Marino Degano Funky Zoo Nile Habitat、1000ピースパズル",
+          "query_types": [
+            "color_package",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T18-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "動物園とナイルが描かれた1000ピースのパズル",
+          "query_types": [
+            "color_package",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T18-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "動物がたくさん描いてある箱の遊ぶもの",
+          "query_types": [
+            "color_package",
+            "category_branch"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T19",
+      "tenant": "itg",
+      "correct_asins": [
+        "B001CZFXHM"
+      ],
+      "correct_product_ids": [
+        "itg:B001CZFXHM"
+      ],
+      "product_name": "Super Slim Wallet Jet Black",
+      "manufacturer": "WAGNER",
+      "allowed_categories": [
+        "fashion-accessory",
+        "wallet"
+      ],
+      "synonyms": [
+        "財布",
+        "薄型財布",
+        "slim wallet",
+        "jet black"
+      ],
+      "variants": [
+        {
+          "case_id": "T19-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Super Slim Wallet、Jet Blackの超薄型財布",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T19-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "とても薄い真っ黒な財布",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T19-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "ポケットに入れる黒い薄いやつ",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T19-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a very slim jet black wallet that fits in a pocket",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T19-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "能放进口袋的超薄黑色钱包",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        },
+        {
+          "case_id": "T19-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "주머니에 들어가는 아주 얇은 검정 지갑",
+          "query_types": [
+            "shape_function",
+            "color_package"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T20",
+      "tenant": "itg",
+      "correct_asins": [
+        "B0768NT3RW"
+      ],
+      "correct_product_ids": [
+        "itg:B0768NT3RW"
+      ],
+      "product_name": "(24.0 inches) - 14K Yellow Gold Filled Solid Figaro Chain Necklace 4.0 mm Wide",
+      "manufacturer": "Jewelry Affairs",
+      "allowed_categories": [
+        "jewelry",
+        "necklace"
+      ],
+      "synonyms": [
+        "ネックレス",
+        "フィガロチェーン",
+        "Figaro chain necklace",
+        "14K gold filled"
+      ],
+      "variants": [
+        {
+          "case_id": "T20-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "24インチ、幅4mmの14Kイエローゴールドフィルド・フィガロチェーンネックレス",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "金色で太め、フィガロ型の長いチェーン",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "首につける金色の長いやつ",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "24 inch 14K gold filled Figaro chain necklace, 4 mm wide",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "24英寸宽4毫米的14K包金费加罗链项链",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "24인치 폭 4mm 14K 골드필드 피가로 체인 목걸이",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T21",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00IXEW7CE"
+      ],
+      "correct_product_ids": [
+        "itg:B00IXEW7CE"
+      ],
+      "product_name": "Stamina Rings Set 3 Assorted Colors by NS Novelties",
+      "manufacturer": "NS Novelties",
+      "allowed_categories": [
+        "fitness",
+        "exercise-rings"
+      ],
+      "synonyms": [
+        "エクササイズリング",
+        "stamina rings",
+        "fitness rings",
+        "3 colors"
+      ],
+      "variants": [
+        {
+          "case_id": "T21-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "NS NoveltiesのStamina Rings、3色アソートセット",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T21-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "色違いが3個入った運動用リング",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        },
+        {
+          "case_id": "T21-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "動画で見た輪っか3つの運動道具",
+          "query_types": [
+            "color_package",
+            "social_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T22",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00DH4EFW0"
+      ],
+      "correct_product_ids": [
+        "itg:B00DH4EFW0"
+      ],
+      "product_name": "Vivitar 6点multi-coated回転Graduated Color Filterセット(52 mm) Includes :レッド、イエロー、ブルー、オレンジ、グレー&パープル",
+      "manufacturer": "Vivitar",
+      "allowed_categories": [
+        "camera-accessory",
+        "lens-filter"
+      ],
+      "synonyms": [
+        "カメラフィルター",
+        "レンズフィルター",
+        "52mm color filter",
+        "Vivitar"
+      ],
+      "variants": [
+        {
+          "case_id": "T22-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Vivitar 52mm、赤・黄・青・オレンジ・グレー・紫の回転グラデーションカラーフィルター6点セット",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "カメラにつける52mmの色付き丸いフィルター6枚",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "写真の色を変える丸い板",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "six 52 mm colored round filters for a camera lens",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "相机镜头用的52毫米六片彩色圆形滤镜",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "카메라 렌즈용 52mm 원형 컬러 필터 6개 세트",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T23",
+      "tenant": "itg",
+      "correct_asins": [
+        "B07J3KHV76"
+      ],
+      "correct_product_ids": [
+        "itg:B07J3KHV76"
+      ],
+      "product_name": "Moleskine Notebook Extra Large Ruled Myrtle Green Hard Cover (7.5 x 9.75)",
+      "manufacturer": "Moleskine",
+      "allowed_categories": [
+        "stationery",
+        "notebook"
+      ],
+      "synonyms": [
+        "ノート",
+        "ハードカバー手帳",
+        "Moleskine notebook",
+        "myrtle green"
+      ],
+      "variants": [
+        {
+          "case_id": "T23-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Moleskine Extra Large、罫線入り、Myrtle Greenのハードカバーノート7.5×9.75インチ",
+          "query_types": [
+            "color_package",
+            "place_context"
+          ]
+        },
+        {
+          "case_id": "T23-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "深い緑色で大きめの硬い表紙の罫線ノート",
+          "query_types": [
+            "color_package",
+            "place_context"
+          ]
+        },
+        {
+          "case_id": "T23-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "文房具屋で見た緑の四角いやつ",
+          "query_types": [
+            "color_package",
+            "place_context"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T24",
+      "tenant": "itg",
+      "correct_asins": [
+        "B0B6216WKJ"
+      ],
+      "correct_product_ids": [
+        "itg:B0B6216WKJ"
+      ],
+      "product_name": "Hohner PentaHarp Harmonica - Key of C Minor Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+      "manufacturer": "Hohner",
+      "allowed_categories": [
+        "musical-instrument",
+        "harmonica"
+      ],
+      "synonyms": [
+        "ハーモニカ",
+        "PentaHarp",
+        "C minor harmonica",
+        "zip case"
+      ],
+      "variants": [
+        {
+          "case_id": "T24-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Hohner PentaHarp Cマイナー、ジップケース・説明書・クロス付きハーモニカセット",
+          "query_types": [
+            "compatibility",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T24-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "ケースとクロスが付いたCマイナーのハーモニカ",
+          "query_types": [
+            "compatibility",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T24-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "口で音を出す銀色の小さい楽器",
+          "query_types": [
+            "compatibility",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T24-en-1", "locale": "en", "information_level": "ultra_ambiguous",
+          "query": "a small silver instrument you play by blowing with your mouth",
+          "query_types": ["compatibility", "category_branch"]
+        },
+        {
+          "case_id": "T24-zh-1", "locale": "zh", "information_level": "ultra_ambiguous",
+          "query": "用嘴吹奏的银色小乐器",
+          "query_types": ["compatibility", "category_branch"]
+        },
+        {
+          "case_id": "T24-ko-1", "locale": "ko", "information_level": "ultra_ambiguous",
+          "query": "입으로 불어서 연주하는 은색 작은 악기",
+          "query_types": ["compatibility", "category_branch"]
+        }
+      ]
+    },
+    {
+      "target_id": "T25",
+      "tenant": "itg",
+      "correct_asins": [
+        "B07STMN9KM"
+      ],
+      "correct_product_ids": [
+        "itg:B07STMN9KM"
+      ],
+      "product_name": "Master Cables 交換用 ソニー VMCUAM2 USBアダプターケーブル",
+      "manufacturer": "Master Cables",
+      "allowed_categories": [
+        "electronics-accessory",
+        "usb-cable"
+      ],
+      "synonyms": [
+        "USBケーブル",
+        "Sony VMCUAM2",
+        "replacement USB adapter cable",
+        "Sony cable"
+      ],
+      "variants": [
+        {
+          "case_id": "T25-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Master Cables製、Sony VMCUAM2交換用USBアダプターケーブル",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T25-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "ソニー機器用の交換USB変換ケーブル",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T25-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "機械とパソコンをつなぐ黒い線",
+          "query_types": [
+            "compatibility",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T26",
+      "tenant": "itg",
+      "correct_asins": [
+        "B07HYWQVLX"
+      ],
+      "correct_product_ids": [
+        "itg:B07HYWQVLX"
+      ],
+      "product_name": "Pillow Perfect Christmas Forest Scene 装飾腰枕 12インチ x 18インチ グレー",
+      "manufacturer": "Pillow Perfect",
+      "allowed_categories": [
+        "home-textile",
+        "decorative-pillow"
+      ],
+      "synonyms": [
+        "クッション",
+        "腰枕",
+        "decorative lumbar pillow",
+        "Christmas forest"
+      ],
+      "variants": [
+        {
+          "case_id": "T26-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Pillow Perfect、クリスマスの森柄、グレー、12×18インチの装飾腰枕",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T26-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "冬の森が描かれた灰色の横長クッション",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T26-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "ソファに置く冬っぽいふわふわ",
+          "query_types": [
+            "color_package",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T26-en-1", "locale": "en", "information_level": "ultra_ambiguous",
+          "query": "something soft and wintry to put on a sofa",
+          "query_types": ["color_package", "shape_function"]
+        },
+        {
+          "case_id": "T26-zh-1", "locale": "zh", "information_level": "ultra_ambiguous",
+          "query": "放在沙发上的冬季柔软装饰",
+          "query_types": ["color_package", "shape_function"]
+        },
+        {
+          "case_id": "T26-ko-1", "locale": "ko", "information_level": "ultra_ambiguous",
+          "query": "소파에 놓는 겨울 느낌의 푹신한 것",
+          "query_types": ["color_package", "shape_function"]
+        }
+      ]
+    },
+    {
+      "target_id": "T27",
+      "tenant": "itg",
+      "correct_asins": [
+        "B000HSCOJA"
+      ],
+      "correct_product_ids": [
+        "itg:B000HSCOJA"
+      ],
+      "product_name": "KNIFE FOLDING LOCK BACK",
+      "manufacturer": "IRWIN",
+      "allowed_categories": [
+        "outdoor-tool",
+        "folding-knife"
+      ],
+      "synonyms": [
+        "折りたたみナイフ",
+        "ロックバックナイフ",
+        "folding lock back knife",
+        "pocket knife"
+      ],
+      "variants": [
+        {
+          "case_id": "T27-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "ロックバック機構付きの折りたたみナイフ",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "刃を折りたためて背中側でロックするナイフ",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "キャンプで使う折りたためる刃物",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a folding lock-back knife for camping",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "露营用的折叠锁背刀",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "캠핑용 접이식 락백 나이프",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T28",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00CS8DT00"
+      ],
+      "correct_product_ids": [
+        "itg:B00CS8DT00"
+      ],
+      "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+      "manufacturer": "iDesign",
+      "allowed_categories": [
+        "storage",
+        "kitchen-organizer"
+      ],
+      "synonyms": [
+        "収納ケース",
+        "整理ボックス",
+        "clear organizer bin",
+        "pantry organizer"
+      ],
+      "variants": [
+        {
+          "case_id": "T28-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "InterDesign、10×5×6インチ、透明のパントリー・冷蔵庫・冷凍庫用収納オーガナイザービン",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T28-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "冷蔵庫にも使える透明で細長い収納ケース",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T28-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "台所で物を分ける透明な箱",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T28-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a clear narrow organizer bin for the refrigerator",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T28-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "冰箱里用的透明细长收纳盒",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T28-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "냉장고에 쓰는 투명하고 긴 수납함",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T29",
+      "tenant": "itg",
+      "correct_asins": [
+        "B01FI7PEH8"
+      ],
+      "correct_product_ids": [
+        "itg:B01FI7PEH8"
+      ],
+      "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+      "manufacturer": "j5create",
+      "allowed_categories": [
+        "computer-accessory",
+        "usb-c-adapter"
+      ],
+      "synonyms": [
+        "USB-Cアダプター",
+        "multi adapter",
+        "j5create JCA374",
+        "USB Type-C hub"
+      ],
+      "variants": [
+        {
+          "case_id": "T29-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "j5create JCA374 USB Type-Cマルチアダプター",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T29-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "USB-Cに複数の端子を増やす小型アダプター",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T29-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "ノートPCにつなぐ端子がたくさんあるやつ",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T29-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a compact USB-C hub with multiple ports for a laptop",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T29-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "笔记本电脑用的小型多接口USB-C转接器",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T29-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        }
+      ]
+    },
+    {
+      "target_id": "T30",
+      "tenant": "itg",
+      "correct_asins": [
+        "B00LEVNMS6"
+      ],
+      "correct_product_ids": [
+        "itg:B00LEVNMS6"
+      ],
+      "product_name": "Livex Lighting 50685-91 Midtown 6-Light Bath Light Brushed Nickel by Livex Lighting",
+      "manufacturer": "Livex",
+      "allowed_categories": [
+        "lighting",
+        "bathroom-light"
+      ],
+      "synonyms": [
+        "浴室照明",
+        "壁付け照明",
+        "6-light bath light",
+        "brushed nickel"
+      ],
+      "variants": [
+        {
+          "case_id": "T30-1",
+          "locale": "ja",
+          "information_level": "rich",
+          "query": "Livex Lighting 50685-91 Midtown、ブラッシュドニッケルの6灯バスライト",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T30-2",
+          "locale": "ja",
+          "information_level": "ambiguous",
+          "query": "銀色の横長バーにライトが6個付いた浴室用照明",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T30-3",
+          "locale": "ja",
+          "information_level": "ultra_ambiguous",
+          "query": "洗面所の鏡の上にある銀色で光るやつ",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T30-en-1", "locale": "en", "information_level": "ambiguous",
+          "query": "a silver horizontal six-light fixture above a bathroom mirror",
+          "query_types": ["shape_function", "usage_scene"]
+        },
+        {
+          "case_id": "T30-zh-1", "locale": "zh", "information_level": "ambiguous",
+          "query": "浴室镜子上方的银色横向六灯照明",
+          "query_types": ["shape_function", "usage_scene"]
+        },
+        {
+          "case_id": "T30-ko-1", "locale": "ko", "information_level": "ambiguous",
+          "query": "욕실 거울 위의 은색 가로형 6등 조명",
+          "query_types": ["shape_function", "usage_scene"]
+        }
+      ]
+    }
+  ]
+}
