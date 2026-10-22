@@ -66,11 +66,20 @@ test('気になる商品は「ホシる中」タブに横スクロールで並�
   assert.match(buzz, /el\('button', 'buzz-home-keep'\)/);
   assert.match(buzz, /window\.HoshiluKeep\?\.toggle\(candidate\)/);
   assert.match(read('buzz-home.css'), /\.buzz-home-keep\.kept\{/);
-  // 2026-10-07: 「他のモール（Google）でも探す」はホシルの色（ピンク→紫のグラデーション＋白文字）。
-  assert.match(read('buzz-home.css'), /\.buzz-home-google \{[^}]*linear-gradient\(110deg, var\(--pink[^}]*color: #fff;/);
-  assert.match(read('buzz-home.css'), /\.buzz-home-google \{[^}]*white-space: nowrap;[^}]*text-overflow: ellipsis;/);
-  assert.match(read('buzz-home.mjs'), /を他のモールでも探す`/);
+  // 2026-10-23 大隆さん指示「公式ランキングがないモール（Qoo10・ZOZO・SHEIN）は順位を出さず導線だけ。おしゃれな誘導にして」:
+  // グラデーションの大ボタンをやめ、「ALSO ON」の帯にジャンルに合うモールの札（search_links の署名付き /go）を 1 行で並べる。
+  // 順位・件数は出さない。最後の札は従来の HOSHILU 横断検索（他モールは Google 枠）。
+  assert.doesNotMatch(read('buzz-home.mjs'), /buzz-home-google/);
+  assert.doesNotMatch(read('buzz-home.css'), /\.buzz-home-google/);
+  assert.match(read('buzz-home.mjs'), /el\('span', 'buzz-home-malls-kicker', 'ALSO ON'\)/);
+  assert.match(read('buzz-home.mjs'), /fashion: \['ZOZOTOWN_JP', 'SHEIN_JP', 'QOO10_JP', 'BUYMA_JP'\]/);
+  assert.match(read('buzz-home.mjs'), /beauty: \['QOO10_JP', 'COSME_JP', 'MATSUKIYO_JP', 'LOFT_JP'\]/);
+  assert.match(read('buzz-home.mjs'), /chip\.href = text\(link\.url\);[\s\S]*chip\.rel = 'noopener sponsored';/);
+  assert.match(read('buzz-home.mjs'), /'buzz-home-mall buzz-home-mall-all', 'すべてのモールで →'/);
+  assert.match(read('buzz-home.mjs'), /all\.addEventListener\('click', \(\) => searchOnHoshilu\(text\(shelf\.search_keyword\)\)\)/);
   assert.doesNotMatch(read('buzz-home.mjs'), /他のモール（Google）/);
+  assert.match(read('buzz-home.css'), /\.buzz-home-malls \{[^}]*overflow-x: auto;/);
+  assert.match(read('buzz-home.css'), /\.buzz-home-mall-all \{[^}]*linear-gradient\(110deg, #ff4f9a, #7357ff 55%, #23b8ff\) border-box/);
   // 2026-10-08: 価格推移の導線は「過去の価格と比べる」のグラデーション枠ボタン（ホシルバズ・検索結果とも）。
   assert.match(read('buzz-home.mjs'), /'buzz-home-detail', '過去の価格と比べる'/);
   assert.match(read('buzz-home.css'), /\.buzz-home-detail\{[^}]*border:1\.5px solid transparent;[^}]*linear-gradient\(110deg,#ff4f9a,#7357ff 55%,#23b8ff\) border-box/);

@@ -107,6 +107,74 @@ function searchOnHoshilu(keyword) {
   else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
 
+// 2026-10-23 大隆さん指示「公式ランキングがないモール（Qoo10・ZOZO・SHEIN）は順位を出さず、
+// 『このジャンルを Qoo10 で探す』の導線だけ。おしゃれな誘導にして」:
+// 棚の下に「ALSO ON」の帯を置き、ジャンルに合うモールだけを小さな札（チップ）で並べる。
+// リンクは /api/buzz/shelf が返す署名付き /go（search_links。Qoo10・SHEIN・Yahoo! 等はリダイレクト先で
+// バリューコマースの計測に包まれる）をそのまま使う。順位・件数は出さない（創作しない）。
+const MALL_SHORT_NAMES = Object.freeze({
+  QOO10_JP: 'Qoo10', ZOZOTOWN_JP: 'ZOZOTOWN', SHEIN_JP: 'SHEIN', BUYMA_JP: 'BUYMA', COSME_JP: '@cosme',
+  LOFT_JP: 'ロフト', HANDS_JP: 'ハンズ', MATSUKIYO_JP: 'マツキヨ', ABCMART_JP: 'ABC-MART', SNKRDUNK_JP: 'SNKRDUNK',
+  AMAZON_JP: 'Amazon', YAHOO_JP: 'Yahoo!', RAKUTEN_JP: '楽天市場'
+});
+// ジャンルごとの並び（先頭ほど左）。棚の中身（楽天）と同じモールは出さない。
+const MALLS_BY_GENRE = Object.freeze({
+  fashion: ['ZOZOTOWN_JP', 'SHEIN_JP', 'QOO10_JP', 'BUYMA_JP'],
+  shoes: ['ZOZOTOWN_JP', 'ABCMART_JP', 'SNKRDUNK_JP', 'SHEIN_JP'],
+  beauty: ['QOO10_JP', 'COSME_JP', 'MATSUKIYO_JP', 'LOFT_JP'],
+  gadget: ['AMAZON_JP', 'YAHOO_JP', 'QOO10_JP'],
+  living: ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'YAHOO_JP']
+});
+const SHELF_GENRE = Object.freeze({
+  womens_fashion: 'fashion', mens_fashion: 'fashion', bags: 'fashion',
+  shoes: 'shoes', womens_sneakers: 'shoes',
+  beauty_cosme: 'beauty', skincare: 'beauty', face_wash: 'beauty', face_lotion: 'beauty', korean_beauty: 'beauty',
+  smartphone: 'gadget', mobile_battery: 'gadget', wireless_earphones: 'gadget', handheld_fan: 'gadget', beauty_health_appliance: 'gadget'
+});
+const MALL_CHIP_LIMIT = 4;
+
+function mallChips(shelf) {
+  const links = Array.isArray(shelf.search_links) ? shelf.search_links : [];
+  if (!links.length) return [];
+  const byMarketplace = new Map(links.map((link) => [text(link.marketplace), link]));
+  const order = MALLS_BY_GENRE[SHELF_GENRE[text(shelf.shelf_id)] || 'living'] || MALLS_BY_GENRE.living;
+  return order
+    .map((marketplace) => byMarketplace.get(marketplace))
+    .filter((link) => link && /^https?:\/\//u.test(text(link.url)) && MALL_SHORT_NAMES[text(link.marketplace)])
+    .slice(0, MALL_CHIP_LIMIT);
+}
+
+// 棚の下の帯: 「ALSO ON ／ Qoo10 ／ ZOZOTOWN ／ SHEIN ／ … ／ すべてのモールで →」。1 行・横スクロール。
+function mallRow(shelf) {
+  const chips = mallChips(shelf);
+  const row = el('div', 'buzz-home-malls');
+  row.setAttribute('aria-label', `${text(shelf.label)}をほかのモールで見る`);
+  row.append(el('span', 'buzz-home-malls-kicker', 'ALSO ON'));
+  chips.forEach((link, index) => {
+    const chip = el('a', 'buzz-home-mall');
+    chip.href = text(link.url);
+    chip.target = '_blank';
+    chip.rel = 'noopener sponsored';
+    chip.dataset.marketplace = text(link.marketplace);
+    chip.dataset.tone = String(index % 4);
+    chip.title = `${text(shelf.search_keyword || shelf.label)}を${MALL_SHORT_NAMES[text(link.marketplace)]}で見る`;
+    chip.append(el('i', 'buzz-home-mall-dot'), el('span', '', MALL_SHORT_NAMES[text(link.marketplace)]));
+    row.append(chip);
+  });
+  // 最後は HOSHILU の横断検索（楽天・Yahoo! の API 結果＋他モールは Google 枠）。新しい API は呼ばない。
+  const all = el('button', 'buzz-home-mall buzz-home-mall-all', 'すべてのモールで →');
+  all.type = 'button';
+  all.title = `${text(shelf.search_keyword)}を他のモールでも探す`;
+  all.addEventListener('click', () => searchOnHoshilu(text(shelf.search_keyword)));
+  row.append(all);
+  // スマホ幅では札が右にはみ出して横スクロールになる。続きがある間だけ右端を薄くぼかして「まだある」と分からせる。
+  const paintEdge = () => row.classList.toggle('has-more', row.scrollLeft + row.clientWidth < row.scrollWidth - 2);
+  row.addEventListener('scroll', paintEdge, { passive: true });
+  if (typeof ResizeObserver === 'function') new ResizeObserver(paintEdge).observe(row);
+  queueMicrotask(paintEdge);
+  return row;
+}
+
 // ジャンルの帯（横スクロール）: 押すとその棚へ移動。棚は API が返した分だけ（創作しない）。
 function genreNav(shelves, idPrefix) {
   const nav = el('nav', 'buzz-home-genres');
@@ -157,12 +225,9 @@ function renderInto({ root, limit, idPrefix, groups, moreToTab }, result) {
     more.href = '/buzz';
     rail.append(more);
     if (shelf.search_keyword) {
-      // 2026-10-07 大隆さん指示「二行になっているのダサい。『○○を他のモールでも探す』でよい」: 短くして 1 行に収める。
-      const google = el('button', 'buzz-home-google', `${text(shelf.search_keyword)}を他のモールでも探す`);
-      google.title = google.textContent;
-      google.type = 'button';
-      google.addEventListener('click', () => searchOnHoshilu(text(shelf.search_keyword)));
-      block.append(head, rail, google);
+      // 2026-10-07 大隆さん指示「二行になっているのダサい」→ 2026-10-23「おしゃれな誘導にして」:
+      // グラデーションの大ボタン 1 本から、ジャンルに合うモールの札を 1 行に並べる帯（mallRow）へ。
+      block.append(head, rail, mallRow(shelf));
       root.append(block);
       continue;
     }

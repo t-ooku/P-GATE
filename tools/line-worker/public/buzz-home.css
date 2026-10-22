@@ -164,14 +164,23 @@
 .buzz-home-genre-chip { flex: 0 0 auto; padding: 7px 12px; border: 1px solid #ded7ff; border-radius: 999px; background: #fff; color: #5140ba; font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; }
 .buzz-home-genre-chip:hover { background: var(--soft, #f4f0ff); }
 .buzz-home-shelf { scroll-margin-top: calc(var(--topbar-height, 74px) + 12px); }
-/* 2026-10-07 大隆さん指示「他のモール（Google）でも探す→ のボタンは、ホシルのポートレートカラーにして」:
-   主ボタンと同じピンク→紫のグラデーション＋白文字（instagram-look.css の主ボタンと同じ色）。 */
-.buzz-home-google { margin: 6px 0 2px; padding: 10px 14px; border: 0; border-radius: 12px; background: linear-gradient(110deg, var(--pink, #ff3ca5), var(--violet, #7357ff)); color: #fff; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; box-shadow: 0 8px 20px #7357ff2e; }
-.buzz-home-google:hover { filter: brightness(1.06); }
-.buzz-home-google:focus-visible { outline: 2px solid #23b8ff; outline-offset: 2px; }
-/* 2026-10-07: 必ず 1 行。長い語は末尾を「…」で省く（全文は title に入れる）。 */
-.buzz-home-google { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 380px) { .buzz-home-google { padding: 10px 12px; font-size: 11px; letter-spacing: -0.01em; } }
+/* 2026-10-23 大隆さん指示「公式ランキングがないモール（Qoo10・ZOZO・SHEIN）は導線だけ。おしゃれな誘導にして」:
+   棚の下に「ALSO ON」の帯。白い札（チップ）を 1 行に並べ、左端の小さな点だけホシルの色（ピンク／紫／青／ミント）。
+   最後の「すべてのモールで →」はグラデーションの縁取り（「過去の価格と比べる」と同じ作法）。横にはみ出さず横スクロール。 */
+.buzz-home-malls { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; padding: 2px 0 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.buzz-home-malls::-webkit-scrollbar { display: none; }
+.buzz-home-malls.has-more { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
+.buzz-home-malls-kicker { flex: 0 0 auto; margin-right: 2px; font-size: 9.5px; font-weight: 900; letter-spacing: .18em; color: var(--muted, #8a86a8); }
+.buzz-home-mall { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 7px 9px; border: 1px solid #e4dfff; border-radius: 999px; background: #fff; color: #2b2a44; font: inherit; font-size: 12px; font-weight: 850; letter-spacing: .01em; white-space: nowrap; text-decoration: none; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.buzz-home-mall:hover { transform: translateY(-1px); border-color: #cfc6ff; box-shadow: 0 6px 16px #7357ff1f; }
+.buzz-home-mall:focus-visible { outline: 2px solid #23b8ff; outline-offset: 2px; }
+.buzz-home-mall-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pink, #ff3ca5); box-shadow: 0 0 0 3px #ff3ca51a; }
+.buzz-home-mall[data-tone="1"] .buzz-home-mall-dot { background: var(--violet, #7357ff); box-shadow: 0 0 0 3px #7357ff1a; }
+.buzz-home-mall[data-tone="2"] .buzz-home-mall-dot { background: #23b8ff; box-shadow: 0 0 0 3px #23b8ff1a; }
+.buzz-home-mall[data-tone="3"] .buzz-home-mall-dot { background: #2fd4a7; box-shadow: 0 0 0 3px #2fd4a71a; }
+.buzz-home-mall-all { padding: 7px 12px; border: 1.5px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(110deg, #ff4f9a, #7357ff 55%, #23b8ff) border-box; color: #5140ba; }
+.buzz-home-mall-all:hover { color: #3b2f99; }
+@media (max-width: 380px) { .buzz-home-mall { padding: 6px 10px 6px 8px; font-size: 11px; } .buzz-home-malls-kicker { font-size: 9px; } }
 /* 2026-09-20 大隆さん指示: 「今、みんながホシってる。」は 1 行。スマホでは見出しの下に「すべて見る」を置く */
 .buzz-home-heading h2 { white-space: nowrap; }
 @media (max-width: 760px) {
