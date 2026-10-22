@@ -202,3 +202,11 @@
 - **固定QAの本番改善確認**: 07:23〜25 JSTの既存成果物で自動25PASS・本命カテゴリ意味25/25。ig_mattressはBed Frameではなく三つ折りマットレス本体、koala_mattressと布用名前ペンも意味一致。マットレス受信箱依頼を実装・配備だけでなく次回既存QA確認まで完了とした。全属性適合や売上改善とは区別。
 - **成果未達／最大B**: 05:03 artifactは7日LP229→検索35（差194、15.3%）、完了32、購入先3セッション、一般希望価格0、新規Seller問い合わせ0、Seller LP28→CTA0。検索例1→検索1→購入先0、値下がり入口0→購入先0。有料契約現在値・ASP成果は未計測。次の局所候補は検索例1箇所の第一画面内視認性と検索開始接続で、購入先クリックを評価指標とする。
 - **公開記録／未復旧**: Instagram10/21 21:02:55 JSTのID18099252446534246・URLを確認。10/22 IMAGEはAPPROVEDで未公開。Threads FAILED27（+2）、再認証未確認。Seller原稿DONE・未公開、年末テストBLOCKED、#616旧素材レビュー待ち、X停止。長期放置35件は増減なし。SNS/営業送信・D1書込・新記事・料金/注意書き変更なし。詳細は[本日日報](2026-10-22-codex-selfcheck.md)。
+
+
+## 2026-10-23 Codex 進捗
+
+- **本番確認済み（既存証拠再利用）**: HEAD`b5b863e0`、[#692](https://github.com/t-ooku/P-GATE/issues/692)のALSO ONモール導線をapply run39826346967でWorker3094/Chrome6・deploy・health成功、Version`e0d61792-7c84-4180-8ddd-9a2dd0adcac6`。monitor run39865199056（07:28 JST）は外形health PASSだが、query structurer primary timeout反復8件＋schedule heartbeat staleで検索SLI FAIL、SNS将来在庫2/3 FAIL。現行閾値を変えず[#691](https://github.com/t-ooku/P-GATE/issues/691)OPEN。二重probe/再実行なし。
+- **成果差分／最大B**: 04:57 artifactは7日LP127→検索36（差91、28.3%）、完了33、購入先4セッション（前回3）。検索例2→検索2→購入先1を初観測。一般希望価格0、新規Seller問い合わせ0、Seller LP21→CTA0。有料契約現在値・ASP成果は未計測。最大Bは「検索しない」。SLI障害とALSO ON配備直後のため検索例の追加改修を並行せず、既存monitorの復旧を先行確認する。
+- **新規P1／依頼記録済み**: QA/INTERNAL除外の`seller_form_failed`を1セッション初観測（10/22 19:03 JST）、問い合わせ累計4は不変。重複inboxなしを確認し、[非個人診断依頼](claude-inbox/2026-10-23-seller-form-failed-diagnosis.md)を1件OPENで保存。利用者入力・連絡先を取らず、固定fixture/固定reasonだけで切り分ける。保存は受領/着手/実装ではなく、Codexが次回artifactで本番確認する。
+- **公開記録／未完了**: Instagram10/22 20:02:55 JSTのID18124482796902152・URLを確認。Threads FAILED27で不変、10/26在庫不足、#616旧素材レビュー待ち、X停止。最新固定QAは10/22の意味25/25、10/23本日分はartifact時刻前で未計測。Seller原稿DONE・未公開、年末テストBLOCKED、長期放置35件不変。SNS/営業送信・D1書込・新記事・料金/注意書き変更なし。詳細は[本日日報](2026-10-23-codex-selfcheck.md)。
