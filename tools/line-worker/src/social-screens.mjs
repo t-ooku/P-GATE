@@ -111,6 +111,8 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   const dateKey = jstDateKey(now);
   // 週 1 回の割引ではない日（木曜）は値下がり投稿を足さない（その日の投稿はホシルバズ）
   if (isWeeklyTrendDay(dateKey)) return { enabled: true, inserted: 0, reason: 'weekly_trend_day' };
+  // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 値下がり投稿は土・日だけ
+  if (!isDropsDay(dateKey)) return { enabled: true, inserted: 0, reason: 'not_drops_day' };
   const scheduledAt = new Date(`${dateKey}T${DROPS_DAILY.publish_utc}:00.000Z`);
   // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
   if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
@@ -189,9 +191,19 @@ export function screenSetsForRow(row = {}, dateKey = '') {
   if (/seller|for-sellers/iu.test(identity)) return ['seller'];
   // 2026-10-20 大隆さん「週1回は割引のフィード広告じゃない投稿して」: 木曜は「いま売れている物」（ホシルバズ）。値下がりは出さない。
   if (isWeeklyTrendDay(dateKey)) return ['buzz', 'notes'];
-  // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中の実画像）に変えていこう」:
-  // ユーザー向けは毎日「値下がり中」を主役にする。撮れていない日だけ次の候補（ホシルバズ・買い物ノート）。
-  return ['drops', 'buzz', 'notes'];
+  // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中の実画像）に変えていこう」→
+  // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 値下がり（drops）は土・日だけ。撮れていない日だけ次の候補。
+  if (isDropsDay(dateKey)) return ['drops', 'buzz', 'notes'];
+  // それ以外の日（月・水など）は、予約どおりの使い方カルーセル（ホシっとく・ショップ横断検索など）のまま出す（差し替えない）
+  return [];
+}
+
+// 値下がり投稿を出す曜日（日本時間。0=日曜、6=土曜）。週 7 本のうち 2 本だけ（土日の買い物前）。
+// 週の形: 月・水=使い方カルーセル／火・金=リール／木=いま売れている物（ホシルバズ）／土・日=値下がり
+export const DROPS_WEEKDAYS = Object.freeze([6, 0]);
+export function isDropsDay(dateKey = '') {
+  const time = Date.parse(`${String(dateKey).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(time) && DROPS_WEEKDAYS.includes(new Date(time).getUTCDay());
 }
 
 // 週 1 回の「割引ではない」投稿の曜日（日本時間の木曜。0=日曜）。木曜は買い物ノートの枠（hoshilu-media-notes）が毎週ある。

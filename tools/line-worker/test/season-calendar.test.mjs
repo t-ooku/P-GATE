@@ -86,7 +86,8 @@ test('週 1 回（木曜）は割引ではない投稿: ホシルバズに差し
   assert.equal(isWeeklyTrendDay('2026-10-22'), true, '10/22 は木曜');
   assert.equal(isWeeklyTrendDay('2026-10-21'), false);
   assert.deepEqual(screenSetsForRow({ content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['buzz', 'notes']);
-  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-price-watch' }, '2026-10-21'), ['drops', 'buzz', 'notes']);
+  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-price-watch' }, '2026-10-24'), ['drops', 'buzz', 'notes'], '土曜は値下がり');
+  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-price-watch' }, '2026-10-21'), [], '水曜は予約どおりの使い方カルーセル（10/22 値下がりは土日だけ）');
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-x', link: 'https://hoshilu.app/for-sellers' }, '2026-10-22'), ['seller']);
   const result = await seedDailyDropsPost({ PRODUCT_DB: {} }, new Date('2026-10-22T03:00:00Z'));
   assert.equal(result.reason, 'weekly_trend_day');

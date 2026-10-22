@@ -141,9 +141,11 @@ test('実画像の本文: 商品の価格・割引率を書かない／セラー
   assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-price-drops' }, '2026-10-29'), ['buzz', 'notes']);
   assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-media-notes', content_id: 'media-user-media-ranking-price' }, '2026-10-22'), ['buzz', 'notes']);
   assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-price-watch' }, '2026-10-24'), ['drops', 'buzz', 'notes']);
-  const firsts = ['2026-10-17', '2026-10-18', '2026-10-19'].map((day) => screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, day)[0]);
+  // 2026-10-22: 値下がりは土・日だけ（10/17 土・10/18 日・10/25 日）。月曜（10/19）は予約どおりのカルーセルのまま
+  assert.deepEqual(screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, '2026-10-19'), []);
+  const firsts = ['2026-10-17', '2026-10-18', '2026-10-25'].map((day) => screenSetsForRow({ campaign_id: 'hoshilu-carousel-v3', content_id: 'carousel-user-x' }, day)[0]);
   assert.deepEqual(firsts, ['drops', 'drops', 'drops']);
-  for (const day of ['2026-10-17', '2026-10-18', '2026-10-19']) {
+  for (const day of ['2026-10-17', '2026-10-18', '2026-10-25']) {
     assert.deepEqual([...screenSetsForRow({ content_id: 'carousel-user-x' }, day)].sort(), ['buzz', 'drops', 'notes'], '撮れていない日は他のセットへ');
   }
   // 値下がりの本文: 割引率と書かず、記録の事実（14 日間の最高値から・撮影日の時点）と、ホシルで検索の促し
@@ -324,10 +326,14 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
   assert.equal((await seedDailyDropsPost(env(body('2026-10-18T08:40:00Z')), new Date('2026-10-18T11:55:00Z'))).reason, 'too_late');
   assert.equal((await seedDailyDropsPost({ ...env(body('2026-10-18T08:40:00Z')), SOCIAL_DROPS_DAILY_ENABLED: 'false' }, new Date('2026-10-18T09:00:00Z'))).enabled, false);
   // 同じ日のユーザー向けカルーセルが drops に差し替わっていれば、21:00 は足さない（同じ画像を 2 回出さない）
+  // （2026-10-22 から値下がりは土・日だけなので、土曜の 10/24 で確かめる）
   database.prepare(`INSERT INTO social_post_queue (post_id,platform,campaign_id,content_id,caption,scheduled_at,status,created_at,updated_at,jst_publish_date,media_urls)
-    VALUES ('hoshilu-carousel-v3-instagram-2026-10-19','INSTAGRAM','hoshilu-carousel-v3','screens-drops','x','2026-10-19T11:00:00.000Z','APPROVED','t','t','2026-10-19',?)`)
-    .run(JSON.stringify(screenMediaUrls('2026-10-19', 'drops', 7)));
-  assert.equal((await seedDailyDropsPost(env(body('2026-10-19T08:40:00Z')), new Date('2026-10-19T08:50:00Z'))).reason, 'drops_already_today');
+    VALUES ('hoshilu-carousel-v3-instagram-2026-10-24','INSTAGRAM','hoshilu-carousel-v3','screens-drops','x','2026-10-24T11:00:00.000Z','APPROVED','t','t','2026-10-24',?)`)
+    .run(JSON.stringify(screenMediaUrls('2026-10-24', 'drops', 7)));
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-24T08:40:00Z')), new Date('2026-10-24T08:50:00Z'))).reason, 'drops_already_today');
+  // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 平日（木曜以外）は値下がり投稿を足さない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-21T08:40:00Z')), new Date('2026-10-21T08:50:00Z'))).reason, 'not_drops_day', '水曜');
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-26T08:40:00Z')), new Date('2026-10-26T08:50:00Z'))).reason, 'not_drops_day', '月曜');
   const source = readFileSync(new URL('../src/social-autopilot.mjs', import.meta.url), 'utf8');
   assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now\)/u);
 });
