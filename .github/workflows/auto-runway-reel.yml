@@ -30,6 +30,8 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 #  - Claude がその画像を大隆さんにチャットで見せ、「OK」なら Issue に `/approve` とコメントする。
 #    リポジトリ所有者（OWNER）の `/approve` コメントだけで、Issue 本文の job_id を承認して再実行する（approve_job_id と同じ動き）。
 #  - 10/2〜10/20 は承認が来ず、確認待ちが次の枠を止めて 2 週間以上リールが出なかった（#689 で次の枠は止めないように直した）。
+# 2026-10-23 大隆さん「見せて」: `/preview` とコメントすると、承認せずに仕上がりの動画だけを作り（生成済みの素材から合成。新しい生成・
+#  承認・不合格の記録はしない）、reel-review ブランチに置いて Issue にリンクを書く。見てから `/approve`。
 #
 # 再実行履歴: 2026-09-06 #220/#221（同枠のAI女優日次リールを競合扱いしていた誤判定と、
 # 実画面撮影の networkidle 依存）を修正し、9/7 月曜分の生成物を回収するため再実行。
@@ -72,7 +74,7 @@ jobs:
     if: >-
       github.event_name != 'issue_comment' ||
       (startsWith(github.event.issue.title, '[AUTO-REEL]') &&
-       startsWith(github.event.comment.body, '/approve') &&
+       (startsWith(github.event.comment.body, '/approve') || startsWith(github.event.comment.body, '/preview')) &&
        github.event.comment.author_association == 'OWNER')
     runs-on: ubuntu-latest
     timeout-minutes: 110
@@ -99,9 +101,12 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_JOB: ${{ github.event.inputs.approve_job_id }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           set -euo pipefail
           job=""
+          mode="approve"
+          case "${COMMENT_BODY:-}" in /preview*) mode="preview" ;; esac
           if [ "$EVENT_NAME" = "issue_comment" ]; then
             job="$(printf '%s' "$ISSUE_BODY" | grep -oE 'job_id: runway-auto-[a-z0-9-]+' | head -1 | sed 's/^job_id: //')" || true
             [ -n "$job" ] || { echo "::error::Issue 本文に job_id が見つかりません"; exit 1; }
@@ -112,6 +117,7 @@ jobs:
             echo "::error::approve_job_id は runway-auto-<型>-<yyyymmdd> の形だけ受け付けます"; exit 1
           fi
           echo "job_id=$job" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         with:
@@ -161,7 +167,13 @@ jobs:
           [ -n "${{ github.event.inputs.theme }}" ] && extra="$extra --theme=${{ github.event.inputs.theme }}"
           [ -n "${{ github.event.inputs.publish_at }}" ] && extra="$extra --publish_at=${{ github.event.inputs.publish_at }}"
           # job_id は前の段で ^runway-auto-[a-z0-9-]+$ を確かめ済み
-          [ -n "${{ steps.approve.outputs.job_id }}" ] && extra="$extra --approve_job_id=${{ steps.approve.outputs.job_id }}"
+          if [ -n "${{ steps.approve.outputs.job_id }}" ]; then
+            if [ "${{ steps.approve.outputs.mode }}" = "preview" ]; then
+              extra="$extra --preview_job_id=${{ steps.approve.outputs.job_id }}"
+            else
+              extra="$extra --approve_job_id=${{ steps.approve.outputs.job_id }}"
+            fi
+          fi
           node scripts/auto-runway-reel.mjs $extra
 
       - name: Report to an issue (success = closed record, failure = open for follow-up)
@@ -175,6 +187,29 @@ jobs:
           if [ ! -f "$report" ]; then
             gh issue create --title "[AUTO-REEL] 実行失敗（report.json なし） run=${{ github.run_id }}" \
               --body "auto-runway-reel が report.json を残さずに終了しました。ログ: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            exit 0
+          fi
+          # `/preview`: 仕上がりの動画と一覧を reel-review ブランチに置き、元の Issue にリンクを書いて終わる（Issue は作らない）
+          if [ "${{ github.event_name }}" = "issue_comment" ] && [ "${{ steps.approve.outputs.mode }}" = "preview" ]; then
+            pjob="${{ steps.approve.outputs.job_id }}"
+            if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/reel-review" >/dev/null 2>&1; then
+              base_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq .object.sha || true)"
+              gh api -X POST "repos/${GITHUB_REPOSITORY}/git/refs" -f ref=refs/heads/reel-review -f sha="$base_sha" >/dev/null || true
+            fi
+            links=""
+            for item in "preview.mp4:mp4" "contact-sheet.jpg:jpg"; do
+              name="${item%%:*}"; ext="${item##*:}"
+              file="$(find "${AUTO_REEL_WORKDIR}" -name "$name" -print -quit 2>/dev/null || true)"
+              [ -n "$file" ] || continue
+              dest="previews/${pjob}-${{ github.run_id }}.${ext}"
+              node -e "const fs=require('node:fs');fs.writeFileSync('upload.json',JSON.stringify({message:'review: preview ${pjob}',branch:'reel-review',content:fs.readFileSync(process.argv[1]).toString('base64')}))" "$file"
+              if gh api -X PUT "repos/${GITHUB_REPOSITORY}/contents/${dest}" --input upload.json >/dev/null; then
+                links="${links}- ${name}: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/reel-review/${dest}"$'\n'
+              fi
+            done
+            reason="$(node -e "console.log(String(require('$report').outcome?.reason || '').slice(0, 300))")"
+            printf '**見るだけの実行（承認していません）**\n\n%s\n検査: %s\n\n問題なければこの Issue に `/approve` とコメント（19:15 JST まで）。\nログ: %s\n' "$links" "$reason" "$RUN_URL" > preview-body.md
+            gh issue comment "${{ github.event.issue.number }}" --body-file preview-body.md
             exit 0
           fi
           # 本人一致の確認待ちなら、contact-sheet を reel-review ブランチに置いて Issue に画像で載せる（チャットで見せるため）
