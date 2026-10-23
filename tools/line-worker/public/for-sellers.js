@@ -29,6 +29,10 @@ function sendSellerEvent(event_type, extra = {}) {
 
 // 2026-10-16（#644 と同じ基準）: SNS 投稿の数分後に 2 件ずつ同時に来るリンク先取得が来訪に混ざっていた。
 // 画面に 1.5 秒出ていたか、人が触った（ホイール・タップ・キー入力。scroll はページの組み立てでも起きるので使わない）時に 1 回だけ数える。
+// 2026-10-23（Codex 受信箱 seller-form-failed-diagnosis）: 確認欄の読込失敗は画面に出る前（先読み・リンク取得）にも起きる。
+// 10/22 の失敗1件は閲覧0・入力0・送信0のセッションだった。閲覧を数えた後だけ失敗として送り、それまでは保留する。
+let sellerLandingCounted = false;
+const failuresBeforeLanding = [];
 const SELLER_LANDING_VISIBLE_MS = 1500;
 (() => {
   let sent = false;
@@ -41,6 +45,8 @@ const SELLER_LANDING_VISIBLE_MS = 1500;
     document.removeEventListener('visibilitychange', arm);
     for (const type of events) removeEventListener(type, fire, true);
     sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
+    sellerLandingCounted = true;
+    for (const code of failuresBeforeLanding.splice(0)) sendSellerEvent('seller_form_failed', { content: code });
   };
   function arm() {
     clearTimeout(timer);
@@ -93,6 +99,7 @@ function sendFormFailure(reason) {
   const code = String(reason || 'unknown').replace(/[^a-z0-9_:-]/giu, '_').slice(0, 60);
   if (failureSent.has(code)) return;
   failureSent.add(code);
+  if (!sellerLandingCounted) { failuresBeforeLanding.push(code); return; }
   sendSellerEvent('seller_form_failed', { content: code });
 }
 // ショップURLは「https://」を付け忘れても、http:// でも送れるようにする。ブラウザの URL 欄は http:// を通すが、
