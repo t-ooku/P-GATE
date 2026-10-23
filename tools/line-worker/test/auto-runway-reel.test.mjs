@@ -217,7 +217,8 @@ test('approve_job_id から枠・型・20:15 JST を復元し、投稿時刻に�
   const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
   assert.match(script, /if \(approvedJobId && approvedJobId === jobId\) \{\s*evidence\.identity = \{\s*ok: true,[\s\S]*?reason: 'owner_confirmed_contact_sheet'/u);
   assert.match(script, /reason: 'biometric_face_match_not_implemented'[\s\S]*?problems\.push\('identity_check_unavailable'\)/u);
-  assert.match(script, /slotFromApprovedJobId\(approvedJobId, themes, now\)/u);
+  // 2026-10-23: 承認と見るだけ（preview）の両方で、job_id から枠を復元する
+  assert.match(script, /slotFromApprovedJobId\(fixedJobId, themes, now\)/u);
 });
 
 // 2026-10-20 大隆さん「動画投稿は何故止まってるの？再開できない？」
@@ -267,4 +268,16 @@ test('画面（声つき）→ 女優の構成: 最後の字幕から女優、�
   assert.match(script, /\.product-now-price,\.product-history-list,\.product-chart-label/u, '今の価格・記録の数字はぼかす');
   assert.match(script, /PRICE_TEXT\.source/u);
   assert.match(script, /tile=4x2'.*sheet-actress\.jpg/u, '本人確認用に生成の女優のコマを一覧に入れる');
+});
+
+// 2026-10-23 大隆さん「見せて」: 承認の前に仕上がりを見る実行（承認・不合格・新しい生成をしない）
+test('見るだけの実行（--preview_job_id）は承認・不合格・新しい生成をしない', () => {
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(script, /if \(!existing\.length && previewJobId\) throw new Error\(`AUTO_REEL_PREVIEW_JOB_MISSING/u, '新しい生成をしない');
+  const previewAt = script.indexOf('if (previewJobId) {');
+  const rejectAt = script.indexOf('reject(generated.jobId');
+  const approveAt = script.indexOf('approve(generated.jobId');
+  assert.ok(previewAt > 0 && previewAt < rejectAt && previewAt < approveAt, '承認・不合格より前に抜ける');
+  assert.match(script.slice(previewAt, rejectAt), /break;/u);
+  assert.match(script, /const previewJobId = approvedJobId \? '' :/u, '承認と同時には使わない');
 });

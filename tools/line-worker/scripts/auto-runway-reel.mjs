@@ -68,11 +68,15 @@ const now = new Date();
 // 2026-09-18 大隆さん決定 (a): --approve_job_id=<job_id> は「大隆さんが contact-sheet で本人一致を確認した」
 // 再実行。枠・型・投稿時刻はその job_id から復元し、本人一致だけ人手確認済みとして通す（他の機械検査はそのまま）。
 const approvedJobId = String(args.approve_job_id || '').trim();
-const slot = approvedJobId
-  ? slotFromApprovedJobId(approvedJobId, themes, now)
+// 2026-10-23 大隆さん「見せて」: --preview_job_id=<job_id> は承認の前に仕上がりを見るための実行。生成済みの素材から合成だけ行い、
+// 承認・不合格・投稿キューには一切触らない（D1 は読むだけ。新しい生成もしない）。仕上がりは WORK/preview.mp4。
+const previewJobId = approvedJobId ? '' : String(args.preview_job_id || '').trim();
+const fixedJobId = approvedJobId || previewJobId;
+const slot = fixedJobId
+  ? slotFromApprovedJobId(fixedJobId, themes, now)
   : nextPublishSlot(now, themes, { slotOverride: args.slot || '', leadMinutes: Number(args.lead || 90) });
-if (args.publish_at && !approvedJobId) slot.publish_at = new Date(args.publish_at);
-const themeKey = approvedJobId ? slot.theme_key : (args.theme || slot.theme_key);
+if (args.publish_at && !fixedJobId) slot.publish_at = new Date(args.publish_at);
+const themeKey = fixedJobId ? slot.theme_key : (args.theme || slot.theme_key);
 const theme = themes.themes[themeKey];
 if (!theme) throw new Error(`AUTO_REEL_THEME_UNKNOWN:${themeKey}`);
 log('slot selected', { slot: slot.slot, theme: themeKey, publish_at: slot.publish_at.toISOString(), date_key: slot.date_key });
@@ -83,6 +87,8 @@ async function ensureGenerated(attempt) {
   const jobId = buildJobId(themeKey, slot.date_key, attempt);
   const postId = buildPostId(jobId);
   const existing = d1(`SELECT job_id,status,qa_status,storage_key,storage_size_bytes,last_error_code,last_error_detail FROM runway_generation_jobs WHERE job_id='${jobId}';`);
+  // 見るだけの実行では、新しく生成しない（Runway の費用を使わない）
+  if (!existing.length && previewJobId) throw new Error(`AUTO_REEL_PREVIEW_JOB_MISSING:${jobId}`);
   if (!existing.length) {
     // 枠の競合は生成後にも再確認するが、まず課金前に止める。2026-09-09 はこの確認が
     // 自動QAまで遅れ、公開済み候補がある枠に不要な336 creditsを使ってしまった。
@@ -539,6 +545,12 @@ try {
     const qa = await autoQa(raw, out, dir, durationA, generated.jobId, generated.postId, uiLive);
     report[`attempt_${attempt}`] = { job_id: generated.jobId, qa };
     writeFileSync(path.join(dir, 'qa.json'), JSON.stringify(qa, null, 2));
+    if (previewJobId) {
+      // 見るだけ: 承認・不合格の記録をしない。本人一致以外の検査結果は見られるように残す
+      writeFileSync(path.join(WORK, 'preview.mp4'), readFileSync(out));
+      outcome = { ok: false, preview: true, job_id: generated.jobId, reason: `preview:${qa.problems.filter((p) => p !== 'identity_check_unavailable').join(',') || 'checks_ok'}`, evidence: qa.evidence };
+      break;
+    }
     if (!qa.ok) {
       // 生成物そのものの問題（顔・セリフ・無音・仕様・デコード）だけ FAILED_FINAL にする。
       // 枠の競合や外部APIの不通など生成物以外の理由では状態を残し、再実行で回復できるようにする。
