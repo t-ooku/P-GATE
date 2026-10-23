@@ -258,6 +258,8 @@ async function recordScreen(dir, plan) {
     } finally { await browser.close(); }
   } catch (error) {
     log('screen recording failed; using the previous layout', { error: String(error.message || error).slice(0, 200) });
+    // 10/23 初回の /preview が従来の構成（14 秒）で返った。理由を Issue に出せるよう残す
+    report.screen_error = String(error.message || error).split('\n')[0].slice(0, 300);
     return null;
   }
 }
@@ -548,7 +550,9 @@ try {
     if (previewJobId) {
       // 見るだけ: 承認・不合格の記録をしない。本人一致以外の検査結果は見られるように残す
       writeFileSync(path.join(WORK, 'preview.mp4'), readFileSync(out));
-      outcome = { ok: false, preview: true, job_id: generated.jobId, reason: `preview:${qa.problems.filter((p) => p !== 'identity_check_unavailable').join(',') || 'checks_ok'}`, evidence: qa.evidence };
+      outcome = { ok: false, preview: true, job_id: generated.jobId,
+        reason: `preview:${qa.problems.filter((p) => p !== 'identity_check_unavailable').join(',') || 'checks_ok'} layout=${report.layout?.kind || ''}${report.screen_error ? ` screen_error=${report.screen_error}` : ''}`,
+        evidence: qa.evidence };
       break;
     }
     if (!qa.ok) {
