@@ -187,6 +187,8 @@ async function recordScreen(dir, plan) {
       const videoDir = path.join(dir, 'screen-video');
       // 録画は画面の大きさと同じ（縦 9:16）。大きい枠を指定すると左上に小さく写るだけ（10/23 ローカルで確認）。合成で 720x1280 に拡大する
       const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 2, locale: 'ja-JP', isMobile: true, hasTouch: true,
+        // 本番は CSP（style-src 'self'）があり、ぼかし用の CSS を入れられない（10/23 /preview 2 回目で判明）。撮影ブラウザだけ外す（build-social-screens と同じ）
+        bypassCSP: true,
         serviceWorkers: 'block', recordVideo: { dir: videoDir, size: { width: 405, height: 720 } },
         userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 HOSHILU-auto-reel' });
       await context.route(/^https?:\/\/(?:[a-z0-9-]+\.)*valuecommerce\.(?:com|ne\.jp)(?:[/:?]|$)/iu, (route) => route.abort());

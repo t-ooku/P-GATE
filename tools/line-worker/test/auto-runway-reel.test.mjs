@@ -265,6 +265,7 @@ test('画面（声つき）→ 女優の構成: 最後の字幕から女優、�
   assert.match(script, /out = compose\(raw, ui\.file, dir, durationA\);/u, '録画できない時は従来の構成');
   assert.match(script, /trim=start=\$\{screen\.offset\.toFixed\(2\)\}/u, 'ぼかしが掛かる前の映像は切る');
   assert.match(script, /\$\{BLUR_CSS\}/u);
+  assert.match(script, /bypassCSP: true,\n\s+serviceWorkers: 'block', recordVideo/u, '本番の CSP でぼかしの CSS が入らない（10/23）');
   assert.match(script, /\.product-now-price,\.product-history-list,\.product-chart-label/u, '今の価格・記録の数字はぼかす');
   assert.match(script, /PRICE_TEXT\.source/u);
   assert.match(script, /tile=4x2'.*sheet-actress\.jpg/u, '本人確認用に生成の女優のコマを一覧に入れる');
