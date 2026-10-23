@@ -23,9 +23,9 @@ import {
   REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
   evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId,
-  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan, voiceoverScreenPath
+  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan
 } from './auto-runway-reel-lib.mjs';
-import { BLUR_CSS, PRICE_TEXT, applyPhotoBands } from './build-social-screens.mjs';
+import { recordReelScreen } from './auto-reel-screen.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const WORK = path.resolve(process.env.AUTO_REEL_WORKDIR || path.join(ROOT, 'auto-reel-work'));
@@ -166,98 +166,14 @@ async function captureUi(dir) {
 }
 
 // 2026-10-23 大隆さん「女優が説明しながらスマホ映像をメインで、価格履歴の画面を案内しよう。最後に女優が出てくる構成」:
-// 実際の hoshilu.app の画面をスマホ幅で録画する（ユーザー向け=商品ページの今の価格と価格の記録、セラー向け=出品者向けページ）。
-// 価格・割引率・お店の名前はぼかす（SNS 投稿と同じ。値下がり投稿の例外は使わない）。ぼかしが掛かる前の映像は使わない（offset で切る）。
+// 実際の hoshilu.app の画面をスマホ幅で録画する（scripts/auto-reel-screen.mjs）。ユーザー向け=商品ページの今の価格と価格の記録（グラフ）、
+// セラー向け=出品者向けページ（theme.screen_then_product の型はそのあと商品ページの価格グラフ）。
+// 同日「金額がぼやけてるよ。あと、価格履歴グラフが出てきてない」: HOSHILU の料金と HOSHILU が記録した価格はぼかさない。
+// 店が付けた商品名・販売先はぼかす。ぼかしが掛かる前の映像は使わない（offset で切る）。
 const SCREEN_BASE = process.env.AUTO_REEL_SCREEN_BASE || 'https://hoshilu.app';
 async function recordScreen(dir, plan) {
-  const modulePath = process.env.PLAYWRIGHT_MODULE || 'playwright';
-  let href = '';
   try {
-    const response = await fetch(`${SCREEN_BASE}/api/media/top-drops?auto-reel=${Date.now()}`, { headers: { accept: 'application/json' } });
-    const data = await response.json();
-    // 服を先に並べた「今日の値下がり」の 1 番目（画像のある商品）
-    href = String(data?.items?.[0]?.href || '');
-  } catch {}
-  const target = voiceoverScreenPath(theme, href);
-  const seconds = plan.screen + 1;
-  try {
-    const { chromium } = await import(modulePath);
-    const browser = await chromium.launch();
-    try {
-      const videoDir = path.join(dir, 'screen-video');
-      // 録画は画面の大きさと同じ（縦 9:16）。大きい枠を指定すると左上に小さく写るだけ（10/23 ローカルで確認）。合成で 720x1280 に拡大する
-      const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 2, locale: 'ja-JP', isMobile: true, hasTouch: true,
-        // 本番は CSP（style-src 'self'）があり、ぼかし用の CSS を入れられない（10/23 /preview 2 回目で判明）。撮影ブラウザだけ外す（build-social-screens と同じ）
-        bypassCSP: true,
-        serviceWorkers: 'block', recordVideo: { dir: videoDir, size: { width: 405, height: 720 } },
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 HOSHILU-auto-reel' });
-      await context.route(/^https?:\/\/(?:[a-z0-9-]+\.)*valuecommerce\.(?:com|ne\.jp)(?:[/:?]|$)/iu, (route) => route.abort());
-      // 読み込み中（ぼかし前）の価格が映らないよう、最初は画面を隠しておく
-      await context.addInitScript(() => { document.documentElement.style.visibility = 'hidden'; });
-      const started = Date.now();
-      const page = await context.newPage();
-      await page.goto(`${SCREEN_BASE}${target}`, { waitUntil: 'load', timeout: 60000 });
-      const ready = target.startsWith('/product') ? '.product-history, .product-now' : target.startsWith('/for-sellers') ? 'main, h1' : '.media-drop';
-      await page.waitForSelector(ready, { timeout: 30000 });
-      await page.waitForTimeout(1500);
-      await page.addStyleTag({ content: `${BLUR_CSS}
-.product-now-price,.product-history-list,.product-chart-label,.product-offer-table,.product-mall,.product-offers,.product-now-note{filter:blur(9px)!important}
-.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"],.seller-sticky-cta,.cookie-banner{display:none!important}
-.topbar,.seo-header,.business-top{position:static!important}
-.hoshilu-reel-photo{position:relative!important;display:block!important}` });
-      // 文字の中の金額・割引率もぼかす。商品写真は下側の帯をぼかす（build-social-screens と同じ）
-      await page.evaluate((source) => {
-        const pattern = new RegExp(source, 'gu');
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        const targets = [];
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          if (node.parentElement?.closest('script,style,.hoshilu-price-mask')) continue;
-          pattern.lastIndex = 0;
-          if (pattern.test(node.nodeValue)) targets.push(node);
-        }
-        for (const node of targets) {
-          const fragment = document.createDocumentFragment();
-          let last = 0;
-          const text = node.nodeValue;
-          pattern.lastIndex = 0;
-          for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
-            fragment.append(text.slice(last, match.index));
-            const span = document.createElement('span');
-            span.className = 'hoshilu-price-mask';
-            span.textContent = match[0];
-            fragment.append(span);
-            last = match.index + match[0].length;
-          }
-          fragment.append(text.slice(last));
-          node.replaceWith(fragment);
-        }
-        for (const img of document.querySelectorAll('.product-head > img')) {
-          const wrap = document.createElement('span');
-          wrap.className = 'hoshilu-reel-photo';
-          img.replaceWith(wrap);
-          wrap.append(img);
-        }
-      }, PRICE_TEXT.source);
-      await page.evaluate(applyPhotoBands, ['.hoshilu-reel-photo', '.media-drop-figure', '.product-image-gallery']);
-      await page.waitForTimeout(500);
-      await page.evaluate(() => { window.scrollTo(0, 0); document.documentElement.style.visibility = ''; });
-      await page.waitForTimeout(200);
-      const offset = (Date.now() - started) / 1000;
-      // 最初の 1.5 秒は上（商品と今の価格）、そのあとゆっくり価格の記録（グラフ）へ
-      await page.waitForTimeout(1500);
-      await page.evaluate(() => {
-        const node = document.querySelector('.product-history') || document.querySelector('.real-screens, .media-drops, section:nth-of-type(2)');
-        const to = node ? node.getBoundingClientRect().top + window.scrollY - 80 : window.innerHeight * 1.2;
-        window.scrollTo({ top: Math.max(0, to), behavior: 'smooth' });
-      });
-      await page.waitForTimeout(Math.max(1000, (seconds - 1.5) * 1000));
-      const video = page.video();
-      await page.close();
-      await context.close();
-      const file = await video.path();
-      log('screen recorded (live hoshilu.app)', { target: target.replace(/key=[^&]+/u, 'key=…'), offset, seconds });
-      return { file, live: true, offset, target };
-    } finally { await browser.close(); }
+    return await recordReelScreen({ theme, plan, dir, base: SCREEN_BASE, modulePath: process.env.PLAYWRIGHT_MODULE || 'playwright', log });
   } catch (error) {
     log('screen recording failed; using the previous layout', { error: String(error.message || error).slice(0, 200) });
     // 10/23 初回の /preview が従来の構成（14 秒）で返った。理由を Issue に出せるよう残す

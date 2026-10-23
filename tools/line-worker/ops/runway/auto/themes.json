@@ -175,7 +175,8 @@
       "caption": "ロゴ・紹介文・商品一覧・ショップ内検索・クーポン・「ショップをホシる」。HOSHILUのショップページは、モールの外にあるお店の入口です。商品を探している人に、お店ごと見つけてもらえます。ショップ・セラーの方はプロフィールのリンクから。\n※この動画はAI生成・AI加工映像です。 #AI生成 #HOSHILU #ホシル #ECセラー #ネットショップ",
       "utm_content": "runway_auto_seller_shop_entrance",
       "link_path": "/for-sellers",
-      "ui_caption": "ショップ・セラーの方は|プロフィールのリンクから"
+      "ui_caption": "ショップ・セラーの方は|プロフィールのリンクから",
+      "screen_then_product": true
     },
     "price_history_check": {
       "title": "買う前に、値段の記録を見る",

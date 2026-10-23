@@ -276,6 +276,20 @@ export function voiceoverScreenPath(theme, topDropHref = '') {
   return /^\/product\?key=/u.test(String(topDropHref)) ? String(topDropHref) : '/media/price-drops';
 }
 
+// 2026-10-23 大隆さん「価格履歴グラフが出てきてない」: theme.screen_then_product の型（セラー向け）は、
+// 出品者向けページのあとに、お客さまが見る商品ページの価格グラフを続ける。商品ページが取れない日は 1 画面のまま
+export function voiceoverSecondScreen(theme, topDropHref = '') {
+  if (!theme?.screen_then_product) return '';
+  return /^\/product\?key=/u.test(String(topDropHref)) ? String(topDropHref) : '';
+}
+
+// 1 画面目の秒数: 無音の最初 + 最初の字幕の終わりまで（2 画面目は 1.5 秒以上残す）
+export function voiceoverScreenSplit(theme, plan) {
+  const end = Number(theme?.subtitles?.[0]?.end);
+  const first = plan.intro + (Number.isFinite(end) ? end : plan.split / 2);
+  return Math.min(Math.max(2, first), plan.screen - 1.5);
+}
+
 // 音声の自動QA: Whisper の書き起こしと固定セリフの一致率（記号・空白・長音差を無視）。
 export function normalizeJa(text) {
   return String(text || '')

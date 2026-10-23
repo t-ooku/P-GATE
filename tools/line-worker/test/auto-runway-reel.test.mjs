@@ -264,10 +264,11 @@ test('画面（声つき）→ 女優の構成: 最後の字幕から女優、�
   assert.match(script, /if \(plan && screen\) \{\n\s+out = composeVoiceover\(raw, screen, dir, plan\);/u);
   assert.match(script, /out = compose\(raw, ui\.file, dir, durationA\);/u, '録画できない時は従来の構成');
   assert.match(script, /trim=start=\$\{screen\.offset\.toFixed\(2\)\}/u, 'ぼかしが掛かる前の映像は切る');
-  assert.match(script, /\$\{BLUR_CSS\}/u);
-  assert.match(script, /bypassCSP: true,\n\s+serviceWorkers: 'block', recordVideo/u, '本番の CSP でぼかしの CSS が入らない（10/23）');
-  assert.match(script, /\.product-now-price,\.product-history-list,\.product-chart-label/u, '今の価格・記録の数字はぼかす');
-  assert.match(script, /PRICE_TEXT\.source/u);
+  assert.match(script, /recordReelScreen\(\{ theme, plan, dir, base: SCREEN_BASE/u);
+  const screenSource = readFileSync(new URL('../scripts/auto-reel-screen.mjs', import.meta.url), 'utf8');
+  assert.match(screenSource, /\$\{BLUR_CSS\}/u);
+  assert.match(screenSource, /bypassCSP: true,\n\s+serviceWorkers: 'block', recordVideo/u, '本番の CSP でぼかしの CSS が入らない（10/23）');
+  assert.match(screenSource, /PRICE_TEXT\.source/u);
   assert.match(script, /tile=4x2'.*sheet-actress\.jpg/u, '本人確認用に生成の女優のコマを一覧に入れる');
 });
 
@@ -281,4 +282,29 @@ test('見るだけの実行（--preview_job_id）は承認・不合格・新し�
   assert.ok(previewAt > 0 && previewAt < rejectAt && previewAt < approveAt, '承認・不合格より前に抜ける');
   assert.match(script.slice(previewAt, rejectAt), /break;/u);
   assert.match(script, /const previewJobId = approvedJobId \? '' :/u, '承認と同時には使わない');
+});
+
+// 2026-10-23 大隆さん「金額がぼやけてるよ。あと、価格履歴グラフが出てきてない」
+test('リールの画面: HOSHILU の料金と記録の価格はぼかさず、商品名・販売先はぼかす。セラー向けは商品ページの価格グラフへ続ける', async () => {
+  const lib = await import('../scripts/auto-runway-reel-lib.mjs');
+  const screen = await import('../scripts/auto-reel-screen.mjs');
+  const themes = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
+  const product = screen.reelScreenCss('/product?key=a');
+  assert.doesNotMatch(product, /\.product-now-price[^{]*\{filter:blur/u, '今いくら？はぼかさない');
+  assert.doesNotMatch(product, /\.product-history-list|\.product-chart-label/u, '価格の記録・グラフの数字はぼかさない');
+  for (const selector of ['.product-name', '.product-mall', '.product-now-note', '.product-offers', '.product-offer-table']) {
+    assert.ok(product.includes(selector), `${selector} はぼかす`);
+  }
+  assert.match(screen.reelScreenCss('/for-sellers'), /\.price-card \.price\{filter:none!important\}/u, '出品者向けページの料金は見せる');
+  assert.equal(screen.REEL_PRICE_TEXT_KEEP, '.product-now-price,.product-history');
+  const source = readFileSync(new URL('../scripts/auto-reel-screen.mjs', import.meta.url), 'utf8');
+  assert.match(source, /if \(!seller\) \{\n\s+await page\.evaluate/u, '出品者向けページは文字の金額をぼかさない');
+  assert.match(source, /parent\.closest\(keep\)/u);
+  const shop = themes.themes.seller_shop_entrance;
+  const plan = lib.voiceoverPlan(shop, 8);
+  assert.equal(lib.voiceoverSecondScreen(shop, '/product?key=RAKUTEN%3Aa&from=top'), '/product?key=RAKUTEN%3Aa&from=top');
+  assert.equal(lib.voiceoverSecondScreen(shop, 'https://evil.example/'), '', '商品ページ以外は続けない');
+  assert.equal(lib.voiceoverSecondScreen(themes.themes.seller_demand_visible, '/product?key=a'), '');
+  assert.equal(lib.voiceoverScreenSplit(shop, plan), 3.8, '最初の字幕（お店の入口を…）まで出品者向けページ');
+  assert.ok(plan.screen - lib.voiceoverScreenSplit(shop, plan) >= 1.5);
 });
