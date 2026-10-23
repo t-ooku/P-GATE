@@ -52,5 +52,11 @@ kpi: seller_inquiries
   - [PATCH] Issue [#694](https://github.com/t-ooku/P-GATE/issues/694) → apply-patch [run 39877764948](https://github.com/t-ooku/P-GATE/actions/runs/39877764948): extract/git am/npm test/push/deploy/health すべて success（✅ コメント 09:24 JST を issue_read で確認）。commit `a30b9571`（base `790929ff`）。
 - **本番確認**: deploy・health は上記 workflow の結果で確認（09:24 JST）。LP 上での挙動は**未確認**（hoshilu.app への curl/Playwright は遮断のため）。`seller_form_failed` の再発有無は**未確認**（配備直後。Codex が次回の QA/INTERNAL 除外 artifact で確認。0件と未取得を区別してください）。
 - **将来の観測（提案のみ、未実装）**: 失敗理由は既に `content` 列に固定reason code（turnstile_unavailable / turnstile_pending / browser_validation:<欄名> / validation_failed / turnstile_failed / http_<3桁> / timeout / network）で入っている。Codex の aggregate artifact の seller ファネル集計に、上記 allowlist に丸めた `content` 別 count を1列足せば理由が見える（allowlist外は `other`）。フォーム内容・連絡先・URL は追加不要。
-- **成果（D1 実測 09:25 JST、集計のみ）**: 購入先クリック（marketplace_click, QA/INTERNAL除外）直近7日 8件（最新 10/22 20:57 JST）。Seller 問い合わせ（seller_business_inquiries）累計4・直近7日新規0（最新 9/28）。有料契約 0（seller_billing_accounts の stripe_subscription_id あり 0件）。本修正は計測の誤検知を除くもので、問い合わせ・契約の増加には**寄与していない**（実装済み ≠ 問い合わせ獲得）。
+- **成果（D1 実測 09:25 JST、集計のみ）**: 購入先クリック（marketplace_click, QA/INTERNAL除外）直近7日 8件（最新 10/22 20:57 JST）。Seller 問い合わせ（seller_business_inquiries）**外部 0件**（全4件・直近7日新規0。下の訂正参照）。有料契約 0（seller_billing_accounts の stripe_subscription_id あり 0件）。本修正は計測の誤検知を除くもので、問い合わせ・契約の増加には**寄与していない**（実装済み ≠ 問い合わせ獲得）。
 - **状態**: DONE（原因限定・実装・deploy/health 済み。効果確認は Codex）。
+
+### 2026-10-23 訂正（大隆さん指示「テストやITGは省く」）
+
+- `seller_business_inquiries` の全4件（9/3・9/7・9/19・9/28 UTC、すべて CONSULTATION/SELLER/NEW）を、個人情報を出力しない判定列だけで分類した（D1 読み取りのみ、値は取得・記録していない）: **4件とも大隆さん本人の連絡先に一致し、かつテスト語を含む送信**。ITG 3店舗（with-care / tomorrows-smile / find-fun）に一致する行は 0。
+- **外部 Seller 問い合わせは 0件**。これまでの「累計4」は本人テストを数えていた。以後 Claude の報告は本人・テスト・ITG を除いた件数で書く。
+- Codex への依頼: aggregate KPI artifact の `inquiry_total`（`read-codex-kpi-snapshot.mjs`）と管理画面 `seller_inquiries` は全件 COUNT のため、本人・テスト・ITG を除いた外部件数を別に出してください（除外条件は連絡先・社名の固定 allowlist をサーバ側 Secret/設定で持ち、値は出力しない形）。既存行の UPDATE/DELETE は不要。
