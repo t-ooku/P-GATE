@@ -236,3 +236,35 @@ test('確認待ちのまま投稿日を過ぎたジョブは次の枠の生成�
   assert.match(script, /model\.transcribe\(audio, language="ja"/u);
   assert.match(script, /'-c:a', 'pcm_s16le', wav\]/u);
 });
+
+// 2026-10-23 大隆さん「女優が説明しながらスマホ映像をメインで、価格履歴の画面を案内しよう。最後に女優が出てくる構成」
+test('画面（声つき）→ 女優の構成: 最後の字幕から女優、価格の記録の画面を録画、ぼかし前の映像は使わない', async () => {
+  const lib = await import('../scripts/auto-runway-reel-lib.mjs');
+  const theme = themes.themes.price_history_check;
+  assert.ok(themes.slots.tue.includes('price_history_check'));
+  const plan = lib.voiceoverPlan(theme, 8);
+  assert.deepEqual([plan.intro, plan.split, plan.hold, plan.total], [1, 5.6, 1.5, 10.5]);
+  assert.ok(plan.total >= 10, '自動QA の長さ（10 秒以上）');
+  for (const key of Object.values(themes.slots).flat()) assert.ok(lib.voiceoverPlan(themes.themes[key], 8), `${key} は新しい構成で作れる`);
+  assert.equal(lib.voiceoverPlan({ subtitles: [{ start: 0, end: 8, text: 'x' }] }, 8), null, '女優の出番が作れない型は従来の構成');
+  const screenAss = lib.buildAssVoiceoverScreen(theme, plan);
+  assert.match(screenAss, /実際の画面（声はAI生成）/u);
+  assert.match(screenAss, /Dialogue: 0,0:00:01\.00,0:00:03\.80,Subtitle/u, '字幕は無音の 1 秒ぶん後ろへ');
+  assert.doesNotMatch(screenAss, /下がった時に/u, '最後の字幕は女優の部分');
+  const actressAss = lib.buildAssVoiceoverActress(theme, themes, plan);
+  assert.match(actressAss, /AI生成・AI加工映像/u);
+  assert.match(actressAss, /下がった時に/u);
+  assert.match(actressAss, /Url,,0,0,0,,hoshilu\.app/u);
+  assert.match(lib.buildAssVoiceoverActress(themes.themes.seller_shop_entrance, themes, lib.voiceoverPlan(themes.themes.seller_shop_entrance, 8)), /ショップ・セラーの方は/u, 'セラー向けの最後の案内');
+  assert.equal(lib.voiceoverScreenPath(theme, '/product?key=RAKUTEN%3Aa&from=top'), '/product?key=RAKUTEN%3Aa&from=top');
+  assert.equal(lib.voiceoverScreenPath(theme, 'https://evil.example/'), '/media/price-drops', '商品ページ以外の行き先は使わない');
+  assert.equal(lib.voiceoverScreenPath(themes.themes.seller_demand_visible, '/product?key=x'), '/for-sellers');
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(script, /if \(plan && screen\) \{\n\s+out = composeVoiceover\(raw, screen, dir, plan\);/u);
+  assert.match(script, /out = compose\(raw, ui\.file, dir, durationA\);/u, '録画できない時は従来の構成');
+  assert.match(script, /trim=start=\$\{screen\.offset\.toFixed\(2\)\}/u, 'ぼかしが掛かる前の映像は切る');
+  assert.match(script, /\$\{BLUR_CSS\}/u);
+  assert.match(script, /\.product-now-price,\.product-history-list,\.product-chart-label/u, '今の価格・記録の数字はぼかす');
+  assert.match(script, /PRICE_TEXT\.source/u);
+  assert.match(script, /tile=4x2'.*sheet-actress\.jpg/u, '本人確認用に生成の女優のコマを一覧に入れる');
+});

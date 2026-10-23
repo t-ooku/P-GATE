@@ -22,8 +22,10 @@ import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
-  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId
+  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId,
+  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan, voiceoverScreenPath
 } from './auto-runway-reel-lib.mjs';
+import { BLUR_CSS, PRICE_TEXT, applyPhotoBands } from './build-social-screens.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const WORK = path.resolve(process.env.AUTO_REEL_WORKDIR || path.join(ROOT, 'auto-reel-work'));
@@ -157,6 +159,133 @@ async function captureUi(dir) {
   }
 }
 
+// 2026-10-23 大隆さん「女優が説明しながらスマホ映像をメインで、価格履歴の画面を案内しよう。最後に女優が出てくる構成」:
+// 実際の hoshilu.app の画面をスマホ幅で録画する（ユーザー向け=商品ページの今の価格と価格の記録、セラー向け=出品者向けページ）。
+// 価格・割引率・お店の名前はぼかす（SNS 投稿と同じ。値下がり投稿の例外は使わない）。ぼかしが掛かる前の映像は使わない（offset で切る）。
+const SCREEN_BASE = process.env.AUTO_REEL_SCREEN_BASE || 'https://hoshilu.app';
+async function recordScreen(dir, plan) {
+  const modulePath = process.env.PLAYWRIGHT_MODULE || 'playwright';
+  let href = '';
+  try {
+    const response = await fetch(`${SCREEN_BASE}/api/media/top-drops?auto-reel=${Date.now()}`, { headers: { accept: 'application/json' } });
+    const data = await response.json();
+    // 服を先に並べた「今日の値下がり」の 1 番目（画像のある商品）
+    href = String(data?.items?.[0]?.href || '');
+  } catch {}
+  const target = voiceoverScreenPath(theme, href);
+  const seconds = plan.screen + 1;
+  try {
+    const { chromium } = await import(modulePath);
+    const browser = await chromium.launch();
+    try {
+      const videoDir = path.join(dir, 'screen-video');
+      // 録画は画面の大きさと同じ（縦 9:16）。大きい枠を指定すると左上に小さく写るだけ（10/23 ローカルで確認）。合成で 720x1280 に拡大する
+      const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 2, locale: 'ja-JP', isMobile: true, hasTouch: true,
+        serviceWorkers: 'block', recordVideo: { dir: videoDir, size: { width: 405, height: 720 } },
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 HOSHILU-auto-reel' });
+      await context.route(/^https?:\/\/(?:[a-z0-9-]+\.)*valuecommerce\.(?:com|ne\.jp)(?:[/:?]|$)/iu, (route) => route.abort());
+      // 読み込み中（ぼかし前）の価格が映らないよう、最初は画面を隠しておく
+      await context.addInitScript(() => { document.documentElement.style.visibility = 'hidden'; });
+      const started = Date.now();
+      const page = await context.newPage();
+      await page.goto(`${SCREEN_BASE}${target}`, { waitUntil: 'load', timeout: 60000 });
+      const ready = target.startsWith('/product') ? '.product-history, .product-now' : target.startsWith('/for-sellers') ? 'main, h1' : '.media-drop';
+      await page.waitForSelector(ready, { timeout: 30000 });
+      await page.waitForTimeout(1500);
+      await page.addStyleTag({ content: `${BLUR_CSS}
+.product-now-price,.product-history-list,.product-chart-label,.product-offer-table,.product-mall,.product-offers,.product-now-note{filter:blur(9px)!important}
+.tab-bar,.install-banner,.pwa-install,.toast,[role="dialog"],.seller-sticky-cta,.cookie-banner{display:none!important}
+.topbar,.seo-header,.business-top{position:static!important}
+.hoshilu-reel-photo{position:relative!important;display:block!important}` });
+      // 文字の中の金額・割引率もぼかす。商品写真は下側の帯をぼかす（build-social-screens と同じ）
+      await page.evaluate((source) => {
+        const pattern = new RegExp(source, 'gu');
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const targets = [];
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (node.parentElement?.closest('script,style,.hoshilu-price-mask')) continue;
+          pattern.lastIndex = 0;
+          if (pattern.test(node.nodeValue)) targets.push(node);
+        }
+        for (const node of targets) {
+          const fragment = document.createDocumentFragment();
+          let last = 0;
+          const text = node.nodeValue;
+          pattern.lastIndex = 0;
+          for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
+            fragment.append(text.slice(last, match.index));
+            const span = document.createElement('span');
+            span.className = 'hoshilu-price-mask';
+            span.textContent = match[0];
+            fragment.append(span);
+            last = match.index + match[0].length;
+          }
+          fragment.append(text.slice(last));
+          node.replaceWith(fragment);
+        }
+        for (const img of document.querySelectorAll('.product-head > img')) {
+          const wrap = document.createElement('span');
+          wrap.className = 'hoshilu-reel-photo';
+          img.replaceWith(wrap);
+          wrap.append(img);
+        }
+      }, PRICE_TEXT.source);
+      await page.evaluate(applyPhotoBands, ['.hoshilu-reel-photo', '.media-drop-figure', '.product-image-gallery']);
+      await page.waitForTimeout(500);
+      await page.evaluate(() => { window.scrollTo(0, 0); document.documentElement.style.visibility = ''; });
+      await page.waitForTimeout(200);
+      const offset = (Date.now() - started) / 1000;
+      // 最初の 1.5 秒は上（商品と今の価格）、そのあとゆっくり価格の記録（グラフ）へ
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => {
+        const node = document.querySelector('.product-history') || document.querySelector('.real-screens, .media-drops, section:nth-of-type(2)');
+        const to = node ? node.getBoundingClientRect().top + window.scrollY - 80 : window.innerHeight * 1.2;
+        window.scrollTo({ top: Math.max(0, to), behavior: 'smooth' });
+      });
+      await page.waitForTimeout(Math.max(1000, (seconds - 1.5) * 1000));
+      const video = page.video();
+      await page.close();
+      await context.close();
+      const file = await video.path();
+      log('screen recorded (live hoshilu.app)', { target: target.replace(/key=[^&]+/u, 'key=…'), offset, seconds });
+      return { file, live: true, offset, target };
+    } finally { await browser.close(); }
+  } catch (error) {
+    log('screen recording failed; using the previous layout', { error: String(error.message || error).slice(0, 200) });
+    return null;
+  }
+}
+
+// 画面（声つき）→ 女優（最後の字幕）→ 最後の絵で CTA。生成の声はそのまま（口と声は女優の部分で合う）。
+function composeVoiceover(raw, screen, dir, plan) {
+  const assS = path.join(dir, 'vo-screen.ass');
+  const assE = path.join(dir, 'vo-actress.ass');
+  writeFileSync(assS, buildAssVoiceoverScreen(theme, plan));
+  writeFileSync(assE, buildAssVoiceoverActress(theme, themes, plan));
+  const out = path.join(dir, 'reel.mp4');
+  const bs = String.fromCharCode(92);
+  const esc = (p) => p.split(':').join(`${bs}:`).split("'").join(`${bs}'`);
+  const fmt = 'aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo';
+  const filter = [
+    `[1:v]trim=start=${screen.offset.toFixed(2)},setpts=PTS-STARTPTS,fps=24,scale=720:1280:force_original_aspect_ratio=increase:flags=lanczos,crop=720:1280,tpad=stop_mode=clone:stop_duration=${plan.screen},trim=duration=${plan.screen},setpts=PTS-STARTPTS,setsar=1,format=yuv420p,ass='${esc(assS)}'[vs]`,
+    `[0:v]trim=start=${plan.split}:end=${plan.duration},setpts=PTS-STARTPTS,scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=24,tpad=stop_mode=clone:stop_duration=${plan.hold},setsar=1,format=yuv420p,ass='${esc(assE)}'[ve]`,
+    `[2:a]atrim=duration=${plan.intro},asetpts=PTS-STARTPTS,${fmt}[a0]`,
+    `[0:a]atrim=start=0:end=${plan.split},asetpts=PTS-STARTPTS,${fmt}[a1]`,
+    `[0:a]atrim=start=${plan.split}:end=${plan.duration},asetpts=PTS-STARTPTS,${fmt},afade=t=out:st=${Math.max(0, plan.actress - 0.3).toFixed(2)}:d=0.3[a2]`,
+    `[3:a]atrim=duration=${plan.hold},asetpts=PTS-STARTPTS,${fmt}[a3]`,
+    '[vs][ve]concat=n=2:v=1:a=0[v]',
+    '[a0][a1][a2][a3]concat=n=4:v=0:a=1[a]'
+  ].join(';');
+  run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-i', screen.file,
+    '-f', 'lavfi', '-t', String(plan.intro), '-i', 'anullsrc=r=44100:cl=stereo',
+    '-f', 'lavfi', '-t', String(plan.hold), '-i', 'anullsrc=r=44100:cl=stereo',
+    '-filter_complex', filter, '-map', '[v]', '-map', '[a]',
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-profile:v', 'high', '-level:v', '4.0', '-pix_fmt', 'yuv420p', '-r', '24',
+    '-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', out]);
+  log('composed (voiceover layout)', { out, size: statSync(out).size, plan });
+  return out;
+}
+
 // ---------- 5. 合成 ----------
 function compose(raw, ui, dir, durationA) {
   const assA = path.join(dir, 'cut-a.ass');
@@ -257,7 +386,7 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   evidence.overlay_diff = { top: topDiff, bottom: bottomDiff };
   if (!(topDiff > 6 && bottomDiff > 6)) problems.push('overlay_not_burned');
   // カットBが実画面であること（Playwright 撮影 or 承認済み実スクリーンショット）
-  evidence.ui_cut = uiLive ? 'live_screenshot_hoshilu_app' : 'approved_real_screenshot_asset';
+  evidence.ui_cut = uiLive === 'recording' ? 'live_screen_recording_hoshilu_app' : uiLive ? 'live_screenshot_hoshilu_app' : 'approved_real_screenshot_asset';
   // 顔（Cloud Vision）
   const frameFiles = [];
   for (const t of [0.8, 2.4, 4.0, 5.6, 7.2]) {
@@ -325,7 +454,10 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   if (duplicateCount !== 0) problems.push('duplicate');
   if (blocking.length) problems.push('competing_slot');
   // 一覧表（証跡用）
-  run('ffmpeg', ['-y', '-v', 'error', '-i', out, '-vf', 'fps=1,scale=180:-1,tile=4x4', '-frames:v', '1', path.join(dir, 'contact-sheet.jpg')]);
+  // 本人確認用に、上 2 段は生成の女優（raw）、下は仕上がり（画面→女優）。2026-10-23 から仕上がりの大半が実際の画面になったため
+  run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-vf', 'fps=1,scale=180:-1,tile=4x2', '-frames:v', '1', path.join(dir, 'sheet-actress.jpg')]);
+  run('ffmpeg', ['-y', '-v', 'error', '-i', out, '-vf', 'fps=1,scale=180:-1,tile=4x3', '-frames:v', '1', path.join(dir, 'sheet-final.jpg')]);
+  run('ffmpeg', ['-y', '-v', 'error', '-i', path.join(dir, 'sheet-actress.jpg'), '-i', path.join(dir, 'sheet-final.jpg'), '-filter_complex', 'vstack=inputs=2', path.join(dir, 'contact-sheet.jpg')]);
   evidence.identity_verified_by = evidence.identity?.ok ? 'owner_contact_sheet' : 'none';
   evidence.machine_verified = ['video_spec', 'audio_spec', 'duration', 'decode', 'audio_present', 'overlay_burned', 'face_single_clear(vision)', 'speech_matches_script(whisper)', 'caption_ai_disclosure', 'link_hoshilu', 'duplicate', 'competing_slot'];
   evidence.not_biometrically_verified = ['hands: props excluded by prompt; hand shape not machine-verified'];
@@ -389,9 +521,22 @@ try {
     const raw = fetchRaw(generated.jobId, generated.row, dir);
     const rawProbe = ffprobeJson(raw);
     const durationA = Math.min(Number(themes.duration_seconds || 8), Number(rawProbe.format.duration));
-    const ui = await captureUi(dir);
-    const out = compose(raw, ui.file, dir, durationA);
-    const qa = await autoQa(raw, out, dir, durationA, generated.jobId, generated.postId, ui.live);
+    // 2026-10-23: 画面（声つき）→ 女優の構成。録画できない・型が合わないときは従来の構成（女優 → 実画面の静止画）
+    const plan = voiceoverPlan(theme, durationA);
+    const screen = plan ? await recordScreen(dir, plan) : null;
+    let out;
+    let uiLive;
+    if (plan && screen) {
+      out = composeVoiceover(raw, screen, dir, plan);
+      uiLive = 'recording';
+      report.layout = { kind: 'voiceover', target: screen.target.replace(/key=[^&]+/u, 'key=…'), ...plan };
+    } else {
+      const ui = await captureUi(dir);
+      out = compose(raw, ui.file, dir, durationA);
+      uiLive = ui.live;
+      report.layout = { kind: 'classic' };
+    }
+    const qa = await autoQa(raw, out, dir, durationA, generated.jobId, generated.postId, uiLive);
     report[`attempt_${attempt}`] = { job_id: generated.jobId, qa };
     writeFileSync(path.join(dir, 'qa.json'), JSON.stringify(qa, null, 2));
     if (!qa.ok) {

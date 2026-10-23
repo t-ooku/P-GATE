@@ -225,6 +225,57 @@ export function buildAssCutB(themes, duration) {
   return `${ASS_HEADER}${lines.join('\n')}\n`;
 }
 
+// 2026-10-23 大隆さん「女優が説明しながらスマホ映像をメインで、価格履歴の画面を案内しよう。最後に女優が出てくる構成」:
+// 生成 8 秒の声はそのまま使い、最後の字幕（start）までは実際の HOSHILU の画面（録画）に声を重ね、最後の字幕から女優を出す。
+//   [画面 INTRO 秒（無音）] → [画面＋声 0..split] → [女優 split..duration（声と口が合う）] → [女優の最後の絵で HOLD 秒、CTA・URL]
+export const VOICEOVER_INTRO_SECONDS = 1;
+export const VOICEOVER_HOLD_SECONDS = 1.5;
+export function voiceoverPlan(theme, duration, { intro = VOICEOVER_INTRO_SECONDS, hold = VOICEOVER_HOLD_SECONDS } = {}) {
+  const subs = Array.isArray(theme?.subtitles) ? theme.subtitles : [];
+  const last = subs.at(-1);
+  const split = Number(last?.start);
+  // 女優の出番が短すぎる・長すぎる型は使わない（従来の構成に戻す）
+  if (!(split >= 3 && duration - split >= 1.5 && duration - split <= 4)) return null;
+  return { intro, split, duration, hold, screen: intro + split, actress: duration - split, total: intro + duration + hold };
+}
+
+// 画面の部分（実際の HOSHILU の画面 + AI の声）: ブランド帯・「画面は実際の HOSHILU／声は AI」・最後以外の字幕（intro 分ずらす）
+export function buildAssVoiceoverScreen(theme, plan) {
+  const lines = [
+    `Dialogue: 0,${assTime(0)},${assTime(plan.screen)},Brand,,0,0,0,,HOSHILU  |  hoshilu.app`,
+    `Dialogue: 0,${assTime(0)},${assTime(plan.screen)},Disclosure,,0,0,0,,実際の画面（声はAI生成）`
+  ];
+  for (const sub of theme.subtitles || []) {
+    if (sub.start >= plan.split) continue;
+    lines.push(`Dialogue: 0,${assTime(plan.intro + sub.start)},${assTime(plan.intro + Math.min(sub.end, plan.split))},Subtitle,,0,0,0,,${assText(sub.text)}`);
+  }
+  return `${ASS_HEADER}${lines.join('\n')}\n`;
+}
+
+// 女優の部分: ブランド帯・AI表記・最後の字幕。最後の絵で止めて CTA と URL
+export function buildAssVoiceoverActress(theme, themes, plan) {
+  const end = plan.actress + plan.hold;
+  const lines = [
+    `Dialogue: 0,${assTime(0)},${assTime(end)},Brand,,0,0,0,,HOSHILU  |  hoshilu.app`,
+    `Dialogue: 0,${assTime(0)},${assTime(end)},Disclosure,,0,0,0,,AI生成・AI加工映像`
+  ];
+  for (const sub of theme.subtitles || []) {
+    if (sub.start < plan.split) continue;
+    lines.push(`Dialogue: 0,${assTime(sub.start - plan.split)},${assTime(Math.min(sub.end, plan.duration) - plan.split)},Subtitle,,0,0,0,,${assText(sub.text)}`);
+  }
+  // セラー向けの型は theme.ui_caption（「ショップ・セラーの方は…」）。ユーザー向けは共通の案内
+  lines.push(`Dialogue: 0,${assTime(plan.actress)},${assTime(end)},Cta,,0,0,0,,${assText(theme.ui_caption || themes.ui_caption)}`);
+  lines.push(`Dialogue: 0,${assTime(plan.actress)},${assTime(end)},Url,,0,0,0,,hoshilu.app`);
+  return `${ASS_HEADER}${lines.join('\n')}\n`;
+}
+
+// 画面の録画で開く場所。ユーザー向けは商品ページ（今の価格と価格の記録のグラフ）、セラー向けは出品者向けページ。
+export function voiceoverScreenPath(theme, topDropHref = '') {
+  if (theme?.screen_path) return String(theme.screen_path);
+  if (theme?.audience === 'seller') return '/for-sellers';
+  return /^\/product\?key=/u.test(String(topDropHref)) ? String(topDropHref) : '/media/price-drops';
+}
+
 // 音声の自動QA: Whisper の書き起こしと固定セリフの一致率（記号・空白・長音差を無視）。
 export function normalizeJa(text) {
   return String(text || '')
