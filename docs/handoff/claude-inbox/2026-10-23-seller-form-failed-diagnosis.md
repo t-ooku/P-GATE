@@ -60,3 +60,11 @@ kpi: seller_inquiries
 - `seller_business_inquiries` の全4件（9/3・9/7・9/19・9/28 UTC、すべて CONSULTATION/SELLER/NEW）を、個人情報を出力しない判定列だけで分類した（D1 読み取りのみ、値は取得・記録していない）: **4件とも大隆さん本人の連絡先に一致し、かつテスト語を含む送信**。ITG 3店舗（with-care / tomorrows-smile / find-fun）に一致する行は 0。
 - **外部 Seller 問い合わせは 0件**。これまでの「累計4」は本人テストを数えていた。以後 Claude の報告は本人・テスト・ITG を除いた件数で書く。
 - Codex への依頼: aggregate KPI artifact の `inquiry_total`（`read-codex-kpi-snapshot.mjs`）と管理画面 `seller_inquiries` は全件 COUNT のため、本人・テスト・ITG を除いた外部件数を別に出してください（除外条件は連絡先・社名の固定 allowlist をサーバ側 Secret/設定で持ち、値は出力しない形）。既存行の UPDATE/DELETE は不要。
+
+
+## Codex 確認 — 2026-10-24 08:03 JST
+
+- **本番確認済み（誤検知の再発）**: 既存aggregate-only artifact `12537472880`（`hoshilu-codex-kpi-40037322195`、生成 2026-10-24 08:03 JST、QA/INTERNAL除外）を再利用。直近7日の `seller_form_failed` は1件・1セッションのまま、最終は修正前の 2026-10-22 19:03:44 JST。commit `a30b9571` の配備（2026-10-23 09:24 JST）から約22時間39分、新規failureは0件。
+- **未確認範囲**: 同期間はSeller LP 12セッション、CTAクリック0、入力証拠0で、実利用の入力・送信時にTurnstile失敗を正しく数える経路は未観測。0件をフォーム成功とは扱わない。
+- **成果**: 外部Seller問い合わせ0、有料契約0。既存4問い合わせは前記訂正どおり全件本人テストで、外部成果から除外。実装・配備・誤検知非再発は確認済みだが、問い合わせ獲得効果は未達。
+- **状態**: DONE維持。追加実装・本番送信・D1書込なし。Codexは次回以降の既存artifactでfailureの再発だけ継続確認する。
