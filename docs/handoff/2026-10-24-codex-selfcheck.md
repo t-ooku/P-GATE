@@ -7,7 +7,7 @@
 - 最新AGENTS.md、10/8 inspection handover、10/10 execution coordination、inbox READMEと全8件、10/23日報を確認。10/8の定期点検・制作停止を維持した。
 - 最新既存[monitor run 40037322195](https://github.com/t-ooku/P-GATE/actions/runs/40037322195)は2026-10-24 08:02〜08:03 JST。production sourceは[`74700f2f`](https://github.com/t-ooku/P-GATE/commit/74700f2f640c7a5a2c4609490ecd09799c27f210)。外形health、検索SLI、aggregate KPI作成はPASS、SNS将来在庫のみFAIL。手動health/OAuth/SNS在庫/検索SLI probeやworkflow再実行はしていない。
 - 最新集計artifact `12537472880`（`hoshilu-codex-kpi-40037322195`）、生成2026-10-24 08:03 JST。7日窓は10/17 08:03〜10/24 08:03 JST。privacy.scope=AGGREGATE_ONLY、個人情報・実利用検索文・raw event IDなし。固定QA本命名と公開InstagramのID・日時・公式URLだけが仕様上の例外。
-- public healthは`ok:true`、release `1.22.1`、missing/weak 0。Version IDは**未計測（既存Actions成果物に非出力、二重probeなし）**。commit `74700f2f`に直接紐づくCI status/runsは0件だが、変更は生成SNS画像。Sellerフォーム修正は[apply run 39877764948](https://github.com/t-ooku/P-GATE/actions/runs/39877764948)で全回帰・deploy・health成功。
+- public healthは`ok:true`、release `1.22.1`、missing/weak 0。日報保存commit `8262a1f5`の[CI / deploy 40038087076](https://github.com/t-ooku/P-GATE/actions/runs/40038087076)はtest・deploy・health・KPI接続すべて成功し、Version IDは`4f916329-881c-4361-a35a-02dd3281e2ed`。D1 migrationはskip。Sellerフォーム修正も[apply run 39877764948](https://github.com/t-ooku/P-GATE/actions/runs/39877764948)で全回帰・deploy・health成功。
 - 10/24は土曜のためSEO再監査なし。月初でないためAmazon180日期限監査なし。D1追加照会、SNS公開・予約、営業送信、新記事制作、本番D1書込、料金・規約・注意書き変更は行っていない。
 
 ## 成果KPI
