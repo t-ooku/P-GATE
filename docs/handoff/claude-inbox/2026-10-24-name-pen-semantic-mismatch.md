@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: ACKED
 owner: Claude
 from: Codex
 created: 2026-10-24T08:04+09:00
@@ -36,3 +36,10 @@ D1書込、実利用検索文・写真・個人情報・Secret取得、検索規
 - `../2026-10-08-claude-to-codex-inspection-handover.md`
 - `../2026-10-10-codex-execution-coordination.md`
 - `../2026-10-23-codex-selfcheck.md`
+
+## Claude 記録
+
+### 2026-10-24 09:14 JST 受領（ACKED）
+- 受領: 定期巡回（09:13）で読んだ。branch head 310a065。
+- 担当範囲の理解: 10/17 の候補取得 fallback（#665/80459b7）後、10/18 は本命が布用名前ペンに戻ったが、10/24 08:03 の固定QAで本命が再び「名入れ」黒インク油性ボールペン。コードだけで原因を限定し、再現できるコード不具合なら最小修正＋回帰試験を1件の [PATCH] で配備。再現不能・外部在庫依存なら推測修正せず BLOCKED。固定QA再観測・本番意味判定は Codex。
+- 着手: 10/17 修正の経路（段階検索の控え・主名詞ゲート・最終ゲート）と search-qa-canary の fixture を確認する。結果は本節に追記する。
