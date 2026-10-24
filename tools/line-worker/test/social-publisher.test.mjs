@@ -9,6 +9,7 @@ import {
   syncInstagramPublishedPermalinks,
   syncThreadsInsights,
   syncInstagramInsights,
+  threadsTopicTag,
   handleSocialAdminRoutes,
   socialPublisherTest
 } from '../src/social-publisher.mjs';
@@ -1074,12 +1075,46 @@ test('Threads publisher creates a text-only container and rejects authenticated 
   });
   assert.equal(id, 'threads-post-1');
   assert.equal(createPayload.media_type, 'TEXT');
+  assert.equal(createPayload.topic_tag, 'お買い物');
   assert.match(createPayload.text, /utm_source=threads/);
   assert.equal('image_url' in createPayload, false);
   assert.equal('video_url' in createPayload, false);
   assert.equal(requests.filter(request => request.url.includes('fields=status')).length, 2);
   assert.match(requests.at(-1).url, /threads_publish$/);
   assert.ok(requests.every(({ options }) => options.redirect === 'manual'));
+});
+
+test('Threadsのトピックは中身ごとに固定の言葉で、止めることもできる', () => {
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-threads-media-v1' }), '値下がり');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-price-drops-daily' }), '値下がり');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-threads-seller-v1' }), 'ネットショップ');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-seller-lp-real-v1' }), 'ネットショップ');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-media-notes' }), 'お買い物');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-official-13mall-v2' }), 'お買い物');
+  assert.equal(threadsTopicTag({ campaign_id: 'hoshilu-threads-media-v1' }, { THREADS_TOPIC_TAGS_ENABLED: 'false' }), '');
+  for (const topic of ['値下がり', 'ネットショップ', 'お買い物']) assert.doesNotMatch(topic, /[.&]/);
+});
+
+test('Threadsの投稿作成にtopic_tagを付け、断られたらトピック無しで1回だけ作り直す', async () => {
+  const payloads = [];
+  const id = await publishSocialPost({
+    platform: 'THREADS', campaign_id: 'hoshilu-threads-media-v1', post_id: 'p1',
+    caption: '値下がりのお知らせ', link: 'https://hoshilu.app/media/price-drops', status: 'APPROVED'
+  }, THREADS_ENV, async (url, options = {}) => {
+    if (url.endsWith('/123/threads')) {
+      const payload = JSON.parse(options.body);
+      payloads.push(payload);
+      if (payload.topic_tag) return Response.json({ error: { message: 'invalid topic' } }, { status: 400 });
+      return Response.json({ id: 'c1' });
+    }
+    if (url.includes('/c1?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'post-1' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'post-1');
+  assert.equal(payloads.length, 2);
+  assert.equal(payloads[0].topic_tag, '値下がり');
+  assert.equal('topic_tag' in payloads[1], false);
 });
 
 test('Threads publisher creates an IMAGE container for a non-video media URL', async () => {
