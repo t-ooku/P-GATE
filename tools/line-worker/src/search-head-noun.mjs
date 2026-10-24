@@ -305,8 +305,19 @@ function isExplicitAccessoryMismatch(query, title) {
   if (/マットレス/u.test(query) && !/カバー|プロテクター|シーツ/u.test(query)) {
     return /マットレス\s*(?:保護)?\s*(?:カバー|プロテクター|シーツ)/u.test(title);
   }
+  // 2026-10-24 固定QA dark_ink_name_pen(受信箱 2026-10-24-name-pen-semantic-mismatch):
+  // 10/22・10/23 はモールが名前ペンを1件も返さず(C7、検索コードの変更なし)、全件不一致の
+  // 元順序フォールバックで「名入れ … 油性ボールペン」が本命に戻った。布・持ち物に名前を書く
+  // お名前ペン/布用ペンを探す検索では、名前ペン・布用と書いていないボールペン(名入れ販促品・
+  // 通常の油性ボールペン)を本体候補にしない。ボールペンや名入れを探す検索は従来どおり。
+  if (NAME_PEN_QUERY.test(query) && !/ボールペン|名入れ/u.test(query)) {
+    return /ボールペン/u.test(title) && !NAME_PEN_TITLE.test(title);
+  }
   return false;
 }
+
+const NAME_PEN_QUERY = /お?名前ペン|おなまえ(?:ペン|マーカー)|なまえペン|ネームペン|布用ペン/u;
+const NAME_PEN_TITLE = /お?名前ペン|おなまえ|なまえペン|ネームペン|布用|布書き|名前書き/u;
 
 // 2026-10-20 固定QA ig_mattress: 本命が「Best Price Mattress Twin Bed Frame 12 Soild Wood Platform Bed Frame」。
 // ブランド名の Mattress が主名詞に一致して本体扱い(2)になったが、商品は英語の Bed Frame / Platform Bed Frame。

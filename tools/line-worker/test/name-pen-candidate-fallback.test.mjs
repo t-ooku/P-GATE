@@ -122,10 +122,35 @@ test('楽天の段階検索: 1つ目の語が全件名入れボールペンな�
   assert.match(kept[0].product_name || kept[0].display_name || kept[0].name, /名入れ ボールペン/u);
 });
 
-test('最終ゲート: 正候補が混在すれば布用名前ペンが本命、全件不適合は元順序のまま(空にしない)', () => {
+test('最終ゲート: 正候補が混在すれば布用名前ペンが本命、全件不適合でもボールペン以外は元順序のまま(空にしない)', () => {
   const pool = [...BALLPOINTS, ...NAME_PENS];
   const gated = applyHeadNounGate(GATE, pool);
   assert.match(gated[0].product_name, /お名前ペン|名前ペン/u);
   assert.ok(gated.every((item) => !/名入れ/u.test(item.product_name)));
-  assert.deepEqual(applyHeadNounGate(GATE, BALLPOINTS), BALLPOINTS);
+  // 2026-10-24: 名入れボールペンは全件不一致のフォールバックでも戻さない(下の 10/24 テスト)。
+  // 明示的なカテゴリ違い以外(サインペン)は従来どおり空にしない。
+  assert.deepEqual(applyHeadNounGate(GATE, BALLPOINTS), [BALLPOINTS[2]]);
+});
+
+// 2026-10-24 固定QA dark_ink_name_pen(受信箱 2026-10-24-name-pen-semantic-mismatch):
+// 10/22・10/23 は候補7件・上位3件に名前ペン無し・本命の主名詞0で「名入れ … 油性ボールペン」が本命。
+// 10/17 の修正(候補取得の段階検索)は、モールがどの語でも名前ペンを返さない時は効かない。
+test('10/24: モールが名前ペンを返さない時、名入れ/通常の油性ボールペンを本命にしない(候補なしへ安全に倒す)', () => {
+  const acro = product('名入れ パイロット PILOT ボールペン アクロ1000 Acro1000 ブラック油性ボールペン 0.5mm極細 BAC-1SEF/0.7mm細字 BAC-', 'acro-0.5');
+  const plain = product('三菱鉛筆 油性ボールペン ジェットストリーム 0.7 黒', 'jet-plain');
+  // 固定fixture の検索文(原文・展開後のゲート用クエリとも)
+  for (const query of [QUERY, GATE]) {
+    assert.deepEqual(applyHeadNounGate(query, [acro]), []);
+    assert.deepEqual(applyHeadNounGate(query, [acro, plain, BALLPOINTS[1]]), []);
+    const mixed = applyHeadNounGate(query, [acro, plain, NAME_PENS[1]]);
+    assert.equal(mixed[0], NAME_PENS[1]);
+    assert.ok(mixed.every((item) => !/ボールペン/u.test(item.product_name)));
+  }
+  // 名前ペン・布用と書いてある商品は商品名にボールペンがあっても残す
+  const fabricBallpoint = product('布用 お名前 ボールペン 名前書き 黒', 'fabric-ballpoint');
+  assert.deepEqual(applyHeadNounGate(GATE, [acro, fabricBallpoint]), [fabricBallpoint]);
+  // ボールペン・名入れを探す検索は従来どおり(名入れボールペンも商品そのもの)
+  assert.deepEqual(applyHeadNounGate('ボールペン', [acro, plain]), [acro, plain]);
+  assert.deepEqual(applyHeadNounGate('名入れ ボールペン', [acro]), [acro]);
+  assert.deepEqual(applyHeadNounGate('お名前ペン ボールペン', [acro]), [acro]);
 });
