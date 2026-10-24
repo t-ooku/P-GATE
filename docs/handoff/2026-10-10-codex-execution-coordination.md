@@ -219,3 +219,11 @@
 - **検索固定QA（依頼記録済み／受領未確認）**: 自動24 PASS・1 FAIL、意味判定24/25。唯一 `dark_ink_name_pen` に名入れ油性ボールペンが本命となり、お名前ペン／布用ペンと不一致。既存10/17 DONEを重複実装せず、`claude-inbox/2026-10-24-name-pen-semantic-mismatch.md` をOPENで保存。即時起動接続はなく、巡回受領は未確認。
 - **運用状態**: 最新monitor 40037322195は同一source `74700f2f` で外形health・検索SLI・KPI作成PASS、SNS将来在庫2/3のみFAIL（10/26 Instagram CANCELLED）。10/8の定期制作停止、X停止、#616再生成・公開停止を維持。SNS公開・営業送信・新記事・D1書込なし。
 - **最大ボトルネック**: B「検索しない」LP39→検索12（差27、30.8%）。検索例3件は全て検索へ進み1件が購入先へ到達したため、次候補は既存検索例の第一画面内視認性。ただし検索サンプル12/20でHOLDのため、並行UI変更を開始せず20検索まで既存計測を継続する。
+
+
+## 2026-10-25 Codex 進捗
+
+- **本番確認でP0発見／修正依頼記録済み・受領未確認**: 承認済みの商品ページSEOは[apply run 40139041848](https://github.com/t-ooku/P-GATE/actions/runs/40139041848)でtest・deploy・health成功、Version `0be9c0a3-e1f2-4b7b-a4f5-beb3eab28fbe`。公開 `/sitemap-products.xml` は1,216 URL、正常商品ページはindex/canonical/h1/今いくら？/SVG/買うリンク/JSON-LDを確認。一方、先頭の共通キー `JAN:0000000000000` は初期表示が耳栓、読込後h1がウインドモップへ入れ替わった。誤indexを止める局所修正を [claude-inbox/2026-10-25-product-seo-key-collision.md](claude-inbox/2026-10-25-product-seo-key-collision.md) にOPENで記録。GitHub保存は受領・実装扱いにせず、Search Console登録はCodex再確認まで保留する。
+- **監視・KPI（既存証拠再利用）**: 最新[monitor 40135877340](https://github.com/t-ooku/P-GATE/actions/runs/40135877340)は06:49 JST、外形health・検索SLI PASS、SNS将来在庫2/3 FAIL（10/26 InstagramにAPPROVED/CANCELLED併存）。KPI snapshotはNOT_DUEで未生成のため、固定QA・一般導線・product_detail成果の本日値は未計測。直近正本は10/24 08:03のLP39→検索12→購入先3セッション、一般保存0、外部Seller問い合わせ0、有料契約0を持越し参考とし、本日値0へ読み替えない。長期放置は37件（#609が新規該当）。
+- **検索修正・Threads**: お名前ペンinboxはACKED→DONE、commit `3ba7644` / Issue #700 / apply run 40044428142で配備済みだが、本日の固定QA snapshotが無く本番意味一致は未確認。Threadsは既存read-only run 40120972505に10/24 20:32・22:32 JSTのPUBLISHED行があり、本人再認証後の本番処理進展は確認したが、external post ID・公開URLを含む三要素が成果物に無いため公開復旧完了とはまだ扱わない。10/21以降の新規401証拠は無く、再認証・Secret更新・強制再送を求めない。
+- **禁止・体制**: 新SEOは10/25の個別承認に基づく既存実装で、Codexから新記事・SNS公開・営業送信・D1書込・料金/注意書き変更はしていない。Claude即時起動接続はなく、README巡回の将来実行保証もしない。次回は受領→実装→本番のSSR/API同一性→Search Console案内を分けて確認する。大隆さんへのClaude中継依頼なし。
