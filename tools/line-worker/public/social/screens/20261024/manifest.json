@@ -1,0 +1,291 @@
+{
+  "base": "https://hoshilu.app",
+  "captured_at": "2026-10-24T10:50:31.798Z",
+  "size": [
+    1080,
+    1350
+  ],
+  "sets": {
+    "notes": {
+      "files": [
+        {
+          "file": "notes/1.jpg",
+          "id": "notes-top",
+          "items": 1,
+          "blurred": 118,
+          "photos": 17,
+          "photo_band_masked": 17,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "notes/2.jpg",
+          "id": "price-drops",
+          "items": 18,
+          "blurred": 201,
+          "photos": 20,
+          "photo_band_masked": 20,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "notes/3.jpg",
+          "id": "ranking-price",
+          "items": 6,
+          "blurred": 118,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "notes/4.jpg",
+          "id": "buzz",
+          "items": 24,
+          "blurred": 624,
+          "photos": 84,
+          "photo_band_masked": 84,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "notes/5.jpg",
+          "id": "search",
+          "items": 1,
+          "blurred": 624,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        }
+      ]
+    },
+    "buzz": {
+      "files": [
+        {
+          "file": "buzz/1.jpg",
+          "id": "buzz-1",
+          "items": 24,
+          "blurred": 624,
+          "photos": 85,
+          "photo_band_masked": 85,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "👗 レディースファッション"
+        },
+        {
+          "file": "buzz/2.jpg",
+          "id": "buzz-2",
+          "items": 24,
+          "blurred": 246,
+          "photos": 95,
+          "photo_band_masked": 95,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "👕 メンズファッション"
+        },
+        {
+          "file": "buzz/3.jpg",
+          "id": "buzz-3",
+          "items": 24,
+          "blurred": 246,
+          "photos": 105,
+          "photo_band_masked": 105,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "👟 靴・スニーカー"
+        },
+        {
+          "file": "buzz/4.jpg",
+          "id": "buzz-4",
+          "items": 24,
+          "blurred": 246,
+          "photos": 115,
+          "photo_band_masked": 115,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "💄 コスメ"
+        },
+        {
+          "file": "buzz/5.jpg",
+          "id": "search",
+          "items": 1,
+          "blurred": 624,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        }
+      ]
+    },
+    "drops": {
+      "files": [
+        {
+          "file": "drops/1.jpg",
+          "id": "drop-1",
+          "items": 1,
+          "blurred": 81,
+          "photos": 21,
+          "photo_band_masked": 21,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "レディースファッション"
+        },
+        {
+          "file": "drops/2.jpg",
+          "id": "drop-2",
+          "items": 1,
+          "blurred": 81,
+          "photos": 24,
+          "photo_band_masked": 24,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "バッグ・小物・ブランド雑貨"
+        },
+        {
+          "file": "drops/3.jpg",
+          "id": "drop-3",
+          "items": 1,
+          "blurred": 81,
+          "photos": 22,
+          "photo_band_masked": 22,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "美容・コスメ・香水"
+        },
+        {
+          "file": "drops/4.jpg",
+          "id": "drop-5",
+          "items": 1,
+          "blurred": 81,
+          "photos": 24,
+          "photo_band_masked": 24,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "レディースファッション"
+        },
+        {
+          "file": "drops/5.jpg",
+          "id": "drop-6",
+          "items": 1,
+          "blurred": 81,
+          "photos": 22,
+          "photo_band_masked": 22,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "韓国コスメ"
+        },
+        {
+          "file": "drops/6.jpg",
+          "id": "drop-7",
+          "items": 1,
+          "blurred": 81,
+          "photos": 24,
+          "photo_band_masked": 24,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "スイーツ・お菓子"
+        },
+        {
+          "file": "drops/7.jpg",
+          "id": "drops-search",
+          "items": 1,
+          "blurred": 624,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        }
+      ]
+    },
+    "seller": {
+      "files": [
+        {
+          "file": "seller/1.jpg",
+          "id": "seller-hero",
+          "items": 2,
+          "blurred": 724,
+          "photos": 34,
+          "photo_band_masked": 34,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/2.jpg",
+          "id": "seller-real-results",
+          "items": 1,
+          "blurred": 725,
+          "photos": 31,
+          "photo_band_masked": 31,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/3.jpg",
+          "id": "seller-real-search",
+          "items": 1,
+          "blurred": 624,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/4.jpg",
+          "id": "seller-real-buzz",
+          "items": 24,
+          "blurred": 246,
+          "photos": 85,
+          "photo_band_masked": 85,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/5.jpg",
+          "id": "seller-demand",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/6.jpg",
+          "id": "seller-pricing",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
+          "label": ""
+        },
+        {
+          "file": "seller/7.jpg",
+          "id": "seller-form",
+          "items": 1,
+          "blurred": 0,
+          "photos": 0,
+          "photo_band_masked": 0,
+          "photo_ocr": "skipped",
+          "photo_full_blur": 0,
+          "label": ""
+        }
+      ]
+    }
+  },
+  "failures": {}
+}
