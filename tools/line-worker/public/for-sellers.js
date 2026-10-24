@@ -137,13 +137,26 @@ if (turnstileContainer) {
   turnstileContainer.style.alignContent = 'center';
 }
 
-function showTurnstileFailure(reason) {
+// 2026-10-24: Threads / Instagram / LINE などのアプリ内ブラウザでは Turnstile が出ないことが多い
+//（10/22 Threads からの来訪者が turnstile_unavailable で止まり、相談が 0 件だった）。
+// アプリ内ブラウザでは 15 秒待たせず、赤いエラーも出さず、最初から「このまま送れます」と案内する。
+// 送信はトークン無しでサーバが件数を絞って受け付ける（FOR_SELLERS_FALLBACK）。
+export function isInAppBrowser(userAgent = navigator.userAgent) {
+  return /\b(Instagram|Barcelona|Threads|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|Twitter|TikTok|BytedanceWebview)\b/iu.test(String(userAgent || ''));
+}
+const inAppBrowser = isInAppBrowser();
+const TURNSTILE_WAIT_MS = inAppBrowser ? 4000 : 15000;
+
+function showTurnstileFailure(reason, { quiet = false } = {}) {
   turnstileFailure = reason;
-  sendFormFailure('turnstile_unavailable');
-  status.className = 'status error';
+  sendFormFailure(quiet ? 'turnstile_unavailable_inapp' : 'turnstile_unavailable');
+  status.className = quiet ? 'status' : 'status error';
   // 確認欄が動かない環境でも送信できる。サーバ側で件数を絞って受け付ける。
   status.style.whiteSpace = 'pre-line';
-  status.textContent = `${reason}\nこのまま「内容を送信」を押しても受け付けます。`;
+  status.textContent = quiet
+    ? 'このブラウザでは確認欄が表示されないことがあります。そのまま「内容を送信」を押してください（受け付けます）。'
+    : `${reason}\nこのまま「内容を送信」を押しても受け付けます。`;
+  if (quiet) return;
   if (!turnstileContainer || turnstileContainer.querySelector('.turnstile-retry')) return;
   const retry = document.createElement('button');
   retry.type = 'button';
@@ -162,7 +175,7 @@ function showTurnstileFailure(reason) {
 }
 
 // api.js は async defer で読み込むため実行順が保証されない。出現を待ってから使う。
-async function waitForTurnstileApi(timeoutMs = 15000) {
+async function waitForTurnstileApi(timeoutMs = TURNSTILE_WAIT_MS) {
   const deadline = Date.now() + timeoutMs;
   while (!window.turnstile?.render) {
     if (Date.now() > deadline) return null;
@@ -182,6 +195,7 @@ async function initializeTurnstile() {
   if (!sitekey) throw new Error('確認欄の設定を取得できませんでした。通信環境を変えて再読み込みしてください。');
   const api = await waitForTurnstileApi();
   if (!api) {
+    if (inAppBrowser) { showTurnstileFailure('in_app_browser', { quiet: true }); return; }
     throw new Error('確認欄を読み込めませんでした。アプリ内ブラウザではなくSafariやChromeで開くと表示されます。');
   }
   // 検索画面(app.js)と同じ設定にそろえる。要素をそのまま渡し、失効・再試行は
@@ -198,12 +212,14 @@ async function initializeTurnstile() {
     'expired-callback': () => { turnstileToken = ''; },
     'timeout-callback': () => { turnstileToken = ''; },
     'unsupported-callback': () => {
-      showTurnstileFailure('このブラウザは確認欄に対応していません。SafariやChromeで開いてください。');
+      if (inAppBrowser) showTurnstileFailure('in_app_browser', { quiet: true });
+      else showTurnstileFailure('このブラウザは確認欄に対応していません。SafariやChromeで開いてください。');
       return true;
     },
     'error-callback': code => {
       turnstileToken = '';
-      showTurnstileFailure(`確認欄でエラーが発生しました(${String(code || 'unknown').slice(0, 24)})。再読み込みしてください。`);
+      if (inAppBrowser) showTurnstileFailure('in_app_browser', { quiet: true });
+      else showTurnstileFailure(`確認欄でエラーが発生しました(${String(code || 'unknown').slice(0, 24)})。再読み込みしてください。`);
       return false;
     }
   });

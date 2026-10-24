@@ -38,7 +38,7 @@ export function adminPromotionPageResponse() {
   return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
-  <link rel="stylesheet" href="/admin-promotion.css?v=2"><title>経営KPI | HOSHILU</title></head><body>
+  <link rel="stylesheet" href="/admin-promotion.css?v=3"><title>経営KPI | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
@@ -95,7 +95,7 @@ export function adminPromotionPageResponse() {
   <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </div>
-  </main><script type="module" src="/admin-promotion.js?v=4"></script></body></html>`, { headers });
+  </main><script type="module" src="/admin-promotion.js?v=5"></script></body></html>`, { headers });
 }
 
 export function adminReelsPageResponse() {

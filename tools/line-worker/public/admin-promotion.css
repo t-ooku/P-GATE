@@ -23,3 +23,6 @@
 
 /* 2026-09-17 第2指示書 §18: KPI タブ */
 .kpi-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px}.kpi-tabs button{padding:10px 16px;border:1px solid #ddd8ff;border-radius:12px;background:#fff;color:#5140ba;font-weight:850;cursor:pointer}.kpi-tabs button.active{background:#7357ff;color:#fff;border-color:#7357ff}.kpi-tab-panel[hidden]{display:none}
+
+/* 2026-10-24 日別推移の折れ線（SVG） */
+.trend-frame{overflow-x:auto}.trend-svg{display:block;width:100%;min-width:320px;height:auto}.trend-grid{stroke:#e6e2f3;stroke-width:1}.trend-tick{font-size:9px;fill:#77738d}.trend-day{font-size:9px;fill:#77738d}.trend-bar{opacity:.28}.trend-bar.search{fill:#9a86f2}.trend-bar.value{fill:#6245db}.trend-bar.outbound{fill:#22a863}.trend-dot{stroke:#fff;stroke-width:1}

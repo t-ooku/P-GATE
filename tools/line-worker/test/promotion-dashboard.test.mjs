@@ -383,8 +383,17 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   // 2026-10-02 指示書「今ほしい人が買うためのサービス」§12: 5 つ目のタブ「購入導線」
   for (const tab of ['business', 'search', 'shop', 'acquisition', 'buy']) assert.ok(html.includes(`data-kpi-tab="${tab}"`) && html.includes(`data-kpi-panel="${tab}"`), tab);
   for (const label of ['経営KPI', '検索品質', 'SHOP・Seller', '流入・販促', '購入導線']) assert.ok(html.includes(`>${label}</button>`), label);
-  assert.match(html, /admin-promotion\.js\?v=4/);
+  assert.match(html, /admin-promotion\.js\?v=5/);
   const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
+  // 2026-10-24 大隆さん「日次推移は折れ線グラフも付けて」: SVG の折れ線 3 本＋目盛り（inline style は CSP で使えないので属性だけ）
+  assert.match(client, /function renderTrend\(data\)/);
+  assert.match(client, /svgNode\('polyline', \{ points, fill: 'none', stroke: color/);
+  assert.match(client, /svgNode\('circle', \{ cx:/);
+  assert.match(client, /class: 'trend-tick'/);
+  assert.doesNotMatch(client.slice(client.indexOf('function renderTrend('), client.indexOf('function renderQuality(')), /\.style\./, '折れ線の描画で style を使わない');
+  assert.match(html, /admin-promotion\.css\?v=3/);
+  const css = readFileSync(new URL('../public/admin-promotion.css', import.meta.url), 'utf8');
+  assert.match(css, /\.trend-svg\{display:block;width:100%/);
   assert.match(client, /function renderShopSeller\(\)/);
   assert.match(client, /function activateTab\(name\)/);
   assert.match(client, /payload\.search_quality/);

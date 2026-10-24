@@ -122,33 +122,81 @@ function renderFunnel(data) {
   valueFunnel.replaceChildren(...rows);
 }
 
+// 2026-10-24 大隆さん「日次推移は折れ線グラフも付けて」: 棒の上に折れ線（検索・商品発見・送客）と目盛りを重ねた SVG。
+// 日付の抜け（0 件の日）も横軸に置き、傾きが見えるようにする。inline style は CSP（style-src 'self'）で使えないので属性だけで描く
+const TREND_SERIES = [['search_sessions', 'search', '検索', '#9a86f2'], ['value_sessions', 'value', '商品発見', '#6245db'], ['outbound_sessions', 'outbound', '送客', '#22a863']];
+function svgNode(tag, attributes = {}) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+  return node;
+}
 function renderTrend(data) {
-  const active = data.daily.filter(day => day.visitors || day.search_sessions || day.value_sessions || day.outbound_sessions);
-  if (!active.length) {
+  const daily = Array.isArray(data.daily) ? data.daily : [];
+  const firstActive = daily.findIndex(day => day.visitors || day.search_sessions || day.value_sessions || day.outbound_sessions);
+  if (firstActive < 0) {
     trendChart.replaceChildren(element('p', '日別データはまだありません。', 'empty-row'));
     return;
   }
-  const maximum = Math.max(1, ...active.map(day => Math.max(day.search_sessions, day.value_sessions, day.outbound_sessions)));
+  const days = daily.slice(firstActive);
+  const maximum = Math.max(1, ...days.map(day => Math.max(day.search_sessions || 0, day.value_sessions || 0, day.outbound_sessions || 0)));
   const legend = element('div', '', 'chart-legend');
-  for (const [name, className] of [['検索', 'search'], ['商品発見', 'value'], ['送客', 'outbound']]) {
+  for (const [, className, name] of TREND_SERIES) {
     const item = element('span', name);
     item.dataset.series = className;
     legend.append(item);
   }
-  const chart = element('div', '', 'bar-chart');
-  for (const day of active) {
-    const column = element('div', '', 'bar-column');
-    const bars = element('div', '', 'bar-group');
-    for (const [key, className] of [['search_sessions', 'search'], ['value_sessions', 'value'], ['outbound_sessions', 'outbound']]) {
-      const bar = element('span', '', `chart-bar ${className}`);
-      bar.style.height = `${Math.max(day[key] ? 5 : 0, day[key] / maximum * 100)}%`;
-      bar.title = `${dayLabel(day.day)} ${day[key]}件`;
-      bars.append(bar);
-    }
-    column.append(bars, element('small', dayLabel(day.day)));
-    chart.append(column);
+  const width = Math.max(320, days.length * 34 + 40);
+  const height = 200;
+  const left = 30; const top = 10; const bottom = 24; const right = 8;
+  const plotWidth = width - left - right; const plotHeight = height - top - bottom;
+  const step = plotWidth / Math.max(1, days.length);
+  const x = index => left + step * (index + 0.5);
+  const y = value => top + plotHeight - (value / maximum) * plotHeight;
+  const svg = svgNode('svg', { viewBox: `0 0 ${width} ${height}`, class: 'trend-svg', role: 'img', 'aria-label': `日別推移 ${days.length}日分（検索・商品発見・送客）` });
+  // 目盛り（0・半分・最大）
+  const ticks = [...new Set([0, Math.round(maximum / 2), maximum])];
+  for (const tick of ticks) {
+    svg.append(svgNode('line', { x1: left, x2: width - right, y1: y(tick), y2: y(tick), class: 'trend-grid' }));
+    const label = svgNode('text', { x: left - 4, y: y(tick) + 3, 'text-anchor': 'end', class: 'trend-tick' });
+    label.textContent = String(tick);
+    svg.append(label);
   }
-  trendChart.replaceChildren(legend, chart);
+  // 棒（薄く）
+  const barWidth = Math.max(3, Math.min(8, step / 4));
+  days.forEach((day, index) => {
+    TREND_SERIES.forEach(([key, className], seriesIndex) => {
+      const value = day[key] || 0;
+      if (!value) return;
+      const bar = svgNode('rect', { x: x(index) + (seriesIndex - 1) * barWidth - barWidth / 2, y: y(value), width: barWidth, height: Math.max(1, top + plotHeight - y(value)), rx: 1.5, class: `trend-bar ${className}` });
+      const title = svgNode('title');
+      title.textContent = `${dayLabel(day.day)} ${TREND_SERIES[seriesIndex][2]} ${value}件`;
+      bar.append(title);
+      svg.append(bar);
+    });
+  });
+  // 折れ線と点
+  for (const [key, className, name, color] of TREND_SERIES) {
+    const points = days.map((day, index) => `${x(index).toFixed(1)},${y(day[key] || 0).toFixed(1)}`).join(' ');
+    svg.append(svgNode('polyline', { points, fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', class: `trend-line ${className}` }));
+    days.forEach((day, index) => {
+      const dot = svgNode('circle', { cx: x(index).toFixed(1), cy: y(day[key] || 0).toFixed(1), r: 2.6, fill: color, class: `trend-dot ${className}` });
+      const title = svgNode('title');
+      title.textContent = `${dayLabel(day.day)} ${name} ${day[key] || 0}件`;
+      dot.append(title);
+      svg.append(dot);
+    });
+  }
+  // 日付（混まないように間引く）
+  const every = days.length > 16 ? Math.ceil(days.length / 8) : days.length > 8 ? 2 : 1;
+  days.forEach((day, index) => {
+    if (index % every && index !== days.length - 1) return;
+    const label = svgNode('text', { x: x(index), y: height - 8, 'text-anchor': 'middle', class: 'trend-day' });
+    label.textContent = dayLabel(day.day);
+    svg.append(label);
+  });
+  const frame = element('div', '', 'trend-frame');
+  frame.append(svg);
+  trendChart.replaceChildren(legend, frame);
 }
 
 function renderQuality(data) {
