@@ -92,4 +92,14 @@
 
 ## 大隆さんがやること
 
-Threads再認証が未実施なら、[Meta Developers](https://developers.facebook.com/apps/)でHOSHILU Threadsを再認証し、[Cloudflare](https://dash.cloudflare.com/)の `Workers & Pages → project-gate-line-bridge → Settings → Variables and Secrets` で既存`THREADS_ACCESS_TOKEN`を更新してDeployする。Secret値はチャットへ貼らない。Claudeへの転送は不要。
+現時点で再認証を再度依頼しない。2026-10-24、大隆さんから「Threadsは再認証したはず」と申告あり。再認証済みの申告と、Workerへの反映・投稿復旧確認を区別する。
+
+## 2026-10-24 Threads再認証の申告を受領・案内訂正
+
+- 従前の「未実施なら再認証」との本人作業案内は、本申告以降の現況案内として使わない。再認証の時刻・経路・本番反映は未取得だが、未実施とも断定しない。
+- 既存artifact `hoshilu-codex-kpi-40037322195`（10/24 08:03 JST）を再確認：`threads_retry_audit` のFAILEDは27件、最終更新は `2026-10-21T11:32:55.950Z`（10/21 20:32:55 JST）。過去の累積27件だけを現在の401継続・トークン無効・再認証未実施の根拠にしない。
+- 同artifactのactive ThreadsはAPPROVED2件/error NONE、次回予定10/24 20:30 JST。予約行の存在やerror NONEはトークン検証・投稿成功の証明ではない。
+- 今回取得した公開healthはok:trueだが、checksにThreads専用状態は無く、Threads再認証の反映確認には使えない。Secret値は取得していない。直近追加monitor run 40047992379はartifactなし。
+- コード `src/threads-token.mjs` はWorker Secretの変更時に暗号化保存トークンを更新する設計。これは設計確認であり、今回のSecret更新・本番反映・認証成功の実測ではない。Secret・トークン・指紋値は扱わない。
+- 次のCodex確認は、再認証後の通常予約の公開結果（PUBLISHED・公開日時・external post ID・公開URL）または新規認証エラーの時刻と固定コード。新たなテスト投稿・過去FAILEDの強制再送・Secrets更新・D1書込はしない。
+- 本番への反映を確認できる証拠がまだないため状態は「再認証済みとの本人申告あり／本番復旧は未確認」。新しい401等の証拠がないまま追加の本人操作を求めない。
