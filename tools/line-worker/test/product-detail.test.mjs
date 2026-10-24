@@ -71,7 +71,7 @@ test('/product は noindex の HTML、/api/product は不正キーを 400 にす
   assert.equal(page.headers.get('x-robots-tag'), 'noindex');
   const html = await page.text();
   assert.match(html, /data-key="RAKUTEN:shop-a:item-1"/u);
-  assert.match(html, /product-detail\.mjs\?v=4/u);
+  assert.match(html, /product-detail\.mjs\?v=5/u);
   const bad = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=AMAZON:B000'), rakutenEnv, {}, {});
   assert.equal(bad.status, 400);
   assert.equal((await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {})).status, 404);
@@ -101,4 +101,64 @@ test('画面は順序固定で、買い時を予言しない（§6）', () => {
   assert.match(app, /function openInboundPriceWatch\(\)/u);
   assert.match(app, /get\('watch'\)!=='1'/u);
   assert.match(app, /querySelector\('\.watch-settings-button'\)/u);
+});
+
+// 2026-10-25 大隆さん「購入サイト送客を無料で100倍にする方法は？」→「初めて良い」: 記録 14 日以上の商品ページを検索エンジンに公開
+test('記録 14 日以上の商品ページは index・本文つき（D1 だけ読む）。足りなければ noindex。商品サイトマップも出る', async (t) => {
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  sqlite.exec(read('migrations/0093_price_observations.sql'));
+  class Statement {
+    constructor(sql) { this.statement = sqlite.prepare(sql); this.values = []; }
+    bind(...values) { this.values = values; return this; }
+    async run() { const result = this.statement.run(...this.values); return { meta: { changes: result.changes } }; }
+    async first() { return this.statement.get(...this.values) || null; }
+    async all() { return { results: this.statement.all(...this.values) }; }
+  }
+  const env = { PRODUCT_DB: { prepare(sql) { return new Statement(sql); } } };
+  const insert = sqlite.prepare(`INSERT INTO price_observations (observation_key,record_key,marketplace,external_product_id,product_name,product_url,price,shipping,total,stock_status,source,observed_date,observed_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const now = new Date('2026-10-25T03:00:00Z');
+  for (let i = 20; i >= 0; i -= 1) {
+    const date = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    insert.run(`k1:${date}`, 'RAKUTEN:shop-a:item-1', 'RAKUTEN_JP', 'shop-a:item-1', 'テスト水筒 500ml 保冷', 'https://item.rakuten.co.jp/shop-a/item-1/', i > 10 ? 2980 : 2480, 0, i > 10 ? 2980 : 2480, 'IN_STOCK', 'search', date, `${date}T03:00:00.000Z`);
+  }
+  for (let i = 3; i >= 0; i -= 1) {
+    const date = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    insert.run(`k2:${date}`, 'RAKUTEN:shop-b:new', 'RAKUTEN_JP', 'shop-b:new', '新しい商品', 'https://item.rakuten.co.jp/shop-b/new/', 1000, null, null, 'UNKNOWN', 'search', date, `${date}T03:00:00.000Z`);
+  }
+  const sign = async ({ d }) => `https://hoshilu.app/go?token=signed:${encodeURIComponent(d)}`;
+  const page = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-a:item-1&from=search'), env, {}, { sign });
+  assert.equal(page.status, 200);
+  assert.equal(page.headers.get('x-robots-tag'), null);
+  assert.match(page.headers.get('cache-control'), /public/u);
+  const html = await page.text();
+  assert.match(html, /<meta name="robots" content="index,follow">/u);
+  assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/product\?key=RAKUTEN%3Ashop-a%3Aitem-1">/u, 'canonical は from を含まない');
+  assert.match(html, /<title>テスト水筒 500ml 保冷｜今いくら？価格推移と最安値（楽天市場）\| HOSHILU<\/title>/u);
+  assert.match(html, /<h1 class="product-name">テスト水筒 500ml 保冷<\/h1>/u);
+  assert.match(html, /<p class="product-now-price">¥2,480<\/p>/u);
+  assert.match(html, /30日 最安 ¥2,480 ／ 最高 ¥2,980/u);
+  assert.match(html, /HOSHILU価格記録開始後の最安値/u);
+  assert.match(html, /<svg class="product-chart"/u, 'サーバー側でも推移グラフ');
+  assert.match(html, /class="product-buy" href="https:\/\/hoshilu\.app\/go\?token=signed:[^"]+" rel="noopener noreferrer sponsored">楽天市場で買う/u, '買うボタンは /go の署名リンク');
+  assert.match(html, /"@type":"Product"[\s\S]*"price":"2480","priceCurrency":"JPY"/u);
+  assert.doesNotMatch(html, /今が底値|買い時|必ず/u);
+  for (const marker of ['product-head', 'product-now', 'product-history', 'product-offers']) assert.ok(html.includes(`class="${marker}"`), marker);
+  assert.match(html, /product-detail\.mjs\?v=5/u, '開いたあとは最新の価格に差し替える');
+  // 記録 4 日の商品は noindex のまま
+  const young = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-b:new'), env, {}, { sign });
+  assert.equal(young.headers.get('x-robots-tag'), 'noindex');
+  assert.match(await young.text(), /<meta name="robots" content="noindex">/u);
+  // 商品サイトマップ: 14 日以上の商品だけ
+  const sitemap = await handleProductDetailRoutes(new Request('https://hoshilu.app/sitemap-products.xml'), env, {}, {});
+  assert.equal(sitemap.status, 200);
+  assert.match(sitemap.headers.get('content-type'), /xml/u);
+  const xml = await sitemap.text();
+  assert.match(xml, /<loc>https:\/\/hoshilu\.app\/product\?key=RAKUTEN%3Ashop-a%3Aitem-1<\/loc><lastmod>2026-10-25<\/lastmod>/u);
+  assert.doesNotMatch(xml, /shop-b/u);
+  assert.match(read('public/robots.txt'), /Sitemap: https:\/\/hoshilu\.app\/sitemap-products\.xml/u);
+  // 開いたあとに最新の価格が取れなくても、記録の表示は消さない
+  assert.match(read('public/product-detail.mjs'), /root\.querySelector\('\.product-now'\) \? '最新の価格をいま確認できませんでした/u);
 });

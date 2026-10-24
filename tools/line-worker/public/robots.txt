@@ -5,3 +5,5 @@ Disallow: /api/
 Disallow: /shop/*?
 
 Sitemap: https://hoshilu.app/sitemap.xml
+# 2026-10-25: 価格の記録が 14 日以上ある商品ページ（HOSHILU が組み立てる）
+Sitemap: https://hoshilu.app/sitemap-products.xml

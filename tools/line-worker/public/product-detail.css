@@ -25,3 +25,6 @@
 .product-chart-guide{stroke:#d9d2f5;stroke-width:1;stroke-dasharray:4 4}
 .product-chart-single .product-chart-dot{fill:var(--violet)}
 .product-chart-note{margin:6px 0 0;color:var(--muted);font-size:12px}
+
+/* 2026-10-25 検索エンジン向けにサーバーで組み立てた本文: 今いくら？の直下に買うボタン */
+.product-buy-row{margin:10px 0 0}.product-buy-row .product-buy{font-size:14px;padding:11px 16px}

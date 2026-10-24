@@ -243,7 +243,11 @@ async function main() {
     if (!data?.ok) throw new Error(data?.error || 'PRODUCT_UNAVAILABLE');
     render(data);
   } catch {
-    if (status) status.textContent = 'いま価格を確認できませんでした。少し待って開き直してください。';
+    // 2026-10-25: 検索エンジン向けにサーバーが記録の価格を先に出している場合は、その表示を消さずに一言だけ添える
+    if (status) {
+      status.hidden = false;
+      status.textContent = root.querySelector('.product-now') ? '最新の価格をいま確認できませんでした（表示は記録した日の価格です）。' : 'いま価格を確認できませんでした。少し待って開き直してください。';
+    }
   }
 }
 main();
