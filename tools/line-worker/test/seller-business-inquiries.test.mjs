@@ -265,16 +265,19 @@ test('掲載見本の相談を主導線にし、未承認の体験条件・保�
   // 2026-09-27 大隆さん「モールの月額に1,980円足すだけで HOSHILU を通して需要が分かる、と謳って」。
   // 見えるのは HOSHILU 内の匿名集計なので「世の需要」「市場全体」とは書かない。
   // 2026-10-09 大隆さん指示「まず入り口は1980円」: 第一画面は掲載プラン 月額1,980円が主役。
-  assert.match(html, /<h1>まずは月額1,980円で、<br><span>探している人の目の前へ。<\/span><\/h1>/u);
+  // 2026-10-24 大隆さん承認: 入口はカード登録なしの「見本掲載 30 日」（PR 枠に 3 商品・課金なし・終わるときに続けるか聞く）
+  assert.match(html, /<h1>まずは30日間、無料の見本掲載で<br><span>探している人の目の前へ。<\/span><\/h1>/u);
+  assert.match(html, /見本掲載30日 <strong>0円<\/strong><br><small>カード登録なし・課金なし。30日の終わりに続けるかだけ伺います。続ける場合は掲載プラン 月額1,980円（税込）。<\/small>/u);
+  assert.match(html, /<summary>無料の見本掲載30日とは？<\/summary><p>[^<]*カード登録・契約・課金はありません。[^<]*自動で有料に切り替わることはありません。/u);
   // 2026-10-16 大隆さん指示「長文はくどい」: 第一画面の説明は 2 文に
-  assert.match(html, /条件にすべて合う検索で、お店の商品を一番上の「PR」枠に表示します（最大2件）/u);
+  assert.match(html, /商品3点を、条件にすべて合う検索で一番上の「PR」枠に30日間表示します（最大2件）/u);
   assert.match(html, /HOSHILUで探されて、見つからなかった物です/u);
   assert.doesNotMatch(html, /世の需要|世の中の需要|市場全体の需要/u);
-  assert.match(html, /data-seller-cta="hero-inquiry">1,980円の掲載を相談する</u);
-  assert.ok(html.indexOf('id="included"') < html.indexOf('id="how"'), '「1,980円でできること」は第一画面の直後');
+  assert.match(html, /data-seller-cta="hero-inquiry">無料の見本掲載を申し込む</u);
+  assert.ok(html.indexOf('id="included"') < html.indexOf('id="how"'), '「見本掲載の30日間でできること」は第一画面の直後');
   assert.match(html, /<summary>優先出品（「PR」枠）とは？<\/summary>/u);
   assert.match(html, /売上、注文、掲載順位は保証しません/u);
-  assert.match(html, /商品3点で、下のような見本を非公開で作ります。公開は、お店の確認・承認の後です。/u);
+  assert.match(html, /商品3点で、下のような見本を非公開で作ります。公開は、お店の確認・承認の後です。公開から30日間はカード登録も課金もありません。/u);
   // 掲載見本は文字ではなく実際の画面で見せる（2026-10-16 大隆さん指示「リアルな掲載見本を画面掲載して」）
   assert.match(html, /<figure class="seller-sample-real">[\s\S]*?\/for-sellers-shots\/listing\.jpg/u);
   assert.doesNotMatch(html, /クリック50円|今月の利用額|予算上限の設定|自動課金なし|支払い登録不要の3か月/u);

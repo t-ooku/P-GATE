@@ -161,10 +161,12 @@ test('公開 LP: 販売 ON で「モールの外」の訴求と 3 段の料金�
   const html = applyPromoPlansToPublicPage('/for-sellers', raw);
   const text = html.replace(/<script[\s\S]*?<\/script>/gu, '').replace(/<style>[\s\S]*?<\/style>/gu, '').replace(/<!--[\s\S]*?-->/gu, '').replace(/<[^>]+>/gu, ' ').replace(/&amp;/gu, '&');
   // 2026-10-09 大隆さん指示「まず入り口は1980円」: 第一画面の主役は掲載プラン 月額1,980円。AI販促担当は次の一歩として第一画面に添える。
-  assert.match(text, /まずは月額1,980円で、\s*探している人の目の前へ。/u);
+  // 2026-10-24 大隆さん承認: 入口はカード登録なしの見本掲載 30 日
+  assert.match(text, /まずは30日間、無料の見本掲載で\s*探している人の目の前へ。/u);
+  assert.match(text, /見本掲載30日\s*0円\s*カード登録なし・課金なし。/u);
   assert.match(text, /販促まで任せるなら、AI販促担当 Light 月額9,800円・Standard 月額19,800円（税込）/u);
   // 2026-10-16 大隆さん指示「長文はくどい。端的に・箇条書きに」: AI販促担当の説明（モールの外・中と外・毎週届くもの）は 1 つの欄に、届くものは箇条書きに
-  assert.ok(text.indexOf('START WITH ¥1,980') !== -1 && text.indexOf('START WITH ¥1,980') < text.indexOf('お店の入口を。'), '1,980円の説明が AI販促担当の説明より先');
+  assert.ok(text.indexOf('START WITH ¥0') !== -1 && text.indexOf('START WITH ¥0') < text.indexOf('お店の入口を。'), '見本掲載 30 日の説明が AI販促担当の説明より先');
   assert.doesNotMatch(text, /モールの出店は、そのまま。/u, '第一画面は差し替える');
   for (const heading of ['モールの外にも、', 'Google 検索向けの記事 1本', 'SNS 投稿文 2本と画像']) {
     assert.ok(text.indexOf(heading) !== -1 && text.indexOf(heading) < text.indexOf('まずは1,980円から。'), `${heading} は料金の前`);
