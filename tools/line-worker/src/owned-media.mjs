@@ -25,7 +25,7 @@ const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
 // （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
-export const MEDIA_TEMPLATE_VERSION = '8';
+export const MEDIA_TEMPLATE_VERSION = '9';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -286,6 +286,50 @@ export function sparkline(history = []) {
 const SHELF_CATEGORY = new Map(RAKUTEN_RANKING_CATEGORIES.map((category) => [category.id, category.label]));
 export const SHELF_RULES = Object.freeze({ categories: 6, perCategory: 4, freshDays: 3 });
 
+// 2026-10-24 大隆さん「閲覧数と購入サイト送客を100倍に増やして」→「検索記事を大量に作る」:
+// ジャンルごとのページ（/media/genre/<slug>、楽天の公式ランキングのジャンル 22）。「〇〇 値下がり」「〇〇 ランキング 価格」で探す人に向けて、
+// そのジャンルの公式ランキング上位（最大 20）と値下がりした商品に、ホシルの価格記録の折れ線を付ける。毎日中身が変わる。
+// 載せるのは公開ランキングと価格記録だけ（利用者の検索は使わない）。記録の付いた商品が少ない日は索引させない（薄いページを出さない）。
+export const MEDIA_GENRES = Object.freeze(RAKUTEN_RANKING_CATEGORIES.map((category) => Object.freeze({
+  id: category.id, label: category.label, slug: category.id.replaceAll('_', '-')
+})));
+export const MEDIA_GENRE_PATHS = Object.freeze(MEDIA_GENRES.map((genre) => `/media/genre/${genre.slug}`));
+export const GENRE_RULES = Object.freeze({ items: 20, freshDays: 3, minIndexed: 4 });
+const genrePath = (genre) => `/media/genre/${genre.slug}`;
+
+export async function loadGenreRanking(env, genre, { now = new Date(), rules = GENRE_RULES } = {}) {
+  const db = env?.PRODUCT_DB;
+  if (!db || !genre) return [];
+  const since = new Date(now.getTime() - rules.freshDays * 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const { results = [] } = await db.prepare(`SELECT payload_json FROM marketplace_ranking_cache
+      WHERE marketplace_id = 'RAKUTEN_JP' AND category_id IN (?1, 'buzz_' || ?1) AND updated_at >= ?2
+      ORDER BY updated_at DESC LIMIT 1`).bind(genre.id, since).all();
+    return results.length ? rankingItems(results[0].payload_json, { limit: rules.items }) : [];
+  } catch {
+    return [];
+  }
+}
+
+// 公式ランキングの保存（payload_json）から、画像と商品 ID のある上位商品を取り出す。used に入っている商品は飛ばし、取った物を足す。
+function rankingItems(payloadJson, { used = new Set(), limit = 4 } = {}) {
+  let items = [];
+  try { items = JSON.parse(payloadJson); } catch { items = []; }
+  const picked = [];
+  for (const [index, item] of (Array.isArray(items) ? items : []).entries()) {
+    const recordKey = String(item?.record_key || '');
+    const image = largerImage(item?.image_url || (Array.isArray(item?.image_urls) ? item.image_urls[0] : ''));
+    const name = String(item?.display_name || item?.product_name || '').replace(/\s+/gu, ' ').trim().slice(0, 90);
+    if (!/^(?:RAKUTEN|YAHOO|JAN):/u.test(recordKey) || /^(?:RAKUTEN|YAHOO):https?:/iu.test(recordKey) || !image || !name || used.has(recordKey)) continue;
+    const offer = Array.isArray(item?.offers) ? item.offers[0] || {} : {};
+    used.add(recordKey);
+    picked.push({ record_key: recordKey, product_name: name, image_url: image, rank: Math.max(1, Number(item?.rank) || index + 1),
+      listed_price: Math.round(Number(offer.price) || 0), marketplace: String(offer.marketplace || 'RAKUTEN_JP') });
+    if (picked.length >= limit) break;
+  }
+  return picked;
+}
+
 export async function loadRankingShelves(env, { now = new Date(), rules = SHELF_RULES, exclude = [] } = {}) {
   const db = env?.PRODUCT_DB;
   if (!db) return [];
@@ -301,20 +345,7 @@ export async function loadRankingShelves(env, { now = new Date(), rules = SHELF_
       const label = SHELF_CATEGORY.get(id);
       if (!label || seenCategories.has(id)) continue;
       seenCategories.add(id);
-      let items = [];
-      try { items = JSON.parse(row.payload_json); } catch { items = []; }
-      const picked = [];
-      for (const [index, item] of (Array.isArray(items) ? items : []).entries()) {
-        const recordKey = String(item?.record_key || '');
-        const image = largerImage(item?.image_url || (Array.isArray(item?.image_urls) ? item.image_urls[0] : ''));
-        const name = String(item?.display_name || item?.product_name || '').replace(/\s+/gu, ' ').trim().slice(0, 90);
-        if (!/^(?:RAKUTEN|YAHOO|JAN):/u.test(recordKey) || /^(?:RAKUTEN|YAHOO):https?:/iu.test(recordKey) || !image || !name || used.has(recordKey)) continue;
-        const offer = Array.isArray(item?.offers) ? item.offers[0] || {} : {};
-        used.add(recordKey);
-        picked.push({ record_key: recordKey, product_name: name, image_url: image, rank: Math.max(1, Number(item?.rank) || index + 1),
-          listed_price: Math.round(Number(offer.price) || 0), marketplace: String(offer.marketplace || 'RAKUTEN_JP') });
-        if (picked.length >= rules.perCategory) break;
-      }
+      const picked = rankingItems(row.payload_json, { used, limit: rules.perCategory });
       if (picked.length >= 2) shelves.push({ id, label, items: picked });
       if (shelves.length >= rules.categories) break;
     }
@@ -420,7 +451,7 @@ function shell({ title, description, canonical, robots, articleId, intent, body,
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${robots}">
 <link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
-<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=8"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
+<link rel="stylesheet" href="/seo-article.css"><link rel="stylesheet" href="/owned-media.css?v=${MEDIA_TEMPLATE_VERSION}"><script type="application/ld+json">${JSON.stringify(structured).replace(/</g, '\\u003c')}</script></head>
 <body class="media-page" data-seo-article-id="${articleId}" data-seo-intent="${intent}" data-seo-cluster="owned-media" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a><a class="media-header-link" href="/media">${MEDIA_NAME}</a></header>
 <main class="seo-shell">${body}</main>
 <footer><a href="/media">${MEDIA_NAME}</a><a href="/ja/guides">買い物ガイド一覧</a><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
@@ -449,6 +480,7 @@ export function renderMediaTop({ drops = null, popular = [], shelves = [], now =
 ${shelvesSection(shelves)}
 ${SEARCH_CTA}
 ${popular.length ? `<section class="media-section" id="popular">${sectionHead('MOST READ', 'よく読まれている記事', '直近30日によく読まれた記事です。')}${articleList(popular)}</section>` : ''}
+${genreNav()}
 ${sections}
 <p class="bottom-cta"><a href="/ja/guides">買い物ガイドをすべて見る</a></p>
 ${AD_NOTE}</article>`;
@@ -482,6 +514,7 @@ export function renderPriceDrops({ drops = null, shelves = [], now = new Date() 
 <section class="media-section">${sectionHead('THIS WEEK', list.length ? `${list.length}件` : '今週の値下がり', '')}${content}</section>
 ${shelvesSection(shelves)}
 ${SEARCH_CTA}
+${genreNav()}
 ${AD_NOTE}</article>`;
   return shell({
     title: '今週値下がりした商品（ホシルの価格記録より）',
@@ -494,6 +527,57 @@ ${AD_NOTE}</article>`;
         { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
         { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: `${ORIGIN}/media` },
         { '@type': 'ListItem', position: 3, name: '値下がりした商品', item: canonical }] }
+    ] }
+  });
+}
+
+// ジャンル別ページへの入口（ページどうしをつなぐ）。current は今いるジャンル。
+function genreNav(current = '') {
+  return `<section class="media-section" id="genres">${sectionHead('BY GENRE', 'ジャンル別の値下がりと価格の動き', '楽天市場の公式ランキングのジャンルごとに、上位商品の価格の記録をまとめています。')}
+<nav class="media-shelf-nav" aria-label="ジャンル別のページ">${MEDIA_GENRES.map((genre) => (genre.id === current
+    ? `<span aria-current="page">${esc(genre.label)}</span>`
+    : `<a href="${genrePath(genre)}">${esc(genre.label)}</a>`)).join('')}</nav></section>`;
+}
+
+export function renderGenrePage({ genre, items = [], drops = null, now = new Date() } = {}) {
+  const canonical = `${ORIGIN}${genrePath(genre)}`;
+  const today = jstDate(now);
+  const genreDrops = Array.isArray(drops) ? drops.filter((row) => row.category_id === genre.id) : [];
+  const changes = items.map((item) => priceChange(item.history)).filter(Boolean);
+  const down = changes.filter((change) => change.diff < 0).length;
+  const up = changes.filter((change) => change.diff > 0).length;
+  // 値下がり欄とランキングの両方に出る商品は 1 つと数える
+  const droppedKeys = new Set([...genreDrops.map((row) => row.record_key),
+    ...items.filter((item) => (priceChange(item.history)?.diff || 0) < 0).map((item) => item.record_key)]);
+  const recorded = changes.length + genreDrops.filter((row) => !items.some((item) => item.record_key === row.record_key)).length;
+  const robots = recorded >= GENRE_RULES.minIndexed ? 'index,follow,max-image-preview:large,max-snippet:-1' : 'noindex,follow';
+  const summary = changes.length
+    ? `ランキング上位${items.length}商品のうち、価格を2日以上記録できた${changes.length}商品では、記録の最初の日と比べて${down}商品が値下がり、${up}商品が値上がり、${changes.length - down - up}商品が変わらずでした（${shortDate(today)}時点）。`
+    : `ランキング上位の商品の価格は、記録を始めたところです。`;
+  const ranking = items.length
+    ? `<ol class="media-tiles">${items.map(shelfTile).join('')}</ol>`
+    : `<p class="media-empty">${esc(genre.label)}の公式ランキングの保存が古いため、今日は表示していません。</p>`;
+  const body = `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><a href="/media">${MEDIA_NAME}</a><span aria-hidden="true">›</span><span>${esc(genre.label)}</span></nav>
+<article><header class="media-hero media-hero-compact"><p class="media-issue"><span>GENRE × PRICE</span><time datetime="${today}">${issueLabel(now)} 号</time></p><h1>${esc(genre.label)}の値下がりと価格の動き</h1><p class="media-lead">楽天市場の${esc(genre.label)}ランキング上位の商品について、ホシルが毎日確認している価格の記録をまとめています。${esc(summary)}</p>
+<dl class="media-stats"><div><dt>値下がり</dt><dd>${droppedKeys.size}<small>件</small></dd></div><div><dt>掲載</dt><dd>${items.length}<small>商品</small></dd></div><div><dt>更新</dt><dd>毎日</dd></div></dl></header>
+${genreDrops.length ? `<section class="media-section" id="drops">${sectionHead('PRICE DROPS', `${genre.label}で値下がりした商品`, 'ホシルの価格記録で、記録上の最高値から10%以上下がった商品です。')}<ol class="media-drops">${genreDrops.map(dropCard).join('')}</ol></section>` : ''}
+<section class="media-section" id="ranking">${sectionHead('RANKING × PRICE', `${genre.label}・ランキング上位の価格の推移`, 'バッジは、ホシルが記録した最初の日と比べた値動きです。商品を開くと、今の価格と在庫をその場でモールに確認して表示します。')}${ranking}</section>
+<section class="media-rules"><h2>このページの決まり</h2><p>載せている商品は楽天市場の公式ランキング（${GENRE_RULES.freshDays}日以内の保存）の上位だけで、並びはランキングの順位のままです。価格はホシルが確認した時点の商品価格（送料は含みません）で、ホシルでの価格記録は${PRICE_RECORD_STARTED}から始まっています。値下がりの条件は「${DROP_RULE_TEXT}」です。これから上がるか下がるかの予想はしていません。</p></section>
+${SEARCH_CTA}
+${genreNav(genre.id)}
+<p class="media-more"><a href="/media/price-drops">すべてのジャンルの値下がりを見る<span aria-hidden="true">→</span></a></p>
+${AD_NOTE}</article>`;
+  return shell({
+    title: `${genre.label}の値下がり・価格の動き｜楽天ランキング上位を毎日記録`,
+    description: `楽天市場の${genre.label}ランキング上位の商品の価格を、ホシルが毎日記録。値下がりした商品と、ここ2週間の価格の推移をまとめています（毎日自動で更新）。`,
+    canonical, robots, articleId: `media-genre-${genre.slug}`.slice(0, 64), intent: 'owned_media_genre', body,
+    structured: { '@context': 'https://schema.org', '@graph': [
+      { '@type': 'ItemList', name: `${genre.label}の値下がりと価格の動き`, url: canonical, numberOfItems: items.length,
+        itemListElement: items.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.product_name, url: `${ORIGIN}${productLink(item)}` })) },
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: `${ORIGIN}/media` },
+        { '@type': 'ListItem', position: 3, name: genre.label, item: canonical }] }
     ] }
   });
 }
@@ -538,12 +622,13 @@ export async function handleTopDropsApi(request, env, { now = new Date(), cache 
   return response;
 }
 
-// GET /media・/media/price-drops。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
+// GET /media・/media/price-drops・/media/genre/<slug>。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
 export async function handleOwnedMediaRoutes(request, env, { headers = {}, now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
   if (!['GET', 'HEAD'].includes(request.method)) return null;
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/u, '') || '/';
-  if (!MEDIA_PATHS.includes(path)) return null;
+  const genre = MEDIA_GENRES.find((item) => genrePath(item) === path);
+  if (!MEDIA_PATHS.includes(path) && !genre) return null;
   const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
   if (cache) {
     try {
@@ -552,7 +637,9 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
     } catch {}
   }
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
-  const html = path === '/media'
+  const html = genre
+    ? renderGenrePage({ genre, drops, now, items: (await withShelfHistories(env, [{ id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) }], { now }))[0]?.items || [] })
+    : path === '/media'
     ? renderMediaTop({ drops, popular: await loadPopularArticles(env), now,
       shelves: await withShelfHistories(env, await loadRankingShelves(env, { now, exclude: (drops || []).slice(0, 12).map((row) => row.record_key) }), { now }) })
     : renderPriceDrops({ drops, now,
