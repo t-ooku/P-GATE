@@ -831,6 +831,22 @@ async function publishTikTok(post, env, fetchImpl) {
 // wait for it to finish processing (recommended ~30s, then poll
 // GET /{id}?fields=status until FINISHED/ERRORED/EXPIRED), then publish.
 // https://developers.facebook.com/docs/threads/posts
+// 2026-10-24 大隆さん「2やって」: Threads のフォロワーが少なく 1 本の閲覧が 2〜13 のため、投稿にトピック（topic_tag、1 投稿 1 つ）を付けて
+// フォロワー以外にも出やすくする。中身ごとに固定の言葉だけを使う（商品名・検索文は入れない）。
+// THREADS_TOPIC_TAGS_ENABLED=false で止められる。トピックで作成を断られたら、トピック無しで 1 回だけ作り直す。
+// https://developers.facebook.com/docs/threads/reference/publishing
+const THREADS_TOPIC_BY_CAMPAIGN = [
+  [/^hoshilu-threads-media-v1$|price-drops/u, '値下がり'],
+  [/seller/u, 'ネットショップ'],
+  [/media-notes/u, 'お買い物']
+];
+export function threadsTopicTag(post, env = {}) {
+  if (String(env.THREADS_TOPIC_TAGS_ENABLED || '').toLowerCase() === 'false') return '';
+  const campaign = String(post?.campaign_id || '');
+  for (const [pattern, topic] of THREADS_TOPIC_BY_CAMPAIGN) if (pattern.test(campaign)) return topic;
+  return 'お買い物';
+}
+
 async function publishThreads(post, env, fetchImpl, hooks = {}) {
   const userId = encodeURIComponent(env.THREADS_USER_ID);
   const headers = { authorization: `Bearer ${env.THREADS_ACCESS_TOKEN}`, 'content-type': 'application/json' };
@@ -846,14 +862,20 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
   const mediaPayload = post.media_url
     ? { media_type: isVideo ? 'VIDEO' : 'IMAGE', text, ...(isVideo ? { video_url: post.media_url } : { image_url: post.media_url }) }
     : { media_type: 'TEXT', text };
+  const topicTag = threadsTopicTag(post, env);
   let creationId = clean(post.platform_job_id, 120);
   if (!creationId) {
-    const create = await fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads`, {
+    const createContainer = payload => fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads`, {
       method: 'POST',
       redirect: 'manual',
       headers,
-      body: JSON.stringify(mediaPayload)
+      body: JSON.stringify(payload)
     });
+    let create = await createContainer(topicTag ? { ...mediaPayload, topic_tag: topicTag } : mediaPayload);
+    if (!create.ok && topicTag && create.status === 400) {
+      console.error('THREADS_TOPIC_TAG_REJECTED', clean(post.post_id, 100));
+      create = await createContainer(mediaPayload);
+    }
     if (!create.ok) {
       const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
       throw new Error(`THREADS_CREATE_${create.status}${detail ? `_${detail}` : ''}`);
