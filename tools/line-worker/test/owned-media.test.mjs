@@ -123,7 +123,7 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=8/);
+  assert.match(html, /owned-media\.css\?v=9/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);
@@ -213,4 +213,74 @@ test('ジャンル別の棚: 3日以内の公式ランキング保存から、�
   assert.match(html, /価格の記録はこれから/, '記録が1日だけの商品は線を描かずにそう書く');
   // 商品の棚は記事の一覧より前（後半を文字だけにしない）
   assert.ok(html.indexOf('id="ranking"') < html.indexOf('id="find"'));
+});
+
+// 2026-10-24 大隆さん「閲覧数と購入サイト送客を100倍に」→「検索記事を大量に作る」: ジャンル別ページ。
+import { GENRE_RULES, MEDIA_GENRES, MEDIA_GENRE_PATHS, loadGenreRanking, renderGenrePage } from '../src/owned-media.mjs';
+import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
+
+test('ジャンル別ページ: 楽天の公式ランキングのジャンルごとに 1 ページ。サイトマップ・正規URLに載る', () => {
+  assert.equal(MEDIA_GENRES.length, RAKUTEN_RANKING_CATEGORIES.length);
+  assert.ok(MEDIA_GENRE_PATHS.includes('/media/genre/wireless-earphones'));
+  for (const path of MEDIA_GENRE_PATHS) assert.match(path, /^\/media\/genre\/[a-z0-9-]+$/);
+  const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  for (const path of MEDIA_GENRE_PATHS) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
+  assert.match(readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8'), /\.\.\.MEDIA_PATHS, \.\.\.MEDIA_GENRE_PATHS/);
+});
+
+test('ジャンル別ページ: 3日以内の公式ランキングだけ（上位20まで）。記録の付いた商品が少ない日は索引させない', async () => {
+  const ranking = (n) => Array.from({ length: n }, (_, i) => ({ record_key: `RAKUTEN:e:${i}`, display_name: `イヤホン ${i}`, image_url: `https://thumbnail.image.rakuten.co.jp/e${i}.jpg?_ex=128x128`, rank: i + 1, offers: [{ price: 3000 + i }] }));
+  const env = envWith((db) => {
+    db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8'));
+    const ins = db.prepare(`INSERT INTO marketplace_ranking_cache VALUES ('RAKUTEN_JP', ?, 'REALTIME', ?, '2026-10-14T00:00:00Z', ?)`);
+    ins.run('wireless_earphones', JSON.stringify(ranking(25)), '2026-10-14T01:00:00Z');
+    ins.run('mobile_battery', JSON.stringify(ranking(5)), '2026-10-01T00:00:00Z'); // 古い
+    for (const i of [0, 1, 2, 3]) {
+      observe(db, { id: `e:${i}`, date: '2026-10-10', price: 4000 }); observe(db, { id: `e:${i}`, date: '2026-10-13', price: i === 3 ? 4500 : 3500 });
+    }
+  });
+  const genre = MEDIA_GENRES.find((g) => g.id === 'wireless_earphones');
+  const items = await loadGenreRanking(env, genre, { now: NOW });
+  assert.equal(items.length, GENRE_RULES.items);
+  assert.deepEqual(await loadGenreRanking(env, MEDIA_GENRES.find((g) => g.id === 'mobile_battery'), { now: NOW }), []);
+
+  const response = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/wireless-earphones'), env, { now: NOW, cache: null });
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<h1>ワイヤレスイヤホンの値下がりと価格の動き<\/h1>/);
+  assert.match(html, /<title>ワイヤレスイヤホンの値下がり・価格の動き｜楽天ランキング上位を毎日記録 \| HOSHILU<\/title>/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/media\/genre\/wireless-earphones">/);
+  assert.match(html, /content="index,follow/);
+  assert.match(html, /4商品では、記録の最初の日と比べて3商品が値下がり、1商品が値上がり、0商品が変わらず/);
+  assert.match(html, /<dt>値下がり<\/dt><dd>3<small>件<\/small>/);
+  assert.match(html, /広告（アフィリエイト）を含みます/);
+  assert.match(html, /<span aria-current="page">ワイヤレスイヤホン<\/span>/);
+  assert.match(html, /<a href="\/media\/genre\/mobile-battery">モバイルバッテリー<\/a>/);
+  assert.doesNotMatch(html, /最安|今が買い時/);
+
+  const thin = await (await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/mobile-battery'), env, { now: NOW, cache: null })).text();
+  assert.match(thin, /content="noindex,follow"/);
+  assert.match(thin, /公式ランキングの保存が古いため/);
+  assert.equal(await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/unknown'), env, { now: NOW, cache: null }), null);
+});
+
+test('ジャンル別ページ: 値下がり欄にはそのジャンルの商品だけ。ランキングにも出る商品は1つと数える', () => {
+  const genre = MEDIA_GENRES.find((g) => g.id === 'kitchen');
+  const history = [{ date: '2026-10-10', price: 2000 }, { date: '2026-10-13', price: 1500 }];
+  const drops = [
+    { record_key: 'RAKUTEN:a', category_id: 'kitchen', product_name: 'フライパン', marketplace: 'RAKUTEN_JP', max_price: 2000, latest_price: 1500, drop_rate: 25, days: 3, history },
+    { record_key: 'RAKUTEN:b', category_id: 'food', product_name: 'お米', marketplace: 'RAKUTEN_JP', max_price: 3000, latest_price: 2500, drop_rate: 17, days: 3, history }
+  ];
+  const items = [{ record_key: 'RAKUTEN:a', product_name: 'フライパン', image_url: 'https://x/a.jpg', rank: 1, listed_price: 1500, history }];
+  const html = renderGenrePage({ genre, items, drops, now: NOW });
+  assert.match(html, /フライパン/);
+  assert.doesNotMatch(html, /お米/);
+  assert.match(html, /<dt>値下がり<\/dt><dd>1<small>件<\/small>/);
+  assert.match(html, /content="noindex,follow"/, '記録の付いた商品が4未満なら索引させない');
+});
+
+test('トップと値下がりページから、すべてのジャンル別ページへ入れる', () => {
+  for (const html of [renderMediaTop({ drops: [], now: NOW }), renderPriceDrops({ drops: [], now: NOW })]) {
+    for (const path of MEDIA_GENRE_PATHS) assert.ok(html.includes(`href="${path}"`), path);
+  }
 });
