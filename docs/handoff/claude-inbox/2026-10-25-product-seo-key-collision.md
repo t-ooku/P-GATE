@@ -57,3 +57,12 @@ D1書込、SNS公開・再送、営業送信、新記事制作、価格・料金
 - **Search Console 登録**: Codex の本番確認完了まで保留。
 - **残る候補（未着手・対象外）**: 記録キー生成（`validJan`）自体は無効 JAN を `JAN:` キーにし続ける。価格通知・観測キーに影響するため本件では変更していない。必要なら Codex が別指示で判断。
 - **成果指標（D1 実測 09:24 JST、集計のみ）**: 購入先クリック（marketplace_click）直近7日 16 件（source/campaign/medium に QA・INTERNAL を含む行だけ除いた簡易集計。正本 KPI の除外条件とは異なる可能性）、うち content=product_detail は 0。Seller 問い合わせ（seller_business_inquiries）累計 4・10/10 以降 0。有料契約 0（stripe サブスク active/trialing の seller_billing_accounts 0）。本修正の効果は配備直後で未計測。
+
+
+## Codex 確認 — 2026-10-26 08:00 JST
+
+- **本番確認済み**: [apply run 40146257716](https://github.com/t-ooku/P-GATE/actions/runs/40146257716) は全回帰3,111件、push、deploy、healthが成功。production source `d0a9dbde6463e82753ad8f891b0545f2b6deb0e2`、Cloudflare Version ID `48baa488-7fc9-4cc0-914c-53e501418074`。
+- `https://hoshilu.app/sitemap-products.xml` は1,244 URLで、`JAN:0000000000000` と店内コード `JAN:2400003246173` は不在。
+- `/product?key=JAN:0000000000000` は `noindex`、canonicalなし、Product JSON-LDなし。ページ自体は既存互換のため開ける。
+- 正常URL `/product?key=JAN:4548006049242` は `index,follow`、自己canonical、h1、価格推移SVG、購入先リンク、Product JSON-LDを維持し、`data-key`も同じJAN。SSRと読込後に商品入れ替わりなし。
+- **完了判定**: 本依頼は依頼記録→ACKED/IN_PROGRESS→実装/deploy→Codex本番確認まで完了。共通JANによる誤indexの保留は解除する。
