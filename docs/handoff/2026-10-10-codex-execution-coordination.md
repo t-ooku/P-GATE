@@ -234,3 +234,12 @@
 - **本番確認済み（最新成果物）**: [CI / deploy run 40141288106](https://github.com/t-ooku/P-GATE/actions/runs/40141288106)はtest・deploy・health・aggregate-only KPI生成まで成功。実行時HEAD `2701ad07`、Version `52d04475-c55e-4189-b8ce-1b06c10208e9`。7日窓はLP43→検索9→完了8→購入先3、一般希望価格0、外部Seller問い合わせ0、有料契約の最新確認0。Google→product着地とproduct_detail起点クリック、ASP成果は未計測。
 - **固定QA**: 自動23/25だが、FAIL本命の連続排水対応除湿機と紙おむつ専用記名油性ペンはいずれも質問意図に機能・カテゴリ意味一致し、Codex意味判定25/25。名前ペンは用途が狭く、全属性適合や売上改善とは扱わない。
 - **P0／依頼記録済み・受領未確認**: 共通JANでSSR初期商品と読込後商品が入れ替わるため、Search Console登録を保留。inbox `2026-10-25-product-seo-key-collision.md` はOPENのまま。Claude即時起動接続なし、README巡回は将来保証ではない。SNS/営業送信・新記事・D1書込・料金/注意書き変更なし。詳細は[本日日報](2026-10-25-codex-selfcheck.md)。
+
+
+## 2026-10-26 Codex 進捗
+
+- **商品SEO P0は本番確認まで完了**: inbox `2026-10-25-product-seo-key-collision.md` はDONE。commit `d0a9dbde`、apply run [40146257716](https://github.com/t-ooku/P-GATE/actions/runs/40146257716)、全回帰3,111件、deploy、health成功。Version `48baa488-7fc9-4cc0-914c-53e501418074`。公開商品サイトマップ1,244 URLから共通/店内JAN2件が除外され、無効URLはnoindex、正常URLは同一JANのh1/canonical/JSON-LD/推移/購入先を維持。Search Console保留解除。
+- **成果指標**: 最新aggregate正本（10/25 08:08 JST、7日）はLP43→検索9→完了8→購入先3セッション。一般希望価格0、外部Seller問い合わせ0、外部Seller登録/商品登録0、有料契約最新確認0。送信200にresponse0。商品SEO配備後のGoogle→product着地とproduct_detail起点クリック、ASP注文・報酬は未計測で、クリックを売上扱いしない。
+- **月曜SEO監査で新規P1**: 公開標準サイトマップは180 URL（+22ジャンルページ）。代表 `/media/genre/handheld-fan` は掲載0商品で`noindex,follow`なのにサイトマップへ収載。commit `e37d34d` で静的列挙と動的robots判定が分離している。重複依頼を避け、inbox `2026-10-26-genre-sitemap-noindex-mismatch.md` をOPENで保存。依頼記録済み、受領/実装/本番確認は未完了。
+- **監視・SNS**: 最新monitor [40238009654](https://github.com/t-ooku/P-GATE/actions/runs/40238009654) は06:58 JST、health・実利用検索SLI・SNS SLAすべてPASS。Threadsは本runに公開三要素がなく、本人再認証申告と通常予約投稿の公開復旧を分けて未確認のまま。古いFAILED27を現在の認証不良根拠にせず、再認証/Secret更新/強制再送を求めない。X停止、#616再生成・公開停止を維持。
+- **実行境界**: SNS公開、営業送信、新記事制作、D1書込、料金・注意書き変更なし。Claude即時起動接続はなく、巡回受領は将来保証ではない。詳細は`2026-10-26-codex-selfcheck.md`。
