@@ -21,6 +21,25 @@ export function normalizeProductKey(value) {
   return key;
 }
 
+// 2026-10-25 Codex 本番確認: `JAN:0000000000000` の記録に別々の商品（19 店舗・17 商品名）が混ざり、SSR の h1 と開いたあとの商品が入れ替わった。
+// 検索エンジンに出すのは「1 つの商品を指すと言えるキー」だけ。JAN はチェックデジット一致・同一数字の並びでない・
+// 店内コード（GS1 の 13 桁 02/04/2x、8 桁 0/2 始まり）でないものに限る。満たさない JAN は従来どおり noindex（ページ自体は開ける）。
+export function isUniqueJan(value) {
+  const jan = String(value || '');
+  if (!/^(?:\d{8}|\d{13})$/u.test(jan) || /^(\d)\1+$/u.test(jan)) return false;
+  if (jan.length === 13 ? /^(?:0[24]|2)/u.test(jan) : /^[02]/u.test(jan)) return false;
+  const digits = [...jan].map(Number);
+  const check = digits.pop();
+  const sum = digits.reverse().reduce((total, digit, index) => total + digit * (index % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+export function isSeoIndexableKey(key) {
+  const normalized = normalizeProductKey(key);
+  if (!normalized) return false;
+  return normalized.startsWith('JAN:') ? isUniqueJan(normalized.slice(4)) : true;
+}
+
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/gu, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
@@ -110,7 +129,7 @@ export const productCanonical = (key, origin = 'https://hoshilu.app') => `${orig
 // 検索エンジンに出す材料（D1 の記録だけ。外部 API は呼ばない）。記録が SEO_MIN_DAYS 日未満・商品名が無いときは null（noindex のまま）。
 export async function productSeoSnapshot(env, key, { now = new Date() } = {}) {
   const db = env?.PRODUCT_DB;
-  if (!db || !key) return null;
+  if (!db || !key || !isSeoIndexableKey(key)) return null;
   let latest = null;
   let days = 0;
   try {
@@ -240,10 +259,11 @@ export async function renderProductsSitemap(env, { origin = 'https://hoshilu.app
   } catch {
     rows = [];
   }
-  const urls = rows.filter((row) => normalizeProductKey(row.record_key))
+  const indexable = rows.filter((row) => isSeoIndexableKey(row.record_key));
+  const urls = indexable
     .map((row) => `<url><loc>${esc(productCanonical(row.record_key, origin))}</loc><lastmod>${esc(row.lastmod)}</lastmod><changefreq>daily</changefreq></url>`).join('\n');
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`, {
-    headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=3600, s-maxage=21600', 'x-product-count': String(rows.length) }
+    headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=3600, s-maxage=21600', 'x-product-count': String(indexable.length) }
   });
 }
 

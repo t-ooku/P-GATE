@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { normalizeProductKey, buildProductDetail, handleProductDetailRoutes } from '../src/product-detail.mjs';
+import { normalizeProductKey, buildProductDetail, handleProductDetailRoutes, isUniqueJan, isSeoIndexableKey } from '../src/product-detail.mjs';
 import { normalizeGrowthEvent } from '../src/growth-events.mjs';
 
 // 2026-10-02 指示書「今ほしい人が買うためのサービス」§9 商品詳細・§6 買い時は事実だけ・§12 KPI。
@@ -161,4 +161,76 @@ test('記録 14 日以上の商品ページは index・本文つき（D1 だけ�
   assert.match(read('public/robots.txt'), /Sitemap: https:\/\/hoshilu\.app\/sitemap-products\.xml/u);
   // 開いたあとに最新の価格が取れなくても、記録の表示は消さない
   assert.match(read('public/product-detail.mjs'), /root\.querySelector\('\.product-now'\) \? '最新の価格をいま確認できませんでした/u);
+});
+
+// 2026-10-25 Codex 本番確認: JAN:0000000000000 で SSR「MONESTA 耳栓」→ 読込後「ウインドモップ」に入れ替わった。共通・無効 JAN は index しない。
+test('共通・無効 JAN はサイトマップにも index にも入れない。正常な商品は index を維持し、SSR と API が同じ商品を指す', async (t) => {
+  assert.equal(isUniqueJan('4975479418907'), true);
+  assert.equal(isUniqueJan('49012347'), true);
+  for (const bad of ['0000000000000', '1111111111111', '2400003246173', '0412345678903', '4975479418900', '20123451', '12345']) assert.equal(isUniqueJan(bad), false, bad);
+  assert.equal(isSeoIndexableKey('JAN:0000000000000'), false);
+  assert.equal(isSeoIndexableKey('RAKUTEN:shop-a:item-1'), true);
+  assert.equal(isSeoIndexableKey('AMAZON:B000'), false);
+  assert.equal(normalizeProductKey('JAN:0000000000000'), 'JAN:0000000000000', '既存リンクは開ける（noindex）');
+
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  sqlite.exec(read('migrations/0093_price_observations.sql'));
+  class Statement {
+    constructor(sql) { this.statement = sqlite.prepare(sql); this.values = []; }
+    bind(...values) { this.values = values; return this; }
+    async run() { const result = this.statement.run(...this.values); return { meta: { changes: result.changes } }; }
+    async first() { return this.statement.get(...this.values) || null; }
+    async all() { return { results: this.statement.all(...this.values) }; }
+  }
+  const env = { PRODUCT_DB: { prepare(sql) { return new Statement(sql); } } };
+  const insert = sqlite.prepare(`INSERT INTO price_observations (observation_key,record_key,marketplace,external_product_id,product_name,product_url,price,shipping,total,stock_status,source,observed_date,observed_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const now = new Date();
+  for (let i = 20; i >= 0; i -= 1) {
+    const date = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    // 共通 JAN: 日ごとに別の店・別の商品が同じキーで記録される
+    insert.run(`z:${date}`, 'JAN:0000000000000', 'YAHOO_JP', `store${i}_x`, i % 2 ? 'テスト耳栓' : 'テストモップ', `https://store.shopping.yahoo.co.jp/store${i}/x.html`, 1000 + i, 0, 1000 + i, 'IN_STOCK', 'search', date, `${date}T03:00:00.000Z`);
+    insert.run(`g:${date}`, 'JAN:4975479418907', 'YAHOO_JP', 'shop-g_item', 'テスト加湿器', 'https://store.shopping.yahoo.co.jp/shop-g/item.html', 3980, 0, 3980, 'IN_STOCK', 'search', date, `${date}T03:00:00.000Z`);
+    insert.run(`n:${date}`, 'RAKUTEN:shop-n:noname', 'RAKUTEN_JP', 'shop-n:noname', '', 'https://item.rakuten.co.jp/shop-n/noname/', 500, 0, 500, 'IN_STOCK', 'search', date, `${date}T03:00:00.000Z`);
+  }
+  const sign = async ({ d }) => `https://hoshilu.app/go?token=signed:${encodeURIComponent(d)}`;
+
+  const xmlResponse = await handleProductDetailRoutes(new Request('https://hoshilu.app/sitemap-products.xml'), env, {}, {});
+  const xml = await xmlResponse.text();
+  assert.doesNotMatch(xml, /JAN%3A0000000000000/u, '共通 JAN はサイトマップに入れない');
+  assert.doesNotMatch(xml, /shop-n/u, '商品名なしはサイトマップに入れない');
+  assert.match(xml, /<loc>https:\/\/hoshilu\.app\/product\?key=JAN%3A4975479418907<\/loc>/u);
+  assert.equal(xmlResponse.headers.get('x-product-count'), '1', '件数はサイトマップに出した URL 数');
+
+  const common = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=JAN:0000000000000'), env, {}, { sign });
+  assert.equal(common.status, 200);
+  assert.equal(common.headers.get('x-robots-tag'), 'noindex');
+  const commonHtml = await common.text();
+  assert.match(commonHtml, /<meta name="robots" content="noindex">/u);
+  assert.doesNotMatch(commonHtml, /application\/ld\+json|rel="canonical"|class="product-name"/u, '共通 JAN は Product JSON-LD・h1 を出さない');
+
+  const noname = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-n:noname'), env, {}, { sign });
+  assert.equal(noname.headers.get('x-robots-tag'), 'noindex', '商品名なしは noindex');
+
+  const good = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=JAN:4975479418907'), env, {}, { sign });
+  assert.equal(good.headers.get('x-robots-tag'), null);
+  const html = await good.text();
+  assert.match(html, /<meta name="robots" content="index,follow">/u);
+  assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/product\?key=JAN%3A4975479418907">/u);
+  assert.match(html, /<h1 class="product-name">テスト加湿器<\/h1>/u);
+  assert.match(html, /<svg class="product-chart"/u);
+  assert.match(html, /class="product-buy" href="https:\/\/hoshilu\.app\/go\?token=signed:/u);
+  assert.match(html, /data-key="JAN:4975479418907"/u);
+
+  // 開いたあとの /api/product は同じキーの商品だけを返す（SSR の商品と同一）
+  const yahooPayload = { hits: [
+    { name: 'テスト加湿器', url: 'https://store.shopping.yahoo.co.jp/shop-g/item.html', price: 3780, janCode: '4975479418907', code: 'shop-g_item', shipping: { code: 2 }, inStock: true },
+    { name: '別の商品', url: 'https://store.shopping.yahoo.co.jp/shop-h/other.html', price: 500, janCode: '4901234567894', code: 'shop-h_other', shipping: { code: 2 }, inStock: true }
+  ] };
+  const detail = await buildProductDetail({ ...env, YAHOO_SHOPPING_CLIENT_ID: 'id' }, 'JAN:4975479418907', { fetcher: async () => Response.json(yahooPayload), record: async () => ({}) });
+  assert.equal(detail.key, 'JAN:4975479418907');
+  assert.equal(detail.current.status, 'OK');
+  assert.equal(detail.product.name, 'テスト加湿器', 'SSR の h1 と同じ商品');
 });
