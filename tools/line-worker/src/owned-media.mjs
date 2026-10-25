@@ -294,7 +294,9 @@ export const MEDIA_GENRES = Object.freeze(RAKUTEN_RANKING_CATEGORIES.map((catego
   id: category.id, label: category.label, slug: category.id.replaceAll('_', '-')
 })));
 export const MEDIA_GENRE_PATHS = Object.freeze(MEDIA_GENRES.map((genre) => `/media/genre/${genre.slug}`));
-export const GENRE_RULES = Object.freeze({ items: 20, freshDays: 3, minIndexed: 4 });
+// freshDays: 化粧水・ハンディファンなど、BUZZ のテーマ（週 2 回入れ替え）に入る時だけ更新されるジャンルは 3〜4 日空くことがある。
+// 3 日で切ると索引させる・させないが行き来するので 7 日まで使い、ページにランキングの日付を出す（2026-10-26）。
+export const GENRE_RULES = Object.freeze({ items: 20, freshDays: 7, minIndexed: 4 });
 const genrePath = (genre) => `/media/genre/${genre.slug}`;
 
 export async function loadGenreRanking(env, genre, { now = new Date(), rules = GENRE_RULES } = {}) {
@@ -302,10 +304,13 @@ export async function loadGenreRanking(env, genre, { now = new Date(), rules = G
   if (!db || !genre) return [];
   const since = new Date(now.getTime() - rules.freshDays * 24 * 60 * 60 * 1000).toISOString();
   try {
-    const { results = [] } = await db.prepare(`SELECT payload_json FROM marketplace_ranking_cache
+    const { results = [] } = await db.prepare(`SELECT payload_json, updated_at FROM marketplace_ranking_cache
       WHERE marketplace_id = 'RAKUTEN_JP' AND category_id IN (?1, 'buzz_' || ?1) AND updated_at >= ?2
       ORDER BY updated_at DESC LIMIT 1`).bind(genre.id, since).all();
-    return results.length ? rankingItems(results[0].payload_json, { limit: rules.items }) : [];
+    if (!results.length) return [];
+    // ランキングを保存した日（JST）を各商品に付けて、ページに「M/D 時点のランキング」と出す
+    const rankedOn = jstDate(new Date(results[0].updated_at));
+    return rankingItems(results[0].payload_json, { limit: rules.items }).map((item) => ({ ...item, ranked_on: rankedOn }));
   } catch {
     return [];
   }
@@ -561,7 +566,7 @@ export function renderGenrePage({ genre, items = [], drops = null, now = new Dat
 <article><header class="media-hero media-hero-compact"><p class="media-issue"><span>GENRE × PRICE</span><time datetime="${today}">${issueLabel(now)} 号</time></p><h1>${esc(genre.label)}の値下がりと価格の動き</h1><p class="media-lead">楽天市場の${esc(genre.label)}ランキング上位の商品について、ホシルが毎日確認している価格の記録をまとめています。${esc(summary)}</p>
 <dl class="media-stats"><div><dt>値下がり</dt><dd>${droppedKeys.size}<small>件</small></dd></div><div><dt>掲載</dt><dd>${items.length}<small>商品</small></dd></div><div><dt>更新</dt><dd>毎日</dd></div></dl></header>
 ${genreDrops.length ? `<section class="media-section" id="drops">${sectionHead('PRICE DROPS', `${genre.label}で値下がりした商品`, 'ホシルの価格記録で、記録上の最高値から10%以上下がった商品です。')}<ol class="media-drops">${genreDrops.map(dropCard).join('')}</ol></section>` : ''}
-<section class="media-section" id="ranking">${sectionHead('RANKING × PRICE', `${genre.label}・ランキング上位の価格の推移`, 'バッジは、ホシルが記録した最初の日と比べた値動きです。商品を開くと、今の価格と在庫をその場でモールに確認して表示します。')}${ranking}</section>
+<section class="media-section" id="ranking">${sectionHead('RANKING × PRICE', `${genre.label}・ランキング上位の価格の推移`, `${items[0]?.ranked_on ? `${shortDate(items[0].ranked_on)}時点の楽天市場の公式ランキングです。` : ''}バッジは、ホシルが記録した最初の日と比べた値動きです。商品を開くと、今の価格と在庫をその場でモールに確認して表示します。`)}${ranking}</section>
 <section class="media-rules"><h2>このページの決まり</h2><p>載せている商品は楽天市場の公式ランキング（${GENRE_RULES.freshDays}日以内の保存）の上位だけで、並びはランキングの順位のままです。価格はホシルが確認した時点の商品価格（送料は含みません）で、ホシルでの価格記録は${PRICE_RECORD_STARTED}から始まっています。値下がりの条件は「${DROP_RULE_TEXT}」です。これから上がるか下がるかの予想はしていません。</p></section>
 ${SEARCH_CTA}
 ${genreNav(genre.id)}

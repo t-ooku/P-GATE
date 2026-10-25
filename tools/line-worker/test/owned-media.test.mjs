@@ -234,7 +234,8 @@ test('ジャンル別ページ: 3日以内の公式ランキングだけ（上�
     db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8'));
     const ins = db.prepare(`INSERT INTO marketplace_ranking_cache VALUES ('RAKUTEN_JP', ?, 'REALTIME', ?, '2026-10-14T00:00:00Z', ?)`);
     ins.run('wireless_earphones', JSON.stringify(ranking(25)), '2026-10-14T01:00:00Z');
-    ins.run('mobile_battery', JSON.stringify(ranking(5)), '2026-10-01T00:00:00Z'); // 古い
+    ins.run('mobile_battery', JSON.stringify(ranking(5)), '2026-10-01T00:00:00Z'); // 古い（7日より前）
+    ins.run('face_lotion', JSON.stringify(ranking(5)), '2026-10-09T00:00:00Z'); // 5日前（テーマ入れ替えで空く日数）は使う
     for (const i of [0, 1, 2, 3]) {
       observe(db, { id: `e:${i}`, date: '2026-10-10', price: 4000 }); observe(db, { id: `e:${i}`, date: '2026-10-13', price: i === 3 ? 4500 : 3500 });
     }
@@ -243,6 +244,10 @@ test('ジャンル別ページ: 3日以内の公式ランキングだけ（上�
   const items = await loadGenreRanking(env, genre, { now: NOW });
   assert.equal(items.length, GENRE_RULES.items);
   assert.deepEqual(await loadGenreRanking(env, MEDIA_GENRES.find((g) => g.id === 'mobile_battery'), { now: NOW }), []);
+  const fiveDaysOld = await loadGenreRanking(env, MEDIA_GENRES.find((g) => g.id === 'face_lotion'), { now: NOW });
+  assert.equal(fiveDaysOld.length, 5);
+  assert.equal(fiveDaysOld[0].ranked_on, '2026-10-09');
+  assert.equal(items[0].ranked_on, '2026-10-14');
 
   const response = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/wireless-earphones'), env, { now: NOW, cache: null });
   assert.equal(response.status, 200);
@@ -255,6 +260,8 @@ test('ジャンル別ページ: 3日以内の公式ランキングだけ（上�
   assert.match(html, /<dt>値下がり<\/dt><dd>3<small>件<\/small>/);
   assert.match(html, /広告（アフィリエイト）を含みます/);
   assert.match(html, /<span aria-current="page">ワイヤレスイヤホン<\/span>/);
+  assert.match(html, /10\/14時点の楽天市場の公式ランキングです。/);
+  assert.match(html, /楽天市場の公式ランキング（7日以内の保存）/);
   assert.match(html, /<a href="\/media\/genre\/mobile-battery">モバイルバッテリー<\/a>/);
   assert.doesNotMatch(html, /最安|今が買い時/);
 
