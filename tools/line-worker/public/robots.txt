@@ -7,3 +7,5 @@ Disallow: /shop/*?
 Sitemap: https://hoshilu.app/sitemap.xml
 # 2026-10-25: 価格の記録が 14 日以上ある商品ページ（HOSHILU が組み立てる）
 Sitemap: https://hoshilu.app/sitemap-products.xml
+# 2026-10-26: 買い物ノートのジャンル別ページのうち、今日 index になるページだけ（掲載の少ない日は載せない）
+Sitemap: https://hoshilu.app/sitemap-genres.xml

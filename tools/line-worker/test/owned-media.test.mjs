@@ -216,15 +216,17 @@ test('ジャンル別の棚: 3日以内の公式ランキング保存から、�
 });
 
 // 2026-10-24 大隆さん「閲覧数と購入サイト送客を100倍に」→「検索記事を大量に作る」: ジャンル別ページ。
-import { GENRE_RULES, MEDIA_GENRES, MEDIA_GENRE_PATHS, loadGenreRanking, renderGenrePage } from '../src/owned-media.mjs';
+import { GENRE_RULES, GENRE_SITEMAP_PATH, MEDIA_GENRES, MEDIA_GENRE_PATHS, genreIndexable, loadGenreRanking, renderGenrePage } from '../src/owned-media.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 
-test('ジャンル別ページ: 楽天の公式ランキングのジャンルごとに 1 ページ。サイトマップ・正規URLに載る', () => {
+test('ジャンル別ページ: 楽天の公式ランキングのジャンルごとに 1 ページ。正規URLに載り、静的サイトマップには載せない（ジャンル用サイトマップへ）', () => {
   assert.equal(MEDIA_GENRES.length, RAKUTEN_RANKING_CATEGORIES.length);
   assert.ok(MEDIA_GENRE_PATHS.includes('/media/genre/wireless-earphones'));
   for (const path of MEDIA_GENRE_PATHS) assert.match(path, /^\/media\/genre\/[a-z0-9-]+$/);
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
-  for (const path of MEDIA_GENRE_PATHS) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
+  // 2026-10-26: 掲載の少ない日に noindex になるので、無条件に並べる静的サイトマップには置かない
+  assert.doesNotMatch(sitemap, /\/media\/genre\//);
+  assert.match(readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8'), /^Sitemap: https:\/\/hoshilu\.app\/sitemap-genres\.xml$/m);
   assert.match(readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8'), /\.\.\.MEDIA_PATHS, \.\.\.MEDIA_GENRE_PATHS/);
 });
 
@@ -269,6 +271,59 @@ test('ジャンル別ページ: 3日以内の公式ランキングだけ（上�
   assert.match(thin, /content="noindex,follow"/);
   assert.match(thin, /公式ランキングの保存が古いため/);
   assert.equal(await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/unknown'), env, { now: NOW, cache: null }), null);
+});
+
+// 2026-10-26 Codex SEO 監査: noindex のジャンルページをサイトマップに載せない。判定はページの robots と同じ。
+test('ジャンル用サイトマップ: index になるジャンル（記録4件以上）だけ。掲載0件・4件未満の noindex ページは載せない', async () => {
+  const ranking = (prefix, n) => Array.from({ length: n }, (_, i) => ({ record_key: `RAKUTEN:${prefix}:${i}`, display_name: `${prefix} ${i}`, image_url: `https://thumbnail.image.rakuten.co.jp/${prefix}${i}.jpg?_ex=128x128`, rank: i + 1, offers: [{ price: 3000 + i }] }));
+  const env = envWith((db) => {
+    db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8'));
+    const ins = db.prepare(`INSERT INTO marketplace_ranking_cache VALUES ('RAKUTEN_JP', ?, 'REALTIME', ?, '2026-10-14T00:00:00Z', ?)`);
+    ins.run('wireless_earphones', JSON.stringify(ranking('e', 25)), '2026-10-14T01:00:00Z'); // 記録4件 → index
+    ins.run('kitchen', JSON.stringify(ranking('k', 10)), '2026-10-14T01:00:00Z'); // 記録3件 → noindex
+    ins.run('mobile_battery', JSON.stringify(ranking('m', 10)), '2026-10-01T00:00:00Z'); // 古い（掲載0件）→ noindex
+    ins.run('face_lotion', JSON.stringify(ranking('f', 10)), '2026-10-13T00:00:00Z'); // 掲載10件・記録0件 → noindex
+    for (const i of [0, 1, 2, 3]) {
+      observe(db, { id: `e:${i}`, date: '2026-10-10', price: 4000 }); observe(db, { id: `e:${i}`, date: '2026-10-13', price: 3500 });
+      observe(db, { id: `m:${i}`, date: '2026-10-10', price: 4000 }); observe(db, { id: `m:${i}`, date: '2026-10-13', price: 3500 });
+    }
+    for (const i of [0, 1, 2]) { observe(db, { id: `k:${i}`, date: '2026-10-10', price: 2000 }); observe(db, { id: `k:${i}`, date: '2026-10-13', price: 1900 }); }
+  });
+  const response = await handleOwnedMediaRoutes(new Request(`https://hoshilu.app${GENRE_SITEMAP_PATH}`), env, { now: NOW, cache: null });
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /application\/xml/);
+  const xml = await response.text();
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(locs, ['https://hoshilu.app/media/genre/wireless-earphones']);
+  assert.equal(response.headers.get('x-genre-count'), '1');
+  assert.match(xml, /<lastmod>2026-10-14<\/lastmod>/);
+  // ページの robots と同じ判定になっている（載せたページは index、載せないページは noindex）
+  for (const genre of MEDIA_GENRES) {
+    const html = await (await handleOwnedMediaRoutes(new Request(`https://hoshilu.app/media/genre/${genre.slug}`), env, { now: NOW, cache: null })).text();
+    const listed = locs.includes(`https://hoshilu.app/media/genre/${genre.slug}`);
+    assert.equal(/<meta name="robots" content="index,follow/.test(html), listed, genre.slug);
+    if (!listed) assert.match(html, /content="noindex,follow"/, genre.slug);
+  }
+  const head = await handleOwnedMediaRoutes(new Request(`https://hoshilu.app${GENRE_SITEMAP_PATH}`, { method: 'HEAD' }), env, { now: NOW, cache: null });
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
+});
+
+test('ジャンル用サイトマップ: 価格の記録を読めない時は空のサイトマップを返さず 503（キャッシュしない）', async () => {
+  const response = await handleOwnedMediaRoutes(new Request(`https://hoshilu.app${GENRE_SITEMAP_PATH}`), {}, { now: NOW, cache: null });
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+});
+
+test('ジャンルの index 判定: 値下がり欄とランキングの重複は1つと数え、4件ちょうどで index', () => {
+  const genre = MEDIA_GENRES.find((g) => g.id === 'kitchen');
+  const history = [{ date: '2026-10-10', price: 2000 }, { date: '2026-10-13', price: 1500 }];
+  const items = ['a', 'b', 'c'].map((id) => ({ record_key: `RAKUTEN:${id}`, history }));
+  assert.equal(genreIndexable({ genre, items, drops: [] }), false);
+  assert.equal(genreIndexable({ genre, items, drops: [{ record_key: 'RAKUTEN:a', category_id: 'kitchen' }] }), false);
+  assert.equal(genreIndexable({ genre, items, drops: [{ record_key: 'RAKUTEN:z', category_id: 'food' }] }), false);
+  assert.equal(genreIndexable({ genre, items, drops: [{ record_key: 'RAKUTEN:d', category_id: 'kitchen' }] }), true);
+  assert.equal(genreIndexable({ genre, items: [], drops: null }), false);
 });
 
 test('ジャンル別ページ: 値下がり欄にはそのジャンルの商品だけ。ランキングにも出る商品は1つと数える', () => {

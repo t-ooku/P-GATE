@@ -576,7 +576,7 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 180);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 158); // 2026-10-26 ジャンル別 22 ページは /sitemap-genres.xml（index の日だけ）へ移した
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });

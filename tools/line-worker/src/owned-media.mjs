@@ -544,6 +544,15 @@ function genreNav(current = '') {
     : `<a href="${genrePath(genre)}">${esc(genre.label)}</a>`)).join('')}</nav></section>`;
 }
 
+// ジャンルページを索引させるか（価格を記録できた商品が minIndexed 以上）。ページの robots とジャンルのサイトマップは
+// この 1 つの判定だけを使う（noindex のページをサイトマップに載せない。2026-10-26 Codex の SEO 監査）。
+export function genreRecordedCount({ genre, items = [], drops = null } = {}) {
+  const genreDrops = Array.isArray(drops) ? drops.filter((row) => row.category_id === genre?.id) : [];
+  const changes = items.map((item) => priceChange(item.history)).filter(Boolean);
+  return changes.length + genreDrops.filter((row) => !items.some((item) => item.record_key === row.record_key)).length;
+}
+export const genreIndexable = (input) => genreRecordedCount(input) >= GENRE_RULES.minIndexed;
+
 export function renderGenrePage({ genre, items = [], drops = null, now = new Date() } = {}) {
   const canonical = `${ORIGIN}${genrePath(genre)}`;
   const today = jstDate(now);
@@ -554,8 +563,7 @@ export function renderGenrePage({ genre, items = [], drops = null, now = new Dat
   // 値下がり欄とランキングの両方に出る商品は 1 つと数える
   const droppedKeys = new Set([...genreDrops.map((row) => row.record_key),
     ...items.filter((item) => (priceChange(item.history)?.diff || 0) < 0).map((item) => item.record_key)]);
-  const recorded = changes.length + genreDrops.filter((row) => !items.some((item) => item.record_key === row.record_key)).length;
-  const robots = recorded >= GENRE_RULES.minIndexed ? 'index,follow,max-image-preview:large,max-snippet:-1' : 'noindex,follow';
+  const robots = genreIndexable({ genre, items, drops }) ? 'index,follow,max-image-preview:large,max-snippet:-1' : 'noindex,follow';
   const summary = changes.length
     ? `ランキング上位${items.length}商品のうち、価格を2日以上記録できた${changes.length}商品では、記録の最初の日と比べて${down}商品が値下がり、${up}商品が値上がり、${changes.length - down - up}商品が変わらずでした（${shortDate(today)}時点）。`
     : `ランキング上位の商品の価格は、記録を始めたところです。`;
@@ -627,11 +635,51 @@ export async function handleTopDropsApi(request, env, { now = new Date(), cache 
   return response;
 }
 
+// GET /sitemap-genres.xml: 今日 index になるジャンルページだけ（判定はページと同じ genreIndexable）。D1 は読むだけ。30 分キャッシュ。
+// 静的な /sitemap.xml にはジャンルページを載せない（掲載0件・4件未満の日に noindex と矛盾するため）。
+export const GENRE_SITEMAP_PATH = '/sitemap-genres.xml';
+export async function loadIndexableGenres(env, { now = new Date() } = {}) {
+  const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
+  if (drops === null) return null;
+  const rankings = await Promise.all(MEDIA_GENRES.map(async (genre) => ({
+    id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) })));
+  // 価格履歴は 1 回 90 商品まで（loadPriceHistories）。1 ジャンル最大 20 商品なので 4 ジャンルずつ読む（D1 の読取回数を抑える）。
+  const shelves = [];
+  for (let start = 0; start < rankings.length; start += 4) shelves.push(...await withShelfHistories(env, rankings.slice(start, start + 4), { now }));
+  return MEDIA_GENRES.filter((genre, index) => genreIndexable({ genre, items: shelves[index]?.items || [], drops }));
+}
+
+export async function renderGenreSitemap(env, { now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
+  const cacheKey = new Request(`${ORIGIN}${GENRE_SITEMAP_PATH}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+    } catch {}
+  }
+  const genres = await loadIndexableGenres(env, { now });
+  // 価格の記録を読めなかった時は空のサイトマップを返さない（全ページを外したと受け取られないように）。
+  if (genres === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+  const lastmod = jstDate(now);
+  const urls = genres.map((genre) => `<url><loc>${ORIGIN}${genrePath(genre)}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq></url>`).join('\n');
+  const response = new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`, {
+    headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-genre-count': String(genres.length) }
+  });
+  if (cache) {
+    try { await cache.put(cacheKey, response.clone()); } catch {}
+  }
+  return response;
+}
+
 // GET /media・/media/price-drops・/media/genre/<slug>。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
 export async function handleOwnedMediaRoutes(request, env, { headers = {}, now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
   if (!['GET', 'HEAD'].includes(request.method)) return null;
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/u, '') || '/';
+  if (path === GENRE_SITEMAP_PATH) {
+    const sitemap = await renderGenreSitemap(env, { now, cache });
+    return request.method === 'HEAD' ? new Response(null, sitemap) : sitemap;
+  }
   const genre = MEDIA_GENRES.find((item) => genrePath(item) === path);
   if (!MEDIA_PATHS.includes(path) && !genre) return null;
   const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
