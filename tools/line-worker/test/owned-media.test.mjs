@@ -123,7 +123,7 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=9/);
+  assert.match(html, /owned-media\.css\?v=10/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);
@@ -344,5 +344,63 @@ test('ジャンル別ページ: 値下がり欄にはそのジャンルの商品
 test('トップと値下がりページから、すべてのジャンル別ページへ入れる', () => {
   for (const html of [renderMediaTop({ drops: [], now: NOW }), renderPriceDrops({ drops: [], now: NOW })]) {
     for (const path of MEDIA_GENRE_PATHS) assert.ok(html.includes(`href="${path}"`), path);
+  }
+});
+
+// 2026-10-26 大隆さん「全部やって」: 説明文に数字・使う人・場面から探す入口。
+import { MEDIA_SCENES, MEDIA_SCENE_PATHS, maxDropPercent, renderScenePage, sceneIndexable, sceneItems } from '../src/owned-media.mjs';
+
+test('ジャンル別ページの説明文に、その日の値下がり件数と最大の下がり幅を入れる', () => {
+  const genre = MEDIA_GENRES.find((g) => g.id === 'kitchen');
+  const items = [
+    { record_key: 'RAKUTEN:a', product_name: 'フライパン', image_url: 'https://x/a.jpg', rank: 1, history: [{ date: '2026-10-10', price: 2000 }, { date: '2026-10-13', price: 1500 }] },
+    { record_key: 'RAKUTEN:b', product_name: '鍋', image_url: 'https://x/b.jpg', rank: 2, history: [{ date: '2026-10-10', price: 1000 }, { date: '2026-10-13', price: 1100 }] }
+  ];
+  assert.equal(maxDropPercent({ items }), 25);
+  assert.equal(maxDropPercent({ items, drops: [{ drop_rate: 31 }] }), 31);
+  const html = renderGenrePage({ genre, items, drops: [], now: NOW });
+  assert.match(html, /<meta name="description" content="楽天市場のキッチン用品・食器・調理器具ランキング上位2商品の価格を、ホシルが毎日記録。10\/14時点で1商品が値下がり（最大-25%）。/);
+  const quiet = renderGenrePage({ genre, items: [items[1]], drops: [], now: NOW });
+  assert.match(quiet, /10\/14時点で大きな値下がりはありません。/);
+});
+
+test('使う人・場面のページ: 商品名の言葉で22ジャンルのランキングから集め、下がり幅の大きい順。少ない日は索引させない', () => {
+  assert.ok(MEDIA_SCENE_PATHS.includes('/media/scene/hitorigurashi'));
+  for (const path of MEDIA_SCENE_PATHS) assert.match(path, /^\/media\/scene\/[a-z0-9-]+$/);
+  const scene = MEDIA_SCENES.find((s) => s.slug === 'hitorigurashi');
+  const h = (from, to) => [{ date: '2026-10-10', price: from }, { date: '2026-10-13', price: to }];
+  const shelves = [
+    { id: 'kitchen', label: 'キッチン用品・食器・調理器具', items: [
+      { record_key: 'RAKUTEN:k1', product_name: '一人暮らし 炊飯器 3合', image_url: 'https://x/1.jpg', rank: 1, history: h(5000, 4500) },
+      { record_key: 'RAKUTEN:k2', product_name: '大家族 鍋', image_url: 'https://x/2.jpg', rank: 2, history: h(3000, 2000) }] },
+    { id: 'interior', label: 'インテリア・寝具・収納', items: [
+      { record_key: 'RAKUTEN:i1', product_name: 'コンパクト 収納ラック', image_url: 'https://x/3.jpg', rank: 3, history: h(4000, 3000) },
+      { record_key: 'RAKUTEN:k1', product_name: '一人暮らし 炊飯器 3合', image_url: 'https://x/1.jpg', rank: 9, history: h(5000, 4500) }] }
+  ];
+  const items = sceneItems(scene, shelves);
+  assert.deepEqual(items.map((i) => i.record_key), ['RAKUTEN:i1', 'RAKUTEN:k1'], '言葉の合う物だけ・同じ商品は1回・下がり幅の大きい順');
+  assert.equal(items[0].genre_label, 'インテリア・寝具・収納');
+  assert.equal(sceneIndexable(items), false);
+  const html = renderScenePage({ scene, items, now: NOW });
+  assert.match(html, /<h1>一人暮らし向けの売れ筋と価格の動き<\/h1>/);
+  assert.match(html, /content="noindex,follow"/);
+  assert.match(html, /商品名の言葉だけで選んでいる/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/media\/scene\/hitorigurashi">/);
+  assert.match(html, /広告（アフィリエイト）を含みます/);
+  assert.doesNotMatch(html, /最安|今が買い時/);
+  const many = Array.from({ length: 6 }, (_, i) => ({ record_key: `RAKUTEN:m${i}`, product_name: `一人用 ${i}`, image_url: 'https://x/m.jpg', rank: i + 1, history: h(1000, 900) }));
+  assert.equal(sceneIndexable(sceneItems(scene, [{ id: 'kitchen', label: 'キッチン', items: many }])), true);
+});
+
+test('使う人・場面のページ: ルートと正規URL。トップ・値下がり・ジャンルの各ページから入れる', async () => {
+  const env = envWith((db) => db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8')));
+  const response = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/scene/gift'), env, { now: NOW, cache: null });
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /<h1>プレゼント・ギフト向けの売れ筋と価格の動き<\/h1>/);
+  assert.equal(await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/scene/unknown'), env, { now: NOW, cache: null }), null);
+  assert.match(readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8'), /\.\.\.MEDIA_GENRE_PATHS, \.\.\.MEDIA_SCENE_PATHS/);
+  const genre = MEDIA_GENRES[0];
+  for (const html of [renderMediaTop({ drops: [], now: NOW }), renderPriceDrops({ drops: [], now: NOW }), renderGenrePage({ genre, items: [], drops: [], now: NOW })]) {
+    for (const path of MEDIA_SCENE_PATHS) assert.ok(html.includes(`href="${path}"`), path);
   }
 });

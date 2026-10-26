@@ -25,7 +25,7 @@ const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
 // （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
-export const MEDIA_TEMPLATE_VERSION = '9';
+export const MEDIA_TEMPLATE_VERSION = '10';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -486,6 +486,7 @@ ${shelvesSection(shelves)}
 ${SEARCH_CTA}
 ${popular.length ? `<section class="media-section" id="popular">${sectionHead('MOST READ', 'よく読まれている記事', '直近30日によく読まれた記事です。')}${articleList(popular)}</section>` : ''}
 ${genreNav()}
+${sceneNav()}
 ${sections}
 <p class="bottom-cta"><a href="/ja/guides">買い物ガイドをすべて見る</a></p>
 ${AD_NOTE}</article>`;
@@ -520,6 +521,7 @@ export function renderPriceDrops({ drops = null, shelves = [], now = new Date() 
 ${shelvesSection(shelves)}
 ${SEARCH_CTA}
 ${genreNav()}
+${sceneNav()}
 ${AD_NOTE}</article>`;
   return shell({
     title: '今週値下がりした商品（ホシルの価格記録より）',
@@ -553,6 +555,25 @@ export function genreRecordedCount({ genre, items = [], drops = null } = {}) {
 }
 export const genreIndexable = (input) => genreRecordedCount(input) >= GENRE_RULES.minIndexed;
 
+// 2026-10-26 大隆さん「全部やって」（参考: 一覧の時点で数字が見える説明文）: 検索結果に出る説明文に、その日の数字を入れる。
+// 最大の下がり幅は、値下がり欄の下がり幅と、ランキング商品の記録の最初の日からの下がり幅のうち大きい方（記録だけで決める）。
+export function maxDropPercent({ items = [], drops = [] } = {}) {
+  const rates = [...drops.map((row) => Number(row.drop_rate) || 0), ...items.map((item) => {
+    const points = (item.history || []).filter((point) => point.price > 0);
+    if (points.length < 2) return 0;
+    const first = points[0].price;
+    const last = points[points.length - 1].price;
+    return first > last ? Math.round((1 - last / first) * 100) : 0;
+  })];
+  return Math.max(0, ...rates);
+}
+function genreDescription({ genre, items, genreDrops, droppedCount, now }) {
+  const head = `楽天市場の${genre.label}ランキング上位${items.length ? `${items.length}商品` : ''}の価格を、ホシルが毎日記録。`;
+  const max = maxDropPercent({ items, drops: genreDrops });
+  const numbers = droppedCount ? `${shortDate(jstDate(now))}時点で${droppedCount}商品が値下がり（最大-${max}%）。` : `${shortDate(jstDate(now))}時点で大きな値下がりはありません。`;
+  return `${head}${numbers}ここ2週間の価格の推移を毎日更新しています。`;
+}
+
 export function renderGenrePage({ genre, items = [], drops = null, now = new Date() } = {}) {
   const canonical = `${ORIGIN}${genrePath(genre)}`;
   const today = jstDate(now);
@@ -578,11 +599,12 @@ ${genreDrops.length ? `<section class="media-section" id="drops">${sectionHead('
 <section class="media-rules"><h2>このページの決まり</h2><p>載せている商品は楽天市場の公式ランキング（${GENRE_RULES.freshDays}日以内の保存）の上位だけで、並びはランキングの順位のままです。価格はホシルが確認した時点の商品価格（送料は含みません）で、ホシルでの価格記録は${PRICE_RECORD_STARTED}から始まっています。値下がりの条件は「${DROP_RULE_TEXT}」です。これから上がるか下がるかの予想はしていません。</p></section>
 ${SEARCH_CTA}
 ${genreNav(genre.id)}
+${sceneNav()}
 <p class="media-more"><a href="/media/price-drops">すべてのジャンルの値下がりを見る<span aria-hidden="true">→</span></a></p>
 ${AD_NOTE}</article>`;
   return shell({
     title: `${genre.label}の値下がり・価格の動き｜楽天ランキング上位を毎日記録`,
-    description: `楽天市場の${genre.label}ランキング上位の商品の価格を、ホシルが毎日記録。値下がりした商品と、ここ2週間の価格の推移をまとめています（毎日自動で更新）。`,
+    description: genreDescription({ genre, items, genreDrops, droppedCount: droppedKeys.size, now }),
     canonical, robots, articleId: `media-genre-${genre.slug}`.slice(0, 64), intent: 'owned_media_genre', body,
     structured: { '@context': 'https://schema.org', '@graph': [
       { '@type': 'ItemList', name: `${genre.label}の値下がりと価格の動き`, url: canonical, numberOfItems: items.length,
@@ -591,6 +613,95 @@ ${AD_NOTE}</article>`;
         { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
         { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: `${ORIGIN}/media` },
         { '@type': 'ListItem', position: 3, name: genre.label, item: canonical }] }
+    ] }
+  });
+}
+
+// 2026-10-26 大隆さん「全部やって」（参考: 補助金サイトの「業種から探す」入口）: 使う人・場面から探す入口（/media/scene/<slug>）。
+// 22 ジャンルの公式ランキング上位（7 日以内）から、商品名にその場面の言葉がある商品だけを集め、価格の記録の折れ線を付ける。
+// 選び方は商品名の言葉だけ（ページに明記）。利用者の検索は使わない。記録の付いた商品が少ない日は索引させない。
+export const MEDIA_SCENES = Object.freeze([
+  { slug: 'hitorigurashi', label: '一人暮らし', words: '一人暮らし・コンパクト・省スペース', pattern: /一人暮らし|ひとり暮らし|1人暮らし|一人用|1人用|コンパクト|省スペース|ミニサイズ/u },
+  { slug: 'kids', label: '子ども・ベビー', words: 'キッズ・子供・ベビー・小学生', pattern: /キッズ|子供|子ども|こども|ベビー|赤ちゃん|小学生|幼児|ジュニア/u },
+  { slug: 'gift', label: 'プレゼント・ギフト', words: 'ギフト・プレゼント・お祝い・ラッピング', pattern: /ギフト|プレゼント|贈り物|贈答|お祝い|ラッピング|誕生日|母の日|父の日|クリスマス/u },
+  { slug: 'commute', label: '通勤・通学・仕事', words: '通勤・通学・オフィス・ビジネス', pattern: /通勤|通学|オフィス|ビジネス|仕事用|スクール/u },
+  { slug: 'travel', label: '旅行・持ち運び', words: '旅行・トラベル・機内・持ち運び・ポータブル', pattern: /旅行|トラベル|機内|持ち運び|携帯用|ポータブル|アウトドア/u },
+  { slug: 'korean', label: '韓国系', words: '韓国・オルチャン', pattern: /韓国|オルチャン/u },
+  { slug: 'big-size', label: '大きいサイズ・ゆったり', words: '大きいサイズ・ゆったり・オーバーサイズ', pattern: /大きいサイズ|ゆったり|オーバーサイズ|ビッグシルエット/u }
+].map((scene) => Object.freeze(scene)));
+export const MEDIA_SCENE_PATHS = Object.freeze(MEDIA_SCENES.map((scene) => `/media/scene/${scene.slug}`));
+export const SCENE_RULES = Object.freeze({ items: 40, minIndexed: 6 });
+const scenePath = (scene) => `/media/scene/${scene.slug}`;
+
+// 22 ジャンルの公式ランキング（7 日以内）に価格履歴を付けて返す。ジャンルのサイトマップと場面のページで使う。
+export async function loadAllGenreRankings(env, { now = new Date() } = {}) {
+  const rankings = await Promise.all(MEDIA_GENRES.map(async (genre) => ({
+    id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) })));
+  // 価格履歴は 1 回 90 商品まで（loadPriceHistories）。1 ジャンル最大 20 商品なので 4 ジャンルずつ読む（D1 の読取回数を抑える）。
+  const shelves = [];
+  for (let start = 0; start < rankings.length; start += 4) shelves.push(...await withShelfHistories(env, rankings.slice(start, start + 4), { now }));
+  return shelves;
+}
+
+// 場面に合う商品（商品名の言葉で選ぶ）。同じ商品は 1 回。下がり幅の大きい順、記録の無い物は後ろ。
+export function sceneItems(scene, shelves = [], { limit = SCENE_RULES.items } = {}) {
+  const seen = new Set();
+  const picked = [];
+  for (const shelf of shelves) {
+    for (const item of shelf.items || []) {
+      if (seen.has(item.record_key) || !scene.pattern.test(item.product_name)) continue;
+      seen.add(item.record_key);
+      picked.push({ ...item, genre_label: shelf.label });
+    }
+  }
+  const ratio = (item) => {
+    const change = priceChange(item.history);
+    const first = (item.history || []).find((point) => point.price > 0)?.price;
+    return change && first ? change.diff / first : 1;
+  };
+  return picked.sort((a, b) => ratio(a) - ratio(b) || a.rank - b.rank).slice(0, limit);
+}
+export const sceneIndexable = (items = []) => items.filter((item) => priceChange(item.history)).length >= SCENE_RULES.minIndexed;
+
+function sceneNav(current = '') {
+  return `<section class="media-section" id="scenes">${sectionHead('BY SCENE', '使う人・場面から探す', '一人暮らし、子ども、プレゼントなど、使う人や場面の言葉から、売れている商品と価格の動きを探せます。')}
+<nav class="media-shelf-nav" aria-label="使う人・場面のページ">${MEDIA_SCENES.map((scene) => (scene.slug === current
+    ? `<span aria-current="page">${esc(scene.label)}</span>`
+    : `<a href="${scenePath(scene)}">${esc(scene.label)}</a>`)).join('')}</nav></section>`;
+}
+
+export function renderScenePage({ scene, items = [], now = new Date() } = {}) {
+  const canonical = `${ORIGIN}${scenePath(scene)}`;
+  const today = jstDate(now);
+  const changes = items.map((item) => priceChange(item.history)).filter(Boolean);
+  const down = changes.filter((change) => change.diff < 0).length;
+  const max = maxDropPercent({ items });
+  const robots = sceneIndexable(items) ? 'index,follow,max-image-preview:large,max-snippet:-1' : 'noindex,follow';
+  const genres = [...new Set(items.map((item) => item.genre_label))];
+  const summary = items.length
+    ? `楽天市場の公式ランキング上位から、商品名に「${scene.words}」などの言葉がある${items.length}商品を集めました（${genres.slice(0, 4).join('・')}${genres.length > 4 ? 'など' : ''}）。${changes.length ? `価格を2日以上記録できた${changes.length}商品のうち、${down}商品が記録の最初の日より値下がりしています（${shortDate(today)}時点）。` : ''}`
+    : `今日は、公式ランキング上位に「${scene.words}」の言葉がある商品がありませんでした。`;
+  const list = items.length ? `<ol class="media-tiles">${items.map(shelfTile).join('')}</ol>` : '';
+  const body = `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><a href="/media">${MEDIA_NAME}</a><span aria-hidden="true">›</span><span>${esc(scene.label)}</span></nav>
+<article><header class="media-hero media-hero-compact"><p class="media-issue"><span>SCENE × PRICE</span><time datetime="${today}">${issueLabel(now)} 号</time></p><h1>${esc(scene.label)}向けの売れ筋と価格の動き</h1><p class="media-lead">${esc(summary)}</p>
+<dl class="media-stats"><div><dt>値下がり</dt><dd>${down}<small>件</small></dd></div><div><dt>掲載</dt><dd>${items.length}<small>商品</small></dd></div><div><dt>更新</dt><dd>毎日</dd></div></dl></header>
+${list ? `<section class="media-section" id="ranking">${sectionHead('RANKING × PRICE', `${scene.label}向けの商品と価格の推移`, '下がり幅の大きい順に並べています。バッジは、ホシルが記録した最初の日と比べた値動きです。商品を開くと、今の価格と在庫をその場でモールに確認して表示します。')}${list}</section>` : `<p class="media-empty">${esc(summary)}</p>`}
+<section class="media-rules"><h2>このページの決まり</h2><p>載せている商品は、楽天市場の公式ランキング（${GENRE_RULES.freshDays}日以内の保存、22ジャンル）の上位のうち、商品名に「${esc(scene.words)}」などの言葉がある物だけです。商品名の言葉だけで選んでいるので、場面に合うかは商品ページで確かめてください。価格はホシルが確認した時点の商品価格（送料は含みません）で、価格記録は${PRICE_RECORD_STARTED}から始まっています。これから上がるか下がるかの予想はしていません。</p></section>
+${SEARCH_CTA}
+${sceneNav(scene.slug)}
+${genreNav()}
+${AD_NOTE}</article>`;
+  return shell({
+    title: `${scene.label}向けの売れ筋と値下がり｜楽天ランキングの価格を毎日記録`,
+    description: `楽天市場の公式ランキング上位から、${scene.label}向けの商品${items.length}点を毎日まとめています。${down ? `${shortDate(today)}時点で${down}商品が値下がり（最大-${max}%）。` : ''}価格の推移はホシルの記録です。`,
+    canonical, robots, articleId: `media-scene-${scene.slug}`.slice(0, 64), intent: 'owned_media_scene', body,
+    structured: { '@context': 'https://schema.org', '@graph': [
+      { '@type': 'ItemList', name: `${scene.label}向けの売れ筋と価格の動き`, url: canonical, numberOfItems: items.length,
+        itemListElement: items.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.product_name, url: `${ORIGIN}${productLink(item)}` })) },
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: MEDIA_NAME, item: `${ORIGIN}/media` },
+        { '@type': 'ListItem', position: 3, name: scene.label, item: canonical }] }
     ] }
   });
 }
@@ -641,12 +752,11 @@ export const GENRE_SITEMAP_PATH = '/sitemap-genres.xml';
 export async function loadIndexableGenres(env, { now = new Date() } = {}) {
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
   if (drops === null) return null;
-  const rankings = await Promise.all(MEDIA_GENRES.map(async (genre) => ({
-    id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) })));
-  // 価格履歴は 1 回 90 商品まで（loadPriceHistories）。1 ジャンル最大 20 商品なので 4 ジャンルずつ読む（D1 の読取回数を抑える）。
-  const shelves = [];
-  for (let start = 0; start < rankings.length; start += 4) shelves.push(...await withShelfHistories(env, rankings.slice(start, start + 4), { now }));
-  return MEDIA_GENRES.filter((genre, index) => genreIndexable({ genre, items: shelves[index]?.items || [], drops }));
+  const shelves = await loadAllGenreRankings(env, { now });
+  const genres = MEDIA_GENRES.filter((genre, index) => genreIndexable({ genre, items: shelves[index]?.items || [], drops }));
+  // 2026-10-26: 使う人・場面のページも、今日 index になる物だけ同じサイトマップに載せる
+  genres.scenes = MEDIA_SCENES.filter((scene) => sceneIndexable(sceneItems(scene, shelves)));
+  return genres;
 }
 
 export async function renderGenreSitemap(env, { now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
@@ -661,9 +771,10 @@ export async function renderGenreSitemap(env, { now = new Date(), cache = global
   // 価格の記録を読めなかった時は空のサイトマップを返さない（全ページを外したと受け取られないように）。
   if (genres === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
   const lastmod = jstDate(now);
-  const urls = genres.map((genre) => `<url><loc>${ORIGIN}${genrePath(genre)}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq></url>`).join('\n');
+  const urls = [...genres.map(genrePath), ...(genres.scenes || []).map(scenePath)]
+    .map((path) => `<url><loc>${ORIGIN}${path}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq></url>`).join('\n');
   const response = new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`, {
-    headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-genre-count': String(genres.length) }
+    headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-genre-count': String(genres.length), 'x-scene-count': String((genres.scenes || []).length) }
   });
   if (cache) {
     try { await cache.put(cacheKey, response.clone()); } catch {}
@@ -671,7 +782,7 @@ export async function renderGenreSitemap(env, { now = new Date(), cache = global
   return response;
 }
 
-// GET /media・/media/price-drops・/media/genre/<slug>。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
+// GET /media・/media/price-drops・/media/genre/<slug>・/media/scene/<slug>。D1 を毎回読まないよう 30 分キャッシュする（中身は毎日変わる程度）。
 export async function handleOwnedMediaRoutes(request, env, { headers = {}, now = new Date(), cache = globalThis.caches?.default ?? null } = {}) {
   if (!['GET', 'HEAD'].includes(request.method)) return null;
   const url = new URL(request.url);
@@ -681,13 +792,24 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
     return request.method === 'HEAD' ? new Response(null, sitemap) : sitemap;
   }
   const genre = MEDIA_GENRES.find((item) => genrePath(item) === path);
-  if (!MEDIA_PATHS.includes(path) && !genre) return null;
+  const scene = MEDIA_SCENES.find((item) => scenePath(item) === path);
+  if (!MEDIA_PATHS.includes(path) && !genre && !scene) return null;
   const cacheKey = new Request(`${ORIGIN}${path}?media-cache=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
   if (cache) {
     try {
       const hit = await cache.match(cacheKey);
       if (hit) return request.method === 'HEAD' ? new Response(null, hit) : hit;
     } catch {}
+  }
+  if (scene) {
+    const html = renderScenePage({ scene, now, items: sceneItems(scene, await loadAllGenreRankings(env, { now })) });
+    const response = new Response(html, {
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, ...headers }
+    });
+    if (cache) {
+      try { await cache.put(cacheKey, response.clone()); } catch {}
+    }
+    return request.method === 'HEAD' ? new Response(null, response) : response;
   }
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
   const html = genre

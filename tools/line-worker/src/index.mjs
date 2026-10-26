@@ -127,7 +127,7 @@ import {
 } from './runway-generation.mjs';
 import { handleRunwayMediaRoute } from './social-media-r2.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
-import { MEDIA_GENRE_PATHS, MEDIA_PATHS, handleOwnedMediaRoutes, handleTopDropsApi } from './owned-media.mjs';
+import { MEDIA_GENRE_PATHS, MEDIA_PATHS, MEDIA_SCENE_PATHS, handleOwnedMediaRoutes, handleTopDropsApi } from './owned-media.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import {
   classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure,
@@ -169,7 +169,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
 const RELEASE = '1.22.1';
 const CANONICAL_HOST = 'hoshilu.app';
-const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, ...MEDIA_PATHS, ...MEDIA_GENRE_PATHS, '/for-sellers', '/for-creators', '/creator-terms']);
+const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, ...MEDIA_PATHS, ...MEDIA_GENRE_PATHS, ...MEDIA_SCENE_PATHS, '/for-sellers', '/for-creators', '/creator-terms']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
   'content-security-policy': "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'",
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
