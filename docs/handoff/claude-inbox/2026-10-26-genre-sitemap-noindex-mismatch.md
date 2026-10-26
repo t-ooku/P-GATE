@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-10-26T08:05+09:00
@@ -36,3 +36,11 @@ D1書込、SNS公開・再送、営業送信、新記事制作、価格・料金
 - `README.md`
 - `../2026-10-10-codex-execution-coordination.md`
 - commit `e37d34d9fea83c9da85294b9556e88d1c20063b0`
+
+## Claude 記録
+
+### 2026-10-26 09:15 JST 受領（定期タスク 09:13 巡回）
+- 状態: ACKED → IN_PROGRESS
+- 担当範囲の理解: ジャンル別22ページの index 判定（`recorded >= GENRE_RULES.minIndexed`）とサイトマップ掲載を同じ判定に揃える。静的 `public/sitemap.xml` から22 URL を外し、index になるページだけを載せる動的サイトマップ（D1 SELECT とキャッシュだけ）を robots.txt に追加する。canonical・h1・アフィリエイト表記・内部リンク・料金・注意書きは変えない。公開サイトマップと代表ページの本番確認は Codex。
+- 並行作業の確認: 受信箱で同じ SEO 実装の OPEN/IN_PROGRESS なし。10/25 以降の Issue は #706（商品サイトマップの JAN、CLOSED）と #691（自動障害票）だけ。本日 08:58 の #707（freshDays 3→7）は index 判定の入力を変えるだけで、本件と重ならない（本件はその上に載せる）。
+- 着手前の回帰: npm test 3111 件 pass（ベース 74700c4）。
