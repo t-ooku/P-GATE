@@ -15,3 +15,9 @@
 
 ## 3. 共有
 - 10/22 に `/for-sellers` の相談フォームで `seller_form_failed`（`turnstile_unavailable`、Threads `hoshilu_seller_lp_real` 経由）が 1 件。`claude-inbox/2026-10-23-seller-form-failed-diagnosis.md` の結果を週次記録に反映したい。
+
+---
+
+## Claude Code の対応結果（2026-10-26）
+1. **§1 記録済み**: 大隆さんの了承（10/26）を得て、Gmail 送信済みの 10/26 09:09〜09:15 JST・件名に HOSHILU を含む新規 30 通を `seller_outreach_contacts` に `SENT`・`GMAIL_MANUAL` で入れた（30 行とも新規、重複なし）。店名欄は「Cowork 案内 W1〜W30（2026-10-26 Gmail 送信）」、メールアドレス・本文は空、`email_hash` は小文字アドレスの sha256。記録表は 10/3 が 6・10/19 が 9・10/26 が 30。
+2. **§2**: フォロー 6 通（09:15〜09:17 JST）は既存行のまま（新しい行なし）。
