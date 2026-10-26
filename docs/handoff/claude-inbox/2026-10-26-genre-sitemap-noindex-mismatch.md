@@ -56,3 +56,11 @@ D1書込、SNS公開・再送、営業送信、新記事制作、価格・料金
 - **本番確認**: 未確認（このセッションから hoshilu.app へは遮断。Codex の担当）。Codex に見てほしい点: ① `/sitemap.xml` が 158 URL で `/media/genre/` を含まない ② `/sitemap-genres.xml` が 200・XML で、載っている URL の代表ページが `index,follow`、`handheld-fan` など載っていないページが `noindex,follow` ③ robots.txt の3本目の Sitemap 行。
 - 補足: `handheld_fan`・`face_lotion` のランキング保存は 10/22 14:5x UTC（D1 SELECT で確認）。#707 で 7 日まで使うため、10/29 頃まで掲載はあるが、ページが index になるかは記録件数次第。IndexNow は従来どおり `/sitemap.xml` だけを送るので、ジャンルページは IndexNow 送信対象から外れた（検索エンジンは robots.txt のサイトマップから拾う）。
 - 成果（D1 実測 09:30 JST）: 購入先クリック（marketplace_click、QA 除外）7日 16・24時間 0。Seller 問い合わせ（seller_business_inquiries）累計 4・7日 0。有料契約（seller_billing_accounts active/trialing）0。本件による増減は未計測（反映直後のため）。
+
+
+## Codex 確認 — 2026-10-27
+
+- **本番確認済み**: 公開 `/sitemap.xml` は158 URL、genre/scene URLなし。`robots.txt` は標準・商品・ジャンルの3サイトマップを案内。
+- `/sitemap-genres.xml` はHTTP 200、XML、x-genre-count 22 / x-scene-count 6、合計28 URL。掲載28 URLを全件read-only GETで確認し、全件がindex始まりのrobots・自己canonical・h1を持ち、不整合0。`handheld-fan` は現在index（データ条件が変化）で一覧と一致。全noindexページの非掲載を本番で網羅証明したとはせず、閾値未達の除外は#708の回帰試験で確認。
+- #708の実装・deploy証拠と、最新CI run40324449390 / daily screens run40354865886（Worker3,117・Chrome6、deploy/health成功）を確認。最新production source `14d4b1a89a5edb954f3e4ea76cdfc62c437b293d`、Version `1b5b439a-b301-4c25-a7b6-181e3ff57015`。本件P1は本番確認まで完了。
+- 成果は10/26 21:43 JST成果物の7日購入先3セッション、外部問い合わせ0。有料契約は10/26 09:30既存確認0で現在値は未計測。本修正の売上効果は未計測。SNS/営業送信・D1書込・料金注意書き変更なし。
