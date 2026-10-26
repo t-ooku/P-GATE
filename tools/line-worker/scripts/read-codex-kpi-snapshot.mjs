@@ -448,7 +448,17 @@ export async function operationalDiagnostics(db, internalIds = []) {
     actual_inbox_replies: {status:'UNVERIFIED',reason:'CORRECT_MAILBOX_NOT_CONNECTED'},
     definition: 'A candidate or API-accepted email is not consent, delivery, dialogue or an acquired external seller.'
   };
-  return { inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+  // Retained all-time outbound totals; no event/session/visitor identifiers leave D1.
+  // QA/INTERNAL are excluded. Anonymous sessions and clicks are not verified people or orders.
+  const marketplaceClicksAllTime = await read(`SELECT COUNT(*) AS click_events,
+    COUNT(DISTINCT NULLIF(session_id,'')) AS click_sessions,
+    MIN(occurred_at) AS first_click_at,MAX(occurred_at) AS last_click_at
+    FROM growth_events WHERE event_type='marketplace_click'
+    AND traffic_class NOT IN ('QA','INTERNAL')`);
+  return { marketplace_clicks_all_time: {
+    ...marketplaceClicksAllTime,
+    scope: 'RETAINED_GROWTH_EVENTS_ALL_TIME_QA_INTERNAL_EXCLUDED_NOT_ORDERS'
+  }, inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
       exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC',
