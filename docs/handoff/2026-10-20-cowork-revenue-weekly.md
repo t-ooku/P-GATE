@@ -145,3 +145,92 @@
 1. **Seller**: 10/19 に 16 通（新規 10・フォロー 6）を送ったら記録を Claude Code に依頼。新しい 10 通は 10/20 以降に送信。返信は返信の型で 24 時間以内に下書き。
 2. **訪問・送客の計測を確かめる**: 10/17 朝からの人の訪問 0 と、モール送客 5未満の原因を Claude Code に確認（2-4 の送客の質の記録 10/16〜10/22 の前提）。
 3. **報酬額と Threads**: アフィリエイト 3 社の数字を大隆さんからもらって表を埋める。Threads の再連携を大隆さんにお願いする。
+
+---
+
+## 2026-10-19 週
+
+> 実行: 2026-10-26（月）08:47〜09:06 JST（Cowork 月曜の定期タスク）。対象は **10/19（月）00:00〜10/25（日）24:00 JST**。D1 は読み取りのみ・QA（traffic_class='QA'）除外。
+> 10/17 08:05 以降は撮影用ブラウザも QA に入っている（`2026-10-19-cowork-to-claude-code-revenue.md` の回答）。この週の数字は人の数に近い。
+
+### 1. 訪問・検索・送客（growth_events）
+
+| 項目 | 10/19 週 | メモ |
+|---|---|---|
+| 訪問（landing_view のセッション） | 45 | 日別: 10/19 4・10/20 6・10/21 4・10/22 2・10/23 7・10/24 5・10/25 17 |
+| 検索開始（search_started のセッション） | 9 | |
+| 検索成功（search_completed のセッション） | 8 | |
+| モール送客（marketplace_click） | 16 回（セッションは 5未満） | 10/24 の Amazon 9 回は 1 セッションに集中。ほかは楽天・ZOZOTOWN・Amazon・Yahoo!・Qoo10（10/19 は Instagram のプロフィールリンク経由を含む） |
+| `/for-sellers` 閲覧（seller_landing_view） | 11 回・10 セッション | 10/21 1・10/23 5・10/24 5 |
+| セラーの相談フォーム送信失敗（seller_form_failed） | 1 | 10/22、Threads の `hoshilu_seller_lp_real` から来た人、`turnstile_unavailable`。Claude Code 側で `claude-inbox/2026-10-23-seller-form-failed-diagnosis.md` が起票済み |
+
+流入元 上位（landing_view のセッション／うち検索）
+
+| 流入元 | 着地 | 検索 |
+|---|---|---|
+| 不明（参照元なし） | 39 | 7 |
+| instagram | 5未満 | 5未満 |
+| bing | 5未満 | 0 |
+| yahoo | 5未満 | 5未満 |
+| （5 位なし） | — | — |
+
+### 2. アフィリエイト 3 社（10/19〜10/25）
+
+| 会社 | クリック | 成果 | 報酬額 |
+|---|---|---|---|
+| Amazon アソシエイト | 未計測（管理画面にログインできない・Gmail にレポートメール無し） | 未計測 | 未計測 |
+| 楽天アフィリエイト | 未計測（同上） | 未計測 | 未計測 |
+| バリューコマース | 未計測（同上） | 未計測 | 未計測 |
+
+- HOSHILU 側のクリック: 上の marketplace_click 16 回（Amazon 10・楽天 2・ZOZOTOWN 2・Yahoo! 1・Qoo10 1）。
+
+### 3. Seller
+
+| 項目 | 10/19 週 | メモ |
+|---|---|---|
+| 送信数（Gmail 送信済み） | 15 | 10/19 10:24 JST に新規 9・フォロー 6（10/3 の 6 店）。10/20〜10/25 の送信は 0（10/19 08:50 作成の 10 通・10/17 作成の 1 通は未送信のまま、下書きにも残っていない） |
+| 返信数 | 0 | 過去 7 日、件名に HOSHILU／ホシル を含む店からの受信なし（通知・自分を除く）。不達通知もなし |
+| 「不要」 | 0 | 新しい停止なし（seller_outreach_suppressions は 1 件のまま） |
+| 相談数（seller_business_inquiries、QA 以外） | 0 | |
+| 見本掲載の開始 | 0 | 商品 URL 3 つの返信なし。claude-inbox への依頼なし |
+| 契約（seller_listing_pilots・seller_billing_accounts・seller_shops の新しい行） | 0 | |
+| seller_outreach_contacts | 10/19 の新規 9 件が `SENT`・`GMAIL_MANUAL` で記録済み | 件数は Gmail 送信済みと一致 |
+
+### 4. Search Console
+- 未計測（Cowork のクラウド環境に Search Console の接続が無い）。
+
+### 5. Instagram・Threads（social_post_queue の PUBLISHED、反応は social_post_performance の最大値）
+
+Instagram（公開 9 本。保存・シェア・コメントはすべて 0、リンクのタップは未計測＝取り込まれていない）
+
+| 公開 | キャンペーン | リーチ | プロフィール |
+|---|---|---|---|
+| 10/19 12:27 | hoshilu-runway-video | 10 | 未計測 |
+| 10/19 20:02 | hoshilu-carousel-v3 | 5 | 0 |
+| 10/20 20:17 | hoshilu-carousel-v3 | 4 | 2 |
+| 10/20 23:07 | hoshilu-runway-video | 4 | 未計測 |
+| 10/21 21:02 | hoshilu-price-drops-daily | 4 | 0 |
+| 10/22 20:02 | hoshilu-media-notes（木曜の買い物ノート） | 2 | 0 |
+| 10/23 20:22 | hoshilu-runway-video | 2 | 未計測 |
+| 10/24 20:02 | hoshilu-carousel-v3 | 3 | 0 |
+| 10/25 21:02 | hoshilu-price-drops-daily | 2 | 0 |
+
+Threads（**10/22 から再開**。10/19〜10/21 は `THREADS_CREATE_401` で 8 本失敗）
+- `hoshilu-threads-media-v1`（買い物ノート）: 公開 4（リーチ 2・11・2・4）、失敗 3
+- `hoshilu-threads-seller-v1`（セラー向け）: 公開 2（リーチ 5・7）、失敗 1、取消 4（1 日おき）
+- `hoshilu-seller-lp-real-v1`: 公開 2（リーチ 11・13）、失敗 3
+- `hoshilu-media-notes`: 公開 1（リーチ 8）
+- シェア・コメントはすべて 0。X は停止のまま（取消 4）。
+
+### 6. 今週（10/26 週）やること
+1. **見本掲載の入口で案内を届ける**: 10/26 に新規 30 通の下書きを作成（下の送信記録）。送信は今回できなかった（下記）。返信が来たら返信の型で 24 時間以内に下書き、URL 3 つが届いたら claude-inbox に依頼。
+2. **セラー LP のフォーム失敗を直してもらう**: 10/22 に実在の人がセラー向けフォームで `turnstile_unavailable` で送れなかった可能性。claude-inbox の診断の結果を確認し、直るまで返信メールでの受付（URL 3 つの返信）を案内の主にする。
+3. **報酬額**: アフィリエイト 3 社は 3 週続けて未計測。大隆さんにスクショかレポートメールの転送をお願いする。
+
+### 送信の記録（10/26）
+- **新規の案内 30 通: Gmail 下書きを作成（08:50〜08:57 JST）、未送信**。09:00 JST に 1 通目の送信を試したところ、Cowork 側の操作の許可（自動の確認）で送信が止められた。下書きは残してある。大隆さんが Gmail から送るか、送信の許可を出してもらう必要がある。
+  - 対象はすべて Yahoo!ショッピングのストア情報に公開された事業者アドレス（ページで 1 件ずつ確認）。Gmail 送信済み（`to:`）・seller_outreach_contacts・suppressions（sha256）と照合して重複 0。RIZAP グループ・IT グループ関連 0。化粧品・健康食品・食品・医療機器を扱う店は除外（候補から 3 店落とした）。
+  - 件名は 3 つの順送り（「無料の見本掲載30日のご案内（商品URL 3つで始められます）｜HOSHILU」「お店の商品3点を、検索結果のPR枠に30日無料で（HOSHILU）」「名前が分からなくても探せる検索に、商品3点を無料で（HOSHILU）」）。本文は 541〜564 字。
+  - 店名: MCインテリア雑貨ヤフー店／Active Plus／ライフスタイルZERO／BEGOT（ビゴット）／コミットアンド／楽装屋／STARABA（スタラバ）／Print-Dog プリントドッグ／文具・事務用品のエス・ビ・ディ／雑貨才蔵／鞄倶楽部Yahoo!店／インターネット・服／ROCOCO Yahoo!店／プレプレ／ascal Yahoo!店／タイムリー・ファッションストア／アウトドアショップベースキャンプ／YOCABITO Yahoo!店／インポートセレクトmusee／アシスタント／タンスのゲン Design the Future／オリジナルキャットタワー Mau／KABAROCK カバロック／BACKYARD FAMILY ママタウン／ベルト専門店ベルトラボ Yahoo!店／ジュニア・バッグの店 プリーズ／THE BAGMANIA Yahoo!店／ギャレリア Bag&Luggage ANNEX／ELEMENTS（エレメンツ）／クオリアル Yahoo!ショッピング店
+- **1 週間前（10/19）の相手へのフォロー: このタスクでは 0 通**。10/19 新規の 9 店は別の仕組み（send_later、10/26 09:05 JST）でフォローする予定のため重ねない（09:06 JST 時点では Gmail 送信済みに 10/26 分はまだ無い）。10/19 にフォローを送った 6 店（10/3 の相手）はすでに 2 通目を送っているので送らない。
+- 送った後は seller_outreach_contacts への記録（`SENT`・`GMAIL_MANUAL`）を Claude Code に依頼する。
