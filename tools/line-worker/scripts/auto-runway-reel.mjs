@@ -22,7 +22,7 @@ import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
-  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId,
+  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, pendingReviewJobsForSlot, slotFromApprovedJobId,
   buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan
 } from './auto-runway-reel-lib.mjs';
 import { recordReelScreen } from './auto-reel-screen.mjs';
@@ -67,7 +67,26 @@ function runwaySlotCompetition(postId) {
 const now = new Date();
 // 2026-09-18 大隆さん決定 (a): --approve_job_id=<job_id> は「大隆さんが contact-sheet で本人一致を確認した」
 // 再実行。枠・型・投稿時刻はその job_id から復元し、本人一致だけ人手確認済みとして通す（他の機械検査はそのまま）。
-const approvedJobId = String(args.approve_job_id || '').trim();
+let approvedJobId = String(args.approve_job_id || '').trim();
+// 2026-10-27 大隆さん決定「19:00 までに返事が無ければ、レイアウト検査に通ったリールはそのまま投稿」:
+// --deadline_auto_approve=true は 18:45 JST の定期実行。今日の枠で確認待ち（GENERATED_REVIEW_REQUIRED）のジョブがあれば、
+// 本人一致を「返事なしの期限自動承認」として通し、他の機械検査（顔・セリフ・無音・焼き込み・画面）はそのまま行う。
+// 確認待ちが無ければ何もしない（承認済み・不合格・生成無しのどれでも触らない）。
+const deadlineAutoApprove = !approvedJobId && !String(args.preview_job_id || '').trim() && String(args.deadline_auto_approve || '') === 'true';
+let identityReason = 'owner_confirmed_contact_sheet';
+if (deadlineAutoApprove) {
+  const pending = pendingReviewJobsForSlot(nextPublishSlot(now, themes, { leadMinutes: 45 }), d1(`SELECT job_id,status FROM runway_generation_jobs WHERE status='GENERATED_REVIEW_REQUIRED';`));
+  if (!pending.length) {
+    report.outcome = { ok: true, deadline: true, note: 'deadline_no_pending_job' };
+    report.finished_at = new Date().toISOString();
+    writeFileSync(path.join(WORK, 'report.json'), JSON.stringify(report, null, 2));
+    console.log(`[auto-reel] OUTCOME ${JSON.stringify(report.outcome)}`);
+    process.exit(0);
+  }
+  approvedJobId = pending[0];
+  identityReason = 'deadline_auto_approve_no_owner_reply';
+  log('deadline auto approve', { job_id: approvedJobId });
+}
 // 2026-10-23 大隆さん「見せて」: --preview_job_id=<job_id> は承認の前に仕上がりを見るための実行。生成済みの素材から合成だけ行い、
 // 承認・不合格・投稿キューには一切触らない（D1 は読むだけ。新しい生成もしない）。仕上がりは WORK/preview.mp4。
 const previewJobId = approvedJobId ? '' : String(args.preview_job_id || '').trim();
@@ -343,7 +362,7 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
     evidence.identity = {
       ok: true,
       reference: themes.character_image_url,
-      reason: 'owner_confirmed_contact_sheet',
+      reason: identityReason,
       confirmed_job_id: approvedJobId,
       confirmed_run_id: String(process.env.GITHUB_RUN_ID || ''),
       confirmed_at: new Date().toISOString()

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   buildApprovalSql, buildAssCutA, buildLink, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
   classifyRunwaySlotCompetition, evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
-  nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity, slotFromApprovedJobId
+  nextPublishSlot, parseVolume, pendingReviewJobsForSlot, REQUIRED_QA_CHECKS, similarity, slotFromApprovedJobId
 } from '../scripts/auto-runway-reel-lib.mjs';
 
 const themes = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
@@ -215,10 +215,38 @@ test('approve_job_id から枠・型・20:15 JST を復元し、投稿時刻に�
   assert.throws(() => slotFromApprovedJobId("x'; DROP TABLE", themes, now), /AUTO_REEL_APPROVE_JOB_ID_INVALID/u);
   // スクリプト側: approve_job_id と一致する job だけ本人一致を「大隆さん確認済み」にし、それ以外は fail closed のまま
   const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
-  assert.match(script, /if \(approvedJobId && approvedJobId === jobId\) \{\s*evidence\.identity = \{\s*ok: true,[\s\S]*?reason: 'owner_confirmed_contact_sheet'/u);
+  assert.match(script, /if \(approvedJobId && approvedJobId === jobId\) \{\s*evidence\.identity = \{\s*ok: true,[\s\S]*?reason: identityReason/u);
+  assert.match(script, /let identityReason = 'owner_confirmed_contact_sheet'/u);
   assert.match(script, /reason: 'biometric_face_match_not_implemented'[\s\S]*?problems\.push\('identity_check_unavailable'\)/u);
   // 2026-10-23: 承認と見るだけ（preview）の両方で、job_id から枠を復元する
   assert.match(script, /slotFromApprovedJobId\(fixedJobId, themes, now\)/u);
+});
+
+// 2026-10-27 大隆さん決定「19:00 までに返事が無ければ、レイアウト検査に通ったリールはそのまま投稿」:
+// 18:45 JST の定期実行（--deadline_auto_approve=true）は、今日の枠で確認待ちのジョブだけを期限自動承認に回す。
+// 10/27 は 10:18 の /preview に返事が無く、代替カルーセルが出て前日と同じ投稿になった。
+test('期限自動承認は今日の枠の確認待ちジョブだけを対象にし、無ければ何もしない', () => {
+  const now = new Date('2026-10-27T09:45:00.000Z'); // 火 18:45 JST
+  const slot = nextPublishSlot(now, themes, { leadMinutes: 45 });
+  assert.equal(slot.date_key, '20261027');
+  assert.equal(slot.publish_at.toISOString(), '2026-10-27T11:15:00.000Z');
+  const rows = [
+    { job_id: 'runway-auto-price-drop-notice-20261027', status: 'GENERATED_REVIEW_REQUIRED' },
+    { job_id: 'runway-auto-price-drop-notice-20261027-r2', status: 'GENERATED_REVIEW_REQUIRED' },
+    { job_id: 'runway-auto-want-at-price-20261020', status: 'GENERATED_REVIEW_REQUIRED' }, // 先週の残りは対象外
+    { job_id: 'runway-auto-seller-shop-entrance-20261030', status: 'GENERATED_REVIEW_REQUIRED' } // 次の枠は対象外
+  ];
+  assert.deepEqual(pendingReviewJobsForSlot(slot, rows), ['runway-auto-price-drop-notice-20261027-r2', 'runway-auto-price-drop-notice-20261027']);
+  assert.deepEqual(pendingReviewJobsForSlot(slot, [{ job_id: 'runway-auto-price-drop-notice-20261027', status: 'APPROVED_FOR_POST' }]), []);
+  assert.deepEqual(pendingReviewJobsForSlot({ date_key: '' }, rows), []);
+  // 19:30 の代替カルーセルより前に終わるよう 18:45 に動く。20:15 の 45 分前（19:30）を過ぎたら今日の枠は選ばれない
+  assert.notEqual(nextPublishSlot(new Date('2026-10-27T10:31:00.000Z'), themes, { leadMinutes: 45 }).date_key, '20261027');
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(script, /deadline_auto_approve/u);
+  assert.match(script, /identityReason = 'deadline_auto_approve_no_owner_reply'/u);
+  assert.match(script, /note: 'deadline_no_pending_job'/u);
+  // 承認・見るだけの指定があるときは期限自動承認にならない
+  assert.match(script, /const deadlineAutoApprove = !approvedJobId && !String\(args\.preview_job_id \|\| ''\)\.trim\(\) && String\(args\.deadline_auto_approve \|\| ''\) === 'true'/u);
 });
 
 // 2026-10-20 大隆さん「動画投稿は何故止まってるの？再開できない？」

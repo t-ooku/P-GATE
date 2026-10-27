@@ -89,6 +89,18 @@ export function activePipelineBlockers(rows = [], dateKey = '') {
   });
 }
 
+// 2026-10-27: 18:45 JST の期限自動承認で使う。今日の枠（date_key）の確認待ちジョブだけを、試行番号の大きい順に返す。
+// 別の日の確認待ち（過去の残り）は対象にしない。
+export function pendingReviewJobsForSlot(slot, rows = []) {
+  const dateKey = String(slot?.date_key || '');
+  if (!dateKey) return [];
+  return rows
+    .filter((row) => row.status === 'GENERATED_REVIEW_REQUIRED')
+    .map((row) => String(row.job_id || ''))
+    .filter((jobId) => new RegExp(`^runway-auto-[a-z0-9-]+?-${dateKey}(?:-r\\d+)?$`, 'u').test(jobId))
+    .sort((a, b) => (Number(b.match(/-r(\d+)$/u)?.[1] || 1)) - (Number(a.match(/-r(\d+)$/u)?.[1] || 1)));
+}
+
 export function buildPostId(jobId) {
   return jobId.replace(/^runway-auto-/, 'hoshilu-runway-auto-');
 }
