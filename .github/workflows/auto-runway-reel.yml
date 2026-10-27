@@ -32,6 +32,11 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 #  - 10/2〜10/20 は承認が来ず、確認待ちが次の枠を止めて 2 週間以上リールが出なかった（#689 で次の枠は止めないように直した）。
 # 2026-10-23 大隆さん「見せて」: `/preview` とコメントすると、承認せずに仕上がりの動画だけを作り（生成済みの素材から合成。新しい生成・
 #  承認・不合格の記録はしない）、reel-review ブランチに置いて Issue にリンクを書く。見てから `/approve`。
+# 2026-10-27 大隆さん決定「19:00 までに返事が無ければ、レイアウト検査に通ったリールはそのまま投稿」:
+#  火・金 18:45 JST（09:45 UTC）の定期実行は mode=deadline。今日の枠で確認待ちのジョブがあれば、本人一致を
+#  「返事なしの期限自動承認」として通し、他の機械検査はそのまま行って投稿キューに入れる（--deadline_auto_approve=true）。
+#  確認待ちが無ければ何もしない。19:30 の代替カルーセル判定より前に終わらせるため 18:45 に動かす。
+#  （10/27 は 10:18 の /preview に返事が無く、代替カルーセルが前日と同じ投稿になった。）
 #
 # 再実行履歴: 2026-09-06 #220/#221（同枠のAI女優日次リールを競合扱いしていた誤判定と、
 # 実画面撮影の networkidle 依存）を修正し、9/7 月曜分の生成物を回収するため再実行。
@@ -44,6 +49,8 @@ on:
   schedule:
     # 火・金 06:00 JST = 月・木 21:00 UTC（2026-09-17 SNS 方針 v3）
     - cron: '0 21 * * 1,4'
+    # 火・金 18:45 JST = 09:45 UTC: 返事が無い確認待ちリールの期限自動承認（2026-10-27）
+    - cron: '45 9 * * 2,5'
   workflow_dispatch:
     inputs:
       slot:
@@ -99,6 +106,7 @@ jobs:
         id: approve
         env:
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
           INPUT_JOB: ${{ github.event.inputs.approve_job_id }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           COMMENT_BODY: ${{ github.event.comment.body }}
@@ -107,6 +115,8 @@ jobs:
           job=""
           mode="approve"
           case "${COMMENT_BODY:-}" in /preview*) mode="preview" ;; esac
+          # 定期実行のうち 18:45 JST の cron の回だけ期限自動承認（開始が遅れても cron 文字列で判定）。06:00 JST の生成の回は従来どおり
+          if [ "$EVENT_NAME" = "schedule" ] && [ "${EVENT_SCHEDULE:-}" = "45 9 * * 2,5" ]; then mode="deadline"; fi
           if [ "$EVENT_NAME" = "issue_comment" ]; then
             job="$(printf '%s' "$ISSUE_BODY" | grep -oE 'job_id: runway-auto-[a-z0-9-]+' | head -1 | sed 's/^job_id: //')" || true
             [ -n "$job" ] || { echo "::error::Issue 本文に job_id が見つかりません"; exit 1; }
@@ -166,6 +176,8 @@ jobs:
           [ -n "${{ github.event.inputs.slot }}" ] && extra="$extra --slot=${{ github.event.inputs.slot }}"
           [ -n "${{ github.event.inputs.theme }}" ] && extra="$extra --theme=${{ github.event.inputs.theme }}"
           [ -n "${{ github.event.inputs.publish_at }}" ] && extra="$extra --publish_at=${{ github.event.inputs.publish_at }}"
+          # 18:45 JST の期限自動承認: job_id はスクリプトが D1 の確認待ちから選ぶ
+          [ "${{ steps.approve.outputs.mode }}" = "deadline" ] && extra="$extra --deadline_auto_approve=true"
           # job_id は前の段で ^runway-auto-[a-z0-9-]+$ を確かめ済み
           if [ -n "${{ steps.approve.outputs.job_id }}" ]; then
             if [ "${{ steps.approve.outputs.mode }}" = "preview" ]; then
@@ -212,6 +224,11 @@ jobs:
             gh issue comment "${{ github.event.issue.number }}" --body-file preview-body.md
             exit 0
           fi
+          # 期限自動承認で確認待ちが無かったときは何も書かない（Issue を増やさない）
+          if [ "${{ steps.approve.outputs.mode }}" = "deadline" ] && [ "$(node -e "console.log(require('$report').outcome?.note || '')")" = "deadline_no_pending_job" ]; then
+            echo "::notice::deadline: 確認待ちのリールは無し（承認済み・不合格・生成無しのいずれか）"
+            exit 0
+          fi
           # 本人一致の確認待ちなら、contact-sheet を reel-review ブランチに置いて Issue に画像で載せる（チャットで見せるため）
           export SHEET_URL=""
           job="$(node -e "console.log(require('$report').outcome?.job_id || '')")"
@@ -245,7 +262,7 @@ jobs:
           if (ev.overlay_diff) lines.push(`- 焼き込み差分: ${JSON.stringify(ev.overlay_diff)}`);
           if (ev.ui_cut) lines.push(`- カットB: ${ev.ui_cut}`);
           if (ev.collision) lines.push(`- 枠の扱い: ${JSON.stringify(ev.collision)}`);
-          if (ev.identity) lines.push(`- 本人一致: ${ev.identity.ok ? `大隆さん確認済み（contact-sheet、run ${ev.identity.confirmed_run_id || ''}）` : '未確認（機械では判定できないため不合格）'}`);
+          if (ev.identity) lines.push(`- 本人一致: ${ev.identity.ok ? (ev.identity.reason === 'deadline_auto_approve_no_owner_reply' ? `19:00 までに返事が無かったため期限自動承認（本人一致は機械で未確認。2026-10-27 大隆さん決定、run ${ev.identity.confirmed_run_id || ''}）` : `大隆さん確認済み（contact-sheet、run ${ev.identity.confirmed_run_id || ''}）`) : '未確認（機械では判定できないため不合格）'}`);
           if (ev.not_biometrically_verified) lines.push(`- 機械で確認していないこと: ${ev.not_biometrically_verified.join(' / ')}`);
           if (!o.ok && /identity_check_unavailable/.test(String(o.reason || '')) && o.job_id) {
             lines.push('');
@@ -267,6 +284,16 @@ jobs:
             gh issue comment "${{ github.event.issue.number }}" --body-file issue-body.md
             [ "$ok" = "yes" ] && gh issue close "${{ github.event.issue.number }}" --reason completed
             exit 0
+          fi
+          if [ "${{ steps.approve.outputs.mode }}" = "deadline" ] && [ -n "$job" ]; then
+            # 期限自動承認: 朝の [AUTO-REEL] Issue（job_id を含む・open）に結果を書く。見つからなければ下の新規 Issue に進む
+            existing="$(gh issue list --state open --search "\"job_id: ${job}\" in:body [AUTO-REEL]" --json number --jq '.[0].number // empty' || true)"
+            if [ -n "$existing" ]; then
+              { printf '**期限自動承認（18:45 JST、返事なし）**\n\n'; cat issue-body.md; } > deadline-body.md
+              gh issue comment "$existing" --body-file deadline-body.md
+              [ "$ok" = "yes" ] && gh issue close "$existing" --reason completed
+              exit 0
+            fi
           fi
           if [ "$ok" = "yes" ]; then
             url="$(gh issue create --title "[AUTO-REEL] ${slot} 合格・投稿キュー済み" --body-file issue-body.md)"
