@@ -214,7 +214,7 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
   assert.deepEqual(buildReelFallbackPosts(new Date('2026-09-21T10:45:00.000Z')), []);
 
   // 投入: リールが承認済みなら入れない。未承認なら接続済み媒体分だけ INSERT OR IGNORE
-  const makeEnv = (reelCount) => {
+  const makeEnv = (reelCount, recentIds = []) => {
     const rows = [];
     const env = {
       SOCIAL_AUTOPILOT_ENABLED: 'true', INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
@@ -224,6 +224,10 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
           // 承認 SQL は jst_publish_date を '' のまま入れるので scheduled_at の JST 当日範囲で判定する
           assert.match(sql, /campaign_id=\?1 AND scheduled_at>=\?2 AND scheduled_at<\?3/u);
           return { bind(campaign, from, to) { assert.equal(campaign, 'hoshilu-runway-video'); assert.equal(from, '2026-09-17T15:00:00.000Z'); assert.equal(to, '2026-09-18T15:00:00.000Z'); return { async first() { return { n: reelCount }; } }; } };
+        }
+        if (/SELECT DISTINCT content_id FROM social_post_queue/u.test(sql)) {
+          assert.match(sql, /status IN \('PUBLISHED','PUBLISHING'\) AND scheduled_at>=\?1 AND scheduled_at<=\?2/u);
+          return { bind(since, until) { assert.equal(since, '2026-09-11T10:31:00.000Z'); assert.equal(until, '2026-09-18T10:31:00.000Z'); return { async all() { return { results: recentIds.map((content_id) => ({ content_id })) }; } }; } };
         }
         assert.match(sql, /INSERT OR IGNORE INTO social_post_queue/u);
         return { bind(...values) { return { async run() { rows.push(values); return { meta: { changes: 1 } }; } }; } };
@@ -239,6 +243,35 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
   assert.equal(missing.rows[0][0], 'hoshilu-carousel-v3-fallback-instagram-2026-09-18');
   assert.equal(missing.rows[0][7], '2026-09-18T11:15:00.000Z');
   assert.deepEqual(await seedReelFallbackQueue(makeEnv(0).env, new Date('2026-09-18T09:00:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: false });
+
+  // 2026-10-27: 直近 7 日に実際に出たセットは避けて次のセットにする。全部出ていたら入れない
+  const picked = missing.rows[0][3];
+  const avoided = makeEnv(0, [picked]);
+  const avoidedResult = await seedReelFallbackQueue(avoided.env, new Date('2026-09-18T10:31:00.000Z'));
+  assert.equal(avoidedResult.inserted, 1);
+  assert.notEqual(avoided.rows[0][3], picked, '前日と同じセットを再び出さない');
+  assert.equal(avoided.rows[0][0], 'hoshilu-carousel-v3-fallback-instagram-2026-09-18');
+  const sellerIds = loadCarouselSets().order.filter((set) => set.audience === 'seller').map((set) => `carousel-${set.id}`);
+  const exhausted = makeEnv(0, sellerIds);
+  assert.deepEqual(await seedReelFallbackQueue(exhausted.env, new Date('2026-09-18T10:31:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: false, skipped: 'all_recent' });
+  assert.equal(exhausted.rows.length, 0);
+});
+
+// 2026-10-27 再現: 10/26（月）に予定表に無いカルーセル（cross-mall-search）を手で入れて出した翌日、
+// 10/27（火）の代替カルーセルが予定表しか見ずに同じセットを選び、Instagram に 2 日連続で同じ投稿が出た。
+test('代替カルーセルは直近に実際に出た content_id を避ける（10/26→10/27 の再現）', () => {
+  const tuesday = new Date('2026-10-27T10:40:00.000Z');
+  const [before] = buildReelFallbackPosts(tuesday);
+  assert.equal(before.content_id, 'carousel-user-cross-mall-search', '再現条件: 修正前は cross-mall-search を選んでいた');
+  const [after] = buildReelFallbackPosts(tuesday, { recent: new Set(['carousel-user-cross-mall-search']) });
+  assert.notEqual(after.content_id, 'carousel-user-cross-mall-search');
+  assert.equal(loadCarouselSets().order.find((item) => `carousel-${item.id}` === after.content_id).audience, 'user');
+  assert.equal(after.post_id, 'hoshilu-carousel-v3-fallback-instagram-2026-10-27');
+  // 前後 6 日の通常カルーセルとも重ならない
+  const regular = new Set(buildCarouselPosts(new Date('2026-10-20T00:00:00.000Z'), 14)
+    .filter((post) => post.platform === 'INSTAGRAM' && post.jst_publish_date >= '2026-10-21' && post.jst_publish_date <= '2026-11-02')
+    .map((post) => post.content_id));
+  assert.ok(!regular.has(after.content_id), `通常枠と重複: ${after.content_id}`);
 });
 
 // 2026-09-21 に Demand Match Click（1クリック50円）を廃止したのに、カルーセルの

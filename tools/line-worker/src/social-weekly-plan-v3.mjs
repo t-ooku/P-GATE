@@ -149,7 +149,10 @@ function partsFromDayNumber(dayNumber) {
 export function reelFallbackAudience(weekday, plan = SOCIAL_PLAN_V3) {
   return weekday === plan.reel_weekdays[0] ? 'user' : 'seller';
 }
-export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3, sets = loadCarouselSets() } = {}) {
+// recent: 直近に実際に投稿した content_id（social_post_queue の PUBLISHED/PUBLISHING）。
+// 2026-10-27: 10/26 に手で入れたカルーセル（通常予定に無い）と 10/27 の代替が同じセットになり、Instagram に 2 日連続で同じ投稿が出た。
+// 予定表（regularSetFor）だけでなく、実際に出た投稿も避ける。
+export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3, sets = loadCarouselSets(), recent = new Set() } = {}) {
   const parts = jstParts(now);
   if (!plan.reel_weekdays.includes(parts.weekday)) return [];
   const key = dateKey(parts);
@@ -173,7 +176,10 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
   }
   const week = Math.floor(dayNumber / 7);
   const rotated = pool.map((_, index) => pool[(week + index) % pool.length]);
-  const set = rotated.find((candidate) => !nearby.has(candidate.id)) || rotated[0];
+  const published = (candidate) => recent.has(`carousel-${candidate.id}`);
+  const set = rotated.find((candidate) => !nearby.has(candidate.id) && !published(candidate))
+    || rotated.find((candidate) => !published(candidate));
+  if (!set) return [];
   return plan.platforms.map((platform) => normalizeSocialPost({
     post_id: `${plan.fallback_post_prefix}-${platform.toLowerCase()}-${key}`,
     content_id: `carousel-${set.id}`,
@@ -337,14 +343,26 @@ export async function seedCarouselQueue(env, now = new Date()) {
   return { enabled: true, planned: posts.length, inserted };
 }
 
+// 直近 days 日に実際に出た（または出している途中の）content_id。代替カルーセルの重複避けに使う。
+export async function recentlyPublishedContentIds(env, now = new Date(), days = 7) {
+  const since = new Date(now.getTime() - days * DAY_MS).toISOString();
+  const result = await env.PRODUCT_DB.prepare(`SELECT DISTINCT content_id FROM social_post_queue
+    WHERE status IN ('PUBLISHED','PUBLISHING') AND scheduled_at>=?1 AND scheduled_at<=?2`)
+    .bind(since, now.toISOString()).all();
+  return new Set((result?.results || []).map((row) => String(row.content_id || '')).filter(Boolean));
+}
+
 // リール日の代替投入。19:30 JST 以降、今日のリールが承認されていなければカルーセルを 20:15 JST に入れる。
 // post_id が主キーなので再実行しても増えない。リールが後から承認されても、この行は消さない
 // （同枠の重複は auto-runway-reel 側の competing_slot 判定で止まる）。
 export async function seedReelFallbackQueue(env, now = new Date()) {
   if (env.SOCIAL_AUTOPILOT_ENABLED !== 'true' || !env.PRODUCT_DB) return { enabled: false, planned: 0, inserted: 0, reel_ready: false };
-  const candidates = buildReelFallbackPosts(now);
-  if (!candidates.length) return { enabled: true, planned: 0, inserted: 0, reel_ready: false };
+  if (!buildReelFallbackPosts(now).length) return { enabled: true, planned: 0, inserted: 0, reel_ready: false };
   if (await reelReadyToday(env, now)) return { enabled: true, planned: 0, inserted: 0, reel_ready: true };
+  // 直近 7 日に実際に出たセットは使わない（前日と同じ投稿を防ぐ）。全部出ていたら今日は入れない。
+  const recent = await recentlyPublishedContentIds(env, now, 7);
+  const candidates = buildReelFallbackPosts(now, { recent });
+  if (!candidates.length) return { enabled: true, planned: 0, inserted: 0, reel_ready: false, skipped: 'all_recent' };
   const readiness = await socialPublisherReadinessWithStoredCredentials(env);
   const xReady = xPublishingSafetyReadiness(env).ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true';
   const posts = candidates.filter((post) => readiness[post.platform]
