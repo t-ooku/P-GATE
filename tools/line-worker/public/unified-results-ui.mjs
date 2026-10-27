@@ -343,15 +343,19 @@ function foldLegacySections(folded) {
   if (google) google.classList.toggle('hidden', folded);
 }
 
-// 2026-10-04 大隆さん報告「さらに見るボタンが反応してない」。スマホでは列が横スライドなので、
-// 足したカードは列の右端（画面の外）に入り、押しても何も変わらないように見えていた。
-// 足した最初のカードまで列を横に送る（PC の格子では下に並ぶので、そのまま見える）。
+// 2026-10-04 大隆さん報告「さらに見るボタンが反応してない」。当時スマホは横スライドで、足したカードが列の右端
+// （画面の外）に入っていた。2026-10-27 からスマホも縦 2 列（大隆さん決定「検索結果は縦」）なので、
+// 足した最初のカードが画面の外なら縦に少し送って見せる。横に送るのは、列が横に溢れている時だけ（念のため残す）。
 export function revealAppended(list, node) {
   if (!list || !node) return;
   if (list.scrollWidth > list.clientWidth + 1) {
     const left = list.scrollLeft + node.getBoundingClientRect().left - list.getBoundingClientRect().left;
     list.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    return;
   }
+  const rect = node.getBoundingClientRect();
+  const viewport = window.innerHeight || document.documentElement.clientHeight;
+  if (rect.top > viewport - 80) node.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderMore(host, list) {

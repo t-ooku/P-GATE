@@ -85,10 +85,11 @@ test('さらに見るで足した後の文言は「○件を追加表示しま�
 
 // 2026-10-04 大隆さん報告「さらに見るボタンが反応してない」: スマホは横スライドなので、足したカードは
 // 画面の外に入っていた。足した最初のカードまで列を送る。続きの商品は今見えているカードのすぐ後ろに入れる。
-test('さらに見る・結果も見るで足したカードまで列を送る（スマホの横スライドで見えるように）', () => {
+test('さらに見る・結果も見るで足したカードまで送る（2026-10-27 からスマホも縦 2 列: 画面の外なら縦に送る）', () => {
   const ui = readFileSync(new URL('../public/unified-results-ui.mjs', import.meta.url), 'utf8');
   assert.match(ui, /export function revealAppended\(list, node\)/u);
   assert.match(ui, /list\.scrollWidth > list\.clientWidth \+ 1/u);
+  assert.match(ui, /node\.scrollIntoView\?\.\(\{ behavior: 'smooth', block: 'nearest' \}\)/u, '縦の格子では縦に送る');
   assert.equal((ui.match(/revealAppended\(list, cards\[0\]\)/gu) || []).length, 2, 'さらに見る と 結果も見る の両方');
   assert.match(ui, /const insertAt = state\.shown;/u);
   // 「さらに見る」を描き直す時に、続きのボタンを消さない

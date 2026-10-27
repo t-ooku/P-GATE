@@ -1,5 +1,5 @@
-/* 2026-09-22 大隆さん指示書「検索結果UI統合改修」。
-   スマホは横スライド（1〜2商品＋次が少し見える）、PCは楽天市場のような複数列グリッド。
+/* 2026-09-22 大隆さん指示書「検索結果UI統合改修」→ 2026-10-27 大隆さん決定「検索結果は縦」。
+   スマホは縦 2 列グリッド、PCは楽天市場のような複数列グリッド。どちらも縦スクロール。
    カードの高さをそろえ、商品名が長くてもレイアウトを崩さない（§2）。 */
 #unifiedResults{margin:14px 0 18px}
 #unifiedResults[hidden]{display:none}
@@ -92,29 +92,20 @@
   cursor:pointer;
 }
 
-/* スマホ: 横スライド。2商品＋次が少し見える幅（§2・§9） */
+/* スマホ: 縦スクロールの 2 列グリッド。
+   2026-10-27 大隆さん決定「ホシルバズ・ジャンル別の棚は横、検索結果は縦」。
+   横スライドは 2〜3 枚目から先が見られない（Baymard の調査・ノートルダム大の計測）。商品を見比べて選ぶ場面は、
+   Amazon・楽天・Yahoo! のアプリと同じ縦 2 列で、親指だけで止まらずに進めるようにする。
+   （以前の横スライドは 2026-09-22 指示書 §2・§9。この決定で置き換え） */
 @media (max-width:760px){
   .unified-list{
-    display:flex;
-    flex-direction:row;
-    flex-wrap:nowrap;
-    align-items:stretch;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
     gap:10px;
-    overflow-x:auto;
-    overflow-y:hidden;
-    scroll-snap-type:x proximity;
-    overscroll-behavior-x:contain;
-    padding:2px 2px 8px;
+    align-items:stretch;
+    padding:2px 0 4px;
   }
-  /* 2026-09-22 大隆さん報告「商品枠が左にずれすぎ」。
-     画面の端まで出す（full bleed）やり方は、この節の親が画面の中央に無いため
-     左へはみ出していた。はみ出させるのをやめ、**与えられた幅の中で**ちょうど
-     2つ並ぶ幅にする。ページの他の枠と左端がそろう。 */
-  .unified-card{
-    flex:0 0 calc((100% - 10px) / 2);
-    width:calc((100% - 10px) / 2);
-    scroll-snap-align:start;
-  }
+  .unified-card{min-width:0}
 }
 
 /* PC: 楽天市場のような複数列グリッド＋縦スクロール。横スクロールは使わない（§4） */

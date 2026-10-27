@@ -101,18 +101,21 @@ test('ホシっとくは app.js の保存先をそのまま使う（別の保存
   assert.ok(!source.includes('localStorage'), '保存先を二重に持たない');
 });
 
-test('スマホは横スライド、PCは複数列グリッド＋縦スクロール', () => {
+test('スマホは縦 2 列グリッド、PCは複数列グリッド。どちらも横スクロールは使わない', () => {
+  // 2026-10-27 大隆さん決定「ホシルバズ・ジャンル別の棚は横、検索結果は縦」
   const sheet = css();
   const mobile = sheet.slice(sheet.indexOf('@media (max-width:760px)'), sheet.indexOf('@media (min-width:761px)'));
-  assert.match(mobile, /\.unified-list\{[^}]*overflow-x:auto/u);
-  // 2026-09-22: 与えられた幅の中でちょうど2つ。はみ出させない（左にずれる）
-  assert.match(mobile, /flex:0 0 calc\(\(100% - 10px\) \/ 2\)/u, '幅ちょうど2商品');
-  assert.ok(!mobile.includes('50vw'), '画面の端まではみ出させない');
+  assert.match(mobile, /\.unified-list\{[^}]*display:grid;[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/u);
+  assert.ok(!mobile.includes('overflow-x:auto'), 'スマホでも横スクロールは使わない');
+  assert.ok(!mobile.includes('scroll-snap-type:x'), '横スナップも使わない');
   const desktop = sheet.slice(sheet.indexOf('@media (min-width:761px)'));
   assert.match(desktop, /\.unified-list\{display:grid;gap:14px;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/u);
   assert.match(desktop, /@media \(min-width:1000px\)\{\s*\.unified-list\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/u);
   assert.match(desktop, /@media \(min-width:1360px\)\{\s*\.unified-list\{grid-template-columns:repeat\(5,minmax\(0,1fr\)\)\}/u);
   assert.ok(!desktop.includes('overflow-x:auto'), 'PCで横スクロールは使わない');
+  const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(html, /unified-results-ui\.css\?v=14/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=23/u);
 });
 
 test('商品名は2行で切り、カードの高さをそろえる', () => {
@@ -122,8 +125,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=13/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=22/u);
+  assert.match(html, /unified-results-ui\.css\?v=14/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=23/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -199,8 +202,8 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   assert.match(usual, /makeUsual: '↻ いつもの'/u);
   const compare = read('ai-price-comparison-ui.mjs');
   assert.match(compare, /button: '価格比較'/u);
-  // 文字が2行に折れないよう、カードを少し広げてボタンは1行に収める
-  assert.match(sheet, /flex:0 0 calc\(\(100% - 10px\) \/ 2\)/u);
+  // 文字が2行に折れないよう、カードは画面の半分幅（縦 2 列グリッド、2026-10-27）でボタンは1行に収める
+  assert.match(sheet, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/u);
   assert.match(sheet, /white-space:nowrap/u);
   // 絵文字（🔔 ♡）が切れないよう、箱を切らずに高さを合わせる
   assert.match(sheet, /overflow:visible/u);
