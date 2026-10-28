@@ -212,3 +212,36 @@ test('布用お名前ペンの検索で名入れボールペン・サインペ�
     assert.equal(headNounScore(penQuery, 'ジェットストリーム ボールペン 0.5'), 2, penQuery);
   }
 });
+
+// 2026-10-28 受信箱 appliance-accessory-exclusion: 固定QA oil_free_air_fryer / energy_saving_kotatsu
+test('家電本体(ノンフライヤー/こたつ)の検索でライナー・ダクト等の付属品を本命にせず、全件付属品でも再昇格しない', async () => {
+  const { headNounGateQueryFor } = await import('../src/query-expansion.mjs');
+  const fryerQuery = headNounGateQueryFor('油を使わずに唐揚げが作れる調理家電');
+  const kotatsuQuery = headNounGateQueryFor('電気代が気にならないこたつ');
+  const liner = { product_name: '山崎実業 タワー ノンフライヤーライナー21cm／シリコンシート' };
+  const duct = { product_name: 'こたつ省エネダクト・温風ヒーター用パイプ fbp-1080w' };
+  const fryer = { product_name: 'COSORI ノンフライヤー 4.7L エアフライヤー 電気フライヤー' };
+  const fryerWithLiner = { product_name: 'ノンフライヤー 5L 電気フライヤー ペーパーライナー付き' };
+  const kotatsu = { product_name: '山善 こたつ テーブル 80cm 正方形 省エネ' };
+  const kotatsuAttached = { product_name: '家具調こたつテーブル 105×75 長方形' };
+  // 付属品は主名詞スコア0、本体は2
+  assert.equal(headNounScore(fryerQuery, liner.product_name), 0);
+  assert.equal(headNounScore(kotatsuQuery, duct.product_name), 0);
+  assert.equal(headNounScore(fryerQuery, fryer.product_name), 2);
+  assert.equal(headNounScore(fryerQuery, fryerWithLiner.product_name), 2);
+  assert.equal(headNounScore(kotatsuQuery, kotatsu.product_name), 2);
+  assert.equal(headNounScore(kotatsuQuery, kotatsuAttached.product_name), 2);
+  // 本体があれば付属品は外れ、本体が本命
+  assert.deepEqual(applyHeadNounGate(fryerQuery, [liner, fryer]), [fryer]);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, kotatsu]), [kotatsu]);
+  // 全候補不適合(付属品のみ)は元順序フォールバックで本命に戻さない(適合候補なし)
+  assert.deepEqual(applyHeadNounGate(fryerQuery, [liner]), []);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, { product_name: 'こたつ 省エネ ダクト 温風 パイプ' }]), []);
+  assert.equal(hasHeadNounMatch(fryerQuery, [liner]), false);
+  assert.equal(hasHeadNounMatch(kotatsuQuery, [duct]), false);
+  // 付属品を明示した検索は維持
+  assert.deepEqual(applyHeadNounGate('ノンフライヤー ライナー', [liner]), [liner]);
+  assert.deepEqual(applyHeadNounGate('ノンフライヤー用シリコンシート', [liner]), [liner]);
+  assert.deepEqual(applyHeadNounGate('こたつ ダクト', [duct]), [duct]);
+  assert.deepEqual(applyHeadNounGate('こたつ用 温風パイプ', [duct]), [duct]);
+});

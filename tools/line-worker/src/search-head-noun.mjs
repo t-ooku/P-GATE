@@ -80,6 +80,7 @@ const ATTACHED_ACCESSORY_SUFFIXES = Object.freeze([
   'コード', 'ヒーターユニット', '継ぎ脚', '継脚', '脚', 'リモコン', 'フィルター', 'ストラップ', '袋', 'トッパー'
 ]);
 const ATTACHED_BODY_SUFFIXES = Object.freeze(['テーブル', 'デスク', '本体', 'セット']);
+const BODY_COMPOUND_HEADS = new Set(['こたつ', 'コタツ']);
 // 主名詞が別の語の一部として現れる誤一致(リップ→クリップ)。
 const FALSE_FRIENDS = Object.freeze({
   'リップ': ['クリップ', 'グリップ', 'スリップ', 'チューリップ', 'フィリップ', 'ストリップ'],
@@ -192,7 +193,10 @@ function occurrenceIsClean(title, head, index, headTerms = new Set([head])) {
   if (/^\s/u.test(after)) {
     const nextToken = after.trim().split(TOKEN_SPLIT)[0] || '';
     const nextNoun = productNounOfToken(nextToken);
-    if (nextNoun && !relatedToHeads(nextNoun, headTerms) && !ACCESSORY_WORDS.test(nextNoun)) return false;
+    // 2026-10-28: 「こたつ テーブル」のように本体を表す語が空白を挟んで続く場合も商品そのもの
+    // (直接くっついた「こたつテーブル」と同じ扱い)。こたつ系の主名詞に限る。
+    const bodyNext = BODY_COMPOUND_HEADS.has(head) && ATTACHED_BODY_SUFFIXES.some((suffix) => nextToken.startsWith(suffix));
+    if (nextNoun && !bodyNext && !relatedToHeads(nextNoun, headTerms) && !ACCESSORY_WORDS.test(nextNoun)) return false;
   }
   return true;
 }
@@ -313,8 +317,32 @@ function isExplicitAccessoryMismatch(query, title) {
   if (NAME_PEN_QUERY.test(query) && !/ボールペン|名入れ/u.test(query)) {
     return /ボールペン/u.test(title) && !NAME_PEN_TITLE.test(title);
   }
+  // 2026-10-28 固定QA oil_free_air_fryer / energy_saving_kotatsu(受信箱 2026-10-28-appliance-accessory-exclusion):
+  // 家電本体(ノンフライヤー/こたつ)を探す検索で、本命が「ノンフライヤーライナー/シリコンシート」
+  // 「こたつ省エネダクト・温風ヒーター用パイプ」だった。主名詞の直後が辞書外の付属品語(ライナー・ダクト)
+  // のため本体扱い(2)になっていた。付属品だけの商品は候補から外し、全件付属品の時も元順序の
+  // フォールバックで本命に戻さない。付属品を明示した検索・「〜付き/付属/同梱」の本体は従来どおり。
+  const appliance = APPLIANCE_ACCESSORY_RULES.find((rule) => rule.query.test(query));
+  if (appliance && !appliance.queryAccessory.test(query)) {
+    return appliance.titleAccessory.test(title) && !appliance.bundled.test(title);
+  }
   return false;
 }
+
+const APPLIANCE_ACCESSORY_RULES = Object.freeze([
+  {
+    query: /ノンフライヤー|エアフライヤー|air\s*fryer/u,
+    queryAccessory: /ライナー|シート|ペーパー|マット|トレー|バスケット|カップ|ポット|天板|ラック|網|交換|替え|部品|パーツ|専用|用品|アクセサリ|liner|paper|accessor/u,
+    titleAccessory: /ライナー|シリコン\s*(?:シート|マット|トレー|カップ|ポット|バスケット|容器)|クッキング\s*(?:シート|ペーパー)|(?:専用|用)\s*(?:ペーパー|シート|トレー|ラック|バスケット)|liner|parchment/u,
+    bundled: /(?:ライナー|シート|ペーパー|トレー|ラック|バスケット|liner)\s*(?:\d+\s*枚)?\s*(?:付|付属|同梱|入り?\s*セット)|(?:ライナー|シート|ペーパー)\s*(?:不要|いらず|なし)|\bwith\s+(?:\w+\s+){0,2}liners?\b/u
+  },
+  {
+    query: /こたつ|コタツ|炬燵|kotatsu/u,
+    queryAccessory: /ダクト|パイプ|ホース|ヒーター(?:ユニット)?(?:のみ|単体|交換)|ユニット|コード|部品|パーツ|交換|替え|専用|用品|布団|ふとん|毛布|カバー|敷|掛け|継ぎ脚|継脚|脚|天板|duct/u,
+    titleAccessory: /ダクト|(?:温風|ヒーター)\s*(?:用)?\s*パイプ|(?:取替|交換)\s*用|(?:取替|交換)\s*(?:ヒーター|ユニット)|ヒーターユニット\s*(?:のみ|単体)|duct/u,
+    bundled: /(?:ダクト|パイプ)\s*(?:付|付属|同梱)/u
+  }
+]);
 
 const NAME_PEN_QUERY = /お?名前ペン|おなまえ(?:ペン|マーカー)|なまえペン|ネームペン|布用ペン/u;
 const NAME_PEN_TITLE = /お?名前ペン|おなまえ|なまえペン|ネームペン|布用|布書き|名前書き/u;
