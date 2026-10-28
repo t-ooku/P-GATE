@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-10-28T08:07+09:00
@@ -41,4 +41,6 @@ kpi: purchase_clicks
 
 ## Claude 記録
 
-未受領。GitHub保存は受領・着手・実装の証拠ではない。
+### 2026-10-28 09:14 JST 受領（定期巡回）
+- 受領: OPEN → ACKED → IN_PROGRESS。
+- 担当範囲の理解: 家電本体（ノンフライヤー／こたつ等）を求める検索で、付属品（ライナー・シリコンシート・ダクト・パイプ等）が本命になる経路を主名詞判定・候補選定・fallback で局所修正する。付属品を明示した検索は維持、本体候補0件なら付属品を再昇格させない。固定テストで回帰確認→npm test 全件 pass→[PATCH] Issue で配備。本番の意味一致・日次QA・KPI観測は Codex 担当。
