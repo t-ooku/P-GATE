@@ -332,8 +332,15 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
     .run(JSON.stringify(screenMediaUrls('2026-10-24', 'drops', 7)));
   assert.equal((await seedDailyDropsPost(env(body('2026-10-24T08:40:00Z')), new Date('2026-10-24T08:50:00Z'))).reason, 'drops_already_today');
   // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 平日（木曜以外）は値下がり投稿を足さない
-  assert.equal((await seedDailyDropsPost(env(body('2026-10-21T08:40:00Z')), new Date('2026-10-21T08:50:00Z'))).reason, 'not_drops_day', '水曜');
   assert.equal((await seedDailyDropsPost(env(body('2026-10-26T08:40:00Z')), new Date('2026-10-26T08:50:00Z'))).reason, 'not_drops_day', '月曜');
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-27T08:40:00Z')), new Date('2026-10-27T08:50:00Z'))).reason, 'not_drops_day', '火曜');
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-30T08:40:00Z')), new Date('2026-10-30T08:50:00Z'))).reason, 'not_drops_day', '金曜');
+  // 2026-10-28 大隆さん「水曜に１本足して」: 水曜は 21:00 に値下がりを 1 本足す。20:00 のカルーセルは差し替えない
+  const wednesday = await seedDailyDropsPost(env(body('2026-10-28T08:40:00Z')), new Date('2026-10-28T08:50:00Z'));
+  assert.equal(wednesday.inserted, 1, '水曜');
+  assert.equal(wednesday.post_id, 'hoshilu-price-drops-instagram-2026-10-28');
+  assert.equal(database.prepare("SELECT scheduled_at FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-10-28'").get().scheduled_at, '2026-10-28T12:00:00.000Z');
+  assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-cross-mall-search', link: '' }, '2026-10-28'), [], '水曜 20:00 の使い方カルーセルは差し替えない');
   const source = readFileSync(new URL('../src/social-autopilot.mjs', import.meta.url), 'utf8');
   assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now\)/u);
 });

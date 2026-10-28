@@ -112,7 +112,8 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   // 週 1 回の割引ではない日（木曜）は値下がり投稿を足さない（その日の投稿はホシルバズ）
   if (isWeeklyTrendDay(dateKey)) return { enabled: true, inserted: 0, reason: 'weekly_trend_day' };
   // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 値下がり投稿は土・日だけ
-  if (!isDropsDay(dateKey)) return { enabled: true, inserted: 0, reason: 'not_drops_day' };
+  // 2026-10-28 大隆さん「水曜に１本足して」: 水曜は 20:00 の使い方カルーセルはそのまま、21:00 に値下がりを 1 本足す
+  if (!isDropsDay(dateKey) && !isDropsExtraDay(dateKey)) return { enabled: true, inserted: 0, reason: 'not_drops_day' };
   const scheduledAt = new Date(`${dateKey}T${DROPS_DAILY.publish_utc}:00.000Z`);
   // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
   if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
@@ -204,6 +205,14 @@ export const DROPS_WEEKDAYS = Object.freeze([6, 0]);
 export function isDropsDay(dateKey = '') {
   const time = Date.parse(`${String(dateKey).slice(0, 10)}T00:00:00Z`);
   return Number.isFinite(time) && DROPS_WEEKDAYS.includes(new Date(time).getUTCDay());
+}
+
+// 2026-10-28 大隆さん「水曜に１本足して」: 値下がりを 21:00 に「足す」だけの曜日（その日の 20:00 のカルーセルは差し替えない）。
+// 週の形: 月=使い方カルーセル／火・金=リール／水=使い方カルーセル＋21:00 値下がり／木=ホシルバズ／土・日=値下がり
+export const DROPS_EXTRA_WEEKDAYS = Object.freeze([3]);
+export function isDropsExtraDay(dateKey = '') {
+  const time = Date.parse(`${String(dateKey).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(time) && DROPS_EXTRA_WEEKDAYS.includes(new Date(time).getUTCDay());
 }
 
 // 週 1 回の「割引ではない」投稿の曜日（日本時間の木曜。0=日曜）。木曜は買い物ノートの枠（hoshilu-media-notes）が毎週ある。
