@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { previousJstDay, previousDayKpi } from '../scripts/codex-daily-kpi.mjs';
+import { previousJstDay, previousDayKpi, sellerFormFailureReasons } from '../scripts/codex-daily-kpi.mjs';
 import { assertReadOnlySql } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 test('previous JST day crosses month/year boundaries, not rolling 24h', () => {
@@ -47,4 +47,20 @@ test('query failure is unavailable, never zero', async () => {
   assert.equal(j.marketplace_click.status,'UNAVAILABLE');
   assert.equal(j.general_watch_saved.status,'UNAVAILABLE');
   assert.equal(j.external_seller_inquiries.status,'UNAVAILABLE');
+});
+
+test('seller failure aggregate exports only fixed reasons and excludes QA/internal', async () => {
+  const s = new DatabaseSync(':memory:');
+  s.exec(`CREATE TABLE growth_events(event_type TEXT,traffic_class TEXT,session_id TEXT,content TEXT,occurred_at TEXT)`);
+  const q=s.prepare("INSERT INTO growth_events VALUES('seller_form_failed',?,?,?,datetime('now'))");
+  for(const [traffic,id,content] of [['ATTRIBUTED','a','turnstile_unavailable_inapp'],
+    ['UNATTRIBUTED','b','browser_validation:private_field'],['ATTRIBUTED','c','http_429'],
+    ['ATTRIBUTED','d','private-unknown-value'],['QA','qa','network'],['INTERNAL','internal','network']]) q.run(traffic,id,content);
+  const db={prepare(sql){const q=s.prepare(assertReadOnlySql(sql));return {async all(){return {results:q.all()}}}}};
+  const x=await sellerFormFailureReasons(db);
+  assert.deepEqual(x.rows.map(r=>r.reason),['browser_validation','http_error','other','turnstile_unavailable_inapp']);
+  assert.equal(x.rows.reduce((n,r)=>n+r.events,0),4);
+  assert.doesNotMatch(JSON.stringify(x),/private|session_id|qa/);
+  assert.equal((await sellerFormFailureReasons({prepare(){throw Error('private')}})).status,'UNAVAILABLE');
+  s.close();
 });

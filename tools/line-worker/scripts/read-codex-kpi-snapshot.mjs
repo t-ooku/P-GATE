@@ -1,6 +1,6 @@
 import { chmod, writeFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { previousDayKpi } from './codex-daily-kpi.mjs';
+import { previousDayKpi, sellerFormFailureReasons } from './codex-daily-kpi.mjs';
 import { codexKpiSnapshotSummary } from '../src/promotion-dashboard.mjs';
 import { SEARCH_QA_CANARY_QUERIES, PRIORITY_SEARCH_QA_QUERIES } from '../src/search-qa-canary.mjs';
 
@@ -512,6 +512,7 @@ async function main(argv) {
   const internalIds = String(config.vars?.INTERNAL_MEMBER_IDS || '').split(',').map(x=>x.trim()).filter(Boolean);
   snapshot.operational_diagnostics = await operationalDiagnostics(PRODUCT_DB, internalIds);
   snapshot.previous_jst_day = await previousDayKpi(PRODUCT_DB, internalIds);
+  snapshot.operational_diagnostics.seller_form_failure_reasons_7d = await sellerFormFailureReasons(PRODUCT_DB);
   // The only row-level text is a bounded product title from repository-defined
   // internal QA. No user search, photo, identity, or arbitrary event content.
   snapshot.privacy.fixed_qa_product_names = 'REPOSITORY_FIXTURES_WORKER_QA_ONLY';

@@ -7,6 +7,24 @@ export function previousJstDay(now = new Date()) {
     start_at: start.toISOString(), end_at: end.toISOString(), bounds: 'START_INCLUSIVE_END_EXCLUSIVE' };
 }
 
+export async function sellerFormFailureReasons(db) {
+  try {
+    const rows = (await db.prepare(`SELECT CASE
+      WHEN content IN ('turnstile_unavailable','turnstile_unavailable_inapp','turnstile_pending',
+        'validation_failed','turnstile_failed','timeout','network') THEN content
+      WHEN content LIKE 'browser_validation:%' THEN 'browser_validation'
+      WHEN content GLOB 'http_[0-9][0-9][0-9]' THEN 'http_error'
+      ELSE 'other' END AS reason,
+      COUNT(*) AS events,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+      MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE event_type='seller_form_failed'
+      AND traffic_class NOT IN ('QA','INTERNAL')
+      AND datetime(occurred_at)>=datetime('now','-7 days')
+      GROUP BY reason ORDER BY reason`).all()).results;
+    return { status: 'AVAILABLE', rows, scope: 'QA_INTERNAL_EXCLUDED_7D_FIXED_REASON_ONLY' };
+  } catch { return { status: 'UNAVAILABLE', reason: 'SELLER_FAILURE_AGGREGATE_QUERY_FAILED' }; }
+}
+
 export async function previousDayKpi(db, internalIds = [], now = new Date()) {
   const period = previousJstDay(now);
   const read = async sql => {
