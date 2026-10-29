@@ -317,6 +317,15 @@ function isExplicitAccessoryMismatch(query, title) {
   if (NAME_PEN_QUERY.test(query) && !/ボールペン|名入れ/u.test(query)) {
     return /ボールペン/u.test(title) && !NAME_PEN_TITLE.test(title);
   }
+  // 2026-10-29 固定QA shein_one_piece(受信箱 2026-10-29-dress-innerwear-exclusion):
+  // ワンピース本体を探す検索で、本命が「ペチコート キャミソールワンピース／インナーワンピース」だった。
+  // 商品名にワンピースが含まれるため本体扱い(2)になっていた。インナー/ペチコートを明示していない
+  // ワンピース検索では、主用途がペチコート・インナー専用の商品を候補から外し、全件インナーの時も
+  // 元順序フォールバックで本命に戻さない。キャミワンピ・スリップワンピ等の本体、「インナー付き」
+  // 「ペチコート付き」の本体、インナー/ペチコートを明示した検索は従来どおり。
+  if (DRESS_QUERY.test(query) && !DRESS_QUERY_INNER.test(query)) {
+    return DRESS_TITLE_INNER.test(title) && !DRESS_TITLE_BUNDLED.test(title);
+  }
   // 2026-10-28 固定QA oil_free_air_fryer / energy_saving_kotatsu(受信箱 2026-10-28-appliance-accessory-exclusion):
   // 家電本体(ノンフライヤー/こたつ)を探す検索で、本命が「ノンフライヤーライナー/シリコンシート」
   // 「こたつ省エネダクト・温風ヒーター用パイプ」だった。主名詞の直後が辞書外の付属品語(ライナー・ダクト)
@@ -343,6 +352,13 @@ const APPLIANCE_ACCESSORY_RULES = Object.freeze([
     bundled: /(?:ダクト|パイプ)\s*(?:付|付属|同梱)/u
   }
 ]);
+
+const DRESS_QUERY = /ワンピ|(?<!ア)ドレス|\bdress(?:es)?\b/u;
+const DRESS_QUERY_INNER = /ペチ|インナー|下着|ランジェリー|アンダー|透け防止|肌着|petticoat|\bslip\b|underdress|inner/u;
+// 主用途がワンピースの下に着るインナー(ペチコート・インナーワンピ等)である商品名
+const DRESS_TITLE_INNER = /ペチコート|ペチワンピ|ペチドレス|インナー\s*(?:ワンピ|キャミソール\s*ワンピ|キャミワンピ|ドレス|専用)|アンダー\s*(?:ワンピ|ドレス)|下着|ランジェリー|肌着|petticoat|underdress|underskirt|full\s+slip/u;
+// インナー/ペチコートが付属・同梱された本体、またはインナー不要を謳う本体
+const DRESS_TITLE_BUNDLED = /(?:インナー|ペチコート|ペチ|スリップ|キャミ(?:ソール)?)\s*(?:\d+\s*枚)?\s*(?:付|付属|同梱|セット)|(?:ペチコート|インナー)\s*(?:不要|いらず|なし)|[+＋&]\s*(?:インナー|ペチコート)|(?:\d|二|2)\s*点\s*セット|\bwith\s+(?:\w+\s+){0,2}(?:petticoat|slip|lining)\b/u;
 
 const NAME_PEN_QUERY = /お?名前ペン|おなまえ(?:ペン|マーカー)|なまえペン|ネームペン|布用ペン/u;
 const NAME_PEN_TITLE = /お?名前ペン|おなまえ|なまえペン|ネームペン|布用|布書き|名前書き/u;

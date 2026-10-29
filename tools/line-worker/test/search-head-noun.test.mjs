@@ -245,3 +245,32 @@ test('家電本体(ノンフライヤー/こたつ)の検索でライナー・�
   assert.deepEqual(applyHeadNounGate('こたつ ダクト', [duct]), [duct]);
   assert.deepEqual(applyHeadNounGate('こたつ用 温風パイプ', [duct]), [duct]);
 });
+
+// 2026-10-29 受信箱 dress-innerwear-exclusion: 固定QA shein_one_piece の本命がペチコート/インナーワンピース
+test('ワンピース本体の検索でペチコート・インナー専用品を本命にせず、全件インナーでも再昇格しない', () => {
+  const query = 'SHEINで見たワンピース';
+  const petticoat = { product_name: 'ペチコート キャミソールワンピース／インナーワンピース' };
+  const innerOnly = { product_name: 'インナーワンピース 透け防止 ロング丈 レディース' };
+  const dress = { product_name: 'SHEIN 花柄 ワンピース ロング 半袖' };
+  const camiDress = { product_name: 'キャミワンピース サテン レディース 夏' };
+  const slipDress = { product_name: 'スリップワンピース ロング キャミソール' };
+  const withInner = { product_name: 'シフォン ワンピース インナー付き プリーツ' };
+  const withPetticoat = { product_name: 'レース ワンピース ペチコート付き 結婚式' };
+  // インナー専用は主名詞スコア0、本体(キャミワンピ・スリップワンピ・インナー付き本体を含む)は2
+  assert.equal(headNounScore(query, petticoat.product_name), 0);
+  assert.equal(headNounScore(query, innerOnly.product_name), 0);
+  for (const item of [dress, camiDress, slipDress, withInner, withPetticoat]) {
+    assert.equal(headNounScore(query, item.product_name), 2, item.product_name);
+  }
+  // 本体があればインナー専用は外れ、本体が本命
+  assert.deepEqual(applyHeadNounGate(query, [petticoat, dress, innerOnly]), [dress]);
+  assert.deepEqual(applyHeadNounGate(query, [petticoat, withInner]), [withInner]);
+  // 全候補不適合(インナー専用のみ)は元順序フォールバックで本命に戻さない
+  assert.deepEqual(applyHeadNounGate(query, [petticoat]), []);
+  assert.deepEqual(applyHeadNounGate(query, [petticoat, innerOnly]), []);
+  assert.equal(hasHeadNounMatch(query, [petticoat, innerOnly]), false);
+  // ペチコート/インナーを明示した検索は維持
+  assert.deepEqual(applyHeadNounGate('ワンピース ペチコート', [petticoat]), [petticoat]);
+  assert.deepEqual(applyHeadNounGate('インナーワンピース', [innerOnly]), [innerOnly]);
+  assert.deepEqual(applyHeadNounGate('透け防止 ペチコート', [petticoat]), [petticoat]);
+});
