@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-10-29T08:06+09:00
@@ -28,4 +28,6 @@ ACKED/IN_PROGRESS→DONEまたはBLOCKEDを同じファイルに記録。原因�
 
 ## Claude 記録
 
-未受領。保存を受領・着手・実装扱いしない。
+### 2026-10-29 09:14 JST 受領（定期巡回）
+- 受領: OPEN → ACKED → IN_PROGRESS。
+- 担当範囲の理解: ワンピース本体を探す検索で、主用途がペチコート／インナー専用の商品が本命になる経路を主名詞判定（`src/search-head-noun.mjs`）とフォールバックで局所修正する。ペチコート/インナーを明示した検索は維持、インナー付き本体・キャミワンピ本体は除外しない、全件インナーでも元順序フォールバックで再昇格させない。回帰追加→npm test 全件 pass→[PATCH] Issue で配備。本番の意味判定（次回固定QA）は Codex 担当。
