@@ -246,6 +246,44 @@ test('家電本体(ノンフライヤー/こたつ)の検索でライナー・�
   assert.deepEqual(applyHeadNounGate('こたつ用 温風パイプ', [duct]), [duct]);
 });
 
+// 2026-10-31 受信箱 kotatsu-panel-heater-mismatch: 固定QA energy_saving_kotatsu の本命が足元パネルヒーター
+test('こたつ本体の検索で足元パネルヒーター/デスク下暖房を本命にせず、本体0件でも再昇格しない', async () => {
+  const { headNounGateQueryFor } = await import('../src/query-expansion.mjs');
+  const kotatsuQuery = headNounGateQueryFor('電気代が気にならないこたつ');
+  const panel = { product_name: 'パネルヒーター 足元 ワイド こたつ ラウンド 遠赤外線360度 足元ヒーター デスク下' };
+  const deskHeater = { product_name: 'デスクヒーター デスク下 足元暖房 こたつ風 省エネ' };
+  const footHeater = { product_name: 'フットヒーター 足元 こたつ 省エネ 電気代' };
+  const body = { product_name: '山善 こたつ テーブル 80cm 正方形 省エネ' };
+  const bodyPanelBuiltIn = { product_name: '家具調こたつ 長方形 105×75 薄型 パネルヒーター 遠赤外線' };
+  const bodyHeaterBuiltIn = { product_name: 'こたつ 一人用 遠赤外線パネルヒーター内蔵 省エネ 天板 リバーシブル' };
+  const deskKotatsu = { product_name: 'デスクこたつ ハイタイプ 省エネ パネルヒーター付き' };
+  const duct = { product_name: 'こたつ省エネダクト・温風ヒーター用パイプ fbp-1080w' };
+  // 足元パネルヒーター系は主名詞スコア0(販売名の「こたつ」だけで本体扱いしない)
+  for (const heater of [panel, deskHeater, footHeater]) {
+    assert.equal(headNounScore(kotatsuQuery, heater.product_name), 0, heater.product_name);
+  }
+  // 本物のこたつ本体(パネル/遠赤外線ヒーター内蔵を含む)は除外しない
+  for (const kotatsu of [body, bodyPanelBuiltIn, bodyHeaterBuiltIn, deskKotatsu]) {
+    assert.equal(headNounScore(kotatsuQuery, kotatsu.product_name), 2, kotatsu.product_name);
+  }
+  // 本体があれば本体が本命
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [panel, body]), [body]);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [panel, bodyPanelBuiltIn]), [bodyPanelBuiltIn]);
+  // 本体候補0件(足元パネルのみ)は元順序フォールバックで本命に戻さず、適合候補なし
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [panel]), []);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [panel, deskHeater, footHeater]), []);
+  assert.equal(hasHeadNounMatch(kotatsuQuery, [panel, deskHeater]), false);
+  // パネルヒーター/足元ヒーターを明示した検索は維持
+  assert.deepEqual(applyHeadNounGate('こたつ パネルヒーター', [panel]), [panel]);
+  assert.deepEqual(applyHeadNounGate('足元 こたつ ヒーター', [panel, footHeater]).length, 2);
+  assert.deepEqual(applyHeadNounGate('デスク下 こたつ', [deskHeater]), [deskHeater]);
+  // 10/28 ダクト除外の旧回帰
+  assert.equal(headNounScore(kotatsuQuery, duct.product_name), 0);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, panel]), []);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, panel, body]), [body]);
+  assert.deepEqual(applyHeadNounGate('こたつ ダクト', [duct]), [duct]);
+});
+
 // 2026-10-29 受信箱 dress-innerwear-exclusion: 固定QA shein_one_piece の本命がペチコート/インナーワンピース
 test('ワンピース本体の検索でペチコート・インナー専用品を本命にせず、全件インナーでも再昇格しない', () => {
   const query = 'SHEINで見たワンピース';

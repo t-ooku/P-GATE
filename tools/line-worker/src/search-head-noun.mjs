@@ -331,6 +331,15 @@ function isExplicitAccessoryMismatch(query, title) {
   // 「こたつ省エネダクト・温風ヒーター用パイプ」だった。主名詞の直後が辞書外の付属品語(ライナー・ダクト)
   // のため本体扱い(2)になっていた。付属品だけの商品は候補から外し、全件付属品の時も元順序の
   // フォールバックで本命に戻さない。付属品を明示した検索・「〜付き/付属/同梱」の本体は従来どおり。
+  // 2026-10-31 固定QA energy_saving_kotatsu(受信箱 2026-10-31-kotatsu-panel-heater-mismatch):
+  // こたつ本体を探す検索で、本命が「パネルヒーター 足元 ワイド こたつ … 足元ヒーター デスク下」だった。
+  // 販売名に「こたつ」があるだけで本体扱い(2)になっていた。パネル/足元/デスク下ヒーターを明示していない
+  // こたつ検索では、主商品が足元パネルヒーター等の別の暖房器具で、こたつ本体を表す語(テーブル・本体・
+  // 天板・家具調・ヒーター内蔵 等)が無い商品を候補から外す。全件不適合でも元順序で本命に戻さない。
+  if (KOTATSU_QUERY.test(query) && !KOTATSU_QUERY_OTHER_HEATER.test(query)
+    && KOTATSU_TITLE_OTHER_HEATER.test(title) && !KOTATSU_TITLE_BODY.test(title)) {
+    return true;
+  }
   const appliance = APPLIANCE_ACCESSORY_RULES.find((rule) => rule.query.test(query));
   if (appliance && !appliance.queryAccessory.test(query)) {
     return appliance.titleAccessory.test(title) && !appliance.bundled.test(title);
@@ -352,6 +361,14 @@ const APPLIANCE_ACCESSORY_RULES = Object.freeze([
     bundled: /(?:ダクト|パイプ)\s*(?:付|付属|同梱)/u
   }
 ]);
+
+const KOTATSU_QUERY = /こたつ|コタツ|炬燵|kotatsu/u;
+// こたつ以外の暖房器具(足元パネルヒーター等)を明示した検索
+const KOTATSU_QUERY_OTHER_HEATER = /パネル|足元|フット|デスク\s*(?:下|ヒーター)|ヒーター(?!\s*(?:内蔵|搭載|付))|暖房/u;
+// 主商品がこたつ以外の暖房器具(足元パネルヒーター・デスク下ヒーター等)である商品名
+const KOTATSU_TITLE_OTHER_HEATER = /パネル\s*ヒーター|足元\s*(?:ヒーター|暖房)|フット\s*ヒーター|デスク\s*ヒーター|デスク下\s*(?:ヒーター|暖房)|デスクパネル/u;
+// こたつ本体を表す語。パネル/遠赤外線ヒーター内蔵のこたつ本体は除外しない
+const KOTATSU_TITLE_BODY = /(?:こたつ|コタツ|炬燵)\s*(?:テーブル|本体|座卓|デスク(?!下))|(?:家具調|ダイニング|座卓|デスク(?!下))\s*(?:こたつ|コタツ|炬燵)|天板|継ぎ脚|ちゃぶ台|(?:ヒーター|パネル|遠赤外線)\S*\s*(?:内蔵|搭載)/u;
 
 const DRESS_QUERY = /ワンピ|(?<!ア)ドレス|\bdress(?:es)?\b/u;
 const DRESS_QUERY_INNER = /ペチ|インナー|下着|ランジェリー|アンダー|透け防止|肌着|petticoat|\bslip\b|underdress|inner/u;
