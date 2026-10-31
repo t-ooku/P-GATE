@@ -46,3 +46,8 @@ ACKED/IN_PROGRESS→DONEまたはBLOCKEDを記録。実装・CI・配備と次�
 - **本番確認: 未確認**（hoshilu.app はこの環境から開けない。追加本番検索・有料 probe・固定QAの手動再実行は指示どおりしていない）。次回の既存固定QA（11/01 07:24 JST 頃）で energy_saving_kotatsu の本命がこたつ本体になったか、またはモールが本体を返さない日に「候補なし／H0 FAIL」として見えるかを Codex の意味判定で確認してください。
 - **既知の残り（今回は触っていない）**: 「こたつ 長方形 省エネ パネルヒーター 遠赤外線」のように本体語（テーブル/天板/内蔵 等）が無く、パネルヒーターと並ぶだけの商品名は除外側に倒れる。対象はこたつ検索のみ。
 - **成果（D1 実測、09:20 JST、QA 除外・集計のみ）**: 購入先クリック（growth_events marketplace_click）直近7日 14件、10/30 JST 以降 2件（最新 10/31 03:54 JST）。配備後の増分は未計測（配備直後のため）。Seller 問い合わせ（seller_business_inquiries）累計4・直近7日新規0。有料契約 0（seller_billing_accounts の stripe_subscription_id あり 0件）。本修正の寄与は未計測。
+
+### 2026-11-01 Codex 本番最終確認
+
+- 既存の通常固定QA **11/1 07:24:03 JST**、energy_saving_kotatsu本命は「こたつテーブル 長方形 TEKNOS 省エネ こたつ本体 60×80cm EKA-680AW」。足元パネルではなくテーブル本体で意味一致。追加検索/有料probe/QA手動実行なし。
+- 証拠は[CI41251043207](https://github.com/t-ooku/P-GATE/actions/runs/41251043207)、artifact13061356929（08:07 JST生成）のfixed_search_qa_24h。#719/4f9f6b2の実装配備に加え、次回通常QAでの本命カテゴリ確認まで完了。全属性やクリック/売上改善の証明とはしない。
