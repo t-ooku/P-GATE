@@ -33,5 +33,17 @@ test('アプリ内ブラウザでは Turnstile を 4 秒だけ待ち、出なけ
   assert.equal((source.match(/if \(inAppBrowser\) showTurnstileFailure\('in_app_browser', \{ quiet: true \}\);/gu) || []).length, 2);
   // 送信側: turnstileFailure が立っていればトークン無しで送る（既存の仕組み）
   assert.match(source, /if \(!turnstileToken && !turnstileFailure\) \{/u);
-  assert.match(html, /for-sellers\.js\?v=1980-8/u, 'キャッシュを更新');
+  assert.match(html, /for-sellers\.js\?v=1980-9/u, 'キャッシュを更新');
+});
+
+// 2026-10-31 大隆さん OK（改善 2）: 7 日で出品者ページ 15 回・申込ボタン 0 回。スマホの 1 画面目に申込ボタンが無かった。
+test('出品者ページ: スマホの画面下に固定の申込ボタン（既存の文言のまま・ほかのボタンかフォームが見えている間は隠す）', () => {
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(html, /<a class="primary seller-sticky-cta" href="#businessForm" data-seller-cta="sticky-inquiry" hidden>無料の見本掲載を申し込む<\/a>/u);
+  assert.match(html, /for-sellers-real\.css\?v=4/u);
+  assert.match(source, /querySelectorAll\('\.seller-showcase-hero \.hero-actions, \.included-cta, #businessForm'\)/u);
+  assert.match(source, /stickyCta\.hidden = visible\.size > 0;/u);
+  const css = readFileSync(new URL('../public/for-sellers-real.css', import.meta.url), 'utf8');
+  assert.match(css, /\.seller-sticky-cta\{display:none\}/u, 'PC では出さない');
+  assert.match(html, /<meta name="description" content="まずは30日間、無料の見本掲載で/u, '検索結果の説明文も今の入口に合わせる');
 });

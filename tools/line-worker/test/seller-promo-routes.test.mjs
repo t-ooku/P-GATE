@@ -44,7 +44,9 @@ test('runbook の流れ: 店の登録→商品 CSV→疑問→手動起動→一
   assert.equal(run.job.week_key, '2026-W41');
   const listed = await (await call(env, '/api/admin/seller-promo/deliverables?seller_key=qa-shop-1&week_key=2026-W41', { deps: admin })).json();
   assert.equal(listed.deliverables.length, 3);
-  const usage = await (await call(env, '/api/admin/seller-promo/usage?month=2026-10', { deps: admin })).json();
+  // 2026-10-31: 呼び出しの記録は「今」の JST の月に入る。固定の 2026-10 だと 11/1 0:00 JST（10/31 15:00 UTC）から落ちていた
+  const usageMonth = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 7);
+  const usage = await (await call(env, `/api/admin/seller-promo/usage?month=${usageMonth}`, { deps: admin })).json();
   assert.equal(usage.usage[0].calls, 3);
   // 契約者側: seller_key はセッションから取る
   const seller = { readSeller: async () => ({ seller_key: 'qa-shop-1' }), now: () => MONDAY_0605_JST };

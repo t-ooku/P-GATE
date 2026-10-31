@@ -326,6 +326,22 @@ if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'fun
   });
 }
 
+// 2026-10-31 大隆さん OK（改善 2）: 7 日で出品者ページ 15 回・申込ボタン 0 回。スマホでは申込ボタンが 1 画面目に無かった。
+// 画面の下に同じ申込ボタンを出す。ほかの申込ボタンかフォームが画面に見えている間は隠す（押した回数は sticky-inquiry で数える）。
+const stickyCta = typeof document !== 'undefined' ? document.querySelector('.seller-sticky-cta') : null;
+const stickyTargets = stickyCta ? [...document.querySelectorAll('.seller-showcase-hero .hero-actions, .included-cta, #businessForm')] : [];
+if (stickyCta && stickyTargets.length && typeof IntersectionObserver === 'function') {
+  const visible = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) visible.add(entry.target);
+      else visible.delete(entry.target);
+    }
+    stickyCta.hidden = visible.size > 0;
+  });
+  stickyTargets.forEach((target) => observer.observe(target));
+}
+
 // 2026-09-19 大隆さん指示 §8: LP に「今、HOSHILUで探されています」を実データで出す。
 // 架空件数は出さない。公開できる件数（同じ条件を5人以上）に達した需要だけ、検索文ではなく正規化した条件で表示する。
 (async () => {
