@@ -7,6 +7,33 @@ export function previousJstDay(now = new Date()) {
     start_at: start.toISOString(), end_at: end.toISOString(), bounds: 'START_INCLUSIVE_END_EXCLUSIVE' };
 }
 
+// Fixed marketplace and aggregate output only: no URLs, product/search text or IDs.
+export async function amazonClickKpi(db, now = new Date()) {
+  const day = previousJstDay(now);
+  const weekStart = new Date(now.getTime() - 7 * 86400000).toISOString();
+  const periods = [
+    { period: 'previous_jst_day', start_at: day.start_at, end_at: day.end_at },
+    { period: '7d', start_at: weekStart, end_at: now.toISOString() },
+    { period: 'retained_all_time', start_at: null, end_at: now.toISOString() }
+  ];
+  try {
+    const rows = (await db.prepare(`WITH windows(period,start_at,end_at) AS (
+      VALUES ('previous_jst_day',?1,?2),('7d',?3,?4),('retained_all_time',NULL,?4)
+    ) SELECT w.period,COUNT(g.event_type) AS events,
+      COUNT(DISTINCT NULLIF(g.session_id,'')) AS sessions
+      FROM windows w LEFT JOIN growth_events g ON g.event_type='marketplace_click'
+      AND g.marketplace='AMAZON_JP' AND g.traffic_class NOT IN ('QA','INTERNAL')
+      AND (w.start_at IS NULL OR datetime(g.occurred_at)>=datetime(w.start_at))
+      AND datetime(g.occurred_at)<datetime(w.end_at)
+      GROUP BY w.period ORDER BY w.period`).bind(day.start_at, day.end_at, weekStart, now.toISOString()).all()).results;
+    return { status: 'AVAILABLE', generated_at: now.toISOString(), periods, rows,
+      scope: 'AMAZON_ONLY_QA_INTERNAL_EXCLUDED_CLICKS_NOT_QUALIFYING_SALES_OR_ORDERS' };
+  } catch {
+    return { status: 'UNAVAILABLE', generated_at: now.toISOString(), periods,
+      reason: 'AMAZON_CLICK_AGGREGATE_QUERY_FAILED' };
+  }
+}
+
 export async function sellerFormFailureReasons(db) {
   try {
     const rows = (await db.prepare(`SELECT CASE

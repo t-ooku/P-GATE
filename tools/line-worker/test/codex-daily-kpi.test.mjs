@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { previousJstDay, previousDayKpi, sellerFormFailureReasons } from '../scripts/codex-daily-kpi.mjs';
+import { previousJstDay, previousDayKpi, sellerFormFailureReasons, amazonClickKpi } from '../scripts/codex-daily-kpi.mjs';
 import { assertReadOnlySql } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 test('previous JST day crosses month/year boundaries, not rolling 24h', () => {
@@ -10,6 +10,33 @@ test('previous JST day crosses month/year boundaries, not rolling 24h', () => {
   assert.equal(p.start_at,'2026-12-30T15:00:00.000Z');
   assert.equal(p.end_at,'2026-12-31T15:00:00.000Z');
   assert.equal(previousJstDay(new Date('2026-10-27T23:00:00Z')).date,'2026-10-27');
+});
+
+test('Amazon click windows exclude QA/internal, other malls and end boundary without exporting identifiers', async () => {
+  const s = new DatabaseSync(':memory:');
+  s.exec('CREATE TABLE growth_events(event_type TEXT,marketplace TEXT,traffic_class TEXT,session_id TEXT,occurred_at TEXT)');
+  const insert=s.prepare("INSERT INTO growth_events VALUES('marketplace_click',?,?,?,?)");
+  for (const row of [
+    ['AMAZON_JP','ATTRIBUTED','private-a','2026-10-30T15:00:00Z'],
+    ['AMAZON_JP','UNATTRIBUTED','private-a','2026-10-31T03:00:00Z'],
+    ['AMAZON_JP','ATTRIBUTED','private-b','2026-10-31T15:00:00Z'],
+    ['AMAZON_JP','ATTRIBUTED','private-c','2026-10-01T00:00:00Z'],
+    ['AMAZON_JP','QA','private-qa','2026-10-31T03:00:00Z'],
+    ['AMAZON_JP','INTERNAL','private-internal','2026-10-31T03:00:00Z'],
+    ['RAKUTEN_JP','ATTRIBUTED','private-other','2026-10-31T03:00:00Z'],
+    ['AMAZON_JP','ATTRIBUTED','private-future','2026-10-31T23:00:00Z']
+  ]) insert.run(...row);
+  const db={prepare(sql){const q=s.prepare(assertReadOnlySql(sql));return {bind(...a){return {async all(){return {results:q.all(...a)}}}}}}};
+  const j=await amazonClickKpi(db,new Date('2026-10-31T23:00:00Z'));
+  assert.equal(j.status,'AVAILABLE');
+  assert.deepEqual(j.rows.map(r=>[r.period,r.events,r.sessions]),[['7d',3,2],['previous_jst_day',2,1],['retained_all_time',4,3]]);
+  assert.doesNotMatch(JSON.stringify(j),/private|session_id/);
+  s.exec('DELETE FROM growth_events');
+  assert.ok((await amazonClickKpi(db)).rows.every(r=>r.events===0 && r.sessions===0));
+  const failure=await amazonClickKpi({prepare(){throw Error('private')} });
+  assert.equal(failure.status,'UNAVAILABLE');
+  assert.equal(failure.rows,undefined);
+  s.close();
 });
 
 test('daily aggregates include start, exclude end, QA/internal and legacy focus; multiple clicks remain events', async () => {
