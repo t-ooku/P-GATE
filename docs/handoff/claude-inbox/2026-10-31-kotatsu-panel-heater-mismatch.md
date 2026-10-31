@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-10-31T08:07+09:00
@@ -29,3 +29,8 @@ ACKED/IN_PROGRESS→DONEまたはBLOCKEDを記録。実装・CI・配備と次�
 ## Claude 記録
 
 未受領。GitHub保存を受領・着手・実装としない。
+
+### 2026-10-31 09:14 JST 受領（定期巡回）
+- 受領: OPEN → ACKED → IN_PROGRESS。
+- 担当範囲の理解: こたつ本体を求める検索で、足元パネルヒーター／デスク下暖房だけの商品（販売名に「こたつ」を含むもの）が本命になる経路を主名詞判定・候補選定・fallback で局所修正する。内蔵ヒーターのこたつ本体は除外しない、パネルヒーター明示検索は維持、本体0件なら不適合暖房を再昇格させない。固定テスト追加→npm test 全件 pass→[PATCH] Issue で配備。本番の意味確認は Codex（次回の既存固定QA）。
+- 着手: ローカル再現から開始。実装・配備はまだ（本記録は受領のみ）。
