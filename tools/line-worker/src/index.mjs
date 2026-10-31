@@ -130,7 +130,7 @@ import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
 import { MEDIA_GENRE_PATHS, MEDIA_PATHS, MEDIA_SCENE_PATHS, handleOwnedMediaRoutes, handleTopDropsApi } from './owned-media.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import {
-  classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure,
+  classifyGrowthTraffic, handleGrowthEvent, isCrawlerUserAgent, recordSearchOperationalFailure,
   recordSearchProviderDegradation
 } from './growth-events.mjs';
 import {
@@ -1073,6 +1073,12 @@ async function handleRedirect(request, env, ctx) {
     const occurredAt = new Date().toISOString();
     const events = trackingEventsForPayload(payload, occurredAt);
     const channel = payload.c === 'PWA' ? 'PWA' : 'LINE';
+    // 2026-10-31: 商品ページを検索エンジンに出した 10/25 から、/go（商品詳細から）が 7 日で 756 件。
+    // 全部 seo リンク・セッション無しで、人のクリックは 9 件だった（クローラが「楽天市場で買う」を辿っていた）。
+    // 名乗っているクローラは送客・前払い消化・計測に数えない（リダイレクトはそのまま返す）。
+    if (isCrawlerUserAgent(request.headers.get('user-agent'))) {
+      return Response.redirect(payload.d, 302);
+    }
     if (payload.t === 'SEARCH_FALLBACK') {
       ctx.waitUntil(recordUnmetDemandEvent(env, payload, occurredAt, channel));
     }

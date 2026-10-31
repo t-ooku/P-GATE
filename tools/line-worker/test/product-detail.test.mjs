@@ -142,7 +142,7 @@ test('記録 14 日以上の商品ページは index・本文つき（D1 だけ�
   assert.match(html, /30日 最安 ¥2,480 ／ 最高 ¥2,980/u);
   assert.match(html, /HOSHILU価格記録開始後の最安値/u);
   assert.match(html, /<svg class="product-chart"/u, 'サーバー側でも推移グラフ');
-  assert.match(html, /class="product-buy" href="https:\/\/hoshilu\.app\/go\?token=signed:[^"]+" rel="noopener noreferrer sponsored">楽天市場で買う/u, '買うボタンは /go の署名リンク');
+  assert.match(html, /class="product-buy" href="https:\/\/hoshilu\.app\/go\?token=signed:[^"]+" rel="nofollow sponsored noopener noreferrer">楽天市場で買う/u, '買うボタンは /go の署名リンク');
   assert.match(html, /"@type":"Product"[\s\S]*"price":"2480","priceCurrency":"JPY"/u);
   assert.doesNotMatch(html, /今が底値|買い時|必ず/u);
   for (const marker of ['product-head', 'product-now', 'product-history', 'product-offers']) assert.ok(html.includes(`class="${marker}"`), marker);

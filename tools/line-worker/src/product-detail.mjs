@@ -223,7 +223,7 @@ function jsonLd(snapshot, canonical) {
 export function renderProductSeoBody(snapshot, buyUrl = '') {
   const h = snapshot.history;
   const lines = comparisonLines(h, snapshot.latest_price).map((line) => `<li>${esc(line)}</li>`).join('');
-  const buy = buyUrl ? `<p class="product-buy-row"><a class="product-buy" href="${esc(buyUrl)}" rel="noopener noreferrer sponsored">${esc(snapshot.marketplace_label)}で買う</a></p>` : '';
+  const buy = buyUrl ? `<p class="product-buy-row"><a class="product-buy" href="${esc(buyUrl)}" rel="nofollow sponsored noopener noreferrer">${esc(snapshot.marketplace_label)}で買う</a></p>` : '';
   return `<section class="product-head"><div class="product-head-text"><h1 class="product-name">${esc(snapshot.name)}</h1><p class="product-mall">${esc(snapshot.marketplace_label)} で確認した商品</p></div></section>
 <section class="product-now"><h2>今いくら？</h2><p class="product-now-price">${esc(yen(snapshot.latest_price))}</p><p class="product-now-note">${snapshot.shipping_included ? '送料込み' : '送料未確認・商品価格のみ'} ／ ${esc(snapshot.marketplace_label)} ／ ${esc(slashDate(snapshot.latest_date))} の記録（開くと最新の価格を確認します）</p>${buy}</section>
 <section class="product-history"><h2>過去の価格と比べる</h2><ul class="product-history-list">${lines}</ul><p class="product-history-since">HOSHILUでの価格記録開始：${esc(slashDate(h.recording_since))}（記録は1日1回。無い日は空白のままにしています）</p>${priceChartSvg(h.series)}</section>

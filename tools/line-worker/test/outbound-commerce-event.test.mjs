@@ -171,6 +171,44 @@ test('v4.3項目27: GET /go は既存どおり302リダイレクトしつつ、�
   }
 });
 
+// 2026-10-31: 商品ページ（SEO）の「楽天市場で買う」をクローラが 7 日で 756 回辿り、送客に数えられていた。
+test('名乗っているクローラの /go はリダイレクトだけ返し、送客・計測には数えない。robots.txt と nofollow でも辿らせない', async () => {
+  const { sqlite, db } = sqliteD1();
+  const secret = 'b'.repeat(32);
+  const token = await createTrackToken({
+    u: '', r: 'seo-intent', a: 'shop:10001', d: 'https://item.rakuten.co.jp/shop/10001/',
+    exp: Math.floor(Date.now() / 1000) + 3600, j: 'shop:10001:RAKUTEN_JP:seo', c: 'PWA', m: 'RAKUTEN_JP'
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (...args) => { calls.push(args); return Response.json({ ok: true, result: {} }); };
+  try {
+    const env = { LINK_SIGNING_SECRET: secret, GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec', GAS_BRIDGE_SECRET: 'g'.repeat(32), PRODUCT_DB: db };
+    const pending = [];
+    const context = { waitUntil: (p) => pending.push(p) };
+    const bot = await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`, {
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' }
+    }), env, context);
+    assert.equal(bot.status, 302);
+    assert.equal(bot.headers.get('location'), 'https://item.rakuten.co.jp/shop/10001/');
+    await Promise.all(pending);
+    assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM outbound_commerce_events').get().n, 0);
+    assert.equal(calls.length, 0, 'GAS の計測も呼ばない');
+    const human = await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`, {
+      headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' }
+    }), env, context);
+    assert.equal(human.status, 302);
+    await Promise.all(pending);
+    assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM outbound_commerce_events').get().n, 1, '人のクリックは今までどおり数える');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  const robots = readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8');
+  assert.match(robots, /^Disallow: \/go$/mu);
+  const detail = readFileSync(new URL('../src/product-detail.mjs', import.meta.url), 'utf8');
+  assert.match(detail, /class="product-buy" href="\$\{esc\(buyUrl\)\}" rel="nofollow sponsored noopener noreferrer"/u);
+});
+
 // 2026-09-02: /go経由の商品リンクもバリューコマース提携モールなら
 // referral URLで包んで収益化する(フロント直リンクのLinkSwitchと対)。
 test('提携済みモールの/go先はバリューコマースreferralで包まれ、元URLを完全保持する', () => {
