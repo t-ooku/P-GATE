@@ -360,3 +360,22 @@ test('自動の撮影はバリューコマースの表示の計測に入れな�
     assert.match(source, /blockAffiliateTracking\(mobile\)|valuecommerce\\\.\(\?:com\|ne\\\.jp\)/u, file);
   }
 });
+
+// 2026-10-31 大隆さん OK（Instagram 改善 B「保存したくなる形」）: 1 投稿のリーチ 4〜13・保存 0 だった。
+test('ユーザー向けの投稿は 1 行目・1 枚目が問いかけ、最後に「保存して見返して」。買い時・底値とは書かない', async () => {
+  const { SAVE_PROMPT } = await import('../scripts/build-social-screens.mjs');
+  assert.equal(SAVE_PROMPT, '保存して、買う前に見返してね。');
+  for (const id of ['notes', 'drops', 'buzz']) {
+    const caption = SCREEN_POSTS[id].caption;
+    assert.match(caption.split('\n')[0], /？$/u, `${id}: 1 行目は問いかけ`);
+    assert.match(caption, /保存しておいて、買う前に見返してね。/u, `${id}: 保存の一言`);
+    assert.doesNotMatch(caption, /買い時|底値|今が安い/u);
+    assert.ok(caption.length < 2200, 'Instagram の本文上限');
+  }
+  assert.match(SCREEN_SETS.notes[0].title, /？$/u);
+  assert.match(SCREEN_SETS.buzz[0].title, /？$/u);
+  assert.match(SCREEN_SETS.drops[0].title, /？$/u);
+  assert.equal(SCREEN_SETS.drops[1].title, '今、\n値下がり中。', '2 枚目以降は今までどおり');
+  for (const id of ['notes', 'drops', 'buzz']) assert.match(SCREEN_SETS[id].at(-1).body, /保存して、買う前に見返してね。/u, `${id}: 最後の 1 枚`);
+  assert.doesNotMatch(SCREEN_SETS.seller.map((slide) => slide.body).join('\n'), /保存して/u, 'セラー向けは変えない');
+});

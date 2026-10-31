@@ -167,17 +167,20 @@ const DROP_CARD_CSS = '.media-drop a{grid-template-columns:1fr!important}.media-
   // 2026-10-17 大隆さん「商品名にぼかし入れて」: 店が付けた商品名は丸ごとぼかす（ジャンルの札・写真・記録した価格で見せる）
   + '.media-drop-body strong{filter:blur(7px)!important;user-select:none!important}';
 
+// 2026-10-31 大隆さん OK（Instagram 改善 B「保存したくなる形」）: 1 投稿のリーチ 4〜13・保存 0。
+// 1 枚目は問いかけ、最後の 1 枚に「保存して、買う前に見返してね」。価格の予想・「買い時」は書かない。
+export const SAVE_PROMPT = '保存して、買う前に見返してね。';
 const SEARCH_SLIDE = Object.freeze({
   id: 'search', url: '/', selector: '#knowledgeForm', min: 1, fromTop: true,
   kicker: 'SEARCH', title: '名前が分からなくても、\nまとめて探せる。',
-  body: '見た目・用途・スクショから。\n登録なしで使えます。プロフィールのリンクから。'
+  body: `見た目・用途・スクショから。登録なしで使えます。\n${SAVE_PROMPT}`
 });
 
 export const SCREEN_SETS = Object.freeze({
   notes: Object.freeze([
     {
       id: 'notes-top', url: '/media', selector: '.media-hero', min: 1, extend: '.media-stats',
-      kicker: 'HOSHILU NOTES', title: '毎日の値動きを、\nノートにしています。',
+      kicker: 'HOSHILU NOTES', title: 'それ、最近\n安くなった？',
       body: 'ホシルが楽天市場・Yahoo!ショッピングの価格を\n毎日記録。「買い物ノート」で読めます。'
     },
     {
@@ -200,7 +203,7 @@ export const SCREEN_SETS = Object.freeze({
   buzz: Object.freeze([
     {
       id: 'buzz-1', url: '/#tab-buzz', selector: '#buzzTab .buzz-home-shelf', min: 4, nth: 0, labelFrom: 'h3',
-      kicker: 'HOSHILU BUZZ', title: '今、みんなが\nホシってる。',
+      kicker: 'HOSHILU BUZZ', title: 'みんな今、\n何を買ってる？',
       body: 'いま売れている物を、ジャンル別に。\n順位は楽天市場・Yahoo!ショッピングの公式ランキング。'
     },
     {
@@ -234,13 +237,13 @@ export const SCREEN_SETS = Object.freeze({
       optional: true, rejectFullBlur: true, group: 'drop', groupMax: 6, groupMin: 3,
       unmask: Object.freeze(['.media-drop-prices', '.media-drop-rate']), css: DROP_CARD_CSS, fit: true, maxHeight: 760,
       labelFrom: '.media-drop-genre', bigFrom: '.media-drop-rate', bigNote: Object.freeze(['値下がり中', '下がってる今', '最高値から↓']),
-      kicker: 'PRICE DROP', title: '今、\n値下がり中。',
+      kicker: 'PRICE DROP', title: focus === 1 ? '最近、\n安くなった物は？' : '今、\n値下がり中。',
       body: '{date} ホシルの記録で、14日間の最高値から下がった幅です。\n価格は変わります。欲しい物は、ホシルで検索。'
     })),
     Object.freeze({
       ...SEARCH_SLIDE, id: 'drops-search',
       kicker: 'SEARCH', title: '欲しい物は、\nホシルで検索。',
-      body: '名前が分からなくても、言葉やスクショで。\n値下がりしたら、お知らせします。プロフィールのリンクから。'
+      body: `名前が分からなくても、言葉やスクショで探せます。\n${SAVE_PROMPT}`
     })
   ]),
   // 2026-10-16 大隆さん「肝心なリアル画像が全ページ見切れてる」（20:15 の投稿を削除）: 出品者向けページをスマホ枠ごと撮ると、
