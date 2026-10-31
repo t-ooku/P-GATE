@@ -46,7 +46,7 @@ async function main() {
     const data = await response.json();
     const items = Array.isArray(data?.items) ? data.items.filter((item) => /^https:\/\//u.test(String(item?.image_url || ''))) : [];
     if (!data?.ok || !items.length) return;
-    list.replaceChildren(...items.slice(0, 3).map(topDropCard));
+    list.replaceChildren(...items.slice(0, 6).map(topDropCard));
     if (note) note.textContent = String(data.note || '');
     // 2026-10-20 季節の一言（「衣替えの季節。ニット・羽織りものもチェック」など）。無い時期は出さない
     const seasonText = String(data.season || '').slice(0, 60);

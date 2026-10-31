@@ -34,8 +34,8 @@ const EXPECTED = Object.freeze({
   'unified-results-ui.css': '14',
   'unified-results-ui.mjs': '23',
   'instagram-look.css': '11',
-  'top-drops.css': '2',
-  'top-drops.mjs': '2'
+  'top-drops.css': '3',
+  'top-drops.mjs': '3'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {

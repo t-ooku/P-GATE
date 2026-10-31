@@ -36,3 +36,20 @@
   .top-drop-prices{font-size:10px}
   .top-drop-prices b{font-size:12px}
 }
+
+/* 2026-10-31 大隆さん OK（改善 1）: 来た人の 9 割が検索せずに帰っていた（7 日で着地 55・検索 7）。
+   スマホの最初の画面に「今日の値下がり」の写真まで入るよう、入力欄を少し低く・例を横 1 列にし、
+   値下がりは 6 つを横に流す棚にする（棚は横・検索結果は縦のきまり）。PC は 6 列 1 段。 */
+@media(max-width:760px){
+  #hoshiluSearch .query-field textarea#query{min-height:60px!important;height:60px}
+  #quickQueries.quick-queries-top{flex-wrap:nowrap;align-items:center;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:8px -2px 10px;padding:0 2px 2px}
+  #quickQueries.quick-queries-top::-webkit-scrollbar{display:none}
+  #quickQueries.quick-queries-top::before{content:"例";flex:none;flex-basis:auto;padding:0 2px}
+  #quickQueries.quick-queries-top button.chip{flex:none;white-space:nowrap}
+  #quickQueries.quick-queries-top .member-example-cta{flex:none;flex-basis:auto;order:99;white-space:nowrap}
+  .top-drops{margin-top:12px}
+  .top-drops-list{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -10px;padding:0 10px 2px}
+  .top-drops-list::-webkit-scrollbar{display:none}
+  .top-drop{flex:0 0 31%;scroll-snap-align:start}
+}
+@media(min-width:761px){.top-drops-list{grid-template-columns:repeat(6,minmax(0,1fr))}}

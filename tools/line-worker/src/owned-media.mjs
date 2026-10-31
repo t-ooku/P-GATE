@@ -710,7 +710,9 @@ ${AD_NOTE}</article>`;
 // 値下がりページ（/media/price-drops）と同じ記録・同じ並び（data-focus の 1〜3）。商品名・記録した価格・下がり幅・画像だけを返す。
 // 検索文や利用者の情報は使わない。30 分キャッシュ（値下がりページと同じ）。
 export const TOP_DROPS_PATH = '/api/media/top-drops';
-export const TOP_DROPS_LIMIT = 3;
+// 2026-10-31 大隆さん OK（改善 1）: 来た人の 9 割が検索せずに帰っていた（7 日で着地 55・検索 7・値下がりの押下 0）。
+// トップの値下がりを 3 → 6 に増やし、スマホでは横に流す棚にした。
+export const TOP_DROPS_LIMIT = 6;
 export function topDropItems(drops, limit = TOP_DROPS_LIMIT) {
   if (!Array.isArray(drops)) return [];
   return drops.filter((row) => row.focus && row.image_url && /^https:\/\//u.test(String(row.image_url)))

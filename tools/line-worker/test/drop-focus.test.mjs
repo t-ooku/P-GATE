@@ -105,7 +105,7 @@ test('韓国ファッションの価格記録: 固定の検索語・商品名に
 });
 
 // 2026-10-19 大隆さん OK（入口の改善案 2・3）
-test('トップの「今日の値下がり」: 値下がりページと同じ並びの 1〜3 番目だけ、画像のある物を返す。押した回数を数える', async () => {
+test('トップの「今日の値下がり」: 値下がりページと同じ並びの 1〜6 番目だけ、画像のある物を返す。押した回数を数える', async () => {
   const { topDropItems, handleTopDropsApi, TOP_DROPS_PATH } = await import('../src/owned-media.mjs');
   const drops = withDropFocus([
     { ...row('k', 'korean_fashion', '韓国 ブラウス', 30), image_url: 'https://img.example/k.jpg', latest_price: 1980, max_price: 2980 },
@@ -115,8 +115,10 @@ test('トップの「今日の値下がり」: 値下がりページと同じ並
     { ...row('x', 'kitchen', '画像なし', 50, false) }
   ]);
   const items = topDropItems(drops);
-  assert.equal(items.length, 3);
-  assert.deepEqual(items.map((item) => item.name), ['韓国 ブラウス', 'ニット', 'フライパン']);
+  // 2026-10-31: 3 → 6 に増やした。画像の無い物は入らない
+  assert.equal(items.length, 4);
+  assert.deepEqual(items.slice(0, 3).map((item) => item.name), ['韓国 ブラウス', 'ニット', 'フライパン']);
+  assert.ok(!items.some((item) => item.name === '画像なし'));
   assert.equal(items[0].genre, '韓国ファッション');
   assert.equal(items[0].href, '/product?key=k&from=top');
   assert.deepEqual([items[0].latest_price, items[0].max_price], [1980, 2980]);
