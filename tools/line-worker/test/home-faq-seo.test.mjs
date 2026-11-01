@@ -95,7 +95,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 158); // 2026-10-03 Seller 向け記事 2 本。2026-10-26 ジャンル別 22 ページは /sitemap-genres.xml（index の日だけ）へ移した
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v429/);
+  assert.match(worker, /hoshilu-shell-v430/);
 });
 
 test('SNS URL FAQは静的表示とruntime上書きで対応形式の公開単体URLに統一する', async () => {

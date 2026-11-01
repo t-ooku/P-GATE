@@ -291,7 +291,11 @@ function collectMarketplaceImpressions(executionId) {
 // リンク先取得が、ブラウザと同じ UA で数秒だけページを開いている。人の訪問として数えないよう、
 // 画面に 1.5 秒出ていたか、人が触った（ホイール・タップ・キー入力。scroll はページの組み立てでも起きるので使わない）時点で 1 回だけ数える。
 const LANDING_VIEW_VISIBLE_MS = 1500;
+// 2026-11-02 Cowork 依頼 §1: 11/1 01:10 JST に 10 分で約 140 件、操作の無い閲覧が別々の visitor で入った（UA は保存しないので名前は分からない）。
+// 自動操作のブラウザ（navigator.webdriver が true。Puppeteer・Playwright・Selenium など）は、表示されていても訪問に数えない。
+const isAutomatedBrowser = (nav = globalThis.navigator) => nav?.webdriver === true;
 (() => {
+  if (isAutomatedBrowser()) return;
   let sent = false;
   let timer = 0;
   const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];

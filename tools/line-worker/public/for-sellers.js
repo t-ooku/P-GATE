@@ -28,33 +28,27 @@ function sendSellerEvent(event_type, extra = {}) {
 }
 
 // 2026-10-16（#644 と同じ基準）: SNS 投稿の数分後に 2 件ずつ同時に来るリンク先取得が来訪に混ざっていた。
-// 画面に 1.5 秒出ていたか、人が触った（ホイール・タップ・キー入力。scroll はページの組み立てでも起きるので使わない）時に 1 回だけ数える。
 // 2026-10-23（Codex 受信箱 seller-form-failed-diagnosis）: 確認欄の読込失敗は画面に出る前（先読み・リンク取得）にも起きる。
-// 10/22 の失敗1件は閲覧0・入力0・送信0のセッションだった。閲覧を数えた後だけ失敗として送り、それまでは保留する。
+// 閲覧を数えた後だけ失敗として送り、それまでは保留する。
+// 2026-11-02 Cowork 依頼 §1・§2: 1.5 秒表示の基準でも、自動の閲覧が数えられていた（11/1 01:10 JST の 10 分で 103 セッション・
+// 操作 0。Threads のセラー投稿の約 4 分後に 2 件ずつ、閲覧と確認欄の失敗が同じ秒に出る）。セラー向けの長いページは、
+// 人なら読むためにスクロール・タップ・キー入力をする。人が触った時だけ閲覧として数え、確認欄の失敗もその後だけ送る。
+// 自動操作のブラウザ（navigator.webdriver が true）は触っても数えない。
 let sellerLandingCounted = false;
 const failuresBeforeLanding = [];
-const SELLER_LANDING_VISIBLE_MS = 1500;
+const SELLER_LANDING_EVENTS = Object.freeze(['pointerdown', 'keydown', 'touchstart', 'wheel']);
 (() => {
+  if (globalThis.navigator?.webdriver === true) return;
   let sent = false;
-  let timer = 0;
-  const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
   const fire = () => {
     if (sent) return;
     sent = true;
-    clearTimeout(timer);
-    document.removeEventListener('visibilitychange', arm);
-    for (const type of events) removeEventListener(type, fire, true);
+    for (const type of SELLER_LANDING_EVENTS) removeEventListener(type, fire, true);
     sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
     sellerLandingCounted = true;
     for (const code of failuresBeforeLanding.splice(0)) sendSellerEvent('seller_form_failed', { content: code });
   };
-  function arm() {
-    clearTimeout(timer);
-    if (document.visibilityState === 'visible') timer = setTimeout(fire, SELLER_LANDING_VISIBLE_MS);
-  }
-  document.addEventListener('visibilitychange', arm);
-  for (const type of events) addEventListener(type, fire, { capture: true, passive: true });
-  arm();
+  for (const type of SELLER_LANDING_EVENTS) addEventListener(type, fire, { capture: true, passive: true });
 })();
 
 // 2026-10-16 Cowork 依頼 §1・§2: 申込ボタンはフォームの説明の先頭に飛んでいて、スマホでは最初の入力欄が

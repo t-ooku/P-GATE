@@ -405,6 +405,10 @@ test('AI販促担当のボタンから来た相談はプランを持ち、ボタ
   assert.match(js, /'pricing-light': \['PROMO_LIGHT'/u);
   assert.match(js, /'pricing-standard': \['PROMO_STANDARD'/u);
   assert.match(js, /firstInput\.scrollIntoView\(\{ behavior: 'smooth', block: 'center' \}\)/u);
-  assert.match(js, /const SELLER_LANDING_VISIBLE_MS = 1500;/u);
+  // 2026-11-02 Cowork 依頼: 表示時間ではなく、人が触った時だけ閲覧に数える（自動の閲覧・確認欄の失敗を混ぜない）
+  assert.doesNotMatch(js, /SELLER_LANDING_VISIBLE_MS|setTimeout\(fire/u, '表示時間だけでは数えない');
+  assert.match(js, /const SELLER_LANDING_EVENTS = Object\.freeze\(\['pointerdown', 'keydown', 'touchstart', 'wheel'\]\);/u);
+  assert.match(js, /if \(globalThis\.navigator\?\.webdriver === true\) return;/u);
+  assert.match(js, /if \(!sellerLandingCounted\) \{ failuresBeforeLanding\.push\(code\); return; \}/u, '確認欄の失敗は閲覧を数えた後だけ送る');
   assert.doesNotMatch(js, /^sendSellerEvent\('seller_landing_view'/mu, '読み込み直後に無条件で送らない');
 });

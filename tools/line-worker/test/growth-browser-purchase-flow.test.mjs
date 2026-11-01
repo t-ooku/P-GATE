@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { growthMarketplace } from '../public/growth-marketplaces.mjs';
 
-function browser(visibility = 'visible') {
+function browser(visibility = 'visible', navigator = {}) {
   const listeners = new Map(), timers = new Map(), events = [];
   let timerId = 0;
   const add = (name, fn) => listeners.set(name, [...(listeners.get(name) || []), fn]);
@@ -15,7 +15,7 @@ function browser(visibility = 'visible') {
   const document = { visibilityState:visibility, documentElement:{lang:'ja'}, referrer:'',
     addEventListener:add, removeEventListener:remove, dispatchEvent:dispatch, querySelectorAll:()=>[] };
   const context = { document, location:{origin:'https://hoshilu.app',hostname:'hoshilu.app',pathname:'/',search:''},
-    URL, URLSearchParams, Blob, Element, navigator:{}, localStorage:storage(),sessionStorage:storage(),
+    URL, URLSearchParams, Blob, Element, navigator, localStorage:storage(),sessionStorage:storage(),
     growthMarketplace, growthSessionId:()=> 'local-session', growthVisitorId:()=> 'local-visitor',
     addEventListener:add,removeEventListener:remove,
     setTimeout:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id),
@@ -53,6 +53,14 @@ test('a hidden preload does not become a visit; a later visible interaction stil
   b.document.visibilityState='visible';b.dispatch({type:'visibilitychange'});
   b.dispatch({type:'wheel'});b.dispatch({type:'wheel'});
   assert.equal(b.events.filter(e=>e.event_type==='landing_view').length,1);
+});
+
+// 2026-11-02 Cowork 依頼 §1: 自動操作のブラウザ（navigator.webdriver）は、表示されても触っても訪問に数えない。
+test('an automated browser (navigator.webdriver) never records landing_view', () => {
+  const b=browser('visible',{webdriver:true});
+  assert.equal([...b.timers.values()].filter(t=>t.ms===1500).length,0);
+  b.dispatch({type:'pointerdown'});b.dispatch({type:'wheel'});
+  assert.equal(b.events.filter(e=>e.event_type==='landing_view').length,0);
 });
 
 test('watch entry and notification revisit reach mall click without leaking product or notification details', () => {
