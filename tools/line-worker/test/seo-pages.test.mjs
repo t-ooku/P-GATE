@@ -848,3 +848,16 @@ test('Seller 向け記事（ブログ・SNSが続かない／楽天GOLD）は料
     assert.match(text, slug === 'netshop-blog-sns-tsuzukanai' ? /今日もできなかった/ : /選べない理由/);
   }
 });
+
+// 2026-11-01 Search Console: 「この商品名わかる？」「この商品の名前は」などの話し言葉の検索で 1 ページ目に出るがクリック 0。
+test('名前が分からない物の記事: 題名・説明が話し言葉の検索に合い、冒頭に写真から探す入口、似た質問の答えがある', () => {
+  const html = renderSeoPage('/ja/find-product-without-name', {});
+  assert.match(html, /<title>この商品の名前は？写真・うろ覚え・SNSの画像から商品名を調べる方法 \| HOSHILU<\/title>/);
+  assert.match(html, /<meta name="description" content="「この商品名わかる？」という時は/);
+  // 入口は結論の直後（ファーストビュー圏）に置き、既存の data-seo-feature-link 計測に載せる
+  const answer = html.indexOf('id="answer"');
+  const entry = html.indexOf('<p class="bottom-cta feature-entry"><a href="/" data-seo-feature-link>📷 写真・スクショを入れて商品名を探す</a></p>');
+  assert.ok(answer > 0 && entry > answer && entry < html.indexOf('id="visual-guide"'));
+  for (const question of ['この商品の名前を調べるには', 'テレビショッピングで紹介していた商品', 'SNS（インスタ・TikTok など）で見た物', '正式な商品名や型番']) assert.ok(html.includes(question), question);
+  assert.match(html, /"@type":"FAQPage"/);
+});
