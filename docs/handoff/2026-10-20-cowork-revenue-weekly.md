@@ -237,3 +237,74 @@ Threads（**10/22 から再開**。10/19〜10/21 は `THREADS_CREATE_401` で 8 
   - 未送信 3 通（7 通目で許可チェックにより止まった。10/24 作成の下書きのまま）: UPI OUTDOOR ヤフー店／TSUBAMEフットウェア／快和空間Yahoo!店
   - 10/19 にフォローを送った 6 店（10/3 の相手）は、すでに 2 通目を送っているので送らない。
 - 記録の依頼: `2026-10-26-cowork-to-claude-code-revenue.md`（seller_outreach_contacts に 30 件を `SENT`・`GMAIL_MANUAL` で）。
+
+---
+
+## 2026-10-26 週
+
+> 実行: 2026-11-02（月）08:48〜09:00 JST（Cowork 月曜の定期タスク）。対象は **10/26（月）00:00〜11/01（日）24:00 JST**。D1 は読み取りのみ・QA（traffic_class='QA'）除外。
+> **この回は Gmail の接続が切れていた（再接続が必要）**。Gmail を使う手順（返信の確認・新規 20 通の下書き・フォローの下書き・送信）は**実行していない**。Gmail 由来の数字は「未計測」。
+> **11/1（日）01:10〜01:19 JST の一斉アクセスを除いて数えた**（10 分で `seller_landing_view` 103 セッション・`landing_view` 37 セッション、1 件ずつ visitor が別、操作なし）。人ではないと見て除外し、確認を依頼した（`2026-11-02-cowork-to-claude-code-revenue.md` §1）。
+
+### 1. 訪問・検索・送客（growth_events）
+
+| 項目 | 10/26 週 | メモ |
+|---|---|---|
+| 訪問（landing_view のセッション） | 49 | 一斉アクセス込みでは 86。日別: 10/26 15・10/27 6・10/28 9・10/29 1・10/30 2・10/31 4・11/1 12（一斉アクセス込み 49） |
+| 検索開始（search_started のセッション） | 3 | 前週 9 |
+| 検索成功（search_completed のセッション） | 3 | 前週 8 |
+| モール送客（marketplace_click） | 5 回・3 セッション | 楽天 3・Yahoo! 1・ZOZOTOWN 1。`marketplace_shown` 39 件・3 セッション |
+| `/for-sellers` 閲覧（seller_landing_view） | 20 セッション | 一斉アクセス込みでは 123。このうち 4 は Threads セラー投稿（22:30）の約 4 分後に 2 件ずつ同時に来たもの（下）で、人ではない可能性 |
+| セラーの相談フォーム送信失敗（seller_form_failed） | 4 | すべて `turnstile_unavailable`。10/26 22:34・10/30 22:34 JST に、参照元なしと Threads（`hoshilu-threads-seller-v1`）が同じ秒に閲覧＋失敗。入力・送信・CTA は 0。#694 の後も出ている → 依頼書 §2 |
+
+流入元 上位5（landing_view のセッション／うち検索、一斉アクセス除外）
+
+| 流入元 | 着地 | 検索 |
+|---|---|---|
+| 不明（参照元なし） | 32 | 5未満 |
+| bing | 7 | 0 |
+| chatgpt.com | 6 | 5未満 |
+| instagram | 5未満 | 0 |
+| google・facebook | 各 5未満 | 0 |
+
+### 2. アフィリエイト 3 社（10/26〜11/01）
+
+| 会社 | クリック | 成果 | 報酬額 |
+|---|---|---|---|
+| Amazon アソシエイト | 未計測（Gmail の接続切れでレポートメールを確認できず・管理画面にもログインできない） | 未計測 | 未計測 |
+| 楽天アフィリエイト | 未計測（同上） | 未計測 | 未計測 |
+| バリューコマース | 未計測（同上） | 未計測 | 未計測 |
+
+- HOSHILU 側のクリック: 上の marketplace_click 5 回（楽天 3・Yahoo! 1・ZOZOTOWN 1）。4 週続けて報酬額は未計測。
+
+### 3. Seller
+
+| 項目 | 10/26 週 | メモ |
+|---|---|---|
+| 送信数（Gmail 送信済み） | 未計測（Gmail の接続切れ） | D1 の seller_outreach_contacts には 10/26 の 30 件（`SENT`・`GMAIL_MANUAL`）が記録済み。10/27〜11/1 の記録は 0（10/26 のフォロー 6 通は記録対象外） |
+| 返信数 | 未計測（Gmail の接続切れ） | |
+| 「不要」 | 未計測（Gmail）。seller_outreach_suppressions は 1 件のまま | |
+| 相談数（seller_business_inquiries、QA 以外） | 0 | 新しい行 0 |
+| 見本掲載の開始 | 0 | seller_listing_pilots に新しい行なし。claude-inbox への見本掲載の依頼なし |
+| 契約 | 0 | |
+
+### 4. Search Console
+- 未計測（Cowork のクラウド環境に Search Console の接続が無い）。
+
+### 5. Instagram・Threads（social_post_queue、反応は social_post_performance の最大値）
+- Instagram 公開 5 本: `hoshilu-carousel-v3` 2（リーチ 4・13）、`hoshilu-media-notes`（木曜の買い物ノート）1（リーチ 5）、`hoshilu-runway-video` 2（リーチ 6・6）。保存・シェア・プロフィール 0。取消 3（重複の取り下げ 10/27・セラー画面の重なり 2）。
+- Threads 公開 12 本・失敗 0:
+  - `hoshilu-threads-media-v1`（買い物ノート）: 公開 7（リーチ 7・4・4・6・0・4・1）
+  - `hoshilu-threads-seller-v1`（セラー向け）: 公開 4（リーチ 1・15・9・4）、取消 2（1 日おき）
+  - `hoshilu-media-notes`: 公開 1（リーチ 1）
+  - `hoshilu-threads-amazon-boost-v1`: 取消 10（`THREADS_HALVED_20261017`）
+- シェア・コメントはすべて 0。X は停止のまま。
+
+### 6. 今週（11/2 週）やること
+1. **Gmail を再接続してもらい、止まっている案内を送る**: 10/26 に送った 30 店へのフォロー（1 回だけ）、10/19 分の未送信フォロー 3 通、新規 20 通。平日 09:00–18:00 JST・1 日 40 通まで（超える分は翌日）。あわせて過去 7 日の返信・「不要」を確認する。
+2. **セラー LP の数字を人の数で書けるようにする**: 11/1 01:10 の一斉アクセスと、Threads セラー投稿の 4 分後の `seller_form_failed` を Claude Code に確認依頼済み（`2026-11-02-cowork-to-claude-code-revenue.md`）。
+3. **検索まで行く人を増やす**: 検索開始が 3 セッション（前週 9）に減った。訪問のうち bing（7）・chatgpt.com（6）からの着地は検索がほぼ 0。着地ページと検索の入口を見直す材料を来週の記録で集める。報酬額はスクショかレポートメールの転送を引き続きお願いする。
+
+### 送信の記録（11/2）
+- **送信 0 通・下書き 0 通**。Gmail の接続が切れていて、Gmail の操作ができなかった。
+- 送れなかったもの（Gmail 再接続後に送る）: 10/26 の新規 30 店へのフォロー（返信・「不要」が無い店のみ）／10/19 分の未送信フォロー 3 通（UPI OUTDOOR ヤフー店／TSUBAMEフットウェア／快和空間Yahoo!店、10/24 作成の下書き）／新規の案内 20 通（未作成）。
