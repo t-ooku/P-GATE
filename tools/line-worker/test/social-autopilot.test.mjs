@@ -389,7 +389,8 @@ test('Amazon優先Threadsローテーションは1日4本、別々の時刻に�
   assert.equal(sellerPosts.length, 14);
   assert.ok(sellerPosts.every(post => post.post_id.endsWith('-night') && post.scheduled_at.endsWith('T13:30:00.000Z') && !post.affiliate && /^seller-/u.test(post.content_id)));
   assert.ok(sellerPosts.every(post => new URL(post.link).pathname === '/for-sellers' && new URL(post.link).searchParams.get('utm_campaign') === 'hoshilu-threads-seller-v1'));
-  assert.equal(new Set(sellerPosts.slice(0, 10).map(post => post.content_id)).size, 10, 'セラー文面は 10 日以内に繰り返さない');
+  // 2026-11-01: 旧条件の 2 本を外して 8 本に
+  assert.equal(new Set(sellerPosts.slice(0, 8).map(post => post.content_id)).size, 8, 'セラー文面は 8 日以内に繰り返さない');
   for (const post of sellerPosts) {
     for (const banned of ['必ず', '売上が上が', '多数の', '業界No', '確実に', '最安']) assert.ok(!post.caption.includes(banned), `${post.content_id}: ${banned}`);
   }
@@ -460,7 +461,11 @@ test('Threads日次ローテーションは10日間(20本)で同じ文面を繰�
   // 1日4本 × 10日 = 40本(当日9:30 JSTは経過済みなので39本)。文面プールは60本
   // あるので、枠を増やしても10日以内に同じ文面が再投稿されないことは維持する。
   assert.equal(posts.length, 39);
-  assert.equal(new Set(posts.map(post => post.content_id)).size, 39, '10日以内に同じ文面が再投稿されている');
+  // 2026-11-01: 夜枠のセラー文面は 8 本（旧条件の 2 本を外した）なので、10 日で 2 本は重なる。昼枠（買い物客向け）は重ならない
+  const user = posts.filter((post) => post.campaign_id !== 'hoshilu-threads-seller-v1');
+  assert.equal(new Set(user.map(post => post.content_id)).size, user.length, '10日以内に同じ文面が再投稿されている');
+  const seller = posts.filter((post) => post.campaign_id === 'hoshilu-threads-seller-v1');
+  assert.equal(new Set(seller.slice(0, 8).map(post => post.content_id)).size, 8);
 });
 
 // 2026-09-03 成長戦略・方向転換指示書 §6〜§8: SNSの主訴求を「Amazonも楽天も

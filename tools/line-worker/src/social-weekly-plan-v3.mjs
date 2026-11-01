@@ -45,6 +45,13 @@ function isPausedSet(id, key) {
   const paused = PAUSED_CAROUSEL_SETS[id];
   return Boolean(paused && key >= paused.from_jst);
 }
+// 2026-11-01 大隆さん「合っていないのは消していい」: セラー向けカルーセル 7 セットは画像に旧条件（商品公開から30日間無料・
+// 開始前カード登録必須・31日目から自動更新）が焼き込まれていて、今の入口（無料の見本掲載 30 日・カード登録なし）と合わない。
+// この日から通常枠・代替枠ともセラー向けセットを使わず、ユーザー向けセットだけを順送りにする（画像を作り直すまで）。
+export const SELLER_SETS_RETIRED_FROM = '2026-11-01';
+export function sellerSetsRetired(key) {
+  return String(key || '') >= SELLER_SETS_RETIRED_FROM;
+}
 
 let cachedSets = null;
 export function loadCarouselSets() {
@@ -137,6 +144,10 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
 function regularSetFor(parts, key, plan, sets) {
   const slot = carouselSlotIndex(parts, plan);
   if (slot < 0 || !sets.order.length) return null;
+  if (sellerSetsRetired(key)) {
+    const users = sets.order.filter((candidate) => candidate.audience !== 'seller');
+    if (users.length) return users[slot % users.length];
+  }
   const set = sets.order[slot % sets.order.length];
   if (!isPausedSet(set.id, key)) return set;
   return sets.order.find((candidate) => candidate.id === PAUSED_CAROUSEL_SETS[set.id].replacement) || set;
@@ -160,7 +171,8 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
   const gate = Date.parse(scheduledAt(parts, plan.fallback_gate_jst));
   const when = scheduledAt(parts, plan.reel_publish_jst);
   if (now.getTime() < gate || Date.parse(when) <= now.getTime()) return [];
-  const audience = reelFallbackAudience(parts.weekday, plan);
+  // 2026-11-01: セラー向けセットを止めたので、金曜の代替もユーザー向けから選ぶ
+  const audience = sellerSetsRetired(key) ? 'user' : reelFallbackAudience(parts.weekday, plan);
   const pool = sets.order.filter((set, index, all) => set.audience === audience
     && !isPausedSet(set.id, key) && all.findIndex((other) => other.id === set.id) === index);
   if (!pool.length) return [];
@@ -175,7 +187,14 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
     if (regular) nearby.add(regular.id);
   }
   const week = Math.floor(dayNumber / 7);
-  const rotated = pool.map((_, index) => pool[(week + index) % pool.length]);
+  // 2026-11-01: 火・金とも同じユーザー向けの順送りになったので、同じ週の火と金で同じセットにならないよう 2 つずつ進める
+  const step = sellerSetsRetired(key) ? week * 2 + (parts.weekday === plan.reel_weekdays[0] ? 0 : 1) : week;
+  // 同じ週の火曜（金曜から見て 3 日前）の代替と同じセットも避ける
+  if (sellerSetsRetired(key) && parts.weekday !== plan.reel_weekdays[0]) {
+    const tuesday = buildReelFallbackPosts(new Date(now.getTime() - 3 * DAY_MS), { plan, sets })[0];
+    if (tuesday) nearby.add(String(tuesday.content_id).replace(/^carousel-/u, ''));
+  }
+  const rotated = pool.map((_, index) => pool[(step + index) % pool.length]);
   const published = (candidate) => recent.has(`carousel-${candidate.id}`);
   const set = rotated.find((candidate) => !nearby.has(candidate.id) && !published(candidate))
     || rotated.find((candidate) => !published(candidate));

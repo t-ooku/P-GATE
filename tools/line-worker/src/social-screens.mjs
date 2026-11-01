@@ -14,8 +14,6 @@ export const SCREENS_START_JST = '2026-10-16';
 export const SCREEN_SET_IDS = Object.freeze(['notes', 'buzz', 'seller']);
 const TARGET_CAMPAIGNS = Object.freeze(['hoshilu-carousel-v3', 'hoshilu-media-notes']);
 
-const SELLER_TERMS = '新規Sellerは商品公開から30日間無料。（体験開始は準備中）開始前にカード登録必須。期限までに解約しなければ31日目から月額1,980円（税込）で毎月自動更新。解約は掲載管理画面から。自店の掲載見本を相談する。';
-
 export const SCREEN_POSTS = Object.freeze({
   notes: Object.freeze({
     link_path: '/media',
@@ -88,7 +86,7 @@ export const SCREEN_POSTS = Object.freeze({
   seller: Object.freeze({
     link_path: '/for-sellers',
     caption: [
-      SELLER_TERMS,
+      // 2026-11-01 大隆さん「合っていないのは消していい」: 旧入口（商品公開から30日間無料・カード登録必須）の文を外した
       // 2026-10-16 大隆さん「せっかく改修したページだから販促増やして」: 実際の画面（検索結果・検索・ホシルバズ）を見せる版
       'ネットショップ・メーカーの方へ。HOSHILUの実際の画面をお見せします（他店の価格はぼかしています）。',
       'お客さまは、名前が分からない物も「こういう物が欲しい」という言葉で探します。',
@@ -96,10 +94,9 @@ export const SCREEN_POSTS = Object.freeze({
       '売れ筋の棚の「気になる」「価格通知」で、今すぐ買わないお客さまも商品を残せます。',
       'HOSHILUで探されて見つからなかった需要も、個人が分からない形で確認できます。',
       'Amazonや楽天市場の出店はそのまま。',
-      '料金はHOSHILU Seller 1,980円/月（税込）だけ、商品公開から30日間無料（体験開始は準備中）、クリックによる追加料金はありません。',
+      '料金はHOSHILU Seller 1,980円/月（税込）だけ、クリックによる追加料金はありません。',
       '詳しくはプロフィールのリンクから。',
-      '#HOSHILU #ホシル #ECセラー #ネットショップ #EC運営 #商品企画',
-      '開始前にカード登録と自動更新への明示同意が必要です。期限までに解約しなければ31日目から月額1,980円（税込）。掲載管理画面から解約できます。'
+      '#HOSHILU #ホシル #ECセラー #ネットショップ #EC運営 #商品企画'
     ].join('\n')
   })
 });

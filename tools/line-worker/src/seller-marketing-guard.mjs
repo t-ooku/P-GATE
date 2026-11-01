@@ -15,6 +15,10 @@ export function assertSellerMarketingCurrent(post = {}, env = {}) {
     throw new Error('SELLER_MARKETING_REVIEW_REQUIRED:OLD_TRIAL_COPY');
   }
   if (/30日(?:間)?無料へ変更/u.test(pricingText)) throw new Error('SELLER_MARKETING_REVIEW_REQUIRED:SUPERSEDED_COPY');
+  // 2026-11-01 大隆さん「合っていないのは消していい」: 入口は「無料の見本掲載 30 日（カード登録なし）」（10/24 承認）。
+  // 旧入口（商品公開から30日間無料・開始前カード登録必須・31日目から自動更新）の投稿は出さない。
+  // SNS 投稿（platform のある行）だけに効かせる。LP・FAQ の掲載プラン条件や営業キットの説明文は別の正本で管理する。
+  if (post.platform && /カード登録必須|31日目から|商品公開から30日間無料/u.test(pricingText)) throw new Error('SELLER_MARKETING_REVIEW_REQUIRED:SUPERSEDED_ENTRY_COPY');
   const media = [post.media_url, post.media_urls].filter(Boolean).join(' ');
   // Previous image/video assets may have the old offer burned into the pixels.
   // The new versioned carousel directory is built from reviewed 30-day sources.

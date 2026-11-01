@@ -1,4 +1,4 @@
-import { TRIAL_SOCIAL_PENDING_COPY, socialTrialCaption } from '../public/seller-trial-policy.mjs';
+import { socialTrialCaption } from '../public/seller-trial-policy.mjs';
 import {
   normalizeSocialPost,
   runDueSocialPosts,
@@ -642,11 +642,12 @@ const THREADS_AMAZON_SLOTS = Object.freeze([
 // 2026-09-19 大隆さん指示: Threads の 1 日 4 枠のうち夜枠を毎日セラー募集に充てる（週 7 本）。
 // 文面は実装済みの事実だけ（1,980円/月・最初の 3 か月 0 円・呼び戻せた時だけ 50 円・匿名需要は 5 人以上）。
 // 成果保証・「多数のセラー」・実績の水増しは書かない（§33・§49）。10 本を日替わりで回すので 10 日以内に同じ文面は出ない。
+// 2026-11-01 大隆さん「合っていないのは消していい」: 旧入口（商品公開から30日間無料・カード登録必須）の前置きと、
+// 旧条件を説明する 2 本（seller-price-plain・seller-start-flow）を外した。
 const THREADS_SELLER_CAMPAIGN_ID = 'hoshilu-threads-seller-v1';
 const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-first-visible', caption: '欲しい人が、先に見える。\nHOSHILUで探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届きます。ネットショップ・メーカーの方へ。' },
   { id: 'seller-keep-your-mall', caption: '新しいECモールを増やす必要はありません。\nAmazon・楽天・Yahoo!など今ある販売先はそのまま。HOSHILUは受注や発送を移す場所ではなく、探している人と商品をつなぐ入口です。' },
-  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額1,980円、新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
   // 2026-09-27 大隆さん「Amazonや楽天市場の月額に1,980円出すだけで、ホシルを通して需要が分かる、と謳って」。
   // 見えるのは HOSHILU で探された需要（個人が分からない形の集計）なので「世の需要」とは書かない。
   { id: 'seller-keep-mall-see-demand', caption: 'Amazonや楽天市場の出店はそのまま。月1,980円を足すだけで、HOSHILUで何が探されていて、何が見つからなかったかを契約者画面で見られます。\n見えるのは、個人が分からない形でまとめた需要だけ。クリックで料金が増えることはありません。' },
@@ -656,8 +657,7 @@ const THREADS_SELLER_POSTS = Object.freeze([
   // 2026-10-13: ショップページ（ロゴ・商品一覧・クーポン等）の案内は外す。大隆さん決定（10/9）「shop専用ページはまだ先。それまでは優先出品を謳えばよい」。
   // LP からショップの説明を消した後もこの投稿が回っており、来訪者が LP で同じ説明を見つけられない（10/11 のフォーム開始はこの投稿経由）。
   { id: 'seller-pr-slot', caption: '探している人の、検索結果の一番上に。\nお店の商品が検索語の条件にすべて合うとき、HOSHILUの検索結果の一番上に「PR」と表示して出します（最大2件）。条件に合わない検索では出さず、掲載順位や表示回数は保証しません。購入先は今の販売先のままです。' },
-  { id: 'seller-no-guarantee', caption: 'HOSHILUは売上や掲載順位を保証しません。\nできるのは、探している人の条件と商品を突き合わせて、一致した時にその人へ届けること。数字は実数だけをお見せします。' },
-  { id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 使用許諾 → 見本の確認・承認 → カード登録と自動更新への同意 → 商品公開。\nパスワードやAPIキーは最初の相談では求めません。相談や見本の段階では無料期間は始まりません。体験開始は準備中です。' }
+  { id: 'seller-no-guarantee', caption: 'HOSHILUは売上や掲載順位を保証しません。\nできるのは、探している人の条件と商品を突き合わせて、一致した時にその人へ届けること。数字は実数だけをお見せします。' }
 ]);
 
 // 2026-10-17 大隆さん承認（Cowork 経由、docs/handoff/2026-10-16-cowork-to-claude-code-revenue.md「本数を半分にして、
@@ -911,14 +911,16 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14, { medi
       }
       if (slot.seller) {
         // 2026-09-19: 夜枠はセラー募集（日替わり 10 本）。post_id の接頭辞は既存キュー行を上書きするため据え置く。
-        const content = THREADS_SELLER_POSTS[positiveModulo(dayIndex, THREADS_SELLER_POSTS.length)];
+        // 2026-11-01: 1 日おき（偶数日だけ）になってから dayIndex のままだと偶数番の文面しか出なかった。1 日おきの回数で回す
+        const sellerOrdinal = halved ? Math.floor(dayIndex / 2) : dayIndex;
+        const content = THREADS_SELLER_POSTS[positiveModulo(sellerOrdinal, THREADS_SELLER_POSTS.length)];
         const params = new URLSearchParams({ utm_source: 'threads', utm_medium: 'social', utm_campaign: THREADS_SELLER_CAMPAIGN_ID, utm_content: content.id });
         posts.push(normalizeSocialPost({
           post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,
           content_id: content.id,
           platform: 'THREADS',
           campaign_id: THREADS_SELLER_CAMPAIGN_ID,
-          caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
+          caption: content.caption,
           link: `https://hoshilu.app/for-sellers?${params}`,
           affiliate: false,
           scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
@@ -937,7 +939,7 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14, { medi
         content_id: content.id,
         platform: 'THREADS',
         campaign_id: THREADS_AMAZON_CAMPAIGN_ID,
-        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
+        caption: content.caption,
         link,
         affiliate: Boolean(link),
         scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
@@ -986,7 +988,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         content_id: content.id,
         platform: 'X',
         campaign_id: campaignIdForContent(content.id),
-        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
+        caption: content.caption,
         link: campaignLink('X', key, content.id, content.query, content.link_path || '/'),
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
@@ -1010,7 +1012,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         content_id: content.id,
         platform: 'INSTAGRAM',
         campaign_id: campaignIdForContent(content.id),
-        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
+        caption: content.caption,
         link: campaignLink('INSTAGRAM', key, content.id, content.query, content.link_path || '/'),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 0),

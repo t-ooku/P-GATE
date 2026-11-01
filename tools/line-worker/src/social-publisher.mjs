@@ -985,7 +985,8 @@ function socialPublishRetryAt(now, env) {
 // （Seller 9,800円・送客料のみ）が入っている投稿をプラットフォーム側から削除し、キュー行は CANCELLED +
 // last_error='RETRACTED_OLD_PRICING' で残す（external_post_id は監査用に保持）。削除は不可逆なので、
 // 対象は本文の一致条件で機械的に絞り、他の投稿には触れない。失敗した行は PUBLISHED のまま理由を記録し、次回再試行。
-export const OLD_PRICING_CAPTION_PATTERN = /9,800|9800円|送客料のみ/u;
+// 2026-11-01 大隆さん「合っていないのは消していい」: 旧入口（商品公開から30日間無料・カード登録必須・31日目から自動更新）の投稿も取り下げる
+export const OLD_PRICING_CAPTION_PATTERN = /9,800|9800円|送客料のみ|カード登録必須|31日目から|商品公開から30日間無料/u;
 async function deletePlatformPost(platform, externalId, env, fetchImpl) {
   if (platform === 'THREADS') {
     if (!env.THREADS_ACCESS_TOKEN) throw new Error('THREADS_NOT_CONFIGURED');
@@ -1026,7 +1027,7 @@ export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = 
     // 権限不足で失敗した行は cron では飛ばし（権限を足した後に手動ルートの force で再実行）、X を先に処理する。
     rows = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,external_post_id,caption FROM social_post_queue
       WHERE status='PUBLISHED' AND external_post_id<>'' AND platform IN ('X','THREADS')
-      AND (caption LIKE '%9,800%' OR caption LIKE '%9800%' OR caption LIKE '%送客料のみ%')
+      AND (caption LIKE '%9,800%' OR caption LIKE '%9800%' OR caption LIKE '%送客料のみ%' OR caption LIKE '%カード登録必須%' OR caption LIKE '%31日目から%' OR caption LIKE '%商品公開から30日間無料%')
       AND (?2=1 OR last_error NOT LIKE 'RETRACT_FAILED_%permission%')
       ORDER BY platform DESC, scheduled_at DESC LIMIT ?1`).bind(limit, force ? 1 : 0).all();
   } catch { return result; }

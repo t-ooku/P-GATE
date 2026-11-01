@@ -323,8 +323,15 @@ test('カルーセルに書くモール名は、実際に横断している4つ�
 test('代替カルーセルは週ごとに変わり、前後6日の通常カルーセルと重ならず、ショップ入口セットを使わない', () => {
   const fallbackDays = ['2026-10-16', '2026-10-20', '2026-10-23', '2026-10-27', '2026-10-30', '2026-11-03', '2026-11-06', '2026-11-10'];
   const picks = fallbackDays.map((day) => buildReelFallbackPosts(new Date(`${day}T10:40:00.000Z`))[0].content_id);
-  const fridays = picks.filter((_, index) => fallbackDays[index] && new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 5);
-  const tuesdays = picks.filter((_, index) => new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 2);
+  // 2026-11-01 からはセラー向けセットを止めて火・金ともユーザー向けの順送り（下で別に確かめる）。ここは 10 月の分
+  // （10/30 は前後 6 日に 11 月の通常枠が入り、11 月のセラー向け停止で「近くの通常枠」が変わるので、ここでは 10/27 までを見る。10/30 は投稿済み）
+  const october = (index) => fallbackDays[index] < '2026-10-28';
+  const fridays = picks.filter((_, index) => october(index) && new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 5);
+  const tuesdays = picks.filter((_, index) => october(index) && new Date(`${fallbackDays[index]}T00:00:00Z`).getUTCDay() === 2);
+  // 11 月: 代替はユーザー向けだけ。同じ週の火と金は別のセット
+  const november = fallbackDays.map((day, index) => [day, picks[index]]).filter(([day]) => day >= '2026-11-01');
+  assert.ok(november.every(([, id]) => /^carousel-user-/u.test(id)), `11 月にセラー向け: ${november}`);
+  assert.notEqual(picks[fallbackDays.indexOf('2026-11-03')], picks[fallbackDays.indexOf('2026-11-06')], '同じ週の火と金');
   assert.equal(new Set(fridays).size, fridays.length, `金曜が毎週同じ: ${fridays}`);
   assert.equal(new Set(tuesdays).size, tuesdays.length, `火曜が毎週同じ: ${tuesdays}`);
   assert.ok(picks.every((id) => id !== 'carousel-seller-shop-entrance'));

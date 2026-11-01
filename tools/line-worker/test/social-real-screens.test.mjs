@@ -125,14 +125,13 @@ test('Threads の買い物ノート枠は表紙 1 枚だけ実画像にし、本
   assert.equal(row.caption, 'Threads本文');
 });
 
-test('実画像の本文: 商品の価格・割引率を書かない／セラー向けは現行条件の注意書きを含む', () => {
+test('実画像の本文: 商品の価格・割引率を書かない／セラー向けは旧入口の条件を書かない', () => {
   for (const id of ['notes', 'buzz', 'drops']) {
     assert.doesNotMatch(SCREEN_POSTS[id].caption, /[¥￥]|\d+\s*円|\d+\s*[%％]|最安|必ず|保証/u, id);
   }
-  assert.match(SCREEN_POSTS.seller.caption, /30日間無料/u);
-  assert.match(SCREEN_POSTS.seller.caption, /カード登録/u);
-  assert.match(SCREEN_POSTS.seller.caption, /自動更新/u);
-  assert.match(SCREEN_POSTS.seller.caption, /準備中/u);
+  // 2026-11-01 大隆さん「合っていないのは消していい」: 旧入口（商品公開から30日間無料・カード登録必須・31日目から自動更新）を外した
+  assert.doesNotMatch(SCREEN_POSTS.seller.caption, /30日間無料|カード登録必須|31日目から|準備中/u);
+  assert.match(SCREEN_POSTS.seller.caption, /1,980円/u);
   assert.match(SCREEN_POSTS.seller.caption, /「PR」枠/u);
   assert.doesNotMatch(SCREEN_POSTS.seller.caption, /ショップページ|クーポン|売上が上がる|必ず売れる/u);
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-seller-demand-visible' }, '2026-10-17'), ['seller']);
