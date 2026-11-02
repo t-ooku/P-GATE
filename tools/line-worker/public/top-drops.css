@@ -44,7 +44,9 @@
   #hoshiluSearch .query-field textarea#query{min-height:60px!important;height:60px}
   #quickQueries.quick-queries-top{flex-wrap:nowrap;align-items:center;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:8px -2px 10px;padding:0 2px 2px}
   #quickQueries.quick-queries-top::-webkit-scrollbar{display:none}
-  #quickQueries.quick-queries-top::before{content:"例";flex:none;flex-basis:auto;padding:0 2px}
+  /* 2026-11-02 大隆さん「検索画面の例を削除して、左に寄せて」: 「例」の文字を出さず、例のボタンを左端から並べる */
+  #quickQueries.quick-queries-top::before{content:none;display:none}
+  #quickQueries.quick-queries-top{justify-content:flex-start;margin-left:0;padding-left:0}
   #quickQueries.quick-queries-top button.chip{flex:none;white-space:nowrap}
   #quickQueries.quick-queries-top .member-example-cta{flex:none;flex-basis:auto;order:99;white-space:nowrap}
   .top-drops{margin-top:12px}

@@ -34,7 +34,7 @@ const EXPECTED = Object.freeze({
   'unified-results-ui.css': '14',
   'unified-results-ui.mjs': '23',
   'instagram-look.css': '11',
-  'top-drops.css': '3',
+  'top-drops.css': '4',
   'top-drops.mjs': '3'
 });
 
