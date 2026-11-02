@@ -153,3 +153,20 @@ test('§9: 自動公開でも「要確認」の注記（商品データに無い
   assert.deepEqual(JSON.parse(rows.SNS.qa).notes, [{ code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }, { code: 'PROPERTY_CLAIM_UNVERIFIED', detail: '丈夫' }]);
   assert.notEqual(rows.ARTICLE.status, 'QA_PASSED');
 });
+
+// 2026-11-02 大隆さん「ITG の Amazon は運用停止したから、ホシルから ITG Amazon へのメール案内などは止めていい」
+test('運営を止めた ITG GROUP は週次ジョブ・月次報告・案内メールの対象にしない', async () => {
+  const { RETIRED_SELLER_KEYS, sellerRetired, notifyWeekReady, promoProfileRunnable } = await import('../src/seller-promo-scheduler.mjs');
+  const itg = 'IGpFO0_7Xfi6mheMC2-HbGubdYIQPkGlda_gsSFmTKo';
+  assert.ok(RETIRED_SELLER_KEYS.includes(itg));
+  assert.equal(sellerRetired(itg), true);
+  assert.equal(sellerRetired('other-seller'), false);
+  const profile = { seller_key: itg, status: 'ACTIVE', plan: 'LIGHT', qa: true, notify_email: 'x@example.com' };
+  assert.equal(promoProfileEligible(profile, {}), false);
+  assert.equal(await promoProfileRunnable({}, profile), false);
+  let called = 0;
+  const env = { RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'a@example.com', SELLER_PROMO_FETCH: async () => { called += 1; return { ok: true }; } };
+  assert.equal(await notifyWeekReady(env, profile, { seller_key: itg, week_key: '2026-W45' }), false);
+  assert.equal(called, 0);
+  assert.equal(promoProfileEligible({ ...profile, seller_key: 'other-seller' }, {}), true);
+});

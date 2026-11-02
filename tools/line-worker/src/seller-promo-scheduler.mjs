@@ -27,9 +27,17 @@ export function promoLimits(env = {}) {
   };
 }
 
+// 2026-11-02 大隆さん「ITG の Amazon は運用停止したから、ホシルから ITG Amazon へのメール案内などは止めていい」。
+// 運営を止めた店（ITG GROUP）は、週次ジョブ・月次報告・「今週の分ができました」メールの対象から外す。D1 の行は変えない。
+export const RETIRED_SELLER_KEYS = Object.freeze(['IGpFO0_7Xfi6mheMC2-HbGubdYIQPkGlda_gsSFmTKo']);
+export function sellerRetired(sellerKey) {
+  return RETIRED_SELLER_KEYS.includes(String(sellerKey || ''));
+}
+
 // 対象店: ACTIVE かつ LIGHT/STANDARD。販売 OFF（Phase 1〜3）の間は QA 店舗とパイロット店だけ。
 export function promoProfileEligible(profile, env = {}) {
   if (!profile || profile.status !== 'ACTIVE') return false;
+  if (sellerRetired(profile.seller_key)) return false;
   if (!promoPlansEnabled(env)) return profile.qa === true || pilotSellerKeys(env).has(profile.seller_key);
   return PROMO_DELIVERY_PLANS.includes(profile.plan);
 }
@@ -136,6 +144,7 @@ async function notifyResend(env, { to, subject, text, idempotencyKey }) {
 
 // 月曜「今週の分ができました」（サービス通知。相談通知と同じ Resend 経路）。
 export async function notifyWeekReady(env, profile, job) {
+  if (sellerRetired(profile?.seller_key || job?.seller_key)) return false;
   return notifyResend(env, {
     to: profile.notify_email,
     subject: '【HOSHILU】今週の分ができました',
