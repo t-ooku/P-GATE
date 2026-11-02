@@ -378,3 +378,67 @@ test('ユーザー向けの投稿は 1 行目・1 枚目が問いかけ、最後
   for (const id of ['notes', 'drops', 'buzz']) assert.match(SCREEN_SETS[id].at(-1).body, /保存して、買う前に見返してね。/u, `${id}: 最後の 1 枚`);
   assert.doesNotMatch(SCREEN_SETS.seller.map((slide) => slide.body).join('\n'), /保存して/u, 'セラー向けは変えない');
 });
+
+// 2026-11-02 大隆さん（競合ウォッチ「季節の SNS 企画を 1 本だけ検証」→「防寒」）
+test('防寒の季節投稿: 11/8 21:00 だけ、撮れていれば値下がり投稿の代わりに防寒グッズ版を出す（本数は増やさない）', async () => {
+  const { WARM_POST } = await import('../src/social-screens.mjs');
+  const { SET_DATES, setDueToday } = await import('../scripts/build-social-screens.mjs');
+  const { isWarmProduct } = await import('../src/season-calendar.mjs');
+  const { withDropFocus } = await import('../src/owned-media.mjs');
+  assert.equal(WARM_POST.date, '2026-11-08');
+  assert.deepEqual([...SET_DATES.warm], [WARM_POST.date], '撮る日と出す日は同じ 1 日だけ');
+  assert.equal(setDueToday('warm', new Date('2026-11-08T06:07:00Z')), true);
+  assert.equal(setDueToday('warm', new Date('2026-11-09T06:07:00Z')), false);
+  assert.equal(setDueToday('drops', new Date('2026-11-09T06:07:00Z')), true);
+  // 商品名の言葉だけで選ぶ
+  assert.equal(isWarmProduct('ボアフリース ジャケット レディース'), true);
+  assert.equal(isWarmProduct('電気毛布 洗える'), true);
+  assert.equal(isWarmProduct('アプリ ダウンロード カード'), false);
+  assert.equal(isWarmProduct('Tシャツ 半袖'), false);
+  // 防寒の物だけに、下がり幅の大きい順・1 店 1 つで data-warm の番号
+  const rows = withDropFocus([
+    { record_key: 'a', product_name: '中綿ジャケット', image_url: 'https://x/a.jpg', drop_rate: 10, marketplace: 'rakuten', seller_id: 's1' },
+    { record_key: 'b', product_name: '電気毛布', image_url: 'https://x/b.jpg', drop_rate: 30, marketplace: 'rakuten', seller_id: 's1' },
+    { record_key: 'c', product_name: 'マフラー チェック', image_url: 'https://x/c.jpg', drop_rate: 20, marketplace: 'yahoo', seller_id: 's2' },
+    { record_key: 'd', product_name: 'ボールペン', image_url: 'https://x/d.jpg', drop_rate: 50, marketplace: 'yahoo', seller_id: 's3' },
+    { record_key: 'e', product_name: '手袋 スマホ対応', image_url: '', drop_rate: 40, marketplace: 'yahoo', seller_id: 's4' }
+  ]);
+  assert.deepEqual(rows.filter((row) => row.warm).map((row) => [row.record_key, row.warm]), [['b', 1], ['c', 2]]);
+  // 本文: 1 行目は問いかけ・保存の一言・「買い時」「底値」「節電」などは書かない・数字は書かない
+  const caption = SCREEN_POSTS.warm.caption;
+  assert.match(caption.split('\n')[0], /？$/u);
+  assert.match(caption, /保存しておいて、買う前に見返してね。/u);
+  assert.match(caption, /セールの割引率ではありません/u);
+  assert.doesNotMatch(caption, /買い時|底値|今が安い|節電|電気代|[0-9０-９]+\s*[%％円]/u);
+  assert.ok(caption.length < 2200);
+
+  const database = new DatabaseSync(':memory:');
+  database.exec(`CREATE TABLE social_post_queue (post_id TEXT PRIMARY KEY, platform TEXT NOT NULL, campaign_id TEXT NOT NULL DEFAULT '',
+    content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '', media_url TEXT NOT NULL DEFAULT '',
+    scheduled_at TEXT NOT NULL, status TEXT NOT NULL, affiliate INTEGER NOT NULL DEFAULT 0, external_post_id TEXT NOT NULL DEFAULT '',
+    last_error TEXT NOT NULL DEFAULT '', approved_at TEXT, published_at TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+    platform_job_id TEXT NOT NULL DEFAULT '', creative_asset_id TEXT NOT NULL DEFAULT '', content_format TEXT NOT NULL DEFAULT '',
+    creative_policy TEXT NOT NULL DEFAULT '', jst_publish_date TEXT NOT NULL DEFAULT '', ai_generated INTEGER NOT NULL DEFAULT 0,
+    crosspost_group_id TEXT NOT NULL DEFAULT '', media_urls TEXT NOT NULL DEFAULT '')`);
+  const body = (captured, sets) => ({ captured_at: captured, sets: Object.fromEntries(Object.entries(sets).map(([id, n]) => [id, { files: Array.from({ length: n }, (_, i) => ({ file: `${id}/${i + 1}.jpg` })) }])) });
+  const env = (manifestBody) => ({ PRODUCT_DB: d1(database), ASSETS: assets(manifestBody) });
+  const get = () => database.prepare("SELECT * FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-11-08'").get();
+  const first = await seedDailyDropsPost(env(body('2026-11-08T06:20:00Z', { drops: 7, warm: 5 })), new Date('2026-11-08T06:30:00Z'));
+  assert.equal(first.inserted, 1);
+  let row = get();
+  assert.equal(row.content_id, 'screens-warm');
+  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-08', 'warm', 5));
+  assert.match(row.caption, /^寒くなる前に、何をそろえる[?？] 防寒・あったかグッズ/u);
+  assert.match(row.link, /utm_content=screens-warm_20261108/u);
+  // 撮り直しで防寒が足りなくなったら、投稿前ならいつもの値下がりに戻す（本文も合わせる）
+  const resync = await seedDailyDropsPost(env(body('2026-11-08T09:10:00Z', { drops: 6, warm: 3 })), new Date('2026-11-08T09:20:00Z'));
+  assert.equal(resync.synced, 1);
+  row = get();
+  assert.equal(row.content_id, DROPS_DAILY.content_id);
+  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-08', 'drops', 6));
+  assert.match(row.caption, /^最近、安くなった物ってどれ[?？]/u);
+  assert.doesNotMatch(row.caption, /防寒・あったかグッズの中から/u);
+  // ほかの日曜は今までどおり drops（防寒が撮れていても使わない）
+  await seedDailyDropsPost(env(body('2026-11-15T06:20:00Z', { drops: 7, warm: 5 })), new Date('2026-11-15T06:30:00Z'));
+  assert.equal(database.prepare("SELECT content_id FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-11-15'").get().content_id, DROPS_DAILY.content_id);
+});

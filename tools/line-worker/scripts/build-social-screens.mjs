@@ -246,6 +246,23 @@ export const SCREEN_SETS = Object.freeze({
       body: `名前が分からなくても、言葉やスクショで探せます。\n${SAVE_PROMPT}`
     })
   ]),
+  // 2026-11-02 大隆さん（競合ウォッチ「季節の SNS 企画を 1 本だけ検証」→「防寒」）: 値下がりページの中の防寒・あったかグッズ
+  // （owned-media.mjs の data-warm）だけを撮る。撮り方・ぼかし・書き方は drops と同じ（記録の事実）。撮るのは SET_DATES の日だけ。
+  warm: Object.freeze([
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map((warm) => Object.freeze({
+      id: `warm-${warm}`, url: '/media/price-drops', selector: `.media-drop[data-warm="${warm}"]`, min: 1, count: 1,
+      optional: true, rejectFullBlur: true, group: 'warm', groupMax: 6, groupMin: 3,
+      unmask: Object.freeze(['.media-drop-prices', '.media-drop-rate']), css: DROP_CARD_CSS, fit: true, maxHeight: 760,
+      labelFrom: '.media-drop-genre', bigFrom: '.media-drop-rate', bigNote: Object.freeze(['値下がり中', '下がってる今', '最高値から↓']),
+      kicker: 'WINTER', title: warm === 1 ? '寒くなる前に、\n何をそろえる？' : '防寒グッズ、\n値下がり中。',
+      body: '{date} ホシルの記録で、14日間の最高値から下がった幅です。\n価格は変わります。欲しい物は、ホシルで検索。'
+    })),
+    Object.freeze({
+      ...SEARCH_SLIDE, id: 'warm-search',
+      kicker: 'SEARCH', title: '欲しい物は、\nホシルで検索。',
+      body: `名前が分からなくても、言葉やスクショで探せます。\n${SAVE_PROMPT}`
+    })
+  ]),
   // 2026-10-16 大隆さん「肝心なリアル画像が全ページ見切れてる」（20:15 の投稿を削除）: 出品者向けページをスマホ枠ごと撮ると、
   // 中の実画面がカルーセルの枠で切れていた。本番の画面の「部品」だけ（PR 枠・ホシっとく・検索欄・売れ筋の棚・需要・料金・相談の流れ）を
   // 上端から下端まで撮り、枠をその大きさに合わせる（fit）。どの画面も途中で切らない。
@@ -295,6 +312,13 @@ export const SCREEN_SETS = Object.freeze({
 });
 // 互換: 10/15 の最初の版（notes 1 セット）
 export const SLIDES = SCREEN_SETS.notes;
+// 毎日は撮らないセット → 撮る日（JST）。期間外は撮らない（撮影の時間を増やさない）。
+export const SET_DATES = Object.freeze({ warm: Object.freeze(['2026-11-08']) });
+export function setDueToday(setId, now = new Date()) {
+  const dates = SET_DATES[setId];
+  if (!dates) return true;
+  return dates.includes(new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10));
+}
 
 // 撮影ページの中で動く（page.evaluate に渡す）。写る商品写真ごとに、ぼかした複製を下帯だけ重ね、効いている枚数を返す。
 export function applyPhotoBands(selectors) {
@@ -662,6 +686,7 @@ async function main() {
   const sets = {};
   const failures = {};
   for (const [setId, slides] of Object.entries(SCREEN_SETS)) {
+    if (!setDueToday(setId)) continue;
     const page = await mobile.newPage();
     try {
       sets[setId] = { files: await buildSet(browser, composer, page, setId, slides) };

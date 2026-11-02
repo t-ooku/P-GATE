@@ -63,6 +63,26 @@ export const SCREEN_POSTS = Object.freeze({
       '#HOSHILU #ホシル #値下がり #お得情報 #楽天市場 #プチプラ #主婦の味方 #購入品紹介'
     ].join('\n')
   }),
+  // 2026-11-02 大隆さん（競合ウォッチ「季節の SNS 企画を 1 本だけ検証」→「防寒」）: 値下がりの記録の中から防寒・あったかグッズだけ。
+  // 書き方は drops と同じ（記録の事実・数字は画像の中だけ・「買い時」「底値」「節電になる」等の効果は書かない）。
+  warm: Object.freeze({
+    link_path: '/media/price-drops',
+    caption: [
+      '寒くなる前に、何をそろえる？',
+      '防寒・あったかグッズの中から、今、値下がり中の物を集めました。',
+      '',
+      'ホシルは楽天市場・Yahoo!ショッピングの価格を毎日記録しています。その記録で、14日間の最高値より下がっている物だけを選んでいます。',
+      '画像の大きな数字は、ホシルの記録の最高値と比べた下がり幅です（撮影した日の時点）。セールの割引率ではありません。',
+      '価格は変わるので、買う前に商品ページで今の価格を確認してね。',
+      '',
+      '欲しい物は、ホシルで検索してね。名前が分からなくても、言葉やスクショで探せて、値下がりしたらお知らせもできます。',
+      'みんなの冬の必需品は？コメントで教えてね。',
+      '保存しておいて、買う前に見返してね。',
+      'プロフィールのリンクから。登録なしで使えます。',
+      '',
+      '#HOSHILU #ホシル #冬支度 #防寒 #あったかグッズ #値下がり #楽天市場 #購入品紹介'
+    ].join('\n')
+  }),
   buzz: Object.freeze({
     link_path: '/',
     caption: [
@@ -111,6 +131,11 @@ export const DROPS_DAILY = Object.freeze({
   campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '06:00'
 });
 
+// 2026-11-02 大隆さん（競合ウォッチ）「防寒の季節投稿 1 本」: 11/8（日）21:00 の値下がり投稿を、防寒・あったかグッズだけの版にする。
+// 判定は再生数ではなく、ホシっとく（Watch Set）とモールクリック。十分な転換が確かめられるまで横展開しない（日付は 1 日だけ）。
+// 防寒の商品が 3 つ未満で 4 枚（商品 3 + 検索）に満たない日は、いつもの値下がり投稿のまま。
+export const WARM_POST = Object.freeze({ date: '2026-11-08', content_id: 'screens-warm', min_slides: 4 });
+
 export async function seedDailyDropsPost(env, now = new Date()) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
   const dateKey = jstDateKey(now);
@@ -123,7 +148,9 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
   if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
   const manifest = await loadScreensManifest(env, dateKey);
-  const count = availableSet(manifest, 'drops');
+  // 2026-11-02 防寒の季節投稿（1 本だけの検証）: WARM_POST の日は、撮れていれば drops の代わりに warm を出す（本数は増やさない）
+  const setId = dateKey === WARM_POST.date && availableSet(manifest, 'warm') >= WARM_POST.min_slides ? 'warm' : 'drops';
+  const count = availableSet(manifest, setId);
   if (!count) return { enabled: true, inserted: 0, reason: 'no_drops_today' };
   if (!(Date.parse(manifest.captured_at || '') >= Date.parse(`${dateKey}T${DROPS_DAILY.daily_capture_utc}:00.000Z`))) {
     return { enabled: true, inserted: 0, reason: 'before_daily_capture' };
@@ -136,9 +163,9 @@ export async function seedDailyDropsPost(env, now = new Date()) {
     .bind(dateKey, postId, `%/social/screens/${day}/drops/%`).first();
   if (already) return { enabled: true, inserted: 0, reason: 'drops_already_today', post_id: already.post_id };
   const post = normalizeSocialPost({
-    post_id: postId, platform: 'INSTAGRAM', campaign_id: DROPS_DAILY.campaign_id, content_id: DROPS_DAILY.content_id,
-    caption: screenCaption('drops', now), link: screenLink('INSTAGRAM', 'drops', dateKey), media_url: '',
-    media_urls: screenMediaUrls(dateKey, 'drops', count), scheduled_at: scheduledAt.toISOString(), status: 'APPROVED', content_format: 'IMAGE'
+    post_id: postId, platform: 'INSTAGRAM', campaign_id: DROPS_DAILY.campaign_id, content_id: setId === 'warm' ? WARM_POST.content_id : DROPS_DAILY.content_id,
+    caption: screenCaption(setId, now), link: screenLink('INSTAGRAM', setId, dateKey), media_url: '',
+    media_urls: screenMediaUrls(dateKey, setId, count), scheduled_at: scheduledAt.toISOString(), status: 'APPROVED', content_format: 'IMAGE'
   });
   const at = now.toISOString();
   const result = await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO social_post_queue
@@ -149,9 +176,10 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   const inserted = Number(result?.meta?.changes || 0);
   let synced = 0;
   if (!inserted) {
-    const sync = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET media_urls=?2,updated_at=?3
+    // 画像のセットが変わったとき（warm ⇔ drops）は、本文・リンク・content_id も合わせる（画像と本文を食い違わせない）
+    const sync = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET media_urls=?2,updated_at=?3,caption=?4,link=?5,content_id=?6
         WHERE post_id=?1 AND status='APPROVED' AND published_at='' AND external_post_id='' AND platform_job_id='' AND media_urls<>?2`)
-      .bind(postId, post.media_urls, at).run();
+      .bind(postId, post.media_urls, at, post.caption, post.link, post.content_id).run();
     synced = Number(sync?.meta?.changes || 0);
   }
   return { enabled: true, inserted, synced, post_id: postId, slides: count };

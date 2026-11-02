@@ -91,6 +91,13 @@ export function seasonFor(now = new Date()) {
   return SEASON_CALENDAR.find((season) => season.from <= date && date <= season.to) || null;
 }
 
+// 2026-11-02 大隆さん（競合ウォッチの「季節の SNS 企画を 1 本だけ検証」で「防寒」を選択）: 防寒・あったかグッズの目印。
+// 商品名の言葉だけで選ぶ（AI で作らない）。値下がりの記録（ホシルの価格記録）にある物だけが対象。
+export const WARM_KEYWORDS = /ダウン(?!ロード)|中綿|コート|アウター|ムートン|ボア|フリース|手袋|マフラー|ネックウォーマー|イヤーマフ|毛布|ブランケット|ヒーター|ホットカーペット|こたつ|湯たんぽ|カイロ|あったか|暖か|裏起毛|防寒|ルームシューズ/u;
+export function isWarmProduct(name = '') {
+  return WARM_KEYWORDS.test(String(name || ''));
+}
+
 export function isSeasonalProduct(name = '', season = null) {
   return Boolean(season?.keywords && season.keywords.test(String(name || '')));
 }

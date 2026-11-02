@@ -13,7 +13,7 @@
 // - 価格は「確認した時点」のもの。現在の価格と在庫は商品ページ（/product）で、いま API に取りに行って出す。
 // - 将来の価格は予言しない。「最安」「今が買い時」とは書かない。
 // - 広告（アフィリエイト）を含むことを明記する。掲載と並び順は価格の記録だけで決める。
-import { isSeasonalProduct, seasonFor } from './season-calendar.mjs';
+import { isSeasonalProduct, isWarmProduct, seasonFor } from './season-calendar.mjs';
 import { seoArticleCard } from './seo-pages.mjs';
 import { jstDate } from './price-observations.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from './marketplace-ranking.mjs';
@@ -142,6 +142,18 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0, seaso
   }
   while (rest.length && picked.length < limit) push(rest);
   picked.forEach((row, index) => { row.focus = index + 1; });
+  // 2026-11-02 防寒の季節投稿（1 本だけの検証）: 防寒・あったかグッズを下がり幅の大きい順に 1 店 1 つまで番号を付ける（data-warm）。
+  const warmShops = new Set();
+  let warm = 0;
+  for (const row of [...rows].filter((item) => item.image_url && isWarmProduct(item.product_name))
+    .sort((a, b) => (Number(b.drop_rate) || 0) - (Number(a.drop_rate) || 0))) {
+    if (warm >= limit) break;
+    const shop = row.seller_id ? `${row.marketplace || ''}:${row.seller_id}` : '';
+    if (shop && warmShops.has(shop)) continue;
+    if (shop) warmShops.add(shop);
+    warm += 1;
+    row.warm = warm;
+  }
   return rows;
 }
 
@@ -401,7 +413,7 @@ function dropCard(row, index) {
     : `<span class="media-drop-noimage" aria-hidden="true">${esc(String(row.product_name || '').slice(0, 1))}</span>`;
   const history = sparkline(row.history);
   const genre = row.segment?.label ? `<span class="media-drop-genre">${esc(row.segment.label)}</span>` : '';
-  return `<li class="media-drop"${row.focus ? ` data-focus="${row.focus}"` : ''}><a href="${productLink(row)}">
+  return `<li class="media-drop"${row.focus ? ` data-focus="${row.focus}"` : ''}${row.warm ? ` data-warm="${row.warm}"` : ''}><a href="${productLink(row)}">
 <span class="media-drop-figure">${image}<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span><span class="media-drop-rank" aria-hidden="true">${rank}</span></span>
 <span class="media-drop-body">${genre}<strong>${esc(row.product_name)}</strong>
 <span class="media-drop-prices"><s>${yen(row.max_price)}</s><span aria-hidden="true">→</span><b>${yen(row.latest_price)}</b></span>

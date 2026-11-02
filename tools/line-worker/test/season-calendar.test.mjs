@@ -57,7 +57,8 @@ test('Instagram の値下がり投稿: 2 行目に季節の一言、最後のタ
   assert.equal(screenCaption('notes', now), SCREEN_POSTS.notes.caption);
   assert.equal(screenCaption('drops', new Date('2027-02-01T03:00:00Z')), SCREEN_POSTS.drops.caption);
   const source = readFileSync(new URL('../src/social-screens.mjs', import.meta.url), 'utf8');
-  assert.match(source, /caption: screenCaption\('drops', now\)/u, '毎日の値下がり投稿');
+  // 2026-11-02 毎日の値下がり投稿は、11/8 だけ防寒版（warm）になるので setId で呼ぶ（drops の日は screenCaption('drops')）
+  assert.match(source, /const setId = dateKey === WARM_POST\.date && [^\n]*\? 'warm' : 'drops';[\s\S]*?caption: screenCaption\(setId, now\), link: screenLink\('INSTAGRAM', setId, dateKey\)/u, '毎日の値下がり投稿');
   assert.match(source, /caption: screenCaption\(setId, now\)/u, '実画像への差し替え');
 });
 
