@@ -23,4 +23,7 @@ test('landing_view は画面に 1.5 秒出ていたか、人が触った時に 1
   assert.match(source, /document\.visibilityState === 'visible'\) timer = setTimeout\(fire, LANDING_VIEW_VISIBLE_MS\)/u);
   assert.match(source, /\['pointerdown', 'keydown', 'touchstart', 'wheel'\]/u);
   assert.match(source, /if \(sent\) return;\n    sent = true;/u);
+  // 2026-11-02: 自動操作のブラウザ（navigator.webdriver）は訪問に数えない
+  assert.match(source, /const isAutomatedBrowser = \(nav = globalThis\.navigator\) => nav\?\.webdriver === true;/u);
+  assert.match(source, /\(\(\) => \{\n  if \(isAutomatedBrowser\(\)\) return;\n  let sent = false;/u);
 });
