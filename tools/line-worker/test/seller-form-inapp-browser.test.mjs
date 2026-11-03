@@ -33,7 +33,7 @@ test('アプリ内ブラウザでは Turnstile を 4 秒だけ待ち、出なけ
   assert.equal((source.match(/if \(inAppBrowser\) showTurnstileFailure\('in_app_browser', \{ quiet: true \}\);/gu) || []).length, 2);
   // 送信側: turnstileFailure が立っていればトークン無しで送る（既存の仕組み）
   assert.match(source, /if \(!turnstileToken && !turnstileFailure\) \{/u);
-  assert.match(html, /for-sellers\.js\?v=1980-10/u, 'キャッシュを更新');
+  assert.match(html, /for-sellers\.js\?v=1980-11/u, 'キャッシュを更新');
 });
 
 // 2026-10-31 大隆さん OK（改善 2）: 7 日で出品者ページ 15 回・申込ボタン 0 回。スマホの 1 画面目に申込ボタンが無かった。

@@ -22,7 +22,7 @@ function page(visibilityState, navigator = {}) {
   });
   runInContext(landing, context);
   runInContext(failure, context);
-  return { events, fail: code => runInContext(`sendFormFailure(${JSON.stringify(code)})`, context), elapse: () => timer?.(), tap: () => listeners.get('pointerdown')?.() };
+  return { events, fail: code => runInContext(`sendFormFailure(${JSON.stringify(code)})`, context), elapse: () => timer?.(), tap: (type = 'pointerdown', ...event) => listeners.get(type)?.(...(event.length ? event : [{ isTrusted: true }])) };
 }
 
 test('hidden prefetch load records no seller_form_failed', () => {
@@ -64,5 +64,41 @@ test('an automated browser (navigator.webdriver) is never counted even when it c
   const p = page('visible', { webdriver: true });
   p.fail('turnstile_unavailable');
   p.tap();
+  assert.deepEqual(p.events, []);
+});
+
+// 2026-11-03 Codex 受信箱 seller-synthetic-interaction-guard: スクリプトの合成イベント（isTrusted false・欠落）では数えない。
+test('synthetic or unknown interaction events record neither the view nor the held failure', () => {
+  for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel']) {
+    const p = page('visible');
+    p.fail('turnstile_unavailable');
+    p.tap(type, { isTrusted: false });
+    p.tap(type, {});
+    p.tap(type, null);
+    p.tap(type, { isTrusted: 'true' });
+    p.elapse();
+    assert.deepEqual(p.events, [], type);
+  }
+});
+
+test('a trusted interaction sends one view and flushes the held failure exactly once', () => {
+  for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel']) {
+    const p = page('visible');
+    p.fail('turnstile_unavailable');
+    p.tap(type, { isTrusted: false });
+    p.tap(type, { isTrusted: true });
+    p.tap('pointerdown', { isTrusted: true });
+    p.fail('turnstile_unavailable');
+    assert.deepEqual(p.events, [
+      { type: 'seller_landing_view', content: 'for-sellers' },
+      { type: 'seller_form_failed', content: 'turnstile_unavailable' }
+    ], type);
+  }
+});
+
+test('navigator.webdriver stays excluded even for trusted interactions', () => {
+  const p = page('visible', { webdriver: true });
+  p.fail('turnstile_unavailable');
+  for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel']) p.tap(type, { isTrusted: true });
   assert.deepEqual(p.events, []);
 });

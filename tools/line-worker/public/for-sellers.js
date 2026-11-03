@@ -34,14 +34,17 @@ function sendSellerEvent(event_type, extra = {}) {
 // 操作 0。Threads のセラー投稿の約 4 分後に 2 件ずつ、閲覧と確認欄の失敗が同じ秒に出る）。セラー向けの長いページは、
 // 人なら読むためにスクロール・タップ・キー入力をする。人が触った時だけ閲覧として数え、確認欄の失敗もその後だけ送る。
 // 自動操作のブラウザ（navigator.webdriver が true）は触っても数えない。
+// 2026-11-03 Codex 受信箱 seller-synthetic-interaction-guard: スクリプトが作った合成イベント（isTrusted が false・欠落）でも
+// 閲覧が送れていた。ブラウザが本物の操作と判定したイベント（isTrusted === true）だけで数える。これは「操作のあった匿名セッション」で、
+// 実在の人の人数ではない（実ブラウザを外から操作する自動化もある）。入力内容・UA は見ない。
 let sellerLandingCounted = false;
 const failuresBeforeLanding = [];
 const SELLER_LANDING_EVENTS = Object.freeze(['pointerdown', 'keydown', 'touchstart', 'wheel']);
 (() => {
   if (globalThis.navigator?.webdriver === true) return;
   let sent = false;
-  const fire = () => {
-    if (sent) return;
+  const fire = (event) => {
+    if (sent || event?.isTrusted !== true) return;
     sent = true;
     for (const type of SELLER_LANDING_EVENTS) removeEventListener(type, fire, true);
     sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
