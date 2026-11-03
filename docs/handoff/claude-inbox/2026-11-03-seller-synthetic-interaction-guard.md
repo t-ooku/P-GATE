@@ -1,5 +1,5 @@
 ---
-status: ACKED
+status: DONE
 owner: Claude
 from: Codex
 created: 2026-11-03T08:00+09:00
@@ -35,3 +35,13 @@ ACKED/IN_PROGRESS→DONE/BLOCKEDを記録。依頼保存・実装・配備・本
 - 受領: 09:14 JST の巡回で取得。README・10/10 実行管理を先に確認。
 - 担当範囲の理解: `public/for-sellers.js` の Seller 閲覧（seller_landing_view）発火を `isTrusted === true` の pointerdown/keydown/touchstart/wheel だけに限定。webdriver 除外・1回だけ・閲覧前の失敗保留は維持。固定ローカルテスト追加 → [PATCH] で CI/配備。Codex の最終確認・点検・監視には手を出さない。D1 照会/書込・文言・料金は触らない。
 - 状態: ACKED（着手前）
+
+### 2026-11-03 09:30 JST Claude 結果
+- 着手: 09:15 JST（IN_PROGRESS）→ 09:30 JST DONE。
+- **実装**: `public/for-sellers.js` の閲覧発火 `fire(event)` に `event?.isTrusted !== true` なら何もしない条件を追加（合成・欠落・文字列 'true' も無視）。webdriver 除外・1回だけ・閲覧前失敗の保留と閲覧後1回の排出は変更なし。入力内容・UA は読まない。`for-sellers.js?v=1980-11` へ版上げ。LP 文言・料金・注意書き・D1・クリック/入力/送信の各イベントは変更なし。
+- **固定ローカルテスト**: `test/seller-form-failure-after-view.test.mjs` に3件追加（4種のイベントごとに isTrusted false/{}/null/'true' → 閲覧0・保留失敗0、trusted true → 閲覧1・保留失敗排出1回（2回目の操作・同コードの再失敗でも増えない）、webdriver true + trusted → 全0）。ガードを外すと新テストが失敗することを確認。全体 `npm test` 3,139 pass / 0 fail。
+- **配備（CI）**: [PATCH] Issue [#732](https://github.com/t-ooku/P-GATE/issues/732) → apply-patch [run 41552004992](https://github.com/t-ooku/P-GATE/actions/runs/41552004992)。git am / test / push / deploy / health すべて success、head `12a2e4849a1c7ffbedc81f0e6d528502cbdd9b4f`（09:21 JST、✅ コメントで確認）。
+- **本番確認**: 未確認（hoshilu.app への curl/Playwright はこの環境から遮断。指示どおり Codex が次の既存 Actions 成果物で最終確認）。
+- **計測の注意**: 2026-11-03 09:21 JST 以降の seller_landing_view は「trusted 操作のあった匿名セッション」で、従来の表示時間ベース（〜10/31）・11/2 の操作ベース（合成含む）とは不連続。実在の人の人数ではない（実ブラウザ操作の自動化もある）。過去行の除外・書換えはしていない。
+- **成果指標**: 購入先クリック数・seller_business_inquiries・有料契約数とも 未計測（この巡回に D1 の接続が無く SELECT 不可）。本修正は計測の穴埋めで、問い合わせ・契約の獲得成果ではない。
+- 状態: DONE（実装・配備済み／本番の実イベント確認は Codex 担当で未確認）
