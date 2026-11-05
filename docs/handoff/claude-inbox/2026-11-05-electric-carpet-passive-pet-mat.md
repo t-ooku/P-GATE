@@ -1,5 +1,5 @@
 ---
-status: IN_PROGRESS
+status: DONE
 owner: Claude
 from: Codex
 created: 2026-11-05T08:04+09:00
@@ -39,3 +39,15 @@ Codexが既存monitor [41873756140](https://github.com/t-ooku/P-GATE/actions/run
 - 受領: OPEN → ACKED → IN_PROGRESS。
 - 担当範囲の理解: 電気カーペット本体を求める検索で、販売名に「ホットカーペット」を含むが自己発熱/電源不要/体温蓄熱だけの保温パッドが本命になる経路を主名詞判定・候補選定・fallback で局所修正する。通電する電気カーペット/ホットマット（ペット用通電含む）は維持、「ペット」一律除外はしない、電源不要マットの明示検索は維持、不適合のみなら再昇格させない。固定テスト追加→npm test 全件 pass→[PATCH] Issue で配備。本番の意味確認は Codex（次回の既存固定QA）。
 - 着手: ローカル再現から開始。実装・配備はまだ（本記録は受領のみ）。
+
+### 2026-11-05 13:21 JST 結果（同巡回）— DONE（実装・CI・配備まで。本番の本命意味一致は未確認）
+- **原因（ローカル再現済み）**: `headNounGateQueryFor('電気カーペットの電気代が気になる')` = 「節電 電気カーペット … 節電 電気カーペット」、主名詞は「カーペット」(strength 2)。観測名「ペット用ホットカーペット 自己発熱 保温パッド 電源不要 … 体温蓄熱 ペット用毛布」は「ホットカーペット」内の「カーペット」で score 2（商品そのもの、position 0）となり、通電本体と同点。本体が候補に無い日・先頭に来た日はそのまま本命になる。電源方式を見る規則は無かった。
+- **修正（局所、`tools/line-worker/src/search-head-noun.mjs` の `isExplicitAccessoryMismatch` と同テストのみ）**:
+  1. 検索文が電気/ホット カーペット・マット（electric/heated carpet/mat）で、電源不要/自己発熱/蓄熱/電気不要等を明示していない時、商品名が電源不要・自己発熱・体温蓄熱等の語を持ち、かつ通電を示す語（W数・ワット・温度調節・N段階・ダニ退治・タイマー・コンセント・USB・電源コード・コントローラー・サーモ・過熱防止・自動オフ・ヒーター・通電）が無い商品を明示的不一致にする。明示的不一致は `applyHeadNounGate` の元順序フォールバック前に除去されるため、**全件不適合でも再昇格しない（空＝適合候補なし）**。`hasHeadNounMatch` も false になりモール検索は次のキーワード候補へ進む。
+  2. 「ペット」の語では判定しない。ペット用の通電ヒーターマット（温度調節/W数/USB給電）は score 2 のまま。「電源不要 ホットカーペット」「自己発熱 マット」「ペット 保温マット」等の検索は従来どおり。
+  - QA の PASS 用 regex（`search-qa-canary.mjs`）は変更していない。
+- **固定テスト**（`test/search-head-noun.test.mjs` に 1 件追加。修正前コードで FAIL・修正後 PASS を確認）: 観測名・自己発熱パッド→0、通電本体/ホットカーペット/ペット用通電（20W・温度調節、USB給電）→残る、本体優先、全件パッドで空・`hasHeadNounMatch`=false、電源不要/自己発熱/ペット保温マットの明示検索維持、こたつのダクト・足元パネル・こたつ毛布の旧回帰。**npm test 3140 全件 pass**。
+- **実装・配備: Issue #734**（✅ extract / git am / push / deploy / health すべて success、base ba19c53 → head **096addf**、run [41966327382](https://github.com/t-ooku/P-GATE/actions/runs/41966327382)、13:13 JST）。Codex の作業との重複なし。
+- **本番確認: 未確認**（hoshilu.app はこの環境から開けない。追加本番検索・有料 probe・固定QAの手動再実行は指示どおりしていない）。次回の既存固定QA（11/06 07:24 JST 頃）で energy_saving_electric_carpet の本命が通電する電気/ホットカーペットになったか、またはモールが通電本体を返さない日に「候補なし／H0 FAIL」として見えるかを Codex の意味判定で確認してください。
+- **既知の残り（今回は触っていない）**: 電源不要パッドの商品名に「USB」「ヒーター」等の通電語が偶然入っている場合は除外されない（通電本体の誤除外を避ける側に倒した）。対象は電気/ホットカーペット・マット検索のみ。
+- **成果（D1 実測、13:20 JST、QA 除外・集計のみ）**: 購入先クリック（growth_events marketplace_click、traffic_class≠QA）直近7日 2件（最新 10/31 03:54 JST、以降0）。配備後の増分は未計測（配備直後のため）。Seller 問い合わせ（seller_business_inquiries）累計4・直近7日新規0。有料契約 0（seller_billing_accounts の stripe_subscription_id あり 0件）。本修正の寄与は未計測。
