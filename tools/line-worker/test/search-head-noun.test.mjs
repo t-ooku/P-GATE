@@ -284,6 +284,46 @@ test('こたつ本体の検索で足元パネルヒーター/デスク下暖房�
   assert.deepEqual(applyHeadNounGate('こたつ ダクト', [duct]), [duct]);
 });
 
+// 2026-11-05 受信箱 electric-carpet-passive-pet-mat: 固定QA energy_saving_electric_carpet の本命が電源不要の保温パッド
+test('電気カーペット本体の検索で電源不要・自己発熱の保温パッドを本命にせず、全件不適合でも再昇格しない', async () => {
+  const { headNounGateQueryFor } = await import('../src/query-expansion.mjs');
+  const carpetQuery = headNounGateQueryFor('電気カーペットの電気代が気になる');
+  const observed = { product_name: 'ペット用ホットカーペット 自己発熱 保温パッド 電源不要 犬 猫 体温蓄熱 ペット用毛布' };
+  const selfHeating = { product_name: '自己発熱マット ホットカーペット 電気不要 体温で温まる 洗える' };
+  const body = { product_name: '電気カーペット 3畳 本体 省エネ ダニ退治 切タイマー付' };
+  const hotCarpet = { product_name: 'パナソニック ホットカーペット 2畳 DC-2NKC 温度調節' };
+  const petPowered = { product_name: 'ペット用ホットカーペット 犬 猫 ヒーター 温度調節 7段階 防水 20W' };
+  const petPoweredUsb = { product_name: 'ペット用 ホットマット USB給電 電気マット 小型犬 猫' };
+  // 観測名・自己発熱パッドは主名詞スコア0(販売名の「ホットカーペット」だけで本体扱いしない)
+  for (const passive of [observed, selfHeating]) {
+    assert.equal(headNounScore(carpetQuery, passive.product_name), 0, passive.product_name);
+  }
+  // 通電する本体(ペット用の通電マットを含む)は除外しない
+  for (const powered of [body, hotCarpet, petPowered]) {
+    assert.equal(headNounScore(carpetQuery, powered.product_name), 2, powered.product_name);
+  }
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observed, petPoweredUsb]), [petPoweredUsb]);
+  // 本体があれば本体が本命
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observed, body]), [body]);
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observed, petPowered, body]), [petPowered, body]);
+  // 全候補が電源不要パッドなら元順序フォールバックで本命に戻さず、適合候補なし
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observed]), []);
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observed, selfHeating]), []);
+  assert.equal(hasHeadNounMatch(carpetQuery, [observed, selfHeating]), false);
+  // 電源不要・自己発熱を明示した検索、電気カーペットを求めないペット用品検索は維持
+  assert.deepEqual(applyHeadNounGate('電源不要 ホットカーペット ペット', [observed, selfHeating]).length, 2);
+  assert.deepEqual(applyHeadNounGate('自己発熱 マット', [observed]), [observed]);
+  assert.deepEqual(applyHeadNounGate('ペット 保温マット', [observed]), [observed]);
+  // 既存のこたつ(パネル/ダクト)・こたつ毛布の回帰
+  const kotatsuQuery = headNounGateQueryFor('電気代が気にならないこたつ');
+  const kotatsuBody = { product_name: '山善 こたつ テーブル 80cm 正方形 省エネ' };
+  const panel = { product_name: 'パネルヒーター 足元 ワイド こたつ ラウンド 遠赤外線360度 足元ヒーター デスク下' };
+  const duct = { product_name: 'こたつ省エネダクト・温風ヒーター用パイプ fbp-1080w' };
+  const kotatsuBlanket = { product_name: 'こたつ毛布 正方形 190×190' };
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, panel, kotatsuBlanket, kotatsuBody]), [kotatsuBody]);
+  assert.equal(headNounScore(kotatsuQuery, kotatsuBlanket.product_name), 0);
+});
+
 // 2026-10-29 受信箱 dress-innerwear-exclusion: 固定QA shein_one_piece の本命がペチコート/インナーワンピース
 test('ワンピース本体の検索でペチコート・インナー専用品を本命にせず、全件インナーでも再昇格しない', () => {
   const query = 'SHEINで見たワンピース';

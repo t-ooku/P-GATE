@@ -336,6 +336,16 @@ function isExplicitAccessoryMismatch(query, title) {
   // 販売名に「こたつ」があるだけで本体扱い(2)になっていた。パネル/足元/デスク下ヒーターを明示していない
   // こたつ検索では、主商品が足元パネルヒーター等の別の暖房器具で、こたつ本体を表す語(テーブル・本体・
   // 天板・家具調・ヒーター内蔵 等)が無い商品を候補から外す。全件不適合でも元順序で本命に戻さない。
+  // 2026-11-05 固定QA energy_saving_electric_carpet(受信箱 2026-11-05-electric-carpet-passive-pet-mat):
+  // 電気カーペット本体を探す検索で、本命が「ペット用ホットカーペット 自己発熱 保温パッド 電源不要 … 体温蓄熱」
+  // だった。販売名の「ホットカーペット」で本体扱い(2)になっていた。電源不要/自己発熱/蓄熱を明示していない
+  // 電気・ホットカーペット/マット検索では、電源不要・自己発熱・体温蓄熱だけの保温パッドで、通電を示す語
+  // (W数・温度調節・タイマー・ダニ退治・コンセント・USB・ヒーター 等)が無い商品を候補から外す。全件不適合でも
+  // 元順序で本命に戻さない。「ペット」の語だけでは除外しない(ペット用の通電ヒーターマットは従来どおり)。
+  if (ELECTRIC_CARPET_QUERY.test(query) && !PASSIVE_WARMER.test(query)
+    && PASSIVE_WARMER.test(title) && !POWERED_WARMER.test(title)) {
+    return true;
+  }
   if (KOTATSU_QUERY.test(query) && !KOTATSU_QUERY_OTHER_HEATER.test(query)
     && KOTATSU_TITLE_OTHER_HEATER.test(title) && !KOTATSU_TITLE_BODY.test(title)) {
     return true;
@@ -361,6 +371,13 @@ const APPLIANCE_ACCESSORY_RULES = Object.freeze([
     bundled: /(?:ダクト|パイプ)\s*(?:付|付属|同梱)/u
   }
 ]);
+
+// 通電する電気カーペット/ホットカーペット/電気・ホットマットを探す検索
+const ELECTRIC_CARPET_QUERY = /(?:電気|ホット)\s*(?:カーペット|マット)|electric\s*(?:carpet|mat)|heated\s*(?:carpet|mat)/u;
+// 電源を使わない保温用品(自己発熱・体温蓄熱・電源不要)を表す語。検索文にあれば明示的な意図として維持する
+const PASSIVE_WARMER = /電源\s*(?:不要|なし|無し|いらず)|無電源|ノン電源|電気\s*(?:不要|いらず|を?\s*使わない)|コンセント\s*(?:不要|なし|いらず)|自己\s*発熱|自然\s*発熱|蓄熱|体温\s*(?:で|を)|self[\s-]*heating|no\s+electricity/u;
+// 通電する本体を示す語(電源不要の保温パッドには無い)
+const POWERED_WARMER = /\d+(?:\.\d+)?\s*w(?![a-z])|ワット|温度\s*(?:調節|調整|切替|切り替え)|\d+\s*段階|ダニ\s*(?:退治|対策)|タイマー|ac\s*100|100\s*v|コンセント(?!\s*(?:不要|なし|いらず))|usb|電源コード|コントローラー|サーモ|過熱防止|自動\s*(?:オフ|off|電源)|ヒーター(?!\s*(?:不要|なし|いらず))|通電/u;
 
 const KOTATSU_QUERY = /こたつ|コタツ|炬燵|kotatsu/u;
 // こたつ以外の暖房器具(足元パネルヒーター等)を明示した検索
