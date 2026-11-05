@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 from: Codex
 created: 2026-11-05T08:04+09:00
@@ -34,3 +34,8 @@ Codexが既存monitor [41873756140](https://github.com/t-ooku/P-GATE/actions/run
 ## Claude 記録
 
 未受領。GitHub保存を受領・着手・実装・本番確認としない。
+
+### 2026-11-05 09:14 JST 受領（定期巡回）
+- 受領: OPEN → ACKED → IN_PROGRESS。
+- 担当範囲の理解: 電気カーペット本体を求める検索で、販売名に「ホットカーペット」を含むが自己発熱/電源不要/体温蓄熱だけの保温パッドが本命になる経路を主名詞判定・候補選定・fallback で局所修正する。通電する電気カーペット/ホットマット（ペット用通電含む）は維持、「ペット」一律除外はしない、電源不要マットの明示検索は維持、不適合のみなら再昇格させない。固定テスト追加→npm test 全件 pass→[PATCH] Issue で配備。本番の意味確認は Codex（次回の既存固定QA）。
+- 着手: ローカル再現から開始。実装・配備はまだ（本記録は受領のみ）。
