@@ -43,10 +43,10 @@ async function fixture(html: string, status = 200, confirmation = true) {
           assert.equal(new URL(route.request().url()).origin, 'https://shop.example');
           if (route.request().method() === 'POST') {
             posts++; submitted = route.request().postData() ?? '';
-            return route.fulfill({ status, contentType: 'text/html',
+            return route.fulfill({ status, contentType: 'text/html; charset=utf-8',
               body: confirmation ? '<p id="success">送信を受け付けました</p>' : '<p>エラー</p>' });
           }
-          return route.fulfill({ status: 200, contentType: 'text/html', body: html });
+          return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
         });
         return context;
       };
@@ -73,12 +73,14 @@ test('CAPTCHA is skipped with a masked screenshot and no POST', async () => {
   } finally { f.close(); }
 });
 test('unsupported required fields, confirm steps, and solicitation bans do not submit', async () => {
-  for (const html of [form.replace('</form>', '<input type="checkbox" required></form>'),
-    form.replace('送信する', '入力内容を確認'), form + '<p>営業目的の送信はお断りします</p>']) {
+  for (const [html, reason] of [
+    [form.replace('</form>', '<input type="checkbox" required></form>'), 'FORM_AMBIGUOUS_OR_UNSUPPORTED'],
+    [form.replace('送信する', '入力内容を確認'), 'FORM_AMBIGUOUS_OR_UNSUPPORTED'],
+    [form + '<p>営業目的の送信はお断りします</p>', 'SOLICITATION_PROHIBITED']]) {
     const f = await fixture(html);
     try {
       const r = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
-      assert.equal(r.status, 'SKIPPED'); assert.equal(f.posts(), 0);
+      assert.equal(r.status, 'SKIPPED'); assert.equal(r.reason, reason); assert.equal(f.posts(), 0);
     } finally { f.close(); }
   }
 });

@@ -11,6 +11,9 @@ on:
       - .github/workflows/seller-outreach-pipeline.yml
 permissions:
   contents: read
+concurrency:
+  group: seller-outreach-tests-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -87,7 +87,7 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   // seller-promo-weekly-record.yml (2026-10-03追加、Cowork 依頼 §10): 月曜 07:07 JST に本番 D1 を読むだけで、
   // AI販促担当の週次の結果（状態・検査理由・原価。本文と連絡先は書かない）を docs/handoff/ に追記して同じブランチへコミットする。
   assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
-    ['apply-patch.yml', 'apply-price-observations-0093.yml', 'build-hero-font.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml', 'seller-promo-weekly-record.yml']);
+    ['apply-patch.yml', 'apply-price-observations-0093.yml', 'build-hero-font.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml', 'seller-outreach-pipeline.yml', 'seller-promo-weekly-record.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
@@ -153,3 +153,12 @@ test('release archives include Worker migrations and Chrome localization', () =>
   assert.match(source, /'_locales'/);
   assert.match(source, /'i18n\.mjs'/);
 });
+
+// Dedicated offline tests for the independent Node package; no production credentials.
+test('Seller outreach CI runs fixtures without send commands or production secrets', () => {
+  const source = fs.readFileSync(path.join(root, '.github', 'workflows', 'seller-outreach-pipeline.yml'), 'utf8');
+  assert.match(source, /contents: read/u);
+  assert.match(source, /npm test/u);
+  assert.doesNotMatch(source, /secrets\.|GEMINI_API_KEY|CLOUDFLARE|src\/cli|workflow_dispatch:|schedule:/u);
+});
+

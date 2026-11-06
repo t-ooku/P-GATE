@@ -29,7 +29,8 @@ export async function fetchPublic(raw: string, redirects = 0): Promise<{ url: st
   if (redirects > 3) throw new Error('TOO_MANY_REDIRECTS');
   const { url, address, family } = await publicAddress(raw);
   const response = await new Promise<{ status: number; location?: string; text: string }>((resolve, reject) => {
-    const req = request(url, { headers: { 'user-agent': AGENT, accept: 'text/html,text/plain' },
+    const req = request(url, { signal: AbortSignal.timeout(15000),
+      headers: { 'user-agent': AGENT, accept: 'text/html,text/plain' },
       lookup: (_host, options, callback) => {
         if (options.all) callback(null, [{ address, family }]);
         else callback(null, address, family);
