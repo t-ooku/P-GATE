@@ -27,7 +27,15 @@ jobs:
         with:
           node-version: 24
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
+      - name: Select the preinstalled CI browser
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, appendFileSync } from 'node:fs';
+          const browser = ['/usr/bin/google-chrome', '/usr/bin/chromium', '/opt/google/chrome/chrome'].find(existsSync);
+          if (!browser) throw new Error('PREINSTALLED_CI_BROWSER_MISSING');
+          appendFileSync(process.env.GITHUB_ENV, 'TEST_CHROMIUM_PATH=' + browser + '\n');
+          console.log('Using preinstalled CI Chromium');
+          JS
       - run: npm run check
       - run: npm run build
       - run: npm test
