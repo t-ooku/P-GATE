@@ -32,6 +32,7 @@ async function fixture(html: string, status = 200, confirmation = true) {
     now: () => new Date('2026-11-06T01:00:00Z'),
     resolve: async (raw: string) => ({ url: new URL(raw), address: '203.0.113.1', family: 4 }),
     robots: async () => {}, exclusions: async () => '',
+    onError: (error: unknown) => console.error('MOCK_ONLY_DIAGNOSTIC', error),
     launch: async (): Promise<Browser> => {
       const browser = await chromium.launch({ headless: true,
         ...(process.env.TEST_CHROMIUM_PATH ? { executablePath: process.env.TEST_CHROMIUM_PATH } : {}) });
@@ -60,7 +61,7 @@ test('preview never fills or sends a form', async () => {
   const f = await fixture(form);
   try {
     const r = await submitContactForm(seller, pitch, sender, { ...f.options, mode: 'preview' }, f.overrides);
-    assert.equal(r.status, 'DRY_RUN'); assert.equal(f.posts(), 0);
+    assert.equal(r.status, 'DRY_RUN', JSON.stringify(r)); assert.equal(f.posts(), 0);
   } finally { f.close(); }
 });
 test('CAPTCHA is skipped with a masked screenshot and no POST', async () => {
@@ -85,7 +86,7 @@ test('labels are filled once, confirmation is required, and a second process can
   const f = await fixture(form);
   try {
     const r = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
-    assert.equal(r.status, 'SUBMITTED'); assert.equal(f.posts(), 1);
+    assert.equal(r.status, 'SUBMITTED', JSON.stringify(r)); assert.equal(f.posts(), 1);
     const body = new URLSearchParams(f.submitted());
     assert.equal(body.get('email'), sender.email); assert.equal(body.get('emailConfirm'), sender.email);
     assert.equal(body.get('name'), sender.name); assert.equal(body.get('message'), pitch.body);
@@ -97,7 +98,7 @@ test('HTTP failure remains UNKNOWN and cannot be automatically retried', async (
   const f = await fixture(form, 500);
   try {
     const r = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
-    assert.equal(r.status, 'UNKNOWN'); assert.equal(f.posts(), 1);
+    assert.equal(r.status, 'UNKNOWN', JSON.stringify(r)); assert.equal(f.posts(), 1);
     const again = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
     assert.equal(again.status, 'DUPLICATE'); assert.equal(f.posts(), 1);
   } finally { f.close(); }

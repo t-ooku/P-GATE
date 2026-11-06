@@ -78,6 +78,7 @@ interface Dependencies {
   launch: (host: string, address: string) => Promise<Browser>;
   exclusions: (...values: string[]) => Promise<string>;
   now: () => Date;
+  onError: (error: unknown) => void;
 }
 const defaults: Dependencies = {
   resolve: publicAddress, robots: assertRobotsAllowed,
@@ -89,7 +90,7 @@ const defaults: Dependencies = {
     const adapter = await import(moduleUrl) as { findExcludedOrganization: (...v: string[]) => string };
     return adapter.findExcludedOrganization(...values);
   },
-  now: () => new Date()
+  now: () => new Date(), onError: () => {}
 };
 
 export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender: SenderInfo,
@@ -171,7 +172,8 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     if (!requestAttempted || await page.locator(CAPTCHA).count()) throw new Error('UNVERIFIED_SUBMISSION');
     ledger.finish(key, 'SUBMITTED', 'CONFIRMATION_OBSERVED');
     return { status: 'SUBMITTED', reason: 'CONFIRMATION_OBSERVED_NOT_DELIVERY_OR_CONVERSION' };
-  } catch {
+  } catch (error) {
+    deps.onError(error);
     if (reserved) ledger?.finish(key, 'UNKNOWN', 'REVIEW_REQUIRED_NO_AUTOMATIC_RETRY');
     return { status: reserved ? 'UNKNOWN' : 'SKIPPED', reason: 'REVIEW_REQUIRED_NO_AUTOMATIC_RETRY' };
   } finally { ledger?.close(); await browser?.close(); }
