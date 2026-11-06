@@ -1,0 +1,17 @@
+{
+  "storeUrl": "https://replace-with-verified-store.example/",
+  "sender": {
+    "name": "大久津",
+    "email": "",
+    "company": "HOSHILU"
+  },
+  "demands": [],
+  "submit": {
+    "successSelector": "",
+    "suppressionSnapshot": {
+      "capturedAt": "",
+      "source": "",
+      "storeUrls": []
+    }
+  }
+}

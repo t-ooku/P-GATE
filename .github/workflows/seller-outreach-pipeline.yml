@@ -1,0 +1,41 @@
+name: Seller outreach pipeline tests (no external sends)
+on:
+  push:
+    branches: [feature/seller-outreach-pipeline-20261106]
+    paths:
+      - tools/seller-outreach-pipeline/**
+      - .github/workflows/seller-outreach-pipeline.yml
+  pull_request:
+    paths:
+      - tools/seller-outreach-pipeline/**
+      - .github/workflows/seller-outreach-pipeline.yml
+permissions:
+  contents: read
+concurrency:
+  group: seller-outreach-tests-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/seller-outreach-pipeline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Select the preinstalled CI browser
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, appendFileSync } from 'node:fs';
+          const browser = ['/usr/bin/google-chrome', '/usr/bin/chromium', '/opt/google/chrome/chrome'].find(existsSync);
+          if (!browser) throw new Error('PREINSTALLED_CI_BROWSER_MISSING');
+          appendFileSync(process.env.GITHUB_ENV, 'TEST_CHROMIUM_PATH=' + browser + '\n');
+          console.log('Using preinstalled CI Chromium');
+          JS
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
