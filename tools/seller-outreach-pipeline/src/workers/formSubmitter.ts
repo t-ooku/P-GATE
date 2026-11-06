@@ -5,7 +5,7 @@ import { publicAddress, assertRobotsAllowed, AGENT } from '../lib/publicWeb.js';
 import { Ledger, storeKey } from '../lib/ledger.js';
 import { environmentDryRun } from '../config.js';
 import { requestLimiter } from '../utils/rateLimiter.js';
-import { retryRead, RetryableReadError } from '../utils/retry.js';
+import { retryRead, RetryableReadError, isTransientReadError } from '../utils/retry.js';
 import { logPlannedMessage } from '../utils/plannedMessage.js';
 import { BLOCK_MARKERS, detectBlock } from '../utils/blockDetection.js';
 import type { SellerInfo, SenderInfo, Pitch, SubmissionResult } from '../types/index.js';
@@ -136,7 +136,8 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
   let intentRecorded = false;
   let blockHandler: ((reason: string) => Promise<SubmissionResult>) | undefined;
   let responseStatus: number | undefined;
-  const routing = new AbortController();
+  let routing = new AbortController();
+  let readBlock: string | null = null;
   try {
     ledger = new Ledger(options.ledgerPath);
     if (ledger.isBlocked(key)) return skip('PERSISTED_BLOCKED_OR_CAPTCHA');
@@ -159,7 +160,8 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     });
     page = await context.newPage();
     page.setDefaultTimeout(10000);
-    const activePage = page, activeLedger = ledger;
+    let activePage = page;
+    const activeLedger = ledger;
     blockHandler = async reason => {
       let path: string | undefined;
       try { path = await screenshot(activePage, options.screenshotDir || 'logs/blocked', key); }
@@ -172,11 +174,27 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
         ...(path ? { screenshot: path } : {}) };
     };
     const navigation = await deps.retry(async () => {
-      const response = await activePage.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 120000 });
-      responseStatus = response?.status();
-      if (!await detectBlock(activePage, responseStatus) && responseStatus
-        && [408, 500, 502, 503, 504].includes(responseStatus)) throw new RetryableReadError('TRANSIENT_FORM_READ_HTTP');
-      return response;
+      responseStatus = undefined;
+      try {
+        const response = await activePage.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        responseStatus = response?.status();
+        if (!await detectBlock(activePage, responseStatus) && responseStatus
+          && [408, 500, 502, 503, 504].includes(responseStatus)) throw new RetryableReadError('TRANSIENT_FORM_READ_HTTP');
+        return response;
+      } catch (error) {
+        readBlock = await detectBlock(activePage, responseStatus).catch(() => null);
+        if (readBlock) throw new Error('BLOCKED_DURING_READ_NO_RETRY');
+        if (isTransientReadError(error)) {
+          // A failed Chromium navigation can commit chrome-error after goto rejects.
+          // Cancel its resource queue and use a fresh page before any read retry.
+          routing.abort();
+          await activePage.close().catch(() => {});
+          routing = new AbortController();
+          activePage = await context.newPage(); page = activePage;
+          activePage.setDefaultTimeout(10000);
+        }
+        throw error;
+      }
     });
     const initialBlock = await detectBlock(page, navigation?.status());
     if (initialBlock) return await blockHandler(initialBlock);
@@ -229,7 +247,7 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     deps.onError(error);
     if (page && blockHandler) {
       try {
-        const blocked = await detectBlock(page, responseStatus);
+        const blocked = readBlock ?? await detectBlock(page, responseStatus);
         if (blocked) return await blockHandler(blocked);
       } catch (recordError) { deps.onError(recordError); }
     }
