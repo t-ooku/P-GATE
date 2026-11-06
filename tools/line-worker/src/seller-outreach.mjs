@@ -21,9 +21,9 @@ export function newUnsubscribeToken() {
 
 export function jstBusinessHours(date) {
   const shifted = new Date(date.getTime() + JST_OFFSET_MS);
-  const day = shifted.getUTCDay();
   const hour = shifted.getUTCHours();
-  return day >= 1 && day <= 5 && hour >= 9 && hour < 18;
+  // 2026-11-07: weekend sending authorized; the JST 09:00–18:00 window still applies.
+  return hour >= 9 && hour < 18;
 }
 
 export function jstDayRange(date) {
@@ -295,3 +295,4 @@ export async function handleSellerOutreachRoutes(request, env) {
   await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='OPTED_OUT',updated_at=?2 WHERE email_hash=?1 AND status IN ('QUEUED','SENT','FAILED','REPLIED','SKIPPED')`).bind(row.email_hash, timestamp).run();
   return new Response(UNSUB_HTML({ title: '配信停止を受け付けました', body: '今後、HOSHILU からセラー向けのご案内メールはお送りしません。ご確認ありがとうございました。' }), { status: 200, headers });
 }
+

@@ -54,11 +54,15 @@ async function insertContact(db, overrides = {}) {
 
 const MONDAY_10AM_JST = new Date('2026-09-07T01:00:00Z');
 
-test('平日 09:00〜18:00 JST の外では送らない（土日・早朝・夜間）', () => {
+test('土日を含む全曜日で09:00以上18:00未満JSTだけ送る', () => {
   assert.equal(jstBusinessHours(MONDAY_10AM_JST), true);
-  assert.equal(jstBusinessHours(new Date('2026-09-06T01:00:00Z')), false, '日曜');
-  assert.equal(jstBusinessHours(new Date('2026-09-07T23:00:00Z')), false, '月曜 08:00 JST');
-  assert.equal(jstBusinessHours(new Date('2026-09-07T09:30:00Z')), false, '月曜 18:30 JST');
+  for (let day = 7; day <= 13; day++) {
+    const date = `2026-09-${String(day).padStart(2, '0')}`;
+    for (const [utcTime, expected] of [['00:00:00', true], ['08:59:59', true],
+      ['09:00:00', false], ['14:59:59', false], ['15:00:00', false], ['23:59:59', false]]) {
+      assert.equal(jstBusinessHours(new Date(`${date}T${utcTime}Z`)), expected, `${date} ${utcTime} UTC`);
+    }
+  }
   const day = jstDayRange(MONDAY_10AM_JST);
   assert.equal(day.from, '2026-09-06T15:00:00.000Z');
   assert.equal(day.to, '2026-09-07T15:00:00.000Z');
@@ -94,7 +98,23 @@ test('未設定・営業時間外では何もしない', async () => {
   assert.deepEqual(await runSellerOutreachCycle(env, MONDAY_10AM_JST), { action: 'skipped', reason: 'not_configured' });
   const ready = databaseEnv();
   assert.equal(outreachReadiness(ready.env).ok, true);
-  assert.deepEqual(await runSellerOutreachCycle(ready.env, new Date('2026-09-06T01:00:00Z')), { action: 'skipped', reason: 'outside_business_hours' });
+  assert.deepEqual(await runSellerOutreachCycle(ready.env, new Date('2026-09-06T09:00:00Z')), { action: 'skipped', reason: 'outside_business_hours' });
+});
+
+test('土日の営業時間にも同意済みのキューを1通だけ送り、再実行では重複しない', async () => {
+  for (const date of ['2026-09-12T00:00:00Z', '2026-09-13T08:59:59Z']) {
+    const { db, env } = databaseEnv();
+    try {
+      await insertContact(db);
+      let sends = 0;
+      const fetchImpl = async () => { sends++; return new Response(JSON.stringify({ id: 'weekend-test' }), { status: 200 }); };
+      const result = await runSellerOutreachCycle(env, new Date(date), fetchImpl);
+      assert.equal(result.action, 'processed'); assert.equal(sends, 1, date);
+      assert.equal(db.prepare("SELECT status FROM seller_outreach_contacts WHERE contact_id='c1'").get().status, 'SENT');
+      await runSellerOutreachCycle(env, new Date(date), fetchImpl);
+      assert.equal(sends, 1, '再実行では同じ店舗へ送らない');
+    } finally { db.close(); }
+  }
 });
 
 test('QUEUED を送って SENT にする。禁止表現の行は送らず SKIPPED', async () => {
@@ -227,7 +247,7 @@ test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤�
 
 // 2026-09-23 大隆さん指示「営業メールを1日30社に増やして」。
 // 本番の上限は wrangler.jsonc の vars で持つ（コードの既定10は据え置き）。
-// 平日09:00〜18:00 JST・1サイクル3通のままなので、30通は10サイクルに分かれて出る。
+// 全曜日09:00〜18:00 JST・1サイクル3通なので、30通は10サイクルに分かれて出る。
 test('本番の1日の送信上限は50通（コード側の頭打ちと同じ。窓と1サイクルの本数は変えない）', () => {
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   assert.equal(wrangler.vars.SELLER_OUTREACH_DAILY_LIMIT, '50');
@@ -344,3 +364,4 @@ test('返信先が未設定・不正なら営業送信経路は起動しない',
   const {env}=databaseEnv({SELLER_OUTREACH_REPLY_TO:''});
   assert.equal(outreachReadiness(env).ok,false);
 });
+

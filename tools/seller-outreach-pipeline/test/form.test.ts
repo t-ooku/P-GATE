@@ -73,6 +73,32 @@ async function fixture(html: string, status = 200, confirmation: boolean | 'capt
     close: () => rmSync(directory, { recursive: true, force: true }) };
 }
 
+test('Saturday and Sunday send inside the JST window, including both open boundaries', async () => {
+  for (const date of ['2026-11-07T00:00:00Z', '2026-11-08T08:59:59Z']) {
+    const f = await fixture(form);
+    try {
+      const options = { ...f.options, suppressionSnapshot: { ...f.options.suppressionSnapshot, capturedAt: date } };
+      const r = await submitContactForm(seller, pitch, sender, options,
+        { ...f.overrides, now: () => new Date(date) });
+      assert.equal(r.status, 'SUBMITTED', JSON.stringify(r)); assert.equal(f.posts(), 1, date);
+    } finally { f.close(); }
+  }
+});
+
+test('weekend sends before 09:00 or at 18:00 JST stop before browser or ledger access', async () => {
+  for (const date of ['2026-11-06T23:59:59Z', '2026-11-07T09:00:00Z',
+    '2026-11-07T23:59:59Z', '2026-11-08T09:00:00Z']) {
+    const f = await fixture(form);
+    try {
+      const options = { ...f.options, suppressionSnapshot: { ...f.options.suppressionSnapshot, capturedAt: date } };
+      const r = await submitContactForm(seller, pitch, sender, options, { ...f.overrides,
+        now: () => new Date(date), launch: async () => { throw Error('MUST_NOT_LAUNCH'); } });
+      assert.equal(r.reason, 'OUTSIDE_JST_BUSINESS_HOURS', date); assert.equal(f.posts(), 0);
+      assert.equal(f.gets(), 0); assert.equal(existsSync(f.options.ledgerPath), false);
+    } finally { f.close(); }
+  }
+});
+
 test('preview logs planned content without launching a browser', async () => {
   const f = await fixture(form);
   try {

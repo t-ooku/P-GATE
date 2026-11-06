@@ -1,7 +1,7 @@
 name: Seller outreach pipeline tests (no external sends)
 on:
   push:
-    branches: [feature/seller-outreach-pipeline-20261106]
+    branches: [feature/seller-outreach-pipeline-20261106, feature/ui-search-v2]
     paths:
       - tools/seller-outreach-pipeline/**
       - .github/workflows/seller-outreach-pipeline.yml
@@ -39,3 +39,4 @@ jobs:
       - run: npm run check
       - run: npm run build
       - run: npm test
+

@@ -126,7 +126,7 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
   if (options.mode === 'send' && !options.successSelector && !options.successUrl) return skip('SUCCESS_SELECTOR_OR_URL_REQUIRED');
   if (options.mode === 'send') {
     const jst = new Date(deps.now().getTime() + 9 * 3600000);
-    if ([0, 6].includes(jst.getUTCDay()) || jst.getUTCHours() < 9 || jst.getUTCHours() >= 18) {
+    if (jst.getUTCHours() < 9 || jst.getUTCHours() >= 18) {
       return skip('OUTSIDE_JST_BUSINESS_HOURS');
     }
   }
