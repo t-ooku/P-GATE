@@ -168,7 +168,15 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     armed = true;
     const [response] = await Promise.all([accepted, plan.submit.click({ noWaitAfter: true })]);
     if (response.status() < 200 || response.status() >= 400) throw new Error('SUBMISSION_HTTP_FAILED');
-    await page.locator(options.successSelector!).waitFor({ state: 'visible', timeout: 15000 });
+    const outcome = await Promise.race([
+      page.locator(options.successSelector!).waitFor({ state: 'visible', timeout: 15000 }).then(() => 'success'),
+      page.locator(CAPTCHA).first().waitFor({ state: 'attached', timeout: 15000 }).then(() => 'captcha')
+    ]);
+    if (outcome === 'captcha') {
+      ledger.finish(key, 'UNKNOWN', 'CAPTCHA_AFTER_SUBMIT_REVIEW_REQUIRED');
+      return { status: 'UNKNOWN', reason: 'CAPTCHA_AFTER_SUBMIT_REVIEW_REQUIRED',
+        screenshot: await screenshot(page, options.screenshotDir, key) };
+    }
     if (!requestAttempted || await page.locator(CAPTCHA).count()) throw new Error('UNVERIFIED_SUBMISSION');
     ledger.finish(key, 'SUBMITTED', 'CONFIRMATION_OBSERVED');
     return { status: 'SUBMITTED', reason: 'CONFIRMATION_OBSERVED_NOT_DELIVERY_OR_CONVERSION' };

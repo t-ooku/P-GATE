@@ -21,7 +21,7 @@ const form = `<form action="/submit" method="post">
   <label>本文<textarea name="message" required></textarea></label>
   <button type="submit">送信する</button></form>`;
 
-async function fixture(html: string, status = 200, confirmation = true) {
+async function fixture(html: string, status = 200, confirmation: boolean | 'captcha' = true) {
   const directory = mkdtempSync(join(tmpdir(), 'hoshilu-form-'));
   let posts = 0;
   let submitted = '';
@@ -44,7 +44,8 @@ async function fixture(html: string, status = 200, confirmation = true) {
           if (route.request().method() === 'POST') {
             posts++; submitted = route.request().postData() ?? '';
             return route.fulfill({ status, contentType: 'text/html; charset=utf-8',
-              body: confirmation ? '<p id="success">送信を受け付けました</p>' : '<p>エラー</p>' });
+              body: confirmation === 'captcha' ? '<div class="cf-turnstile" data-sitekey="test"></div>'
+                : confirmation ? '<p id="success">送信を受け付けました</p>' : '<p>エラー</p>' });
           }
           return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
         });
@@ -116,5 +117,16 @@ test('exclusions and opt-outs stop before launching a browser', async () => {
       { ...f.options, suppressionSnapshot: { ...f.options.suppressionSnapshot, storeUrls: [seller.storeUrl] } },
       { ...f.overrides, launch: neverLaunch });
     assert.equal(suppressed.reason, 'PRIOR_CONTACT_OR_OPT_OUT');
+  } finally { f.close(); }
+});
+
+test('CAPTCHA after the submit request keeps UNKNOWN, saves evidence and never retries', async () => {
+  const f = await fixture(form, 200, 'captcha');
+  try {
+    const r = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
+    assert.equal(r.status, 'UNKNOWN'); assert.equal(r.reason, 'CAPTCHA_AFTER_SUBMIT_REVIEW_REQUIRED');
+    assert.equal(f.posts(), 1); assert.ok(r.screenshot && existsSync(r.screenshot));
+    const again = await submitContactForm(seller, pitch, sender, f.options, f.overrides);
+    assert.equal(again.status, 'DUPLICATE'); assert.equal(f.posts(), 1);
   } finally { f.close(); }
 });
