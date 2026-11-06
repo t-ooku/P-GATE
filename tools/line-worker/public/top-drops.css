@@ -1,7 +1,9 @@
 /* 2026-10-19 大隆さん OK（入口の改善案）: 検索窓のすぐ下の「押すだけで探せる例」と「今日の値下がり」3 つ */
 #quickQueries.quick-queries-top{display:flex;flex-wrap:wrap;margin:10px 0 12px;gap:7px}
 #quickQueries.quick-queries-top::before{content:"押すとすぐ探せます";flex-basis:100%;color:#6d6b80;font-size:11px;font-weight:700}
-#quickQueries.quick-queries-top button.chip{min-height:34px;padding:6px 11px;font-size:12.5px;font-weight:700;line-height:1.3;text-align:left}
+/* 2026-11-06 PDCA: 後読み込みで44pxの操作領域が34pxに縮んでいたため、検索例だけ修復する。 */
+#quickQueries.quick-queries-top button.chip{min-height:44px;min-width:44px;max-width:100%;padding:10px 14px;font-size:14px;font-weight:700;line-height:1.4;text-align:left}
+#quickQueries.quick-queries-top button.chip:focus-visible{outline:2px solid #5140ba;outline-offset:2px}
 /* 登録の案内は例の後ろへ小さく（例より目立たせない） */
 #quickQueries.quick-queries-top .member-example-cta{flex-basis:100%;min-height:0;padding:2px 0;border:0!important;background:transparent!important;font-size:11px;font-weight:600;text-align:left}
 
