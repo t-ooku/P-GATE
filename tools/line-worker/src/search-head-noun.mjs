@@ -343,7 +343,7 @@ function isExplicitAccessoryMismatch(query, title) {
   // (W数・温度調節・タイマー・ダニ退治・コンセント・USB・ヒーター 等)が無い商品を候補から外す。全件不適合でも
   // 元順序で本命に戻さない。「ペット」の語だけでは除外しない(ペット用の通電ヒーターマットは従来どおり)。
   if (ELECTRIC_CARPET_QUERY.test(query) && !PASSIVE_WARMER.test(query)
-    && PASSIVE_WARMER.test(title) && !POWERED_WARMER.test(title)) {
+    && PASSIVE_WARMER.test(title) && !isPoweredWarmerTitle(title)) {
     return true;
   }
   if (KOTATSU_QUERY.test(query) && !KOTATSU_QUERY_OTHER_HEATER.test(query)
@@ -378,6 +378,16 @@ const ELECTRIC_CARPET_QUERY = /(?:電気|ホット)\s*(?:カーペット|マッ�
 const PASSIVE_WARMER = /電源\s*(?:不要|なし|無し|いらず)|無電源|ノン電源|電気\s*(?:不要|いらず|を?\s*使わない)|コンセント\s*(?:不要|なし|いらず)|自己\s*発熱|自然\s*発熱|蓄熱|体温\s*(?:で|を)|self[\s-]*heating|no\s+electricity/u;
 // 通電する本体を示す語(電源不要の保温パッドには無い)
 const POWERED_WARMER = /\d+(?:\.\d+)?\s*w(?![a-z])|ワット|温度\s*(?:調節|調整|切替|切り替え)|\d+\s*段階|ダニ\s*(?:退治|対策)|タイマー|ac\s*100|100\s*v|コンセント(?!\s*(?:不要|なし|いらず))|usb|電源コード|コントローラー|サーモ|過熱防止|自動\s*(?:オフ|off|電源)|ヒーター(?!\s*(?:不要|なし|いらず))|通電/u;
+// 2026-11-06 Codex 再開(同受信箱): 元観測名には「ペット用ヒーター 暖房ペットパッド」が含まれ、汎用呼称の
+// 「ヒーター」だけで通電本体と判定されて残っていた。電源不要/無電源/電気不要/コンセント不要を明示した
+// 商品名では「ヒーター」の語だけを通電の確証にせず、W数・温度調節・USB・コンセント等の具体的な通電語を求める。
+const EXPLICIT_UNPOWERED = /電源\s*(?:不要|なし|無し|いらず)|無電源|ノン電源|電気\s*(?:不要|いらず|を?\s*使わない)|コンセント\s*(?:不要|なし|いらず)|no\s+electricity/u;
+const GENERIC_HEATER_WORD = /ヒーター(?!\s*(?:不要|なし|いらず))/gu;
+function isPoweredWarmerTitle(title) {
+  if (!POWERED_WARMER.test(title)) return false;
+  if (!EXPLICIT_UNPOWERED.test(title)) return true;
+  return POWERED_WARMER.test(title.replace(GENERIC_HEATER_WORD, ' '));
+}
 
 const KOTATSU_QUERY = /こたつ|コタツ|炬燵|kotatsu/u;
 // こたつ以外の暖房器具(足元パネルヒーター等)を明示した検索

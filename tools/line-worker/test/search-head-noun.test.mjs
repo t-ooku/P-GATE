@@ -294,6 +294,22 @@ test('電気カーペット本体の検索で電源不要・自己発熱の保�
   const hotCarpet = { product_name: 'パナソニック ホットカーペット 2畳 DC-2NKC 温度調節' };
   const petPowered = { product_name: 'ペット用ホットカーペット 犬 猫 ヒーター 温度調節 7段階 防水 20W' };
   const petPoweredUsb = { product_name: 'ペット用 ホットマット USB給電 電気マット 小型犬 猫' };
+  // 2026-11-06 Codex 再開: 固定QAの元観測名(省略なし)。「ペット用ヒーター」の汎用呼称で通電扱いにしない
+  const observedFull = { product_name: 'ペット用ホットカーペット 自己発熱 保温パッド 電源不要 カーペット ペット マット 猫 マット ペット用ヒーター 暖房ペットパッド 体温蓄熱 ペット用毛布 滑' };
+  // 電源不要を明示しつつ具体的な通電語(W数/USB給電/温度調節)もある商品は判定を変えない(誤除外を避ける)
+  const unpoweredClaimWithWatt = { product_name: 'ペット用ヒーター ホットカーペット 20W 温度調節 (本体のみ電源不要カバー付)' };
+  const selfHeatingHeaterNoClaim = { product_name: 'ペット用ヒーター ホットカーペット 自己発熱 速暖' };
+  assert.equal(headNounScore(carpetQuery, observedFull.product_name), 0, observedFull.product_name);
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observedFull]), []);
+  assert.equal(hasHeadNounMatch(carpetQuery, [observedFull]), false);
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observedFull, body]), [body]);
+  assert.deepEqual(applyHeadNounGate(carpetQuery, [observedFull, petPowered]), [petPowered]);
+  assert.equal(headNounScore(carpetQuery, unpoweredClaimWithWatt.product_name), 2);
+  // 電源不要の明示が無い商品の「ヒーター」は従来どおり通電語として扱う
+  assert.equal(headNounScore(carpetQuery, selfHeatingHeaterNoClaim.product_name), 2);
+  // 明示的な電源不要・ペット用品の検索では元観測名も維持
+  assert.deepEqual(applyHeadNounGate('電源不要 ホットカーペット ペット', [observedFull]), [observedFull]);
+  assert.deepEqual(applyHeadNounGate('ペット 保温マット', [observedFull]), [observedFull]);
   // 観測名・自己発熱パッドは主名詞スコア0(販売名の「ホットカーペット」だけで本体扱いしない)
   for (const passive of [observed, selfHeating]) {
     assert.equal(headNounScore(carpetQuery, passive.product_name), 0, passive.product_name);
