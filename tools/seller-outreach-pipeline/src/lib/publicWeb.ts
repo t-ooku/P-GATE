@@ -2,6 +2,8 @@ import { lookup } from 'node:dns/promises';
 import { request } from 'node:https';
 import { createRequire } from 'node:module';
 import ipaddr from 'ipaddr.js';
+import { requestLimiter } from '../utils/rateLimiter.js';
+import { retryRead, RetryableReadError } from '../utils/retry.js';
 
 const robotsParser = createRequire(import.meta.url)('robots-parser') as
   (url: string, content: string) => { isAllowed: (url: string, agent: string) => boolean | undefined };
@@ -26,8 +28,17 @@ export async function publicAddress(raw: string): Promise<{ url: URL; address: s
 
 /** TLS hostname is preserved; DNS is resolved and pinned for each redirect. */
 export async function fetchPublic(raw: string, redirects = 0): Promise<{ url: string; text: string; status: number }> {
+  return retryRead(async () => {
+    const response = await fetchPublicOnce(raw, redirects);
+    if ([408, 500, 502, 503, 504].includes(response.status)) throw new RetryableReadError('TRANSIENT_READ_HTTP');
+    return response;
+  });
+}
+
+async function fetchPublicOnce(raw: string, redirects = 0): Promise<{ url: string; text: string; status: number }> {
   if (redirects > 3) throw new Error('TOO_MANY_REDIRECTS');
   const { url, address, family } = await publicAddress(raw);
+  await requestLimiter.wait(raw);
   const response = await new Promise<{ status: number; location?: string; text: string }>((resolve, reject) => {
     const req = request(url, { signal: AbortSignal.timeout(15000),
       headers: { 'user-agent': AGENT, accept: 'text/html,text/plain' },
@@ -52,7 +63,7 @@ export async function fetchPublic(raw: string, redirects = 0): Promise<{ url: st
   if ([301, 302, 303, 307, 308].includes(response.status) && response.location) {
     const next = new URL(response.location, url);
     if (next.origin !== url.origin) throw new Error('CROSS_ORIGIN_REDIRECT_REQUIRES_REVIEW');
-    return fetchPublic(next.href, redirects + 1);
+    return fetchPublicOnce(next.href, redirects + 1);
   }
   return { url: url.href, text: response.text, status: response.status };
 }

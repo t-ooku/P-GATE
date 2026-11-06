@@ -1,6 +1,6 @@
 # HOSHILU Seller outreach pipeline
 
-Node.js 22.13+の独立パッケージ。既存WorkerにPlaywrightを組み込まず、別のNode実行環境で動かす。1実行1店舗。既存のRIZAP/ITG除外は `../line-worker/src/seller-outreach.mjs` を再利用するため、P-GATEリポジトリ内で使う。
+Node.js 22.13+の独立パッケージ。既存WorkerにPlaywrightを組み込まず、別のNode実行環境で動かす。1実行で1店舗または店舗配列を順番に処理する。既存のRIZAP/ITG除外は `../line-worker/src/seller-outreach.mjs` を再利用するため、P-GATEリポジトリ内で使う。
 
 ## インストールと実行
 
@@ -13,8 +13,8 @@ npm test
 npm run build
 # 確認済み店舗・実測需要・送信者・接触履歴をjob.jsonへ設定してから実行
 node --env-file=.env --import tsx src/cli.ts job.json
-# 実送信を指定する場合（上と同じく文面生成のGemini利用料が生じる）
-node --env-file=.env --import tsx src/cli.ts job.json --send
+# 実送信は DRY_RUN=false と --send の両方が必要
+DRY_RUN=false node --env-file=.env --import tsx src/cli.ts job.json --send
 ```
 
 上記は実行方法。今回の開発では実在店舗への送信・有料AI呼び出しは行わない。モデル名・APIキーをコードへ固定しない。.envと下書き/画像/SQLiteはgit管理対象外。Chromium sandboxを有効にできる隔離実行環境を使う。
@@ -42,12 +42,13 @@ AIは店舗のこだわりを原文から選ぶ。選択結果の原文一致を
 
 ## フォーム動作
 
-- previewは公開フォームの検査だけ。入力も送信もしない。文面生成を使うCLIではGemini利用料は発生し得る。
+- DRY_RUNの既定値はtrue。環境変数trueは--send指定より優先する。falseと--sendが両方そろった場合だけ実送信モード。preview/DRY_RUNではフォーム用ブラウザを起動せず、宛先・件名・生成本文をコンソールとlogs/planned.jsonlへ出して終了する。スクレイピングと文面生成は別段階のため、公開ページ取得やGemini利用料が生じる場合はある。
 - sendは平日09:00〜18:00 JST、台帳により1日最大10店舗。接触済み・配信停止・既存除外組織を止める。
 - 名前/メール/会社/件名/本文をラベル・name・idから照合。メール確認欄も入力。
 - 複数フォーム、複数の氏名欄、必須の未対応項目・同意チェック、確認ページ経由、iframe内フォームは推測で送らずSKIPPED。
-- CAPTCHA/Turnstileは回避せず、マスク付きスクリーンショットを保存してSKIPPED。営業禁止表示もSKIPPED。
+- CAPTCHA/Turnstile、CloudflareブロックDOM/タイトル/URL、HTTP403/429を検出し、logs/blocked/へマスク付きスクリーンショットを保存。ローカルSQLiteのseller_status.statusをblocked_or_captchaにする。保存済みの店舗は次回ブラウザ起動前に停止する。送信前はSKIPPED、送信意図を記録した後はUNKNOWNを保持する。営業禁止表示もSKIPPED。
 - HTTPS・public DNS限定。HTTP取得は解決した公開IPへ固定し、ブラウザも対象hostの解決を固定する。他origin通信・WebSocket・Service Workerを止める。別origin送信先や追加ホストが必要なフォームは個別adapterの対象。
+- 成功判定は送信先HTTP受付と、新しく現れたsuccessSelectorまたは設定済みの完全一致successUrl。単なるURL変化だけでは成功にしない。
 - 最終クリック前にSQLiteへ状態を永続化。送信先HTTP成功と、新たな完了表示を確認してSUBMITTED。タイムアウト/不明/異常はUNKNOWNのまま、次回は自動再送しない。
 - SUBMITTEDはフォーム受付表示の確認。メール到達・返信・Seller登録・契約とは別成果。
 
@@ -58,3 +59,14 @@ AIは店舗のこだわりを原文から選ぶ。選択結果の原文一致を
 ## 未接続
 
 キーワード別実測需要の認可済み集計、別経路を含む接触/配信停止エクスポート、実送信者設定、各フォームの完了表示adapter、既存スケジュールとの運用連携は未接続。自動営業を稼働済みとはしない。新しい送信スケジュールは作成しない。
+
+## 追加安全装置（2026-11-07）
+
+- `src/config.ts`: DRY_RUN=trueが既定。true/false以外の設定は停止。PLANNED_LOG_PATH、BLOCKED_DIR、LEDGER_PATHも設定できる。
+- `src/utils/rateLimiter.ts`: クローラのrobots/HTML/リダイレクトとフォーム用ブラウザの許可された各HTTPリクエストが、同一プロセスのFIFOキューを共有し、開始前に3〜7秒待つ。ドメインを変えても共有し、ブロック検出後は同originを止める。ページを閉じたら待機もキャンセルする。
+- IP制御の範囲は単一プロセス。CLIは店舗を逐次処理する。同一IPで複数プロセス/複数マシンを同時に走らせる分散レート制御は未実装で、IPブロックを完全に防ぐ保証はしない。UAを偽装せず、CAPTCHA突破やIPローテーションは実装しない。
+- `src/utils/retry.ts`: 読取専用の通信失敗/タイムアウトと一時的なHTTP失敗だけ、1秒→2秒→4秒の指数バックオフで最大3回再試行（初回を含む最大4試行）。各実リクエストの3〜7秒待機も別に適用する。403/429/CAPTCHA/恒久エラーは再試行しない。
+- **フォームの最終クリック・POST送信は自動再試行しない。** 送信後のタイムアウト/HTTP500は受付済みか不明なためUNKNOWNを保存し、二重送信を防ぐ。安全に再送できると確認していないPOSTの自動再試行は追加しない。
+- 店舗配列をjobファイルに渡せる。ブロック結果や1店舗の処理エラーは記録して次店舗を継続する。新しい自動送信スケジュールは作らない。
+- Dry-runの予定ログは要求どおり宛先・本文を含むため、ファイル0600/ディレクトリ0700で作成し、logs/をgit対象外にする。APIキー・トークン・個別利用者の生検索履歴はログへ入れない。
+- ローカルSQLiteへseller_statusをCREATE TABLE IF NOT EXISTSで追加する。本番D1への移行・書込は行わない。

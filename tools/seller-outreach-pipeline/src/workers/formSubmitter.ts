@@ -3,14 +3,22 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { publicAddress, assertRobotsAllowed, AGENT } from '../lib/publicWeb.js';
 import { Ledger, storeKey } from '../lib/ledger.js';
+import { environmentDryRun } from '../config.js';
+import { requestLimiter } from '../utils/rateLimiter.js';
+import { retryRead, RetryableReadError } from '../utils/retry.js';
+import { logPlannedMessage } from '../utils/plannedMessage.js';
+import { BLOCK_MARKERS, detectBlock } from '../utils/blockDetection.js';
 import type { SellerInfo, SenderInfo, Pitch, SubmissionResult } from '../types/index.js';
 
 type Role = 'name' | 'email' | 'company' | 'subject' | 'message';
 export interface SubmitOptions {
   mode: 'preview' | 'send';
+  dryRun?: boolean;
+  plannedLogPath?: string;
   ledgerPath: string;
   screenshotDir: string;
   successSelector?: string;
+  successUrl?: string;
   submissionUrl?: string;
   /** Fresh, verified export covering existing email/form contacts and opt-outs. */
   suppressionSnapshot: { capturedAt: string; source: string; storeUrls: string[] };
@@ -25,14 +33,10 @@ function inferRole(label: string, tag: string): Role | null {
   return null;
 }
 
-const CAPTCHA = '[data-sitekey],.g-recaptcha,.h-captcha,.cf-turnstile,'
-  + 'iframe[src*="captcha"],iframe[src*="challenges.cloudflare"],'
-  + 'input[name*="captcha" i],input[name="cf-turnstile-response"]';
-
 async function screenshot(page: Page, directory: string, key: string): Promise<string> {
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const path = join(directory, `${key}-${Date.now()}.png`);
-  await page.screenshot({ path, mask: [page.locator('input,textarea')] });
+  await page.screenshot({ path, mask: [page.locator('input,textarea')], timeout: 5000 });
   return path;
 }
 
@@ -79,6 +83,11 @@ interface Dependencies {
   exclusions: (...values: string[]) => Promise<string>;
   now: () => Date;
   onError: (error: unknown) => void;
+  dryRun: () => boolean;
+  logPlan: typeof logPlannedMessage;
+  wait: (url: string, signal?: AbortSignal) => Promise<unknown>;
+  block: (url: string) => void;
+  retry: typeof retryRead;
 }
 const defaults: Dependencies = {
   resolve: publicAddress, robots: assertRobotsAllowed,
@@ -90,13 +99,19 @@ const defaults: Dependencies = {
     const adapter = await import(moduleUrl) as { findExcludedOrganization: (...v: string[]) => string };
     return adapter.findExcludedOrganization(...values);
   },
-  now: () => new Date(), onError: () => {}
+  now: () => new Date(), onError: () => {}, dryRun: environmentDryRun,
+  logPlan: logPlannedMessage, wait: (url, signal) => requestLimiter.wait(url, signal),
+  block: url => requestLimiter.block(url), retry: retryRead
 };
 
 export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender: SenderInfo,
   options: SubmitOptions, overrides: Partial<Dependencies> = {}): Promise<SubmissionResult> {
   const deps = { ...defaults, ...overrides };
   const skip = (reason: string): SubmissionResult => ({ status: 'SKIPPED', reason });
+  if (options.mode === 'preview' || options.dryRun === true || deps.dryRun()) {
+    await deps.logPlan(seller, pitch, options.plannedLogPath ?? 'logs/planned.jsonl');
+    return { status: 'DRY_RUN', reason: 'PLANNED_WITHOUT_BROWSER_OR_SENDING' };
+  }
   if (!seller.contactFormUrl) return skip('NO_CONTACT_FORM');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(sender.email) || !sender.name.trim() || !sender.company.trim()) {
     throw new Error('VERIFIED_SENDER_CONFIG_REQUIRED');
@@ -108,7 +123,7 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     || age < 0 || age > 24 * 3600000) return skip('FRESH_SUPPRESSION_EXPORT_REQUIRED');
   const key = storeKey(seller.storeUrl);
   if (snapshot.storeUrls.some(url => storeKey(url) === key)) return skip('PRIOR_CONTACT_OR_OPT_OUT');
-  if (options.mode === 'send' && !options.successSelector) return skip('SUCCESS_SELECTOR_REQUIRED');
+  if (options.mode === 'send' && !options.successSelector && !options.successUrl) return skip('SUCCESS_SELECTOR_OR_URL_REQUIRED');
   if (options.mode === 'send') {
     const jst = new Date(deps.now().getTime() + 9 * 3600000);
     if ([0, 6].includes(jst.getUTCDay()) || jst.getUTCHours() < 9 || jst.getUTCHours() >= 18) {
@@ -116,10 +131,17 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     }
   }
   let browser: Browser | undefined;
+  let page: Page | undefined;
   let ledger: Ledger | undefined, reserved = false, requestAttempted = false;
+  let intentRecorded = false;
+  let blockHandler: ((reason: string) => Promise<SubmissionResult>) | undefined;
+  let responseStatus: number | undefined;
+  const routing = new AbortController();
   try {
+    ledger = new Ledger(options.ledgerPath);
+    if (ledger.isBlocked(key)) return skip('PERSISTED_BLOCKED_OR_CAPTCHA');
     await deps.robots(seller.contactFormUrl);
-    const { url, address } = await deps.resolve(seller.contactFormUrl);
+    const { url, address } = await deps.retry(() => deps.resolve(seller.contactFormUrl!));
     browser = await deps.launch(url.hostname, address);
     const context = await browser.newContext({ userAgent: AGENT, serviceWorkers: 'block', acceptDownloads: false });
     let armed = false;
@@ -131,20 +153,41 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
         return route.abort();
       }
       if (req.method() === 'POST' && !armed) return route.abort();
+      try { await deps.wait(req.url(), routing.signal); } catch { return route.abort().catch(() => {}); }
       if (armed && (req.method() === 'POST' || req.isNavigationRequest())) requestAttempted = true;
       return route.fallback();
     });
-    const page = await context.newPage();
+    page = await context.newPage();
     page.setDefaultTimeout(10000);
-    await page.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 20000 });
-    if (await page.locator(CAPTCHA).count()) return { ...skip('CAPTCHA'), screenshot: await screenshot(page, options.screenshotDir, key) };
+    const activePage = page, activeLedger = ledger;
+    blockHandler = async reason => {
+      let path: string | undefined;
+      try { path = await screenshot(activePage, options.screenshotDir || 'logs/blocked', key); }
+      catch (error) { deps.onError(error); }
+      activeLedger.recordBlocked(key, reason, path);
+      if (reserved) activeLedger.finish(key, intentRecorded ? 'UNKNOWN' : 'SKIPPED', reason);
+      deps.block(url.href);
+      return { status: intentRecorded ? 'UNKNOWN' : 'SKIPPED',
+        reason: intentRecorded ? 'CAPTCHA_OR_BLOCK_AFTER_SUBMIT_REVIEW_REQUIRED' : reason,
+        ...(path ? { screenshot: path } : {}) };
+    };
+    const navigation = await deps.retry(async () => {
+      const response = await activePage.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 120000 });
+      responseStatus = response?.status();
+      if (!await detectBlock(activePage, responseStatus) && responseStatus
+        && [408, 500, 502, 503, 504].includes(responseStatus)) throw new RetryableReadError('TRANSIENT_FORM_READ_HTTP');
+      return response;
+    });
+    const initialBlock = await detectBlock(page, navigation?.status());
+    if (initialBlock) return await blockHandler(initialBlock);
     if (/営業(?:目的)?.{0,12}(?:お断り|禁止|ご遠慮)|勧誘.{0,8}(?:禁止|お断り)|no solicitation/iu
-      .test(await page.locator('body').innerText())) return skip('SOLICITATION_PROHIBITED');
+      .test((await page.locator('body').innerText()).replace(/\s+/gu, ' '))) return skip('SOLICITATION_PROHIBITED');
     const plan = await inspectForm(page);
     if (!plan) return skip('FORM_AMBIGUOUS_OR_UNSUPPORTED');
-    if (options.mode === 'preview') return { status: 'DRY_RUN', reason: 'INSPECTED_WITHOUT_FILLING_OR_SENDING' };
-    if (await page.locator(options.successSelector!).isVisible()) return skip('SUCCESS_MARKER_ALREADY_VISIBLE');
-    ledger = new Ledger(options.ledgerPath);
+    const successUrl = options.successUrl ? new URL(options.successUrl, url).href : undefined;
+    if (successUrl && new URL(successUrl).origin !== url.origin) return skip('CROSS_ORIGIN_SUCCESS_URL');
+    if ((options.successSelector && await page.locator(options.successSelector).isVisible())
+      || (successUrl && page.url() === successUrl)) return skip('SUCCESS_MARKER_ALREADY_VISIBLE');
     if (!ledger.reserve(key, 10, deps.now())) return { status: 'DUPLICATE', reason: 'ALREADY_RESERVED_OR_DAILY_LIMIT' };
     reserved = true;
     const values: Record<Role, string> = { ...sender, subject: pitch.subject, message: pitch.body };
@@ -152,12 +195,11 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     if (!await plan.form.evaluate(el => (el as HTMLFormElement).checkValidity())) {
       ledger.finish(key, 'SKIPPED', 'VALIDATION_OR_REQUIRED_CONSENT'); return skip('VALIDATION_OR_REQUIRED_CONSENT');
     }
-    if (await page.locator(CAPTCHA).count()) {
-      ledger.finish(key, 'SKIPPED', 'CAPTCHA');
-      return { ...skip('CAPTCHA'), screenshot: await screenshot(page, options.screenshotDir, key) };
-    }
+    const filledBlock = await detectBlock(page);
+    if (filledBlock) return await blockHandler(filledBlock);
     // Persist before the final click: crashes/timeouts are never blindly retried.
     ledger.finish(key, 'UNKNOWN', 'SUBMIT_INTENT_RECORDED');
+    intentRecorded = true;
     const action = new URL(options.submissionUrl ?? await plan.form.getAttribute('action') ?? page.url(), page.url());
     if (action.origin !== url.origin) throw new Error('CROSS_ORIGIN_ACTION_REQUIRES_REVIEW');
     const accepted = page.waitForResponse(response => {
@@ -167,22 +209,31 @@ export async function submitContactForm(seller: SellerInfo, pitch: Pitch, sender
     }, { timeout: 15000 });
     armed = true;
     const [response] = await Promise.all([accepted, plan.submit.click({ noWaitAfter: true })]);
+    responseStatus = response.status();
+    const submissionBlock = await detectBlock(page, responseStatus);
+    if (submissionBlock) return await blockHandler(submissionBlock);
     if (response.status() < 200 || response.status() >= 400) throw new Error('SUBMISSION_HTTP_FAILED');
-    const outcome = await Promise.race([
-      page.locator(options.successSelector!).waitFor({ state: 'visible', timeout: 15000 }).then(() => 'success'),
-      page.locator(CAPTCHA).first().waitFor({ state: 'attached', timeout: 15000 }).then(() => 'captcha')
-    ]);
-    if (outcome === 'captcha') {
-      ledger.finish(key, 'UNKNOWN', 'CAPTCHA_AFTER_SUBMIT_REVIEW_REQUIRED');
-      return { status: 'UNKNOWN', reason: 'CAPTCHA_AFTER_SUBMIT_REVIEW_REQUIRED',
-        screenshot: await screenshot(page, options.screenshotDir, key) };
-    }
-    if (!requestAttempted || await page.locator(CAPTCHA).count()) throw new Error('UNVERIFIED_SUBMISSION');
+    const successWaits: Promise<string>[] = [];
+    if (options.successSelector) successWaits.push(page.locator(options.successSelector)
+      .waitFor({ state: 'visible', timeout: 15000 }).then(() => 'success'));
+    if (successUrl) successWaits.push(page.waitForURL(u => u.href === successUrl,
+      { timeout: 15000, waitUntil: 'domcontentloaded' }).then(() => 'success'));
+    const outcome = await Promise.race([...successWaits,
+      page.locator(BLOCK_MARKERS).first().waitFor({ state: 'attached', timeout: 15000 }).then(() => 'block')]);
+    const finalBlock = await detectBlock(page);
+    if (outcome === 'block' || finalBlock) return await blockHandler(finalBlock ?? 'BLOCK_MARKER');
+    if (!requestAttempted) throw new Error('UNVERIFIED_SUBMISSION');
     ledger.finish(key, 'SUBMITTED', 'CONFIRMATION_OBSERVED');
     return { status: 'SUBMITTED', reason: 'CONFIRMATION_OBSERVED_NOT_DELIVERY_OR_CONVERSION' };
   } catch (error) {
     deps.onError(error);
+    if (page && blockHandler) {
+      try {
+        const blocked = await detectBlock(page, responseStatus);
+        if (blocked) return await blockHandler(blocked);
+      } catch (recordError) { deps.onError(recordError); }
+    }
     if (reserved) ledger?.finish(key, 'UNKNOWN', 'REVIEW_REQUIRED_NO_AUTOMATIC_RETRY');
     return { status: reserved ? 'UNKNOWN' : 'SKIPPED', reason: 'REVIEW_REQUIRED_NO_AUTOMATIC_RETRY' };
-  } finally { ledger?.close(); await browser?.close(); }
+  } finally { routing.abort(); ledger?.close(); await browser?.close(); }
 }
