@@ -39,3 +39,12 @@
 - https://sellercentral.amazon.co.jp/seller-forums/guidelines は外部サイトへの営業リンク・広告・勧誘投稿を禁止。フォーラム投稿へ置き換えない。
 - https://m.media-amazon.com/images/G/01/SellerCentral/CommunicationGuidelines/English_JP_Communication_Guidelines.pdf は購入者への販促メッセージを禁止。この購入者向け規定だけから別の全チャネルの可否を断定しない。
 - 現時点でHOSHILU営業に使えるAmazon内の店舗宛メッセージ窓口は未確認・送信0件。Amazon出店者の事業者自身が公開する窓口を、店舗/法人同一性・営業禁止・停止・既送・除外と照合して利用する。
+
+
+## 土日対応の本番確認（11/7 08:44 JST追記）
+- 対象コードcommit **fc435a395e627c597bbc0f038b2537bcbe259511**。Workerの既存15分cronと独立Nodeフォームの両方で、全曜日09:00以上18:00未満JSTへ変更。独立Nodeの実運用接続は引き続き別の未完了項目。
+- [本体CI42313525218](https://github.com/t-ooku/P-GATE/actions/runs/42313525218)：test128220485563 success（release7/7、Worker3141/3141、Chrome6/6、検索品質・GAS再現性成功）。deploy128221022209 success。**08:43:11 JST** 配備、Version **66ff8549-d1a3-4bef-a0d8-4c1ec01fd1c0**。**08:43:19 JST** production monitor PASS、health重要7項目正常。
+- [フォームCI42313525201](https://github.com/t-ooku/P-GATE/actions/runs/42313525201) test128220485689 success、29/29（追加した土日/時刻境界を含む）。模擬フォームのみ、実店舗への送信なし。
+- 日次改善タスクの全曜日化は更新success。Cowork受信箱は08:44時点OPENで受領・送信・Cowork自身の送信タスク曜日変更は未確認。09:13の既存巡回での実行を依頼済み。
+- このスレッドに、本日午前の一回限りの実績確認タスク **Automation_ccc3284786c8819198e639bd063d2c57** を予約success（11/7 09:40 JST基準のflexible_schedule）。朝の日次と用途を分けた受領/実送信の追跡であり、新しい営業送信スケジュールではない。翌日以降の重複タスクを増やさない。
+- 今回の変更作業時点は09時前。今朝の新規実店舗送信の証拠はまだ0件。予定・準備を送信済みとしない。Amazon内の営業メッセージ窓口は未確認・送信0件。Amazon出店者の公開事業窓口を照合して案内する指示へ反映済み。
