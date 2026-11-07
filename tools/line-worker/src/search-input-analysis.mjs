@@ -372,6 +372,27 @@ export function weakGoogleVisualBestGuessAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
   const primary = cleanText(evidence.best_guess_labels?.[0], 160);
   if (!primary || GENERIC_VISUAL_STYLE_LABELS.test(primary)) return null;
+  // A broad mouse label used to take only the first entity (often Computer),
+  // discarding more specific evidence later in Vision's bounded list. Only
+  // normalize exact category/brand clues, never infer a model or an identity.
+  // Scope this to pointing-device labels so an unrelated entity cannot replace
+  // a different product category. No extra provider requests are made.
+  if (/^(?:mouse|computer mouse|pointing device|trackball|マウス|トラックボール)$/iu.test(primary)) {
+    const clues = sanitizeAiOutputList(
+      Array.isArray(evidence.web_entities) ? evidence.web_entities : [], 10, 100
+    );
+    const hasTrackball = /^(?:trackball|トラックボール)$/iu.test(primary)
+      || clues.some((value) => /^(?:trackball|トラックボール)$/iu.test(value));
+    if (hasTrackball) {
+      const brand = clues.some((value) => /^(?:elecom|エレコム)$/iu.test(value)) ? 'エレコム' : '';
+      return normalizeSearchInputAnalysis({
+        refined_query: [brand, 'トラックボール'].filter(Boolean).join(' '), match_score: 0
+      });
+    }
+    // Mouse/Computer alone cannot distinguish the pictured shopping category.
+    // Prefer the existing explicit failure path to an unrelated product query.
+    return null;
+  }
   const primaryKey = primary.toLocaleLowerCase();
   const entity = sanitizeAiOutputList(
     (Array.isArray(evidence.web_entities) ? evidence.web_entities : []), 3, 100
