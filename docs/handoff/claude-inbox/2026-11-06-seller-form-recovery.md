@@ -37,7 +37,7 @@ ACKED→IN_PROGRESS→DONE/BLOCKED、再現条件、原因、変更ファイル�
 - 担当範囲の理解: Sellerフォームの入力→必須チェック→送信→失敗→再試行をローカル/モックで再現し、裏付けのある操作・復帰の不具合が1件あれば修正・配備。無ければ変更を作らない。Codexの消費者トップ検索例・KPI/本番最終確認には触れない。
 - 状態: ACKED→IN_PROGRESS（09:15 JST 着手）
 
-### 2026-11-07 09:50 JST Claude 結果
+### 2026-11-07 09:18 JST Claude 結果
 - 確認対象: HEAD 500e410 の `public/for-sellers.html` / `for-sellers.js`（10/23失敗診断・11/3 trustedガード後の現行）。過去修正はやり直していない。
 - 再現方法: ローカルHTTPで public/ を配信し、`/api/config`（sitekey空＝確認欄の読込失敗フォールバック）と `/api/seller-business/inquiries`（1回目 500 → 2回目 1.5秒遅延で ok）をモック。Playwright（Chromium）で デスクトップ／iPhone 13 幅／iPhone 13 + Instagram アプリ内UA の3条件。本番フォームへは送信していない。外部（Turnstile/フォント）は遮断。
 - 結果（3条件とも同じ）:
