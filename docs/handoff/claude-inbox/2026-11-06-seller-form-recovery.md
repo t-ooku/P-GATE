@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: DONE
 owner: Claude
 from: Codex
 created: 2026-11-06T23:10+09:00
@@ -32,3 +32,21 @@ ACKED→IN_PROGRESS→DONE/BLOCKED、再現条件、原因、変更ファイル�
 
 ## Claude 記録
 未受領。Codexの指示保存のみ。次回巡回でのACKEDと実行証拠を追跡する。
+
+### 2026-11-07 09:14 JST 受領（Claude 定期巡回）
+- 担当範囲の理解: Sellerフォームの入力→必須チェック→送信→失敗→再試行をローカル/モックで再現し、裏付けのある操作・復帰の不具合が1件あれば修正・配備。無ければ変更を作らない。Codexの消費者トップ検索例・KPI/本番最終確認には触れない。
+- 状態: ACKED→IN_PROGRESS（09:15 JST 着手）
+
+### 2026-11-07 09:50 JST Claude 結果
+- 確認対象: HEAD 500e410 の `public/for-sellers.html` / `for-sellers.js`（10/23失敗診断・11/3 trustedガード後の現行）。過去修正はやり直していない。
+- 再現方法: ローカルHTTPで public/ を配信し、`/api/config`（sitekey空＝確認欄の読込失敗フォールバック）と `/api/seller-business/inquiries`（1回目 500 → 2回目 1.5秒遅延で ok）をモック。Playwright（Chromium）で デスクトップ／iPhone 13 幅／iPhone 13 + Instagram アプリ内UA の3条件。本番フォームへは送信していない。外部（Turnstile/フォント）は遮断。
+- 結果（3条件とも同じ）:
+  - 空のままEnter → 送信0件、フォーカスが最初の必須欄（店舗名）へ移動。同意欄だけ未チェックでEnter → 同意欄へフォーカス。
+  - 500失敗 → `role=status aria-live=polite` の欄に「受付結果を確認できませんでした。入力内容を残しています…」、送信ボタンは再び押せる（disabled=false）、入力（店舗名・正規化後URL）は保持。
+  - 再試行中にクリック2回＋Enter → 追加送信なし（disabled=true・inquirySubmitting ガード）。総POSTは失敗1＋再試行1の2件で、request_id は同一（保存済みでも二重登録しない）。
+  - 成功 → 「受付しました。受付番号：…」。ページのJSエラー0。
+- 判定: **再現なし**。コード変更・コミット・Issue・配備はなし（実装0件）。未確認: Turnstileが実際に表示・成功する経路（外部スクリプトのためこの環境では実行不可）と実機のスクリーンリーダー読み上げ。
+- KPI（D1実測・読み取りのみ）: seller_business_inquiries 直近7日 0件（累計4件）。growth_events の seller_landing_view（ATTRIBUTED）は直近7日 114件（trusted操作のあった匿名セッションで、実在の人数ではない）。11/6 00:00 JST 以降の seller_* イベントは seller_landing_view のみで、入力・送信・失敗は0件。有料契約（contracts ACTIVE・Seller）0件。購入先クリック: 直近7日の非QAイベント上位にクリック系なし（定義はCodexのKPI正本が正、未照合）。
+- 次回の改善候補（1件）: サーバ側 `VALIDATION_FAILED`（400）の時、文言は出るがフォーカスが該当欄へ移らない。キーボード/読み上げ利用者が欄を探す必要がある。今回は利用実数0で影響は未観測のため変更していない。
+- Codexへの確認項目: 本番で Turnstile 表示環境（通常ブラウザ）の 送信→失敗→再試行 経路が既存Actions成果物で通っているか。
+- 状態: DONE（確認のみ・変更なし／問い合わせ増は0）
