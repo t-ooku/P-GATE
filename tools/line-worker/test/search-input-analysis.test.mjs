@@ -19,6 +19,38 @@ const VISUAL_ENV = {
   PRODUCT_DB: ALLOWING_VISUAL_BUDGET_DB
 };
 
+test('弱い写真救済は先頭3件より後のTrackball/Elecom証拠を失わず、日本語の仮説にする', async () => {
+  const { weakGoogleVisualBestGuessAnalysis: weak } = await import('../src/search-input-analysis.mjs');
+  for (const entities of [
+    ['Computer', 'Mouse', 'Input device', 'Elecom', 'Trackball'],
+    ['Trackball', 'Computer', 'Elecom', 'Mouse']
+  ]) {
+    const result = weak({ best_guess_labels: ['mouse'], web_entities: entities });
+    assert.equal(result.refined_query, 'エレコム トラックボール');
+    assert.equal(result.candidate_name, '');
+    assert.equal(result.candidate_brand, '');
+    assert.equal(result.match_score, 0);
+  }
+  assert.equal(weak({ best_guess_labels: ['mouse'], web_entities: ['Computer', 'Trackball'] }).refined_query, 'トラックボール');
+  assert.equal(weak({ best_guess_labels: ['mouse'], web_entities: ['Computer'] }), null);
+  assert.equal(weak({ best_guess_labels: ['mouse'], web_entities: ['MyTrackballShop', 'Elecom'] }), null);
+  assert.equal(weak({ best_guess_labels: ['ぬいぐるみ'], web_entities: ['Trackball', 'Elecom'] }).refined_query, 'ぬいぐるみ Trackball');
+  let geminiCalls = 0;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: 'mouse' }],
+        webEntities: ['Computer', 'Mouse', 'Input device', 'Elecom', 'Trackball'].map((description) => ({ description, score: 0.8 }))
+      } }] });
+    }
+    geminiCalls++;
+    return new Response('', { status: 503 });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+  assert.equal(result.refined_query, 'エレコム トラックボール');
+  assert.equal(geminiCalls, 2);
+});
+
 test('公開SNS投稿URLだけを許可し追跡パラメータを除く', () => {
   assert.equal(
     normalizeSocialPostUrl('https://www.instagram.com/p/ABC123/?igsh=tracking#fragment'),
