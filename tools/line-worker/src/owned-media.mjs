@@ -25,7 +25,7 @@ const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
 // （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
-export const MEDIA_TEMPLATE_VERSION = '10';
+export const MEDIA_TEMPLATE_VERSION = '11';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -406,6 +406,13 @@ function productLink(row) {
 
 const shortDate = (date) => String(date || '').slice(5).replace('-', '/');
 
+// 2026-11-08 大隆さん（office hours → B「通知で戻ってくる」）: 登録なしで、LINE の送信だけで見張りを始める（/line/watch）。
+// 記録の無い商品（record_key 無し）には出さない。クローラにたどらせない（nofollow・robots.txt）。
+function lineWatchButton(row) {
+  if (!row?.record_key) return '';
+  return `<a class="media-drop-line" href="/line/watch?key=${encodeURIComponent(row.record_key)}" rel="nofollow">もっと下がったらLINEで知らせる</a>`;
+}
+
 function dropCard(row, index) {
   const rank = String(index + 1).padStart(2, '0');
   const image = row.image_url
@@ -420,7 +427,7 @@ function dropCard(row, index) {
 ${history ? `<span class="media-drop-history"><span class="media-drop-history-label">価格の推移</span>${history}<span class="media-spark-axis"><span>${esc(shortDate(row.history[0].date))}</span><span>${esc(shortDate(row.history[row.history.length - 1].date))}</span></span></span>` : ''}
 <span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${row.days}日分の記録</span>
 <span class="media-drop-cta">今の価格と履歴を見る</span></span>
-</a></li>`;
+</a>${lineWatchButton(row)}</li>`;
 }
 
 function shelfTile(item, index) {

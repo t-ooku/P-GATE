@@ -165,7 +165,7 @@ const DROP_CARD_CSS = '.media-drop a{grid-template-columns:1fr!important}.media-
   + '.media-drop-rate{padding:.45rem .8rem!important;border-radius:16px!important}.media-drop-rate b{font-size:2.6rem!important}'
   + '.media-drop-prices{font-size:1.25rem!important}'
   // 2026-10-17 大隆さん「商品名にぼかし入れて」: 店が付けた商品名は丸ごとぼかす（ジャンルの札・写真・記録した価格で見せる）
-  + '.media-drop-body strong{filter:blur(7px)!important;user-select:none!important}';
+  + '.media-drop-body strong{filter:blur(7px)!important;user-select:none!important}.media-drop-line{display:none!important}';
 
 // 2026-10-31 大隆さん OK（Instagram 改善 B「保存したくなる形」）: 1 投稿のリーチ 4〜13・保存 0。
 // 1 枚目は問いかけ、最後の 1 枚に「保存して、買う前に見返してね」。価格の予想・「買い時」は書かない。

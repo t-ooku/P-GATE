@@ -1,6 +1,7 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { recordPriceObservations } from './price-observations.mjs';
 import { handleProductDetailRoutes } from './product-detail.mjs';
+import { handleLineWatchMessage, handleLineWatchStart, recordLineWatchReturned, runLinePriceWatchCycle } from './line-price-watch.mjs';
 import { searchPrItems } from './search-pr.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
@@ -1051,6 +1052,19 @@ function impressionEvents(result, event, userHash) {
   }));
 }
 
+// 2026-11-08 値下がりの「LINEで知らせる」: 「見張る：番号」「やめる」は検索に回さず、ここで返信まで済ませる。
+async function processLineEventWithWatch(event, origin, env, ctx) {
+  try {
+    const handled = await handleLineWatchMessage(event, env, {
+      reply: (text) => replyToLine(event.replyToken, [{ type: 'text', text }], env)
+    });
+    if (handled) return;
+  } catch (error) {
+    console.error('LINE_WATCH_MESSAGE_FAILED', String(error?.message || error).slice(0, 80));
+  }
+  return processLineEvent(event, origin, env, ctx);
+}
+
 async function handleWebhook(request, env, ctx) {
   const rawBody = await request.text();
   const valid = await verifyLineSignature(rawBody, request.headers.get('x-line-signature'), env.LINE_CHANNEL_SECRET);
@@ -1060,7 +1074,7 @@ async function handleWebhook(request, env, ctx) {
   const origin = new URL(request.url).origin;
   const tasks = payload.events
     .filter((event) => event.replyToken)
-    .map((event) => processLineEvent(event, origin, env, ctx));
+    .map((event) => processLineEventWithWatch(event, origin, env, ctx));
   if (tasks.length) ctx.waitUntil(Promise.allSettled(tasks));
   return new Response('ok');
 }
@@ -4000,6 +4014,10 @@ export default {
     }
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
+    // 2026-11-08 値下がりカードの「もっと下がったらLINEで知らせる」→ LINE を「見張る：番号」入力済みで開く
+    if (request.method === 'GET' && url.pathname === '/line/watch') return handleLineWatchStart(request, env, { isCrawler: isCrawlerUserAgent });
+    if (request.method === 'GET' && url.pathname === '/product' && url.searchParams.get('from') === 'line_watch'
+      && !isCrawlerUserAgent(request.headers.get('user-agent'))) ctx.waitUntil(recordLineWatchReturned(env).catch(() => false));
     // 2026-10-14 大隆さん指示「オウンドメディア作って」: ホシルの買い物ノート（/media・/media/price-drops）。
     const ownedMediaResponse = await handleOwnedMediaRoutes(request, env, { headers: DOCUMENT_SECURITY_HEADERS });
     if (ownedMediaResponse) return ownedMediaResponse;
@@ -4136,6 +4154,8 @@ export default {
         runSellerOutreachCycle(env, scheduledAt),
         // 2026-10-03 AI販促担当: 店ごとの曜日・時刻（既定 月曜 06:00 JST）に週次ジョブ。SELLER_PROMO_ENABLED=false なら何もしない。
         runSellerPromoCycle(env, scheduledAt),
+        // 2026-11-08 値下がりの LINE 見張り: 毎日 19:00 JST に 1 回、記録で下がった物だけ知らせる（月の通数上限つき）
+        runLinePriceWatchCycle(env, scheduledAt).catch(() => console.error('LINE_WATCH_CYCLE_FAILED')),
         // 「これですか？」確認カードのキャッシュ（7日）を掃除する。
         purgeExpiredIdentifyCache(env, scheduledAt),
         // 「これですか？」の所要時間ログは14日で消す。

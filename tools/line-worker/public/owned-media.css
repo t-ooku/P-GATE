@@ -170,3 +170,14 @@
 
 /* 2026-10-17 値下がりの商品にジャンル（韓国系・レディースファッション・日用品雑貨 など）を小さく出す */
 .media-page .media-drop-genre { justify-self: start; display: inline-block; margin-bottom: .2rem; padding: .12rem .5rem; border-radius: 999px; background: #f1ecff; color: #5134c5; font-size: .7rem; font-weight: 800; line-height: 1.5; }
+
+/* 2026-11-08 値下がりカードの「もっと下がったらLINEで知らせる」（登録なし・LINE の送信だけ） */
+.media-drop { display: flex; flex-direction: column; gap: .45rem; }
+.media-drop > a:first-child { flex: 1 1 auto; }
+.media-drop a.media-drop-line {
+  display: block; height: auto; padding: .62rem .9rem; border: 0; border-radius: 999px; box-shadow: none;
+  background: #06c755; color: #fff; font-size: .82rem; font-weight: 800; line-height: 1.3; text-align: center; text-decoration: none;
+  transition: filter .15s ease;
+}
+.media-drop a.media-drop-line:hover { transform: none; filter: brightness(.95); box-shadow: none; }
+.media-drop a.media-drop-line:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
