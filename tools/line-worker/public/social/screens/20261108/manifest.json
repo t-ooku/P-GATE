@@ -1,6 +1,6 @@
 {
   "base": "https://hoshilu.app",
-  "captured_at": "2026-11-07T15:41:08.360Z",
+  "captured_at": "2026-11-08T13:19:25.566Z",
   "size": [
     1080,
     1350
@@ -12,9 +12,9 @@
           "file": "notes/1.jpg",
           "id": "notes-top",
           "items": 1,
-          "blurred": 135,
-          "photos": 20,
-          "photo_band_masked": 20,
+          "blurred": 122,
+          "photos": 19,
+          "photo_band_masked": 19,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -22,10 +22,10 @@
         {
           "file": "notes/2.jpg",
           "id": "price-drops",
-          "items": 23,
-          "blurred": 221,
-          "photos": 21,
-          "photo_band_masked": 21,
+          "items": 24,
+          "blurred": 208,
+          "photos": 22,
+          "photo_band_masked": 22,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -34,9 +34,9 @@
           "file": "notes/3.jpg",
           "id": "ranking-price",
           "items": 6,
-          "blurred": 135,
-          "photos": 31,
-          "photo_band_masked": 31,
+          "blurred": 122,
+          "photos": 32,
+          "photo_band_masked": 32,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -44,10 +44,10 @@
         {
           "file": "notes/4.jpg",
           "id": "buzz",
-          "items": 23,
-          "blurred": 702,
-          "photos": 84,
-          "photo_band_masked": 84,
+          "items": 22,
+          "blurred": 685,
+          "photos": 88,
+          "photo_band_masked": 88,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -56,7 +56,7 @@
           "file": "notes/5.jpg",
           "id": "search",
           "items": 1,
-          "blurred": 702,
+          "blurred": 685,
           "photos": 30,
           "photo_band_masked": 30,
           "photo_ocr": "tesseract",
@@ -70,10 +70,10 @@
         {
           "file": "buzz/1.jpg",
           "id": "buzz-1",
-          "items": 23,
-          "blurred": 702,
-          "photos": 84,
-          "photo_band_masked": 84,
+          "items": 22,
+          "blurred": 685,
+          "photos": 88,
+          "photo_band_masked": 88,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "👗 レディースファッション"
@@ -81,10 +81,10 @@
         {
           "file": "buzz/2.jpg",
           "id": "buzz-2",
-          "items": 23,
-          "blurred": 236,
-          "photos": 94,
-          "photo_band_masked": 94,
+          "items": 22,
+          "blurred": 230,
+          "photos": 98,
+          "photo_band_masked": 98,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "👕 メンズファッション"
@@ -92,21 +92,21 @@
         {
           "file": "buzz/3.jpg",
           "id": "buzz-3",
-          "items": 23,
-          "blurred": 236,
-          "photos": 104,
-          "photo_band_masked": 104,
+          "items": 22,
+          "blurred": 230,
+          "photos": 108,
+          "photo_band_masked": 108,
           "photo_ocr": "tesseract",
-          "photo_full_blur": 1,
+          "photo_full_blur": 0,
           "label": "👟 靴・スニーカー"
         },
         {
           "file": "buzz/4.jpg",
           "id": "buzz-4",
-          "items": 23,
-          "blurred": 236,
-          "photos": 114,
-          "photo_band_masked": 114,
+          "items": 22,
+          "blurred": 230,
+          "photos": 118,
+          "photo_band_masked": 118,
           "photo_ocr": "tesseract",
           "photo_full_blur": 1,
           "label": "💄 コスメ"
@@ -115,7 +115,7 @@
           "file": "buzz/5.jpg",
           "id": "search",
           "items": 1,
-          "blurred": 702,
+          "blurred": 685,
           "photos": 30,
           "photo_band_masked": 30,
           "photo_ocr": "tesseract",
@@ -130,20 +130,20 @@
           "file": "drops/1.jpg",
           "id": "drop-1",
           "items": 1,
-          "blurred": 101,
-          "photos": 20,
-          "photo_band_masked": 20,
+          "blurred": 88,
+          "photos": 27,
+          "photo_band_masked": 27,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
-          "label": "メンズファッション"
+          "label": "レディースファッション"
         },
         {
           "file": "drops/2.jpg",
           "id": "drop-2",
           "items": 1,
-          "blurred": 101,
-          "photos": 28,
-          "photo_band_masked": 28,
+          "blurred": 88,
+          "photos": 30,
+          "photo_band_masked": 30,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "レディースファッション"
@@ -152,51 +152,121 @@
           "file": "drops/3.jpg",
           "id": "drop-4",
           "items": 1,
-          "blurred": 101,
-          "photos": 28,
-          "photo_band_masked": 28,
+          "blurred": 88,
+          "photos": 19,
+          "photo_band_masked": 19,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "メンズファッション"
+        },
+        {
+          "file": "drops/4.jpg",
+          "id": "drop-5",
+          "items": 1,
+          "blurred": 88,
+          "photos": 27,
+          "photo_band_masked": 27,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "レディースファッション"
         },
         {
-          "file": "drops/4.jpg",
+          "file": "drops/5.jpg",
           "id": "drop-6",
           "items": 1,
-          "blurred": 101,
-          "photos": 21,
-          "photo_band_masked": 21,
+          "blurred": 88,
+          "photos": 26,
+          "photo_band_masked": 26,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": "韓国コスメ"
         },
         {
-          "file": "drops/5.jpg",
+          "file": "drops/6.jpg",
           "id": "drop-7",
           "items": 1,
-          "blurred": 101,
+          "blurred": 88,
           "photos": 28,
           "photo_band_masked": 28,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
-          "label": "キッズ・ベビー・マタニティ"
-        },
-        {
-          "file": "drops/6.jpg",
-          "id": "drop-8",
-          "items": 1,
-          "blurred": 101,
-          "photos": 23,
-          "photo_band_masked": 23,
-          "photo_ocr": "tesseract",
-          "photo_full_blur": 0,
-          "label": "韓国コスメ"
+          "label": "靴（総合）"
         },
         {
           "file": "drops/7.jpg",
           "id": "drops-search",
           "items": 1,
-          "blurred": 702,
+          "blurred": 685,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": ""
+        }
+      ]
+    },
+    "warm": {
+      "files": [
+        {
+          "file": "warm/1.jpg",
+          "id": "warm-1",
+          "items": 1,
+          "blurred": 88,
+          "photos": 19,
+          "photo_band_masked": 19,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "メンズファッション"
+        },
+        {
+          "file": "warm/2.jpg",
+          "id": "warm-2",
+          "items": 1,
+          "blurred": 88,
+          "photos": 28,
+          "photo_band_masked": 28,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "靴（総合）"
+        },
+        {
+          "file": "warm/3.jpg",
+          "id": "warm-3",
+          "items": 1,
+          "blurred": 88,
+          "photos": 27,
+          "photo_band_masked": 27,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "レディースファッション"
+        },
+        {
+          "file": "warm/4.jpg",
+          "id": "warm-4",
+          "items": 1,
+          "blurred": 88,
+          "photos": 28,
+          "photo_band_masked": 28,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "ハンディファン"
+        },
+        {
+          "file": "warm/5.jpg",
+          "id": "warm-5",
+          "items": 1,
+          "blurred": 88,
+          "photos": 30,
+          "photo_band_masked": 30,
+          "photo_ocr": "tesseract",
+          "photo_full_blur": 0,
+          "label": "レディースファッション"
+        },
+        {
+          "file": "warm/6.jpg",
+          "id": "warm-search",
+          "items": 1,
+          "blurred": 685,
           "photos": 30,
           "photo_band_masked": 30,
           "photo_ocr": "tesseract",
@@ -211,9 +281,9 @@
           "file": "seller/1.jpg",
           "id": "seller-hero",
           "items": 2,
-          "blurred": 796,
-          "photos": 35,
-          "photo_band_masked": 35,
+          "blurred": 820,
+          "photos": 42,
+          "photo_band_masked": 42,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -222,7 +292,7 @@
           "file": "seller/2.jpg",
           "id": "seller-real-results",
           "items": 1,
-          "blurred": 844,
+          "blurred": 828,
           "photos": 40,
           "photo_band_masked": 40,
           "photo_ocr": "tesseract",
@@ -233,7 +303,7 @@
           "file": "seller/3.jpg",
           "id": "seller-real-search",
           "items": 1,
-          "blurred": 702,
+          "blurred": 685,
           "photos": 30,
           "photo_band_masked": 30,
           "photo_ocr": "tesseract",
@@ -243,10 +313,10 @@
         {
           "file": "seller/4.jpg",
           "id": "seller-real-buzz",
-          "items": 23,
-          "blurred": 236,
-          "photos": 84,
-          "photo_band_masked": 84,
+          "items": 22,
+          "blurred": 230,
+          "photos": 88,
+          "photo_band_masked": 88,
           "photo_ocr": "tesseract",
           "photo_full_blur": 0,
           "label": ""
@@ -287,7 +357,5 @@
       ]
     }
   },
-  "failures": {
-    "warm": "GROUP_TOO_FEW:warm/warm:2<3"
-  }
+  "failures": {}
 }
