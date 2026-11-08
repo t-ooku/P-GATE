@@ -23,6 +23,18 @@ const jstMonth = (now) => jstDate(now).slice(0, 7);
 const daysAgo = (now, days) => jstDate(new Date(now.getTime() - days * 86_400_000));
 const yen = (value) => `${Number(value).toLocaleString('ja-JP')}円`;
 
+// 2026-11-08 実機: 「★4日20時〜20%オフクーポン配布！【ロムアンド公式】ロムアンド ザジューシー」のように、店の商品名の頭に
+// セール・クーポンの宣伝が付いていて、ホシルが割引を約束しているように読めた。LINE に出す名前は宣伝の部分を外す（外して空なら元のまま）。
+export function cleanProductName(name = '') {
+  const original = text(name, 200);
+  const cleaned = original
+    .replace(/【[^】]*】|\[[^\]]*\]|＜[^＞]*＞|<[^>]*>/gu, ' ')
+    .replace(/[★☆◆◇■□●○♪※][^★☆◆◇■□●○♪※！!]*[！!]?/gu, ' ')
+    .replace(/(?:送料無料|ポイント\s*\d+\s*倍|\d+\s*[%％]\s*(?:OFF|オフ)|クーポン(?:配布|利用|で)?[^ 　]*|最大\s*\d+[%％円]?[^ 　]*|楽天\s*\d*位|ランキング\s*\d*位)/giu, ' ')
+    .replace(/\s+/gu, ' ').trim();
+  return cleaned.length >= 2 ? cleaned : original;
+}
+
 export function monthlyPushCap(env = {}) {
   const value = Number(env.LINE_WATCH_MONTHLY_PUSH_CAP);
   return Number.isFinite(value) && value >= 0 ? Math.floor(value) : DEFAULT_MONTHLY_PUSH_CAP;
@@ -34,7 +46,7 @@ export async function watchCode(recordKey) {
 }
 
 export function watchMessageText(code, productName = '') {
-  const name = text(productName, 24);
+  const name = text(cleanProductName(productName), 24);
   return `${WATCH_TEXT_PREFIX}${code}${name ? `（${name}）` : ''}`;
 }
 
@@ -128,7 +140,7 @@ export async function handleLineWatchMessage(event, env, { reply, now = new Date
     return true;
   }
   const at = now.toISOString();
-  const name = text(latest.product_name || codeRow.product_name, 120);
+  const name = text(cleanProductName(latest.product_name || codeRow.product_name), 120);
   await db.prepare(`INSERT INTO line_price_watches (line_user_id, record_key, product_name, start_price, notified_price, status, created_at, updated_at, notified_at)
       VALUES (?1,?2,?3,?4,0,'ACTIVE',?5,?5,'')
       ON CONFLICT(line_user_id, record_key) DO UPDATE SET status='ACTIVE', product_name=excluded.product_name,
@@ -146,7 +158,7 @@ export async function handleLineWatchMessage(event, env, { reply, now = new Date
 
 export function dropNoticeText({ productName, fromPrice, toPrice, observedDate, recordKey }) {
   return [
-    `「${text(productName, 40)}」が、ホシルの記録で下がりました。`,
+    `「${text(cleanProductName(productName), 40)}」が、ホシルの記録で下がりました。`,
     `${yen(fromPrice)} → ${yen(toPrice)}（${String(observedDate || '').slice(5).replace('-', '/')} の記録）`,
     '価格は変わるので、買う前に商品ページで今の価格を確認してね。',
     productPageUrl(recordKey),

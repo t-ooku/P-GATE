@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  WATCH_CODE_PATTERN, dropNoticeText, handleLineWatchMessage, handleLineWatchStart, monthlyPushCap,
+  cleanProductName, WATCH_CODE_PATTERN, dropNoticeText, handleLineWatchMessage, handleLineWatchStart, monthlyPushCap,
   runLinePriceWatchCycle, watchCode, watchMessageText
 } from '../src/line-price-watch.mjs';
 
@@ -139,4 +139,14 @@ test('値下がりカードにボタン、撮影（SNS の画像）には出さ�
   assert.match(index, /url\.pathname === '\/line\/watch'\) return handleLineWatchStart/u);
   assert.match(index, /runLinePriceWatchCycle\(env, scheduledAt\)/u);
   assert.match(index, /\.map\(\(event\) => processLineEventWithWatch\(event, origin, env, ctx\)\)/u);
+});
+
+// 2026-11-08 実機で、店の宣伝（クーポン・割引）が付いた商品名がそのまま LINE に出た
+test('LINE に出す商品名は、店のセール・クーポンの宣伝を外す', () => {
+  assert.equal(cleanProductName('★4日20時〜20％オフクーポン配布！【ロムアンド公式】ロムアンド ザジューシー'), 'ロムアンド ザジューシー');
+  assert.equal(cleanProductName('【送料無料】電気毛布 洗える ポイント10倍'), '電気毛布 洗える');
+  assert.equal(cleanProductName('ボアフリース ジャケット'), 'ボアフリース ジャケット');
+  assert.equal(cleanProductName('【公式】'), '【公式】', '外して空なら元のまま');
+  assert.doesNotMatch(watchMessageText('abcdef0123', '★20%OFFクーポン！【公式】リップ ティント'), /クーポン|OFF|【/u);
+  assert.match(dropNoticeText({ productName: '【SALE】★最大50%OFF！ダウンコート', fromPrice: 9000, toPrice: 8000, observedDate: '2026-11-09', recordKey: 'k' }), /^「ダウンコート」が/u);
 });
