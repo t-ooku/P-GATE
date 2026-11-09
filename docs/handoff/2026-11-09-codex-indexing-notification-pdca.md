@@ -1,5 +1,11 @@
 # Search Console robots通知PDCA — 2026-11-09
 
+## 2026-11-10 Act / D0（genre不整合の局所修復）
+- robots通知の例URLは依然未取得。本番robotsはAllow:/、/api/・/go・/line/・/shop/*?の意図的除外を維持し、一括解除なし。今回修正を通知原因の解消とは断定しない。
+- 別件のgenre sitemap/noindex不整合は、D1一時読取失敗を空配列として扱い200/noindexをキャッシュする経路を本番変動で特定。失敗時503/no-storeへ分離し、正当な薄いページのnoindexは維持。media cache v13で旧誤キャッシュを切り離した。commit `2611d428...`、`83f284fa...`、CI42720730309 success、11/10 08:30:30 JST Version `22fb4eb5-9811-42e0-8035-1ca7fb726598`。
+- 08:31〜08:36 JSTの本番GET: sitemap200/27 URL。高並列の一時503はno-storeで、低並列再取得後27/27が200/index・self-canonical・CSS v13、200/noindex 0。Google側の登録状態・再検証は未取得。
+- この局所修復のD0を11/10とし、既存の日次点検内でD+7（11/17）・D+14（11/24）・D+28（12/8）の表示/クリックと取得可能な登録状態を比較する。追加スケジュールは作らない。GSCデータ未取得・低標本なら効果未判定。
+
 ## ユーザー依頼と取得範囲
 ユーザーはhoshilu.app「robots.txtによりブロック」のメール画像を共有しPDCAを依頼。通知に個別URL・件数なし。画像だけから公開主要ページが誤遮断されたとは断定しない。
 Gmail検索で当該メールは取得できず。Windsorのsearchconsole接続はhttps://hoshilu.app/ とsc-domain:hoshilu.appが存在。fields/optionsを確認したがPage Indexing理由別例URL・URL Inspectionは未対応。Search Consoleブラウザは紹介画面（管理セッション未認証）で、個別レポートは未取得。認証情報の抽出・再利用・権限拡大なし。
