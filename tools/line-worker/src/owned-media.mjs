@@ -240,11 +240,12 @@ export async function loadRankingImages(env, recordKeys = []) {
 }
 
 // 価格履歴: HOSHILU が記録した日の価格だけ（記録の無い日は線でつなぐだけで、値を作らない）。
-export async function loadPriceHistories(env, recordKeys = [], { now = new Date(), days = DROP_RULES.windowDays } = {}) {
+export async function loadPriceHistories(env, recordKeys = [], { now = new Date(), days = DROP_RULES.windowDays, required = false } = {}) {
   const db = env?.PRODUCT_DB;
   const keys = [...new Set(recordKeys.filter(Boolean))].slice(0, 90);
   const histories = new Map();
-  if (!db || !keys.length) return histories;
+  if (!keys.length) return histories;
+  if (!db) return required ? null : histories;
   try {
     const placeholders = keys.map((_, index) => `?${index + 3}`).join(',');
     const { results = [] } = await db.prepare(`SELECT record_key, observed_date, MIN(price) AS price FROM price_observations
@@ -256,7 +257,9 @@ export async function loadPriceHistories(env, recordKeys = [], { now = new Date(
       if (!histories.has(key)) histories.set(key, []);
       histories.get(key).push({ date: String(row.observed_date || ''), price: Number(row.price) || 0 });
     }
-  } catch {}
+  } catch {
+    return required ? null : histories;
+  }
   return histories;
 }
 
@@ -313,9 +316,10 @@ export const MEDIA_GENRE_PATHS = Object.freeze(MEDIA_GENRES.map((genre) => `/med
 export const GENRE_RULES = Object.freeze({ items: 20, freshDays: 7, minIndexed: 4 });
 const genrePath = (genre) => `/media/genre/${genre.slug}`;
 
-export async function loadGenreRanking(env, genre, { now = new Date(), rules = GENRE_RULES } = {}) {
+export async function loadGenreRanking(env, genre, { now = new Date(), rules = GENRE_RULES, required = false } = {}) {
   const db = env?.PRODUCT_DB;
-  if (!db || !genre) return [];
+  if (!genre) return [];
+  if (!db) return required ? null : [];
   const since = new Date(now.getTime() - rules.freshDays * 24 * 60 * 60 * 1000).toISOString();
   try {
     const { results = [] } = await db.prepare(`SELECT payload_json, updated_at FROM marketplace_ranking_cache
@@ -326,7 +330,7 @@ export async function loadGenreRanking(env, genre, { now = new Date(), rules = G
     const rankedOn = jstDate(new Date(results[0].updated_at));
     return rankingItems(results[0].payload_json, { limit: rules.items }).map((item) => ({ ...item, ranked_on: rankedOn }));
   } catch {
-    return [];
+    return required ? null : [];
   }
 }
 
@@ -374,9 +378,10 @@ export async function loadRankingShelves(env, { now = new Date(), rules = SHELF_
   return shelves;
 }
 
-export async function withShelfHistories(env, shelves, { now = new Date() } = {}) {
+export async function withShelfHistories(env, shelves, { now = new Date(), required = false } = {}) {
   if (!Array.isArray(shelves) || !shelves.length) return shelves || [];
-  const histories = await loadPriceHistories(env, shelves.flatMap((shelf) => shelf.items.map((item) => item.record_key)), { now });
+  const histories = await loadPriceHistories(env, shelves.flatMap((shelf) => shelf.items.map((item) => item.record_key)), { now, required });
+  if (histories === null) return null;
   return shelves.map((shelf) => ({ ...shelf, items: shelf.items.map((item) => ({ ...item, history: histories.get(item.record_key) || [] })) }));
 }
 
@@ -669,10 +674,15 @@ const scenePath = (scene) => `/media/scene/${scene.slug}`;
 // 22 ジャンルの公式ランキング（7 日以内）に価格履歴を付けて返す。ジャンルのサイトマップと場面のページで使う。
 export async function loadAllGenreRankings(env, { now = new Date() } = {}) {
   const rankings = await Promise.all(MEDIA_GENRES.map(async (genre) => ({
-    id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) })));
+    id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now, required: true }) })));
+  if (rankings.some((shelf) => shelf.items === null)) return null;
   // 価格履歴は 1 回 90 商品まで（loadPriceHistories）。1 ジャンル最大 20 商品なので 4 ジャンルずつ読む（D1 の読取回数を抑える）。
   const shelves = [];
-  for (let start = 0; start < rankings.length; start += 4) shelves.push(...await withShelfHistories(env, rankings.slice(start, start + 4), { now }));
+  for (let start = 0; start < rankings.length; start += 4) {
+    const batch = await withShelfHistories(env, rankings.slice(start, start + 4), { now, required: true });
+    if (batch === null) return null;
+    shelves.push(...batch);
+  }
   return shelves;
 }
 
@@ -788,6 +798,7 @@ export async function loadIndexableGenres(env, { now = new Date() } = {}) {
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
   if (drops === null) return null;
   const shelves = await loadAllGenreRankings(env, { now });
+  if (shelves === null) return null;
   const genres = MEDIA_GENRES.filter((genre, index) => genreIndexable({ genre, items: shelves[index]?.items || [], drops }));
   // 2026-10-26: 使う人・場面のページも、今日 index になる物だけ同じサイトマップに載せる
   genres.scenes = MEDIA_SCENES.filter((scene) => sceneIndexable(sceneItems(scene, shelves)));
@@ -837,7 +848,9 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
     } catch {}
   }
   if (scene) {
-    const html = renderScenePage({ scene, now, items: sceneItems(scene, await loadAllGenreRankings(env, { now })) });
+    const shelves = await loadAllGenreRankings(env, { now });
+    if (shelves === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+    const html = renderScenePage({ scene, now, items: sceneItems(scene, shelves) });
     const response = new Response(html, {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, ...headers }
     });
@@ -847,9 +860,13 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
     return request.method === 'HEAD' ? new Response(null, response) : response;
   }
   const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
-  const html = genre
-    ? renderGenrePage({ genre, drops, now, items: (await withShelfHistories(env, [{ id: genre.id, label: genre.label, items: await loadGenreRanking(env, genre, { now }) }], { now }))[0]?.items || [] })
-    : path === '/media'
+  let html;
+  if (genre) {
+    const ranking = await loadGenreRanking(env, genre, { now, required: true });
+    const shelves = ranking === null ? null : await withShelfHistories(env, [{ id: genre.id, label: genre.label, items: ranking }], { now, required: true });
+    if (drops === null || shelves === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+    html = renderGenrePage({ genre, drops, now, items: shelves[0]?.items || [] });
+  } else html = path === '/media'
     ? renderMediaTop({ drops, popular: await loadPopularArticles(env), now,
       shelves: await withShelfHistories(env, await loadRankingShelves(env, { now, exclude: (drops || []).slice(0, 12).map((row) => row.record_key) }), { now }) })
     : renderPriceDrops({ drops, now,

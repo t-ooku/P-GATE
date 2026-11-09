@@ -315,6 +315,19 @@ test('ジャンル用サイトマップ: 価格の記録を読めない時は空
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
 
+test('ジャンル・場面: D1読取失敗を薄いページと誤判定せず503にし、noindexをキャッシュしない', async () => {
+  const env = { PRODUCT_DB: { prepare() { throw new Error('temporary D1 read failure'); } } };
+  let puts = 0;
+  const cache = { async match() { return undefined; }, async put() { puts += 1; } };
+  for (const path of ['/media/genre/kids-baby', '/media/scene/kids']) {
+    const response = await handleOwnedMediaRoutes(new Request(`https://hoshilu.app${path}`), env, { now: NOW, cache });
+    assert.equal(response.status, 503, path);
+    assert.equal(response.headers.get('cache-control'), 'no-store', path);
+    assert.doesNotMatch(await response.text(), /noindex/u, path);
+  }
+  assert.equal(puts, 0);
+});
+
 test('ジャンルの index 判定: 値下がり欄とランキングの重複は1つと数え、4件ちょうどで index', () => {
   const genre = MEDIA_GENRES.find((g) => g.id === 'kitchen');
   const history = [{ date: '2026-10-10', price: 2000 }, { date: '2026-10-13', price: 1500 }];
