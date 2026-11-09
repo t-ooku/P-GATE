@@ -181,3 +181,6 @@
 }
 .media-drop a.media-drop-line:hover { transform: none; filter: brightness(.95); box-shadow: none; }
 .media-drop a.media-drop-line:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+/* 2026-11-09 下がり幅が大きくても記録上の最安とは限らない：14日間の記録の最安と比べた 1 行 */
+.media-drop-low { display: block; margin-top: .15rem; color: #5b5675; font-size: .74rem; font-weight: 700; line-height: 1.45; }

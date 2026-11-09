@@ -123,7 +123,7 @@ test('見た目: 号数・数字の帯・番号付きの値下がりと記事。
   assert.match(html, /<dl class="media-stats">/);
   assert.match(html, /<span class="media-drop-rank" aria-hidden="true">01<\/span>/);
   assert.match(html, /<b>-10<\/b>%/);
-  assert.match(html, /owned-media\.css\?v=11/);
+  assert.match(html, /owned-media\.css\?v=12/);
   const css = readFileSync(new URL('../public/owned-media.css', import.meta.url), 'utf8');
   for (const rule of css.match(/^[^@\s/}][^{]*\{/gmu) || []) {
     assert.ok(/\.media-|^\s*\.media-page/u.test(rule), `scoped: ${rule}`);
@@ -403,4 +403,16 @@ test('使う人・場面のページ: ルートと正規URL。トップ・値下
   for (const html of [renderMediaTop({ drops: [], now: NOW }), renderPriceDrops({ drops: [], now: NOW }), renderGenrePage({ genre, items: [], drops: [], now: NOW })]) {
     for (const path of MEDIA_SCENE_PATHS) assert.ok(html.includes(`href="${path}"`), path);
   }
+});
+
+// 2026-11-09 大隆さん「進めて」（ブラックフライデー前に価格根拠を強化）: 下がり幅が大きい＝記録上の最安、と読ませない
+test('値下がりカード: 14日間の記録の最安と比べた事実を 1 行で出す（買い時・底値とは書かない）', async () => {
+  const { dropLowNote } = await import('../src/owned-media.mjs');
+  assert.equal(dropLowNote({ latest_price: 4000, min_price: 4000 }), 'この14日間の記録で一番安い価格');
+  assert.equal(dropLowNote({ latest_price: 4000, min_price: 3500 }), 'この14日間の記録の最安は ¥3,500（今より ¥500 安い日がありました）');
+  assert.equal(dropLowNote({ latest_price: 4000, min_price: 0 }), '');
+  for (const text of [dropLowNote({ latest_price: 1, min_price: 1 }), dropLowNote({ latest_price: 2, min_price: 1 })]) assert.doesNotMatch(text, /買い時|底値|今が安い/u);
+  const source = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
+  assert.match(source, /MIN\(price\) OVER \(PARTITION BY marketplace, external_product_id, seller_id\) AS min_price/u);
+  assert.match(source, /<span class="media-drop-low">/u);
 });

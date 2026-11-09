@@ -25,7 +25,7 @@ const CACHE_SECONDS = 1800;
 // ページの作りを変えたら上げる。30 分の保存の鍵に入れ、反映と同時に新しい作りへ切り替える（古い保存を出し続けない）。
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
 // （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
-export const MEDIA_TEMPLATE_VERSION = '11';
+export const MEDIA_TEMPLATE_VERSION = '12';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -169,10 +169,11 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
         SELECT marketplace, external_product_id, seller_id, record_key, product_name, observed_date, price, stock_status,
           ROW_NUMBER() OVER (PARTITION BY marketplace, external_product_id, seller_id ORDER BY observed_date DESC) AS rn,
           MAX(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS max_price,
+          MIN(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS min_price,
           COUNT(*) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS days
         FROM price_observations WHERE observed_date >= ?1 AND observed_date <= ?2)
       SELECT w.marketplace, w.seller_id, w.record_key, w.product_name, w.observed_date AS latest_date, w.price AS latest_price,
-        w.max_price, w.days,
+        w.max_price, w.min_price, w.days,
         (SELECT MAX(m.observed_date) FROM price_observations m WHERE m.marketplace = w.marketplace
           AND m.external_product_id = w.external_product_id AND m.seller_id = w.seller_id
           AND m.price = w.max_price AND m.observed_date >= ?1) AS max_date
@@ -192,6 +193,7 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
       latest_price: Number(row.latest_price) || 0,
       latest_date: String(row.latest_date || ''),
       max_price: Number(row.max_price) || 0,
+      min_price: Number(row.min_price) || 0,
       max_date: String(row.max_date || ''),
       days: Number(row.days) || 0,
       drop_rate: row.max_price ? Math.round((1 - Number(row.latest_price) / Number(row.max_price)) * 100) : 0
@@ -408,6 +410,17 @@ const shortDate = (date) => String(date || '').slice(5).replace('-', '/');
 
 // 2026-11-08 大隆さん（office hours → B「通知で戻ってくる」）: 登録なしで、LINE の送信だけで見張りを始める（/line/watch）。
 // 記録の無い商品（record_key 無し）には出さない。クローラにたどらせない（nofollow・robots.txt）。
+// 2026-11-09 大隆さん「進めて」（競合ウォッチ 3「ブラックフライデー前に価格根拠を強化」）:
+// 下がり幅（最高値から）が大きくても、記録の中で一番安いとは限らない。同じ 14 日間の記録の最安と比べた事実を 1 行で出す。
+// 「買い時」「底値」とは書かない。記録が無い（min_price 0）ときは出さない。
+export function dropLowNote(row) {
+  const min = Number(row?.min_price) || 0;
+  const now = Number(row?.latest_price) || 0;
+  if (!(min > 0) || !(now > 0)) return '';
+  if (now <= min) return 'この14日間の記録で一番安い価格';
+  return `この14日間の記録の最安は ${yen(min)}（今より ${yen(now - min)} 安い日がありました）`;
+}
+
 function lineWatchButton(row) {
   if (!row?.record_key) return '';
   return `<a class="media-drop-line" href="/line/watch?key=${encodeURIComponent(row.record_key)}" rel="nofollow">もっと下がったらLINEで知らせる</a>`;
@@ -424,6 +437,7 @@ function dropCard(row, index) {
 <span class="media-drop-figure">${image}<span class="media-drop-rate"><b>-${row.drop_rate}</b>%</span><span class="media-drop-rank" aria-hidden="true">${rank}</span></span>
 <span class="media-drop-body">${genre}<strong>${esc(row.product_name)}</strong>
 <span class="media-drop-prices"><s>${yen(row.max_price)}</s><span aria-hidden="true">→</span><b>${yen(row.latest_price)}</b></span>
+${dropLowNote(row) ? `<span class="media-drop-low">${esc(dropLowNote(row))}</span>` : ''}
 ${history ? `<span class="media-drop-history"><span class="media-drop-history-label">価格の推移</span>${history}<span class="media-spark-axis"><span>${esc(shortDate(row.history[0].date))}</span><span>${esc(shortDate(row.history[row.history.length - 1].date))}</span></span></span>` : ''}
 <span class="media-drop-meta">${esc(MALL_LABEL[row.marketplace] || row.marketplace)}・${row.days}日分の記録</span>
 <span class="media-drop-cta">今の価格と履歴を見る</span></span>
