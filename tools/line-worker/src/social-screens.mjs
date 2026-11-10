@@ -127,8 +127,11 @@ export const SCREEN_POSTS = Object.freeze({
 // 2026-10-18: GitHub の定時実行は数時間遅れることがあるため、撮影を 15:07／18:07 JST の 2 回にした（main の daily-social-screens.yml）。
 // それに合わせて「その日の撮影」とみなす時刻を 06:00 UTC（15:00 JST）にした。予約後に撮り直して枚数が変わったら、
 // 投稿前（APPROVED のまま）なら画像の URL をその日の撮影に合わせ直す（10/18: 予約後に撮り直した）。
+// 2026-11-10: 10/27 から撮影が毎日 21:00〜23:00 JST にずれ込み（GitHub の定時が 6〜7 時間遅れる）、日曜・水曜 21:00 の値下がり投稿が
+// 「予約の 10 分前を過ぎた」で 1 本も出ていなかった（11/8 の防寒版も撮れていたが出なかった）。撮影を 09:07／12:07 JST に早め、
+// 「その日の撮影」とみなす時刻を 00:00 UTC（09:00 JST）にした。
 export const DROPS_DAILY = Object.freeze({
-  campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '06:00'
+  campaign_id: 'hoshilu-price-drops-daily', content_id: 'screens-drops', publish_utc: '12:00', daily_capture_utc: '00:00'
 });
 
 // 2026-11-02 大隆さん（競合ウォッチ）「防寒の季節投稿 1 本」: 11/8（日）21:00 の値下がり投稿を、防寒・あったかグッズだけの版にする。

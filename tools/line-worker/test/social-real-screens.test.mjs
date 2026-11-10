@@ -298,8 +298,9 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
     crosspost_group_id TEXT NOT NULL DEFAULT '', media_urls TEXT NOT NULL DEFAULT '')`);
   const body = (captured, sets = ['drops']) => ({ captured_at: captured, sets: Object.fromEntries(sets.map((id) => [id, { files: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ file: `${id}/${n}.jpg` })) }])) });
   const env = (manifestBody) => ({ PRODUCT_DB: d1(database), ASSETS: assets(manifestBody) });
-  // その日の定時の撮影（06:00 UTC = 15:00 JST 以降）より前の撮り直しは使わない
-  assert.equal((await seedDailyDropsPost(env(body('2026-10-17T05:40:00Z')), new Date('2026-10-17T07:00:00Z'))).reason, 'before_daily_capture');
+  // その日の定時の撮影（00:00 UTC = 09:00 JST 以降）より前の撮り直しは使わない
+  assert.equal((await seedDailyDropsPost(env(body('2026-10-16T23:40:00Z')), new Date('2026-10-17T07:00:00Z'))).reason, 'before_daily_capture');
+  assert.equal(DROPS_DAILY.daily_capture_utc, '00:00', '撮影は 09:07／12:07 JST（2026-11-10）');
   // drops が撮れていない日は足さない
   assert.equal((await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z', ['notes'])), new Date('2026-10-17T08:50:00Z'))).reason, 'no_drops_today');
   const first = await seedDailyDropsPost(env(body('2026-10-17T08:40:00Z')), new Date('2026-10-17T08:50:00Z'));
