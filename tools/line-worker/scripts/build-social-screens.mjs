@@ -313,7 +313,7 @@ export const SCREEN_SETS = Object.freeze({
 // 互換: 10/15 の最初の版（notes 1 セット）
 export const SLIDES = SCREEN_SETS.notes;
 // 毎日は撮らないセット → 撮る日（JST）。期間外は撮らない（撮影の時間を増やさない）。
-export const SET_DATES = Object.freeze({ warm: Object.freeze(['2026-11-08']) });
+export const SET_DATES = Object.freeze({ warm: Object.freeze(['2026-11-11']) });
 export function setDueToday(setId, now = new Date()) {
   const dates = SET_DATES[setId];
   if (!dates) return true;

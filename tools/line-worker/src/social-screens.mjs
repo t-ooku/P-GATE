@@ -137,7 +137,8 @@ export const DROPS_DAILY = Object.freeze({
 // 2026-11-02 大隆さん（競合ウォッチ）「防寒の季節投稿 1 本」: 11/8（日）21:00 の値下がり投稿を、防寒・あったかグッズだけの版にする。
 // 判定は再生数ではなく、ホシっとく（Watch Set）とモールクリック。十分な転換が確かめられるまで横展開しない（日付は 1 日だけ）。
 // 防寒の商品が 3 つ未満で 4 枚（商品 3 + 検索）に満たない日は、いつもの値下がり投稿のまま。
-export const WARM_POST = Object.freeze({ date: '2026-11-08', content_id: 'screens-warm', min_slides: 4 });
+// 2026-11-10: 11/8 は撮影の遅れで出せなかった（too_late）。大隆さん「11/11（水）にやり直す」→ 水曜 21:00 の値下がり投稿を防寒版に。
+export const WARM_POST = Object.freeze({ date: '2026-11-11', content_id: 'screens-warm', min_slides: 4 });
 
 export async function seedDailyDropsPost(env, now = new Date()) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
