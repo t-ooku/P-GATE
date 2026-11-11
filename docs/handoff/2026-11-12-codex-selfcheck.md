@@ -69,5 +69,7 @@
 
 - GitHub点検時HEAD `8e33917b`、[Actions 43115104729](https://github.com/t-ooku/P-GATE/actions/runs/43115104729) の07:51 JST本番sourceも同SHA。最新の既存配備 [Actions 43006072050](https://github.com/t-ooku/P-GATE/actions/runs/43006072050) は11/11 19:46:11 JST Version `33b66403-6afd-4c3d-9660-dce581423429`、Worker 3152・Chrome 6成功、19:46:20 health PASS。07:50〜51監視でもhealth/SLI/SNS SLAは成功。HEAD単体のActions runは未確認。SEO #751 `9f2f2fec` は [Actions 42934280663](https://github.com/t-ooku/P-GATE/actions/runs/42934280663) CI成功、現本番sourceの祖先。修正後の27 URL一括再確認は未実施（前回の既存確認は11/10 27/27、#745の個別GSC例・再インデックスは未取得）。
 - **ENTRY-20261106-01**：11/7〜13観測、11/14評価。既存11/11 08:40 PCガードレール（例ボタン6件44px、文字14px、主CTA58px・表示/有効、viewport1363px／scroll1348px）を再利用。スマホ実測未取得、別介入と低標本のため因果効果未判定。再現可能な不具合の確認・修正を標本数だけで止めない。実装は既存日次改善側で管理。
-- **受信箱**：点検時18件（DONE16／BLOCKED2）。家庭用こたつは既存[依頼](claude-inbox/2026-10-31-kotatsu-panel-heater-mismatch.md)を再開し、今回の再受領・新実装・新配備・本番確認は未取得。Sellerフォーム復旧はDONEがローカル・mock検証の証拠、実装配備／実環境のTurnstileと400復帰は未確認。既存営業タスク火〜日09:07の設定済みと無人送信／新Node接続のBLOCKEDを分ける。権限拒否への反復・別経路への迂回、再承認の要求はしない。
+- **11/12 日次改善の検索後導線確認**：固定fixtureの `mobile-result-card-height`、`result-overflow`、`growth-browser-purchase-flow` を実行し12/12成功。写真→商品名→価格→ボタン順、モバイルカード幅規則、購入先クリックの1回計測、webdriver除外を確認。ローカル390px Playwright実描画はChromium実行環境のsocket制約で起動できず、スマホ実測・初期viewport内CTA可視性は未確認。PCで代用せず、同じ消費者導線へのコード変更・CI・配備なし。
+- **直接health再確認**：11/12 08:45台JST、`ok:true`、missing/weak空、X・Instagram OAuth接続、Runway ready、database_features全てtrue。monitorの既存証拠と分けて記録。
+- **受信箱**：点検時18件（OPEN1／DONE15／BLOCKED2）。家庭用こたつは既存[依頼](claude-inbox/2026-10-31-kotatsu-panel-heater-mismatch.md)を再開し、今回の再受領・新実装・新配備・本番確認は未取得。Sellerフォーム復旧はDONEがローカル・mock検証の証拠、実装配備／実環境のTurnstileと400復帰は未確認。既存営業タスク火〜日09:07の設定済みと無人送信／新Node接続のBLOCKEDを分ける。権限拒否への反復・別経路への迂回、再承認の要求はしない。
 - 大隆さんがやること：なし。
