@@ -429,3 +429,53 @@ test('値下がりカード: 14日間の記録の最安と比べた事実を 1 �
   assert.match(source, /MIN\(price\) OVER \(PARTITION BY marketplace, external_product_id, seller_id\) AS min_price/u);
   assert.match(source, /<span class="media-drop-low">/u);
 });
+
+// 2026-11-11 キャッシュ切れ直後に 29 本を続けて取ると 15 本が 503（D1 の読取失敗）。重い読み込みはページ間で共有し、
+// 1 回読み直し、それでも読めない時は前に作れたページを出す。
+function memoryCache() {
+  const store = new Map();
+  return { store, async match(request) { const hit = store.get(request.url); return hit ? hit.clone() : undefined; },
+    async put(request, response) { store.set(request.url, response.clone()); } };
+}
+test('ジャンル・場面: 値下がりの集計と22ジャンルのランキングは1回だけ読み、ページ間で共有する', async () => {
+  const base = envWith((db) => db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8')));
+  const counts = { drops: 0, ranking: 0 };
+  const env = { PRODUCT_DB: { prepare(sql) {
+    if (/ROW_NUMBER\(\) OVER/u.test(sql)) counts.drops += 1;
+    if (/category_id IN \(\?1, 'buzz_' \|\| \?1\)/u.test(sql)) counts.ranking += 1;
+    return base.PRODUCT_DB.prepare(sql);
+  } } };
+  const cache = memoryCache();
+  for (const path of ['/media/genre/kitchen', '/media/genre/pet', '/media/genre/toys', '/media/scene/kids', '/media/scene/gift', GENRE_SITEMAP_PATH]) {
+    const response = await handleOwnedMediaRoutes(new Request(`https://hoshilu.app${path}`), env, { now: NOW, cache });
+    assert.equal(response.status, 200, path);
+  }
+  assert.equal(counts.drops, 1, '値下がりの集計は1回');
+  assert.equal(counts.ranking, 3 + MEDIA_GENRES.length, 'ジャンルのページ3本 + 22ジャンルを1回');
+});
+
+test('ジャンル・場面: 読めない時は1回読み直し、それでも読めなければ前に作れたページを出す（無ければ503）', async () => {
+  const base = envWith((db) => db.exec(readFileSync(new URL('../migrations/0045_marketplace_ranking.sql', import.meta.url), 'utf8')));
+  let failing = 0;
+  let calls = 0;
+  const env = { PRODUCT_DB: { prepare(sql) { calls += 1; if (failing > 0) { failing -= 1; throw new Error('D1 overloaded'); } return base.PRODUCT_DB.prepare(sql); } } };
+  // 1 回目だけ失敗 → 読み直して 200
+  failing = 1;
+  const retried = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/scene/kids'), env, { now: NOW, cache: null });
+  assert.equal(retried.status, 200);
+
+  const cache = memoryCache();
+  const good = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/kitchen'), env, { now: NOW, cache });
+  const goodHtml = await good.text();
+  // 30 分の保存が切れ、D1 も読めない
+  for (const key of [...cache.store.keys()]) if (!key.includes('media-last-good')) cache.store.delete(key);
+  failing = Infinity;
+  const stale = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/kitchen'), env, { now: NOW, cache });
+  assert.equal(stale.status, 200);
+  assert.equal(stale.headers.get('x-media-stale'), '1');
+  assert.equal(stale.headers.get('cache-control'), 'no-store');
+  assert.equal(await stale.text(), goodHtml);
+  const none = await handleOwnedMediaRoutes(new Request('https://hoshilu.app/media/genre/pet'), env, { now: NOW, cache });
+  assert.equal(none.status, 503);
+  assert.ok(calls > 0);
+});

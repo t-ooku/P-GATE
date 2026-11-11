@@ -199,7 +199,8 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
       days: Number(row.days) || 0,
       drop_rate: row.max_price ? Math.round((1 - Number(row.latest_price) / Number(row.max_price)) * 100) : 0
     })).filter((row) => row.record_key && row.product_name && row.latest_price > 0 && row.max_price > row.latest_price);
-  } catch {
+  } catch (error) {
+    logMediaReadFailure('price_drops', error);
     return null;
   }
 }
@@ -258,7 +259,8 @@ export async function loadPriceHistories(env, recordKeys = [], { now = new Date(
       if (!histories.has(key)) histories.set(key, []);
       histories.get(key).push({ date: String(row.observed_date || ''), price: Number(row.price) || 0 });
     }
-  } catch {
+  } catch (error) {
+    logMediaReadFailure('price_histories', error);
     return required ? null : histories;
   }
   return histories;
@@ -330,7 +332,8 @@ export async function loadGenreRanking(env, genre, { now = new Date(), rules = G
     // ランキングを保存した日（JST）を各商品に付けて、ページに「M/D 時点のランキング」と出す
     const rankedOn = jstDate(new Date(results[0].updated_at));
     return rankingItems(results[0].payload_json, { limit: rules.items }).map((item) => ({ ...item, ranked_on: rankedOn }));
-  } catch {
+  } catch (error) {
+    logMediaReadFailure('genre_ranking', error);
     return required ? null : [];
   }
 }
@@ -792,13 +795,71 @@ export async function handleTopDropsApi(request, env, { now = new Date(), cache 
   return response;
 }
 
+// 2026-11-11 キャッシュが切れた直後にジャンル・場面のページを続けて取ると 29 本中 15 本が 503（D1 の読取失敗）。
+// ページごとに同じ重い読み込み（14 日分の値下がり集計・22 ジャンルのランキング）を繰り返していたので、
+// 読み込んだ結果を 30 分だけ共有し（ページの保存と同じ長さ）、失敗したら 1 回だけ読み直す。
+// それでも読めない時は、前に作れたページ（最大 2 日）を出す（検索エンジンにエラーを見せない）。無ければ従来どおり 503。
+const DATA_CACHE_PREFIX = `${ORIGIN}/__media-data/`;
+const LAST_GOOD_SECONDS = 2 * 24 * 60 * 60;
+const MEDIA_RETRY_MS = 250;
+function logMediaReadFailure(what, error) {
+  // 原因の切り分け用。D1 のエラー文だけを残す（利用者の検索や商品の中身は出さない）。
+  try { console.warn(JSON.stringify({ event: 'owned_media_read_failed', what, message: String(error?.message || error).slice(0, 200) })); } catch {}
+}
+export async function sharedMediaData(cache, name, now, loader, { retryMs = MEDIA_RETRY_MS } = {}) {
+  const key = new Request(`${DATA_CACHE_PREFIX}${name}?d=${jstDate(now)}&v=${MEDIA_TEMPLATE_VERSION}`);
+  if (cache) {
+    try { const hit = await cache.match(key); if (hit) return await hit.json(); } catch {}
+  }
+  let value = await loader();
+  if (value === null) {
+    if (retryMs > 0) await new Promise((resolve) => setTimeout(resolve, retryMs));
+    value = await loader();
+  }
+  if (cache && value !== null && value !== undefined) {
+    try {
+      await cache.put(key, new Response(JSON.stringify(value), {
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}` } }));
+    } catch {}
+  }
+  return value;
+}
+const loadSharedDrops = (env, now, cache) => sharedMediaData(cache, 'drops', now,
+  async () => withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now }));
+const loadSharedGenreRankings = (env, now, cache) => sharedMediaData(cache, 'genre-rankings', now,
+  () => loadAllGenreRankings(env, { now }));
+const lastGoodKey = (path) => new Request(`${ORIGIN}${path}?media-last-good&v=${MEDIA_TEMPLATE_VERSION}`);
+async function unavailableResponse(cache, path) {
+  if (cache) {
+    try {
+      const hit = await cache.match(lastGoodKey(path));
+      if (hit) {
+        const headers = new Headers(hit.headers);
+        headers.set('cache-control', 'no-store');
+        headers.set('x-media-stale', '1');
+        return new Response(hit.body, { status: 200, headers });
+      }
+    } catch {}
+  }
+  return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+}
+async function storeMediaResponse(cache, cacheKey, path, response) {
+  if (!cache) return;
+  try { await cache.put(cacheKey, response.clone()); } catch {}
+  try {
+    const headers = new Headers(response.headers);
+    headers.set('cache-control', `public, max-age=${LAST_GOOD_SECONDS}`);
+    await cache.put(lastGoodKey(path), new Response(await response.clone().text(), { status: 200, headers }));
+  } catch {}
+}
+
 // GET /sitemap-genres.xml: 今日 index になるジャンルページだけ（判定はページと同じ genreIndexable）。D1 は読むだけ。30 分キャッシュ。
 // 静的な /sitemap.xml にはジャンルページを載せない（掲載0件・4件未満の日に noindex と矛盾するため）。
 export const GENRE_SITEMAP_PATH = '/sitemap-genres.xml';
-export async function loadIndexableGenres(env, { now = new Date() } = {}) {
-  const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
+export async function loadIndexableGenres(env, { now = new Date(), cache = null } = {}) {
+  const drops = await loadSharedDrops(env, now, cache);
   if (drops === null) return null;
-  const shelves = await loadAllGenreRankings(env, { now });
+  const shelves = await loadSharedGenreRankings(env, now, cache);
   if (shelves === null) return null;
   const genres = MEDIA_GENRES.filter((genre, index) => genreIndexable({ genre, items: shelves[index]?.items || [], drops }));
   // 2026-10-26: 使う人・場面のページも、今日 index になる物だけ同じサイトマップに載せる
@@ -814,18 +875,16 @@ export async function renderGenreSitemap(env, { now = new Date(), cache = global
       if (hit) return hit;
     } catch {}
   }
-  const genres = await loadIndexableGenres(env, { now });
-  // 価格の記録を読めなかった時は空のサイトマップを返さない（全ページを外したと受け取られないように）。
-  if (genres === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+  const genres = await loadIndexableGenres(env, { now, cache });
+  // 価格の記録を読めなかった時は空のサイトマップを返さない（全ページを外したと受け取られないように）。前に作れた物があればそれを出す。
+  if (genres === null) return unavailableResponse(cache, GENRE_SITEMAP_PATH);
   const lastmod = jstDate(now);
   const urls = [...genres.map(genrePath), ...(genres.scenes || []).map(scenePath)]
     .map((path) => `<url><loc>${ORIGIN}${path}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq></url>`).join('\n');
   const response = new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`, {
     headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, 'x-genre-count': String(genres.length), 'x-scene-count': String((genres.scenes || []).length) }
   });
-  if (cache) {
-    try { await cache.put(cacheKey, response.clone()); } catch {}
-  }
+  await storeMediaResponse(cache, cacheKey, GENRE_SITEMAP_PATH, response);
   return response;
 }
 
@@ -848,24 +907,33 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
       if (hit) return request.method === 'HEAD' ? new Response(null, hit) : hit;
     } catch {}
   }
+  const unavailable = async () => {
+    const fallback = await unavailableResponse(cache, path);
+    return request.method === 'HEAD' ? new Response(null, fallback) : fallback;
+  };
   if (scene) {
-    const shelves = await loadAllGenreRankings(env, { now });
-    if (shelves === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+    const shelves = await loadSharedGenreRankings(env, now, cache);
+    if (shelves === null) return unavailable();
     const html = renderScenePage({ scene, now, items: sceneItems(scene, shelves) });
     const response = new Response(html, {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, ...headers }
     });
-    if (cache) {
-      try { await cache.put(cacheKey, response.clone()); } catch {}
-    }
+    await storeMediaResponse(cache, cacheKey, path, response);
     return request.method === 'HEAD' ? new Response(null, response) : response;
   }
-  const drops = await withImagesAndHistory(env, await loadPriceDrops(env, { now }), { now });
+  const drops = await loadSharedDrops(env, now, cache);
   let html;
   if (genre) {
-    const ranking = await loadGenreRanking(env, genre, { now, required: true });
-    const shelves = ranking === null ? null : await withShelfHistories(env, [{ id: genre.id, label: genre.label, items: ranking }], { now, required: true });
-    if (drops === null || shelves === null) return new Response('unavailable', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '600' } });
+    const loadShelves = async () => {
+      const ranking = await loadGenreRanking(env, genre, { now, required: true });
+      return ranking === null ? null : withShelfHistories(env, [{ id: genre.id, label: genre.label, items: ranking }], { now, required: true });
+    };
+    let shelves = drops === null ? null : await loadShelves();
+    if (drops !== null && shelves === null) {
+      await new Promise((resolve) => setTimeout(resolve, MEDIA_RETRY_MS));
+      shelves = await loadShelves();
+    }
+    if (drops === null || shelves === null) return unavailable();
     html = renderGenrePage({ genre, drops, now, items: shelves[0]?.items || [] });
   } else html = path === '/media'
     ? renderMediaTop({ drops, popular: await loadPopularArticles(env), now,
@@ -876,8 +944,6 @@ export async function handleOwnedMediaRoutes(request, env, { headers = {}, now =
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': `public, max-age=${CACHE_SECONDS}`, ...headers }
   });
   // 読み込めなかった時（drops === null）はキャッシュしない。
-  if (cache && drops !== null) {
-    try { await cache.put(cacheKey, response.clone()); } catch {}
-  }
+  if (drops !== null) await storeMediaResponse(cache, cacheKey, path, response);
   return request.method === 'HEAD' ? new Response(null, response) : response;
 }
