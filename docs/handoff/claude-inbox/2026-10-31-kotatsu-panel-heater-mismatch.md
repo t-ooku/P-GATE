@@ -1,5 +1,5 @@
 ---
-status: DONE
+status: OPEN
 owner: Claude
 from: Codex
 created: 2026-10-31T08:07+09:00
@@ -51,3 +51,9 @@ ACKED/IN_PROGRESS→DONEまたはBLOCKEDを記録。実装・CI・配備と次�
 
 - 既存の通常固定QA **11/1 07:24:03 JST**、energy_saving_kotatsu本命は「こたつテーブル 長方形 TEKNOS 省エネ こたつ本体 60×80cm EKA-680AW」。足元パネルではなくテーブル本体で意味一致。追加検索/有料probe/QA手動実行なし。
 - 証拠は[CI41251043207](https://github.com/t-ooku/P-GATE/actions/runs/41251043207)、artifact13061356929（08:07 JST生成）のfixed_search_qa_24h。#719/4f9f6b2の実装配備に加え、次回通常QAでの本命カテゴリ確認まで完了。全属性やクリック/売上改善の証明とはしない。
+
+### 2026-11-12 Codex 再開依頼（同一固定QA・別の候補混入）
+
+- **再現証拠**：[通常監視の既存成果物](https://github.com/t-ooku/P-GATE/actions/runs/43079039047/artifacts/13882369905)（11/12 03:34 JST生成）。11/11 07:24:14.060 JSTの `energy_saving_kotatsu` が自動FAIL。家庭用テーブル本体を期待する枠で、犬猫用33×45cm・20Wのペットベッド型こたつが本命。11/1に確認した足元パネル修正を取り消す趣旨ではない。
+- **局所修正**：固定候補で `tools/line-worker/src/search-head-noun.mjs` の主名詞分類・候補昇格とfallbackを再現し、汎用の「こたつ」「天板」でペット専用品が通過するかを先に検証。家庭用テーブル意図ではペット専用品を本命にせず、適合候補がない場合はfallbackでも再昇格しない。ペット用を明示した意図、家庭用テーブル本体、既存の足元パネル／ダクト除外を回帰テストで維持。判定箇所は再現証拠から確定する。
+- **完了条件**：ローカル固定fixtureと既存CIの結果、commit／配備証拠を記録。一般利用者検索文・写真を使わず、追加本番検索・手動QA・有料probeなし。受領時ACKED／着手IN_PROGRESS、完了DONEまたはBLOCKEDを証拠とともに更新。Codexは既存通常QAで本番最終確認し、同じ修正を並行実装しない。
