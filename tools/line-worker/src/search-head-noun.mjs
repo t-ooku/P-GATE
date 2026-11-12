@@ -350,6 +350,14 @@ function isExplicitAccessoryMismatch(query, title) {
     && KOTATSU_TITLE_OTHER_HEATER.test(title) && !KOTATSU_TITLE_BODY.test(title)) {
     return true;
   }
+  // 2026-11-12 固定QA energy_saving_kotatsu 再開(受信箱 2026-10-31-kotatsu-panel-heater-mismatch):
+  // 家庭用こたつ本体を探す検索で、本命が「ペット用 こたつ 犬 猫 33×45cm 省エネ20W ふとん 天板付 … ペットこたつ」
+  // だった。販売名の「こたつ」「天板」で本体扱い(2)になっていた。ペット/犬/猫を明示していないこたつ検索では、
+  // ペット用・犬猫用・ペットこたつ等のペット専用品を候補から外す。天板・ヒーター等の本体語があっても除外し、
+  // 全件不適合でも元順序で本命に戻さない。ペット用を明示した検索、家庭用こたつ本体は従来どおり。
+  if (KOTATSU_QUERY.test(query) && !PET_QUERY.test(query) && KOTATSU_TITLE_PET_ONLY.test(title)) {
+    return true;
+  }
   const appliance = APPLIANCE_ACCESSORY_RULES.find((rule) => rule.query.test(query));
   if (appliance && !appliance.queryAccessory.test(query)) {
     return appliance.titleAccessory.test(title) && !appliance.bundled.test(title);
@@ -396,6 +404,11 @@ const KOTATSU_QUERY_OTHER_HEATER = /パネル|足元|フット|デスク\s*(?:�
 const KOTATSU_TITLE_OTHER_HEATER = /パネル\s*ヒーター|足元\s*(?:ヒーター|暖房)|フット\s*ヒーター|デスク\s*ヒーター|デスク下\s*(?:ヒーター|暖房)|デスクパネル/u;
 // こたつ本体を表す語。パネル/遠赤外線ヒーター内蔵のこたつ本体は除外しない
 const KOTATSU_TITLE_BODY = /(?:こたつ|コタツ|炬燵)\s*(?:テーブル|本体|座卓|デスク(?!下))|(?:家具調|ダイニング|座卓|デスク(?!下))\s*(?:こたつ|コタツ|炬燵)|天板|継ぎ脚|ちゃぶ台|(?:ヒーター|パネル|遠赤外線)\S*\s*(?:内蔵|搭載)/u;
+
+// ペット(犬猫・小動物)向けを明示した検索
+const PET_QUERY = /ペット|犬|猫|いぬ|ねこ|イヌ|ネコ|わんちゃん|ワンちゃん|わんこ|ワンコ|にゃんこ|ニャンコ|ドッグ|キャット|小動物|うさぎ|ウサギ|ハムスター|\bpets?\b|\bdogs?\b|\bcats?\b/u;
+// ペット専用のこたつ・暖房(ペット用/犬用/猫用/犬猫用/ペットこたつ 等)である商品名
+const KOTATSU_TITLE_PET_ONLY = /ペット\s*(?:用|専用|向け)|ペット\s*(?:こたつ|コタツ|炬燵|ヒーター|ハウス|ベッド)|(?:犬|猫|犬猫|猫犬|いぬ|ねこ|小動物|うさぎ|ハムスター)\s*(?:用|専用|向け)|(?:ドッグ|キャット)\s*(?:こたつ|コタツ|ハウス|ベッド|ヒーター)|\bfor\s+(?:pets?|dogs?|cats?)\b/u;
 
 const DRESS_QUERY = /ワンピ|(?<!ア)ドレス|\bdress(?:es)?\b/u;
 const DRESS_QUERY_INNER = /ペチ|インナー|下着|ランジェリー|アンダー|透け防止|肌着|petticoat|\bslip\b|underdress|inner/u;

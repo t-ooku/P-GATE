@@ -284,6 +284,43 @@ test('こたつ本体の検索で足元パネルヒーター/デスク下暖房�
   assert.deepEqual(applyHeadNounGate('こたつ ダクト', [duct]), [duct]);
 });
 
+// 2026-11-12 受信箱 kotatsu-panel-heater-mismatch 再開: 固定QA energy_saving_kotatsu の本命が犬猫用ペットこたつ
+test('こたつ本体の検索でペット専用こたつを本命にせず、本体0件でも再昇格しない(足元パネル/ダクト除外は維持)', async () => {
+  const { headNounGateQueryFor } = await import('../src/query-expansion.mjs');
+  const kotatsuQuery = headNounGateQueryFor('電気代が気にならないこたつ');
+  const petObserved = { product_name: 'ペット用 こたつ 犬 猫 33×45cm 省エネ20W ふとん 天板付 スリット窓 ペットこたつ 犬用 猫用 コタツ ヒーター ベッド ハウス 暖房 防寒 寒さ' };
+  const petDog = { product_name: '犬用 こたつ 小型犬 省エネ 天板 ふとん付き' };
+  const petCat = { product_name: 'ペットこたつ 猫 ハウス ヒーター付き' };
+  const body = { product_name: '山善 こたつ テーブル 80cm 正方形 省エネ' };
+  const bodyHeaterBuiltIn = { product_name: 'こたつ 一人用 遠赤外線パネルヒーター内蔵 省エネ 天板 リバーシブル' };
+  const bodyKagu = { product_name: '家具調こたつテーブル 105×75 長方形' };
+  const panel = { product_name: 'パネルヒーター 足元 ワイド こたつ ラウンド 遠赤外線360度 足元ヒーター デスク下' };
+  const duct = { product_name: 'こたつ省エネダクト・温風ヒーター用パイプ fbp-1080w' };
+  // 観測した犬猫用ペットこたつは「こたつ」「天板」があっても主名詞スコア0
+  for (const pet of [petObserved, petDog, petCat]) {
+    assert.equal(headNounScore(kotatsuQuery, pet.product_name), 0, pet.product_name);
+  }
+  // 家庭用こたつ本体は2のまま
+  for (const kotatsu of [body, bodyHeaterBuiltIn, bodyKagu]) {
+    assert.equal(headNounScore(kotatsuQuery, kotatsu.product_name), 2, kotatsu.product_name);
+  }
+  // 本体があれば本体が本命
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [petObserved, body]), [body]);
+  // 本体候補0件(ペット専用のみ)は元順序フォールバックで本命に戻さず、適合候補なし
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [petObserved]), []);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [petObserved, petDog, petCat]), []);
+  assert.equal(hasHeadNounMatch(kotatsuQuery, [petObserved, petDog]), false);
+  // ペット用を明示した検索は維持
+  assert.deepEqual(applyHeadNounGate('ペット用 こたつ', [petObserved]), [petObserved]);
+  assert.deepEqual(applyHeadNounGate('犬 こたつ', [petDog]), [petDog]);
+  assert.deepEqual(applyHeadNounGate('猫 こたつ', [petCat]), [petCat]);
+  // 既存の足元パネル・ダクト除外の回帰
+  assert.equal(headNounScore(kotatsuQuery, panel.product_name), 0);
+  assert.equal(headNounScore(kotatsuQuery, duct.product_name), 0);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, panel, petObserved]), []);
+  assert.deepEqual(applyHeadNounGate(kotatsuQuery, [duct, panel, petObserved, body]), [body]);
+});
+
 // 2026-11-05 受信箱 electric-carpet-passive-pet-mat: 固定QA energy_saving_electric_carpet の本命が電源不要の保温パッド
 test('電気カーペット本体の検索で電源不要・自己発熱の保温パッドを本命にせず、全件不適合でも再昇格しない', async () => {
   const { headNounGateQueryFor } = await import('../src/query-expansion.mjs');
