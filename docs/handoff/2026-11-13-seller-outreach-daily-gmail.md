@@ -12,3 +12,10 @@
 - 見送り: Teatrino（自社製か不明）／haskypower・クライ・ムキ（自社製造の明記なし）／畠山商店（海産物も扱う）／mamegoto・Fujimoto の靴下工房（営業電話お断り）／Original Purse Nakamura・LAMPLAMP（営業お断りの可能性）／MONORAL・flames・towelshop441・Paper message（自社製か不明）。
 - 累計送信（新規の店）: 137 店（変わらず）。
 - 大隆さんにしかできないこと: Gmail の下書き 21 通（件名に HOSHILU）を 18:00 JST までに手で送る（10〜30 秒あけて）。または、このデイリータスクを「自動で承認」にする。
+
+### 2026-11-13 追記（大隆さんが見ている会話から送信・Claude）
+- 送信: **21 通**（今朝の下書き 21 通すべて）。09:48〜10:42 JST、会話から send_message(draftId)。下書きの残り 0。
+- 送信前の確認: 全下書きに個人名なし・名乗り「HOSHILU（ホシル）の運営事務局」。Gmail `in:sent to:` 一括で既送 0、D1 seller_outreach_contacts 0、suppressions（sha256）0。各送信の直前に JST 時刻（すべて 09:00〜18:00 内）、間隔 12 秒以上。
+- 送らない設定（D1 seller_outreach_suppressions に追加）: 尾道帆布鞄 彩工房（「不要」の返信。送信先と返信元の 2 アドレス）／西表島いやしろち（不達）。
+- 今日の HOSHILU 送信: 21 / 60 通。
+- 累計送信（新規の店）: **158 店**（137＋21）。
