@@ -54,3 +54,10 @@
 - 本番source／枝の点検時HEAD `19902360`。[Actions 43519580837](https://github.com/t-ooku/P-GATE/actions/runs/43519580837) 07:29 JSTでhealth正常（1.22.1・missing/weak 0）、SLI／在庫成功。最新個別OAuth値は成果物に非収録。11/13 08:44の既存PDCAではX／IG接続・Runway ready・DB正常、現在値やThreads証拠に転用しない。[Actions 43412193759](https://github.com/t-ooku/P-GATE/actions/runs/43412193759) 11/13 19:52:41 JSTにVersion `2ee286ff-5dc0-45d0-b7f4-19182c53859c`、Worker3153／Chrome6、配備・health成功。SEO #751の既存配備追跡は維持、全件再取得せずGSC個別例と再インデックスは未取得。
 - **#752こたつ**：依頼記録→11/12 09:13 ACKED／IN_PROGRESS→09:22 DONE（実装4f4f4938、[Actions 43126278499](https://github.com/t-ooku/P-GATE/actions/runs/43126278499)配備）の既存証拠に、11/14通常QAの本命一致を追加し本番確認済み。売上・広範な再発防止の証明ではない。重複依頼なし。
 - 受信箱18件（DONE16／BLOCKED2）。10/16検索除外#642と価格マスク#654／10/17確認の既存証拠を維持（写真再読なし）。SellerフォームDONEはモック検証のみ、修正や配備なし、実環境Turnstile／400復帰未確認。年末ウォッチと無人営業はBLOCKED。大隆さんへの中継・権限変更依頼なし。
+
+## 11/14 日次改善の実行（08:45 JST）
+
+- ENTRY-20261106-01を初回評価。11/7〜13暦日の直接集計合算はLP110→検索開始69→完了60セッション、購入先クリック29回／17セッション。修復前の比較基準7日は63→4→4、2回／1セッションで記述上は増加したが、流入差・別導線／別修正・低件数が混在する非A/B比較のため44pxの因果効果は未判定。44pxは34px上書き不具合の修復として維持し、ENTRYを「実装修復成功／成果効果未判定」で初回評価完了とした。
+- 最新HEADで `search-head-noun`、`mobile-result-card-height`、`result-overflow`、`growth-browser-purchase-flow` を再実行し26/26成功。検索例・カード順・モバイル幅規則・購入先イベント1回・webdriver除外の退行なし。直接healthもrelease1.22.1、ok、missing/weak空、X／Instagram OAuth接続、Runway ready、DB各項目true。
+- 公開トップはQAパラメータで表示を確認したが、利用可能ブラウザはviewport変更機能がなく390px実描画を完了できなかった。PCや静的fixtureを390px初期CTA位置の証拠に代用せず、未再現のままUI変更・新実験を重ねていない。本番検索、購入先リンク押下、保存、D1書込は行っていない。
+- #752こたつは07:24の通常QAで家庭用本体を確認し、本番最終確認まで完了。Sellerは11/13会話経由21通／無人枠0通を分離し、不要返信1・不達1・申込返信0。新規契約は未取得。Claude即時起動接続なし、巡回連携あり・将来保証なし。重複依頼なし。
