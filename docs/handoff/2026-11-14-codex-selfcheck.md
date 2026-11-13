@@ -61,3 +61,4 @@
 - 最新HEADで `search-head-noun`、`mobile-result-card-height`、`result-overflow`、`growth-browser-purchase-flow` を再実行し26/26成功。検索例・カード順・モバイル幅規則・購入先イベント1回・webdriver除外の退行なし。直接healthもrelease1.22.1、ok、missing/weak空、X／Instagram OAuth接続、Runway ready、DB各項目true。
 - 公開トップはQAパラメータで表示を確認したが、利用可能ブラウザはviewport変更機能がなく390px実描画を完了できなかった。PCや静的fixtureを390px初期CTA位置の証拠に代用せず、未再現のままUI変更・新実験を重ねていない。本番検索、購入先リンク押下、保存、D1書込は行っていない。
 - #752こたつは07:24の通常QAで家庭用本体を確認し、本番最終確認まで完了。Sellerは11/13会話経由21通／無人枠0通を分離し、不要返信1・不達1・申込返信0。新規契約は未取得。Claude即時起動接続なし、巡回連携あり・将来保証なし。重複依頼なし。
+- 正本更新commit 122fd709で起動した[CI43529613004](https://github.com/t-ooku/P-GATE/actions/runs/43529613004)はWorker3153件中1件で停止し、配備は未実行。失敗は商品SEO履歴fixtureの基準日2026-10-25に対して経路が実時間を使い、30日窓から旧最高値が外れた時間非決定テスト。利用者データ・本番価格算出の障害ではない。経路の既存depsへ`now`を明示注入できるようにし、fixtureから固定日時を渡す最小修正を実施。商品詳細7/7、購入導線・検索除外26/26、全Worker3153/3153をローカルで成功。新しい料金・規約・D1書込・外部通信はなく、CI・配備・本番healthの証拠取得まで完了扱いにしない。

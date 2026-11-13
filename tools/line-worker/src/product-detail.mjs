@@ -275,7 +275,7 @@ export async function handleProductDetailRoutes(request, env, ctx, deps = {}) {
   if (url.pathname === '/product') {
     const key = normalizeProductKey(url.searchParams.get('key'));
     if (!key) return new Response('商品が見つかりません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
-    const snapshot = await productSeoSnapshot(env, key);
+    const snapshot = await productSeoSnapshot(env, key, { now: deps.now || new Date() });
     let buyUrl = '';
     if (snapshot?.product_url && deps.sign) {
       try { buyUrl = await deps.sign({ d: snapshot.product_url, m: snapshot.marketplace, j: `${key}:${snapshot.marketplace}:seo` }); } catch { buyUrl = ''; }

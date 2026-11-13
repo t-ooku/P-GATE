@@ -129,7 +129,7 @@ test('記録 14 日以上の商品ページは index・本文つき（D1 だけ�
     insert.run(`k2:${date}`, 'RAKUTEN:shop-b:new', 'RAKUTEN_JP', 'shop-b:new', '新しい商品', 'https://item.rakuten.co.jp/shop-b/new/', 1000, null, null, 'UNKNOWN', 'search', date, `${date}T03:00:00.000Z`);
   }
   const sign = async ({ d }) => `https://hoshilu.app/go?token=signed:${encodeURIComponent(d)}`;
-  const page = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-a:item-1&from=search'), env, {}, { sign });
+  const page = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-a:item-1&from=search'), env, {}, { sign, now });
   assert.equal(page.status, 200);
   assert.equal(page.headers.get('x-robots-tag'), null);
   assert.match(page.headers.get('cache-control'), /public/u);
@@ -148,7 +148,7 @@ test('記録 14 日以上の商品ページは index・本文つき（D1 だけ�
   for (const marker of ['product-head', 'product-now', 'product-history', 'product-offers']) assert.ok(html.includes(`class="${marker}"`), marker);
   assert.match(html, /product-detail\.mjs\?v=5/u, '開いたあとは最新の価格に差し替える');
   // 記録 4 日の商品は noindex のまま
-  const young = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-b:new'), env, {}, { sign });
+  const young = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-b:new'), env, {}, { sign, now });
   assert.equal(young.headers.get('x-robots-tag'), 'noindex');
   assert.match(await young.text(), /<meta name="robots" content="noindex">/u);
   // 商品サイトマップ: 14 日以上の商品だけ
