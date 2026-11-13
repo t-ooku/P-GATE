@@ -381,16 +381,16 @@ test('ユーザー向けの投稿は 1 行目・1 枚目が問いかけ、最後
 });
 
 // 2026-11-02 大隆さん（競合ウォッチ「季節の SNS 企画を 1 本だけ検証」→「防寒」）
-test('防寒の季節投稿: 11/11 21:00 だけ、撮れていれば値下がり投稿の代わりに防寒グッズ版を出す（本数は増やさない）', async () => {
+test('防寒の季節投稿: 11/15 21:00 だけ、撮れていれば値下がり投稿の代わりに防寒グッズ版を出す（本数は増やさない）', async () => {
   const { WARM_POST } = await import('../src/social-screens.mjs');
   const { SET_DATES, setDueToday } = await import('../scripts/build-social-screens.mjs');
   const { isWarmProduct } = await import('../src/season-calendar.mjs');
   const { withDropFocus } = await import('../src/owned-media.mjs');
-  assert.equal(WARM_POST.date, '2026-11-11');
+  assert.equal(WARM_POST.date, '2026-11-15');
   assert.deepEqual([...SET_DATES.warm], [WARM_POST.date], '撮る日と出す日は同じ 1 日だけ');
-  assert.equal(setDueToday('warm', new Date('2026-11-11T06:07:00Z')), true);
-  assert.equal(setDueToday('warm', new Date('2026-11-12T06:07:00Z')), false);
-  assert.equal(setDueToday('drops', new Date('2026-11-12T06:07:00Z')), true);
+  assert.equal(setDueToday('warm', new Date('2026-11-15T06:07:00Z')), true);
+  assert.equal(setDueToday('warm', new Date('2026-11-16T06:07:00Z')), false);
+  assert.equal(setDueToday('drops', new Date('2026-11-16T06:07:00Z')), true);
   // 商品名の言葉だけで選ぶ
   assert.equal(isWarmProduct('ボアフリース ジャケット レディース'), true);
   assert.equal(isWarmProduct('電気毛布 洗える'), true);
@@ -423,20 +423,20 @@ test('防寒の季節投稿: 11/11 21:00 だけ、撮れていれば値下がり
     crosspost_group_id TEXT NOT NULL DEFAULT '', media_urls TEXT NOT NULL DEFAULT '')`);
   const body = (captured, sets) => ({ captured_at: captured, sets: Object.fromEntries(Object.entries(sets).map(([id, n]) => [id, { files: Array.from({ length: n }, (_, i) => ({ file: `${id}/${i + 1}.jpg` })) }])) });
   const env = (manifestBody) => ({ PRODUCT_DB: d1(database), ASSETS: assets(manifestBody) });
-  const get = () => database.prepare("SELECT * FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-11-11'").get();
-  const first = await seedDailyDropsPost(env(body('2026-11-11T06:20:00Z', { drops: 7, warm: 5 })), new Date('2026-11-11T06:30:00Z'));
+  const get = () => database.prepare("SELECT * FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-11-15'").get();
+  const first = await seedDailyDropsPost(env(body('2026-11-15T06:20:00Z', { drops: 7, warm: 5 })), new Date('2026-11-15T06:30:00Z'));
   assert.equal(first.inserted, 1);
   let row = get();
   assert.equal(row.content_id, 'screens-warm');
-  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-11', 'warm', 5));
+  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-15', 'warm', 5));
   assert.match(row.caption, /^寒くなる前に、何をそろえる[?？] 防寒・あったかグッズ/u);
-  assert.match(row.link, /utm_content=screens-warm_20261111/u);
+  assert.match(row.link, /utm_content=screens-warm_20261115/u);
   // 撮り直しで防寒が足りなくなったら、投稿前ならいつもの値下がりに戻す（本文も合わせる）
-  const resync = await seedDailyDropsPost(env(body('2026-11-11T09:10:00Z', { drops: 6, warm: 3 })), new Date('2026-11-11T09:20:00Z'));
+  const resync = await seedDailyDropsPost(env(body('2026-11-15T09:10:00Z', { drops: 6, warm: 3 })), new Date('2026-11-15T09:20:00Z'));
   assert.equal(resync.synced, 1);
   row = get();
   assert.equal(row.content_id, DROPS_DAILY.content_id);
-  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-11', 'drops', 6));
+  assert.deepEqual(JSON.parse(row.media_urls), screenMediaUrls('2026-11-15', 'drops', 6));
   assert.match(row.caption, /^最近、安くなった物ってどれ[?？]/u);
   assert.doesNotMatch(row.caption, /防寒・あったかグッズの中から/u);
   // ほかの日曜は今までどおり drops（防寒が撮れていても使わない）

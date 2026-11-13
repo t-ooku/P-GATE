@@ -138,7 +138,8 @@ export const DROPS_DAILY = Object.freeze({
 // 判定は再生数ではなく、ホシっとく（Watch Set）とモールクリック。十分な転換が確かめられるまで横展開しない（日付は 1 日だけ）。
 // 防寒の商品が 3 つ未満で 4 枚（商品 3 + 検索）に満たない日は、いつもの値下がり投稿のまま。
 // 2026-11-10: 11/8 は撮影の遅れで出せなかった（too_late）。大隆さん「11/11（水）にやり直す」→ 水曜 21:00 の値下がり投稿を防寒版に。
-export const WARM_POST = Object.freeze({ date: '2026-11-11', content_id: 'screens-warm', min_slides: 4 });
+// 2026-11-13: 11/11 は防寒の値下がりが 2 商品しか撮れず（GROUP_TOO_FEW 2<3）普通版。大隆さん「日曜にも広げる」→ 11/15（日）にもう 1 回。
+export const WARM_POST = Object.freeze({ date: '2026-11-15', content_id: 'screens-warm', min_slides: 4 });
 
 export async function seedDailyDropsPost(env, now = new Date()) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
