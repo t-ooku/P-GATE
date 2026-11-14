@@ -456,10 +456,40 @@ export async function operationalDiagnostics(db, internalIds = []) {
     MIN(occurred_at) AS first_click_at,MAX(occurred_at) AS last_click_at
     FROM growth_events WHERE event_type='marketplace_click'
     AND traffic_class NOT IN ('QA','INTERNAL')`);
+  // 2026-11-14 P0 root-cause diagnosis: a search_completed beacon does not
+  // prove a purchasable link was rendered. Existing marketplace_shown beacons
+  // are a useful *co-observation*, not proof that a CTA appeared after that
+  // particular search. Do not return raw session IDs or search/product data.
+  const purchaseDestinationCooccurrence7d = await read(`WITH sessions AS (
+    SELECT session_id,
+      MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
+      MAX(CASE WHEN event_type='marketplace_shown' THEN 1 ELSE 0 END) AS shown,
+      MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS clicked
+    FROM growth_events
+    WHERE datetime(occurred_at)>=datetime('now','-7 days')
+      AND traffic_class NOT IN ('QA','INTERNAL')
+      AND NULLIF(session_id,'') IS NOT NULL
+      AND event_type IN ('search_completed','marketplace_shown','marketplace_click')
+    GROUP BY session_id
+  ) SELECT
+    COALESCE(SUM(completed),0) AS completed_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND shown=1 THEN 1 ELSE 0 END),0) AS completed_with_shown_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND shown=0 THEN 1 ELSE 0 END),0) AS completed_without_shown_event_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND clicked=1 THEN 1 ELSE 0 END),0) AS completed_with_click_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND shown=1 AND clicked=1 THEN 1 ELSE 0 END),0) AS completed_shown_clicked_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND shown=1 AND clicked=0 THEN 1 ELSE 0 END),0) AS completed_shown_no_click_sessions,
+    COALESCE(SUM(CASE WHEN completed=1 AND shown=0 AND clicked=1 THEN 1 ELSE 0 END),0) AS completed_clicked_without_shown_event_sessions
+    FROM sessions`);
   return { marketplace_clicks_all_time: {
     ...marketplaceClicksAllTime,
     scope: 'RETAINED_GROWTH_EVENTS_ALL_TIME_QA_INTERNAL_EXCLUDED_NOT_ORDERS'
-  }, inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+  },
+    search_purchase_destination_cooccurrence_7d: {
+      ...purchaseDestinationCooccurrence7d,
+      scope: 'ROLLING_7D_QA_INTERNAL_EXCLUDED_AGGREGATE_ONLY',
+      measurement: 'SESSION_COOCCURRENCE_NOT_ORDERED_FUNNEL',
+      limitation: 'marketplace_shown is asynchronous and not tied to search execution; missing event does not prove missing CTA; clicks can arise from other routes'
+    }, inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
       exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC',
