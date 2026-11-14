@@ -480,6 +480,14 @@ export async function operationalDiagnostics(db, internalIds = []) {
     COALESCE(SUM(CASE WHEN completed=1 AND shown=1 AND clicked=0 THEN 1 ELSE 0 END),0) AS completed_shown_no_click_sessions,
     COALESCE(SUM(CASE WHEN completed=1 AND shown=0 AND clicked=1 THEN 1 ELSE 0 END),0) AS completed_clicked_without_shown_event_sessions
     FROM sessions`);
+  const resultDestinationStages7d = await read(`SELECT event_type,
+    COUNT(*) AS events,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+    MAX(occurred_at) AS last_observed_at
+    FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
+    AND traffic_class NOT IN ('QA','INTERNAL')
+    AND event_type IN ('search_result_direct_offer_rendered','search_result_direct_offer_collapsed',
+      'search_result_marketplace_search_only','search_result_no_destination')
+    GROUP BY event_type ORDER BY event_type`);
   return { marketplace_clicks_all_time: {
     ...marketplaceClicksAllTime,
     scope: 'RETAINED_GROWTH_EVENTS_ALL_TIME_QA_INTERNAL_EXCLUDED_NOT_ORDERS'
@@ -489,6 +497,12 @@ export async function operationalDiagnostics(db, internalIds = []) {
       scope: 'ROLLING_7D_QA_INTERNAL_EXCLUDED_AGGREGATE_ONLY',
       measurement: 'SESSION_COOCCURRENCE_NOT_ORDERED_FUNNEL',
       limitation: 'marketplace_shown is asynchronous and not tied to search execution; missing event does not prove missing CTA; clicks can arise from other routes'
+    },
+    search_result_destination_stages_7d: {
+      ...resultDestinationStages7d,
+      scope: 'NEW_FIXED_STAGE_EVENTS_POST_DEPLOY_ONLY_QA_INTERNAL_EXCLUDED',
+      definition: 'INITIAL_SEARCH_RESULTS_DOM_LINK_TYPE_NOT_USER_VIEWPORT_EXPOSURE_OR_SALE',
+      caution: 'No historical stages before release; empty rows before fresh searches are not an observed zero offer rate'
     }, inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
