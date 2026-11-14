@@ -63,3 +63,30 @@ test('サイズ/容量が食い違えばブランド+商品名が一致しても
   const b = offer({ source_product_id: 'B8', source_marketplace: 'HANDS_JP', brand: 'HOSHILU', title: '圧縮ポーチ', attributes: { size: 'L' } });
   assert.equal(matchProductIdentity(a, b).matched, false);
 });
+
+// 2026-11-14 大隆さん「最安案内の指示書・追記（無効・共通JANの対策）」
+// 過去（#706）: JAN:0000000000000 に別々の商品が混ざった。SEO から外しただけで、同一商品判定・取込の鍵はそのままだった。
+test('無効・共通の JAN が同じでも、別の商品を同一商品にしない。正しい JAN の同じ商品は同一のまま', async () => {
+  const { isUniqueJan } = await import('../src/jan-validity.mjs');
+  const { dedupeKeys } = await import('../src/unified-results.mjs');
+  const { normalizeYahooShoppingItems } = await import('../src/yahoo-shopping-api.mjs');
+  for (const bad of ['0000000000000', '2400003246173', '0412345678903', '4975479418900']) {
+    assert.equal(isUniqueJan(bad), false, bad);
+    assert.equal(matchProductIdentity({ jan: bad }, { jan: bad }).matched, false, `無効 JAN ${bad} の一致は根拠にしない`);
+    assert.equal(matchProductIdentity({ gtin: bad }, { gtin: bad }).matched, false);
+    assert.equal(dedupeKeys({ jan: bad, product_name: '耳栓' }).some((key) => key.startsWith('jan:')), false);
+  }
+  assert.equal(matchProductIdentity({ gtin: '00000000000000' }, { gtin: '00000000000000' }).matched, false);
+  // 正しい JAN の同じ商品
+  assert.deepEqual(matchProductIdentity({ jan: '4975479418907' }, { jan: '4975479418907' }), { tier: 'jan', matched: true });
+  assert.deepEqual(dedupeKeys({ jan: '4975479418907' }), ['jan:4975479418907']);
+  // 無効 JAN でも、ほかの根拠（同じブランドの同じ型番）があれば同一のまま
+  assert.equal(matchProductIdentity({ jan: '0000000000000', brand: 'A', manufacturer_part_number: 'X-1' }, { jan: '0000000000000', brand: 'A', manufacturer_part_number: 'X-1' }).tier, 'manufacturer_part_number');
+  // 取込: 無効 JAN を持つ別々の店の別々の商品は、別々の鍵（店の商品コード）になる。正しい JAN は JAN: の鍵のまま
+  const items = normalizeYahooShoppingItems({ hits: [
+    { name: 'テスト耳栓', url: 'https://store.shopping.yahoo.co.jp/shop-a/mimi.html', price: 1180, janCode: '0000000000000', code: 'shop-a_mimi', shipping: { code: 2 } },
+    { name: 'テストモップ', url: 'https://store.shopping.yahoo.co.jp/shop-b/mop.html', price: 4425, janCode: '0000000000000', code: 'shop-b_mop', shipping: { code: 2 } },
+    { name: 'テスト加湿器', url: 'https://store.shopping.yahoo.co.jp/shop-g/item.html', price: 3980, janCode: '4975479418907', code: 'shop-g_item', shipping: { code: 2 } }
+  ] });
+  assert.deepEqual(items.map((item) => item.record_key), ['YAHOO:shop-a_mimi', 'YAHOO:shop-b_mop', 'JAN:4975479418907']);
+});

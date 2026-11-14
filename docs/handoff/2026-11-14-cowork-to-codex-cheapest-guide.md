@@ -72,6 +72,17 @@ plan: docs/handoff/2026-11-14-cowork-cheapest-guide-plan.md
   - 応答時間
 - QA を除く。未計測を 0 にしない。クリックを売上と呼ばない。
 
+## C-8（追記 11/14）無効・共通 JAN の経路点検
+- 背景と Cowork が入れた最小の対策は plan §8。#706 は SEO の除外だけでした。
+- Cowork の [PATCH] で、Yahoo! 取込の鍵・同一商品判定・検索結果の重複まとめは `src/jan-validity.mjs` の `isUniqueJan` を通るようになります。本番で確かめてください。
+- 残りの経路を点検してください（読み取りで）：
+  - 取込のほかの入口（楽天・Amazon・セラーのフィード `marketplace-offer-feed.mjs`・`product-index-v2.mjs`）で JAN／GTIN を鍵や一致の根拠にしている所
+  - 比較：`rankMerchantCandidates`・`mergeObservedRankingCandidates` が `record_key` でまとめる時に、古いキャッシュの `JAN:0000000000000` が残っていないか
+  - 価格履歴：`price_observations` の無効 JAN の行が、値下がり一覧・商品ページ・希望価格の見張り・LINE 見張りに出ていないか
+  - 購入先：`/product?key=JAN:…` と `/go` が、鍵の商品と違う商品ページへ行かないか
+- 無効・共通の JAN や店内コードだけを根拠に、別の店の商品を同じ商品にまとめないこと。有効な JAN でも色・容量などが矛盾する時は「要確認」にして最安から外すこと（照合は Claude Code の P3）。
+- **既存の価格履歴の書き換え・削除はしないこと。** 件数と影響（どの画面に出るか）を出して、Cowork 経由で大隆さんの承認を確認する。
+
 ## Codex 記録
 ### 2026-11-14 JST — Codex 受領・着手
 

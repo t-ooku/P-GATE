@@ -25,6 +25,7 @@
 // 60件（§3・§4）:
 //   HOSHILU＋Web の合計で最大60件。**60件を埋めるために条件に合わないものを混ぜない。**
 //   22件しか合わなければ22件。最大60件であり、必ず60件ではない。
+import { isUniqueJan } from './jan-validity.mjs';
 import { demandConditions, judgeTitle, normalizeForMatch } from './shop-demand.mjs';
 
 export const UNIFIED_LIMIT = 60;
@@ -77,7 +78,8 @@ export function dedupeKeys(item) {
   const asin = text(item?.asin, 20).toUpperCase();
   if (/^[A-Z0-9]{10}$/u.test(asin)) keys.push(`asin:${asin}`);
   const jan = text(item?.jan || item?.gtin, 20).replace(/\D/gu, '');
-  if (jan.length === 8 || jan.length === 13) keys.push(`jan:${jan}`);
+  // 2026-11-14: 無効・共通の JAN では別々の商品を 1 件にまとめない
+  if (isUniqueJan(jan)) keys.push(`jan:${jan}`);
   const canonical = canonicalProductUrl(item?.product_url || item?.url);
   if (canonical) {
     keys.push(`url:${canonical}`);

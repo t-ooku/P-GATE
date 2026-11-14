@@ -31,10 +31,10 @@ function sqliteD1() {
 
 test('v4.3項目22: canonical productは複数モールのオファーを束ねる(JAN一致で自動グルーピング)', () => {
   const groups = groupOffersIntoCanonicalProducts([
-    { source_product_id: 'AMZ1', source_marketplace: 'AMAZON_JP', jan: '4900000000001', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
-    { source_product_id: 'RAK1', source_marketplace: 'RAKUTEN_JP', jan: '4900000000001', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
-    { source_product_id: 'YAH1', source_marketplace: 'YAHOO_JP', jan: '4900000000001', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
-    { source_product_id: 'UNRELATED1', source_marketplace: 'LOFT_JP', jan: '4900000000099', title: '別の商品', updated_at: '2026-08-08T00:00:00Z' }
+    { source_product_id: 'AMZ1', source_marketplace: 'AMAZON_JP', jan: '4900000000108', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
+    { source_product_id: 'RAK1', source_marketplace: 'RAKUTEN_JP', jan: '4900000000108', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
+    { source_product_id: 'YAH1', source_marketplace: 'YAHOO_JP', jan: '4900000000108', title: 'ハンディファン', updated_at: '2026-08-08T00:00:00Z' },
+    { source_product_id: 'UNRELATED1', source_marketplace: 'LOFT_JP', jan: '4900000000993', title: '別の商品', updated_at: '2026-08-08T00:00:00Z' }
   ]);
   assert.equal(groups.length, 2);
   const famGroup = groups.find((group) => group.offers.length === 3);
@@ -48,8 +48,8 @@ test('v4.3項目22: canonical productは複数モールのオファーを束ね�
 
 test('groupOffersIntoCanonicalProductsは同じ入力に対して常に同じhoshilu_product_idを生成する(冪等)', () => {
   const input = [
-    { source_product_id: 'A', source_marketplace: 'AMAZON_JP', jan: '4900000000002', title: '商品A', updated_at: '2026-08-08T00:00:00Z' },
-    { source_product_id: 'B', source_marketplace: 'RAKUTEN_JP', jan: '4900000000002', title: '商品A', updated_at: '2026-08-08T00:00:00Z' }
+    { source_product_id: 'A', source_marketplace: 'AMAZON_JP', jan: '4900000000207', title: '商品A', updated_at: '2026-08-08T00:00:00Z' },
+    { source_product_id: 'B', source_marketplace: 'RAKUTEN_JP', jan: '4900000000207', title: '商品A', updated_at: '2026-08-08T00:00:00Z' }
   ];
   const first = groupOffersIntoCanonicalProducts(input)[0].hoshilu_product_id;
   const second = groupOffersIntoCanonicalProducts(input)[0].hoshilu_product_id;
@@ -60,7 +60,7 @@ test('v4.3項目23: upsertNormalizedOfferはD1へ正規化済みオファーを�
   const { sqlite, db } = sqliteD1();
   const result = await upsertNormalizedOffer(db, {
     source_product_id: 'B000ABC123', asin: 'B000ABC123', title: 'ハンディファン ホワイト',
-    brand: 'HOSHILU', jan: '4900000000003', price: 2980, shipping_fee: 0, stock_status: 'in_stock',
+    brand: 'HOSHILU', jan: '4900000000306', price: 2980, shipping_fee: 0, stock_status: 'in_stock',
     updated_at: '2026-08-08T00:00:00Z'
   }, { sourceMarketplace: 'AMAZON_JP' });
   assert.match(result.hoshilu_product_id, /^HP_[0-9a-f]{16}$/);
@@ -76,11 +76,11 @@ test('v4.3項目23: upsertNormalizedOfferはD1へ正規化済みオファーを�
 test('v4.3項目22: JANが一致する別モールのオファーは既存のcanonical productへ合流する', async () => {
   const { sqlite, db } = sqliteD1();
   const first = await upsertNormalizedOffer(db, {
-    source_product_id: 'AMZ_JAN1', jan: '4900000000004', title: 'ハンディファン',
+    source_product_id: 'AMZ_JAN1', jan: '4900000000405', title: 'ハンディファン',
     brand: 'HOSHILU', updated_at: '2026-08-08T00:00:00Z'
   }, { sourceMarketplace: 'AMAZON_JP' });
   const second = await upsertNormalizedOffer(db, {
-    source_product_id: 'RAK_JAN1', jan: '4900000000004', title: 'ハンディファン',
+    source_product_id: 'RAK_JAN1', jan: '4900000000405', title: 'ハンディファン',
     brand: 'HOSHILU', updated_at: '2026-08-08T00:00:00Z'
   }, { sourceMarketplace: 'RAKUTEN_JP' });
   assert.equal(first.hoshilu_product_id, second.hoshilu_product_id);

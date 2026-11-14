@@ -15,7 +15,7 @@ branch: feature/ui-search-v2（[PATCH] issue で出す）
 Codex と同じファイルを同時に直さないこと。触ってよいのは次のファイルだけです：
 - 新しいファイル `tools/line-worker/src/product-variant-identity.mjs`
 - 新しいテスト `tools/line-worker/test/product-variant-identity.test.mjs`
-- `src/product-identity-matching.mjs` の tier 4（ブランド＋正式名）で、新しい関数を呼ぶ 1 か所
+- `src/product-identity-matching.mjs` で、新しい関数を呼ぶ所（tier 4 と、追記の JAN／GTIN 一致）
 
 ## やること
 1. **`variantAttributes(name, attributes)`**：商品名と属性から次を取り出す。書いていないものは `null`（推測で埋めない）。
@@ -46,6 +46,14 @@ Codex と同じファイルを同時に直さないこと。触ってよいの�
   - 「【選べる4種】ROMAND ロムアンド グラスティングカラーグロス 4g (03/04/05/06)」（選択ページ）
   - 「rom&nd ロムアンド グラスティングカラーグロス 01・04・05」（色が複数。1,320 円なので選択ページの可能性が高いが、書いていないので「未確認」）
 - 店の宣伝（`ポイント10倍 11月15日`・`【公式】`・`送料無料`）を色番・容量と読み違えないこと（`11月15日` の 15 は色番ではない）。
+
+## 追記（11/14 大隆さん）有効な JAN でも属性が矛盾したら「要確認」
+- 背景は plan §8。無効・共通 JAN は Cowork が `src/jan-validity.mjs`（`isUniqueJan`）で対策済みです。同じ判定を作り直さないこと。
+- 追加でやること：`matchProductIdentity` の JAN／GTIN 一致でも、`compareVariants` が `different` なら `{ matched: false, tier: null, review: 'variant_conflict' }` を返す（要確認。最安の比較に入れない）。`unconfirmed` は JAN 一致を優先して同一のまま。
+- 追加の必須テスト：
+  - 正しい JAN が同じで、容量・入り数が矛盾（例「○○ 1個」1,200 円と「○○ 2個セット」2,400 円）→ 同一にしない（要確認）
+  - 正しい JAN が同じで、属性の矛盾なし → 同一
+  - 無効 JAN が同じ別商品 → 同一にしない（Cowork のテストが既にある。重複して書かない）
 
 ## 完了条件と報告
 - `npm test` が通り、[PATCH] の bot が ✅。

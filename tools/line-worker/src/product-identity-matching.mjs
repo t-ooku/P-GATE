@@ -15,6 +15,8 @@
 // 同一商品を分離する」(section 20)という要件に対して、構造的なグルーピング
 // (canonical product)を不確実なAI推定に依存させないための安全側の設計。
 
+import { isUniqueJan } from './jan-validity.mjs';
+
 function normalizedValue(value) {
   const cleaned = String(value ?? '').trim();
   return cleaned ? cleaned.toUpperCase() : null;
@@ -50,11 +52,12 @@ export function matchProductIdentity(offerA, offerB) {
 
   const janA = normalizedValue(offerA.jan);
   const janB = normalizedValue(offerB.jan);
-  if (janA && janB && janA === janB) return { tier: 'jan', matched: true };
+  // 2026-11-14: 無効・共通の JAN/GTIN の一致は同一商品の根拠にしない（jan-validity.mjs）。
+  if (janA && janB && janA === janB && isUniqueJan(janA)) return { tier: 'jan', matched: true };
 
   const gtinA = normalizedValue(offerA.gtin);
   const gtinB = normalizedValue(offerB.gtin);
-  if (gtinA && gtinB && gtinA === gtinB) return { tier: 'gtin', matched: true };
+  if (gtinA && gtinB && gtinA === gtinB && !/^(.)\1*$/u.test(gtinA) && (isUniqueJan(gtinA) || !/^(?:\d{8}|\d{13})$/u.test(gtinA))) return { tier: 'gtin', matched: true };
 
   const asinA = normalizedValue(offerA.asin);
   const asinB = normalizedValue(offerB.asin);

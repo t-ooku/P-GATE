@@ -11,6 +11,7 @@
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 import { recordPriceObservations, priceHistorySummary } from './price-observations.mjs';
+import { isUniqueJan } from './jan-validity.mjs';
 
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 const KEY_PATTERN = /^(?:RAKUTEN:[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}|YAHOO:[A-Za-z0-9][A-Za-z0-9_.:-]{0,120}|JAN:\d{8}(?:\d{5})?)$/u;
@@ -24,15 +25,7 @@ export function normalizeProductKey(value) {
 // 2026-10-25 Codex 本番確認: `JAN:0000000000000` の記録に別々の商品（19 店舗・17 商品名）が混ざり、SSR の h1 と開いたあとの商品が入れ替わった。
 // 検索エンジンに出すのは「1 つの商品を指すと言えるキー」だけ。JAN はチェックデジット一致・同一数字の並びでない・
 // 店内コード（GS1 の 13 桁 02/04/2x、8 桁 0/2 始まり）でないものに限る。満たさない JAN は従来どおり noindex（ページ自体は開ける）。
-export function isUniqueJan(value) {
-  const jan = String(value || '');
-  if (!/^(?:\d{8}|\d{13})$/u.test(jan) || /^(\d)\1+$/u.test(jan)) return false;
-  if (jan.length === 13 ? /^(?:0[24]|2)/u.test(jan) : /^[02]/u.test(jan)) return false;
-  const digits = [...jan].map(Number);
-  const check = digits.pop();
-  const sum = digits.reverse().reduce((total, digit, index) => total + digit * (index % 2 === 0 ? 3 : 1), 0);
-  return (10 - (sum % 10)) % 10 === check;
-}
+export { isUniqueJan };
 
 export function isSeoIndexableKey(key) {
   const normalized = normalizeProductKey(key);

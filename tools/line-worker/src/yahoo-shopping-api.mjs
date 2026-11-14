@@ -1,4 +1,5 @@
 import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
+import { isUniqueJan } from './jan-validity.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
 import {
   buildYahooProviderUrl, YAHOO_PROXY_RESULT_HEADER, YAHOO_REQUEST_INTERVAL_MS
@@ -180,9 +181,11 @@ export function yahooShoppingApiConfigured(env = {}) {
   return Boolean(String(env.YAHOO_SHOPPING_CLIENT_ID || '').trim());
 }
 
+// 2026-11-14: 無効・共通の JAN（0000000000000・店内コード・チェックデジット不一致）は商品キーにしない。
+// 同じ無効コードを使う別々の商品が 1 つの商品（JAN:…）にまとまり、比較・価格履歴が混ざるため。その時は店の商品コードを鍵にする。
 function validJan(value) {
   const jan = String(value || '').replace(/\D/g, '');
-  return /^(?:\d{8}|\d{13})$/.test(jan) ? jan : '';
+  return isUniqueJan(jan) ? jan : '';
 }
 
 function deliveryDays(value) {
