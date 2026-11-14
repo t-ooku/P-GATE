@@ -149,6 +149,54 @@ test('Instagram verification exports public ID/time and official permalinks only
   assert.equal(unavailable.status, 'UNAVAILABLE');
 });
 
+test('P0: search-completed sessions distinguish observed purchase-link beacons from clicks without exporting IDs', async () => {
+  const sqlite = setup();
+  const insert = sqlite.prepare(`INSERT INTO growth_events
+    (event_type,traffic_class,source,visitor_id,session_id,medium,campaign,content,occurred_at)
+    VALUES (?1,?2,'test','private-visitor',?3,'','','',?4)`);
+  const stamp = new Date(Date.now() - 60_000).toISOString();
+  for (const [eventType, trafficClass, sessionId] of [
+    ['search_completed','ATTRIBUTED','completed-with-link-click'],
+    ['marketplace_shown','ATTRIBUTED','completed-with-link-click'],
+    ['marketplace_click','ATTRIBUTED','completed-with-link-click'],
+    ['search_completed','ATTRIBUTED','completed-with-link-no-click'],
+    ['marketplace_shown','ATTRIBUTED','completed-with-link-no-click'],
+    ['search_completed','ATTRIBUTED','completed-no-observed-link'],
+    ['search_completed','ATTRIBUTED','completed-click-no-observed-link'],
+    ['marketplace_click','ATTRIBUTED','completed-click-no-observed-link'],
+    ['marketplace_shown','ATTRIBUTED','shown-without-completed'],
+    ['search_completed','QA','qa-completed'],
+    ['marketplace_shown','QA','qa-completed'],
+    ['marketplace_click','QA','qa-completed'],
+    ['search_completed','INTERNAL','internal-completed']
+  ]) insert.run(eventType, trafficClass, sessionId, stamp);
+  insert.run('search_completed','ATTRIBUTED','old-completed',new Date(Date.now()-8*86400000).toISOString());
+
+  const report = await operationalDiagnostics(d1(sqlite), ['internal-1']);
+  const result = report.search_purchase_destination_cooccurrence_7d;
+  assert.equal(result.status,'AVAILABLE');
+  assert.deepEqual(result.rows.map(row=>({
+    completed_sessions:row.completed_sessions,
+    completed_with_shown_sessions:row.completed_with_shown_sessions,
+    completed_without_shown_event_sessions:row.completed_without_shown_event_sessions,
+    completed_with_click_sessions:row.completed_with_click_sessions,
+    completed_shown_clicked_sessions:row.completed_shown_clicked_sessions,
+    completed_shown_no_click_sessions:row.completed_shown_no_click_sessions,
+    completed_clicked_without_shown_event_sessions:row.completed_clicked_without_shown_event_sessions
+  })), [{
+    completed_sessions:4,
+    completed_with_shown_sessions:2,
+    completed_without_shown_event_sessions:2,
+    completed_with_click_sessions:2,
+    completed_shown_clicked_sessions:1,
+    completed_shown_no_click_sessions:1,
+    completed_clicked_without_shown_event_sessions:1
+  }]);
+  assert.equal(result.measurement, 'SESSION_COOCCURRENCE_NOT_ORDERED_FUNNEL');
+  assert.doesNotMatch(JSON.stringify(result),/private-visitor|completed-with-link|qa-completed|session_id/);
+  sqlite.close();
+});
+
 test('KPI成果物へ無人取得できる公開healthの最小情報だけを格納する', async () => {
   const healthy = await readPublicHealth(async () => Response.json({
     ok: true, release: '1.22.1', missing: [], weak: [], secret_value: 'do-not-copy'
