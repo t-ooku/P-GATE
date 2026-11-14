@@ -256,6 +256,10 @@ const completeSearchWatch = event => {
     }
   }
   send('search_completed');
+  // Record what the just-rendered result offers, not only whether some mall
+  // anchor exists elsewhere in the document. No search text or URLs leave.
+  const destinationStage = classifySearchResultDestination(executionId);
+  if (destinationStage) send(destinationStage);
   collectMarketplaceImpressions(executionId);
 };
 
@@ -266,6 +270,27 @@ const completeSearchWatch = event => {
 const MARKETPLACE_IMPRESSION_DELAYS_MS = Object.freeze([300, 1500, 4000]);
 const marketplaceImpressions = new Map();
 const MARKETPLACE_LINK_SELECTOR = '.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link';
+
+const DIRECT_OFFER_LINK_SELECTOR = '.offer-link[href],.price-offer[href],.product-primary-link[href],.unified-card-listing .unified-card-link[href]';
+const GENERIC_MALL_LINK_SELECTOR = '.marketplace-search-link[href],.price-compare-search-link[href],.all-marketplaces-button[href]';
+// One fixed enum per completed initial result render. This is DOM/layout
+// evidence, not proof that the user saw the button inside the viewport, or
+// that a merchant completed a sale. Distinguish hidden price panels from a
+// direct listing shown in layout and from generic mall search fallbacks.
+function classifySearchResultDestination(executionId) {
+  const key = String(executionId || '');
+  if (!/^[a-f0-9-]{20,64}$/iu.test(key)) return '';
+  const root = document.getElementById?.('resultCards');
+  if (!root || String(root.dataset?.searchExecutionId || '') !== key) return '';
+  const directLinks = Array.from(root.querySelectorAll(DIRECT_OFFER_LINK_SELECTOR));
+  const rendered = directLinks.some(link =>
+    typeof link.getClientRects === 'function' && link.getClientRects().length > 0
+    && !link.closest?.('.hidden,[hidden],[aria-hidden="true"]'));
+  if (rendered) return 'search_result_direct_offer_rendered';
+  if (directLinks.length) return 'search_result_direct_offer_collapsed';
+  if (root.querySelector(GENERIC_MALL_LINK_SELECTOR)) return 'search_result_marketplace_search_only';
+  return 'search_result_no_destination';
+}
 function collectMarketplaceImpressions(executionId) {
   const key = String(executionId || '');
   if (!key || marketplaceImpressions.has(key)) return;
