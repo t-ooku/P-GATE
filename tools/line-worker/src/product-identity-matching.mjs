@@ -17,6 +17,8 @@
 
 import { isUniqueJan } from './jan-validity.mjs';
 
+import { compareVariants, VARIANT_SAME } from './product-variant-identity.mjs';
+
 function normalizedValue(value) {
   const cleaned = String(value ?? '').trim();
   return cleaned ? cleaned.toUpperCase() : null;
@@ -81,7 +83,9 @@ export function matchProductIdentity(offerA, offerB) {
     // サイズ/容量情報がどちらかに無ければブランド+正式商品名一致のみで
     // 判定(過剰に厳格化して同一商品を取りこぼさないため)。両方分かって
     // いて食い違う場合のみ不一致とする。
-    if (!sizeA || !sizeB || sizeA === sizeB) {
+    // 色番・容量・入り数・詰替・ミニ・セット・商品状態の照合（product-variant-identity.mjs）。
+    // same のときだけ一致にし、different / unconfirmed は一致にしない。
+    if ((!sizeA || !sizeB || sizeA === sizeB) && compareVariants(offerA, offerB) === VARIANT_SAME) {
       return { tier: 'brand_title_size', matched: true };
     }
   }
