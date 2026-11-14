@@ -47,6 +47,37 @@ test('browser analytics survives startup, records one visible visit and a unifie
   assert.doesNotMatch(JSON.stringify(b.events),/fixed public sample|query|href/);
 });
 
+test('search result destination stages distinguish direct, collapsed, generic, empty, and never leak offer URLs', () => {
+  const key = '11111111-2222-4333-8444-555555555555';
+  const cases = [
+    { direct: 1, visible: true, generic: true, expected: 'search_result_direct_offer_rendered' },
+    { direct: 2, visible: false, generic: true, expected: 'search_result_direct_offer_collapsed' },
+    { direct: 0, visible: false, generic: true, expected: 'search_result_marketplace_search_only' },
+    { direct: 0, visible: false, generic: false, expected: 'search_result_no_destination' }
+  ];
+  for (const row of cases) {
+    const b = browser();
+    const links = Array.from({ length: row.direct }, () => ({
+      href: 'https://example.invalid/private-product-path',
+      getClientRects: () => row.visible ? [{ width: 100 }] : [],
+      closest: () => row.visible ? null : { className: 'hidden' }
+    }));
+    b.document.getElementById = name => name === 'resultCards' ? {
+      dataset: { searchExecutionId: key },
+      querySelectorAll: () => links,
+      querySelector: () => row.generic ? { href: 'https://example.invalid/private-search' } : null
+    } : null;
+    b.dispatch({ type: 'hoshilu:search-completed', detail: { executionId: key } });
+    assert.deepEqual(b.events.filter(x => x.event_type.startsWith('search_result_')).map(x => x.event_type), [row.expected]);
+    assert.equal(b.events.filter(x => x.event_type === 'search_completed').length, 1);
+    assert.doesNotMatch(JSON.stringify(b.events),/example.invalid|private-product-path|private-search/u);
+  }
+  const b = browser();
+  b.document.getElementById = () => ({ dataset: { searchExecutionId: 'different' }, querySelectorAll: () => [], querySelector: () => null });
+  b.dispatch({ type: 'hoshilu:search-completed', detail: { executionId: key } });
+  assert.equal(b.events.filter(x => x.event_type.startsWith('search_result_')).length, 0);
+});
+
 test('a hidden preload does not become a visit; a later visible interaction still records it', () => {
   const b=browser('hidden');
   assert.equal([...b.timers.values()].filter(t=>t.ms===1500).length,0);
