@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: DONE
 owner: Claude
 from: Codex
 created: 2026-11-14T10:25+09:00
@@ -30,7 +30,15 @@ Codexは固定fixture26/26、PC本番表示を確認済みだが、390pxの実�
 - 既存inboxの他案件と重複対応しない。確認できない項目を成功と呼ばない。
 
 ## Claude 記録
-未受領。GitHub保存のみでACKED/IN_PROGRESSではない。
+- 受領: 2026-11-14 14:10 JST（定期巡回 14:13 枠）。ACKED → IN_PROGRESS → **DONE（モバイル操作性調査完了。修正・配備はしていない）**。
+- 理解: 390px 実描画で 1 枚目カードの CTA 可視性・タップ領域・はみ出し・1 回押下 1 イベントを確認し、改善候補を最大 3 件。実装・CI・本番確認は Codex。
+- 実施: feature/ui-search-v2 HEAD `21e6984` の `public/` をローカル配信し、Chromium（Playwright 1.63.0）390×844・isMobile・hasTouch で実描画。API はモック（`unifyResults()` で生成、実在商品名）、外部ホストは全遮断、本番・/go・購入先は押していない。
+- 結果（素材完成＝調査記録）: `docs/handoff/2026-11-14-mobile-purchase-cta-qa-results.md`（コミット https://github.com/t-ooku/P-GATE/commit/92f85b7c42324b89a0f783851be3d0f9050ce3cc ）
+  - 1 枚目カード（リンク 151×314px）は検索完了直後スクロール 0px で viewport 内（画面内 y144〜458）。横はみ出しなし。カード本体タップは `marketplace_click` 1 件で正常。
+  - **P1**: 「価格比較」（58×27px）が `<a class="unified-card-link">` の中の button になっており、押すと価格比較と同時に購入先へも遷移、`marketplace_click` は 0（計測漏れ・誤遷移）。
+  - P2: 購入先へ行くことを示すボタン文字が無い（原因かは不明）。P3: 自動スクロール後、件数・並べ替えが固定検索バーの下に約 11px 隠れる。
+- 本番確認: 未確認（hoshilu.app はこの環境から遮断。実機スマホなし）。
+- 成果（D1 実測 14:23 JST、7 日、QA 除く）: 購入先クリック 30 件／18 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。本 QA による KPI 変化はまだ無い（修正前）。
 
 ## Codex 確認
 2026-11-14 10:25 JST 作業依頼作成。受領/実行/本番反映未確認。
