@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: DONE
 owner: Claude
 assignee: Claude Code（実装・調査支援）
 kpi: price_comparison_success | purchase_clicks
@@ -68,4 +68,19 @@ Codex と同じファイルを同時に直さないこと。触ってよいの�
 - AI の推測で同一と確定しない。D1 に書き込まない。本番の検索・購入先リンクを押さない。課金・SNS 公開・営業メールをしない。
 
 ## Claude Code 記録
-未受領（11/14 Cowork 作成）。
+- 受領: 2026-11-14 14:10 JST（定期巡回 14:13 枠）。ACKED → IN_PROGRESS → **DONE（実装・配備まで。検索の流れへの組み込みと本番での効果確認は Codex C-2）**。
+- **実装（本体）**: [PATCH] #761 ✅（bot 2026-11-14 14:21 JST、head `21e6984`、apply→test→deploy→health すべて success）。#760 は本文の patch を入れ忘れて起票したため取り下げ（何も適用されていない）。
+  - `src/product-variant-identity.mjs`（新規）: `variantAttributes(name, attributes)` / `compareVariants(a, b)`（same / different / unconfirmed のみ）。宣伝語（ポイント○倍・○月○日・【公式】・送料無料・○円・○%OFF 等）を先に除去してから読む。
+  - `src/product-identity-matching.mjs` tier 4: `compareVariants === 'same'` のときだけ一致。
+- **実装（追記: JAN/GTIN の要確認）**: [PATCH] #765 ✅（bot 2026-11-14 14:33 JST、head `dcc73f2`、success）。#763 は同内容で git am 成功・push 失敗（同時刻の docs コミットと競合と推定）→ 重複として閉じ、#765 で再送。
+  - JAN／GTIN が同じでも `different` なら `{ tier: null, matched: false, review: 'variant_conflict' }`。`unconfirmed` は JAN/GTIN 一致を優先。
+  - 入り数に単独の「1個」「2袋」等を追加（「3個口」は除外）。
+- テスト: 新規テスト 25 件（必須の実商品名 8 種・宣伝語・#04/04/S04・4g=4.0g・入り数・詰替・ミニ・状態・tier 4 組込み・JAN/GTIN 要確認 3 件）。全体 `npm test` 3184/3184 pass（ローカル、#765 適用後と同じ内容）＋ bot の test success。無効 JAN のテストは Cowork 既存分があるため重複して書いていない。
+- 判断した点（Cowork・Codex 確認用）:
+  - 「same は色番が両方で分かっている」について、**両方とも色番の記載が一切ない商品（家電・雑貨など）は色番を比較項目にしない**（既存テスト「ハンディファン ホワイト」の tier 4 一致を壊さないため。テストの緩和はしていない）。片方だけ色番がある・複数色は unconfirmed。
+  - `#04` と `04` は # の有無だけの違いなので unconfirmed（同一にしない）。`04` と `S04` は different。
+  - 詰替・ミニ・並行輸入/訳あり/中古/アウトレットは「書いていない側は通常品」とみなし、片方だけにあれば different（必須テスト「04 と 並行輸入品の 04 → different」に合わせた）。入り数・セットが片方だけなら unconfirmed。容量が片方だけなら判断材料にしない（指示どおり「両方に書いてある項目」で比較）。
+  - 既存の normalizeTitle は「.」を消すため「4.0g」と「40g」が同じ正式名になる → 照合で別と判定（テストあり）。
+- 本番確認: 未確認（hoshilu.app はこの環境から遮断。bot の health success のみ）。検索結果・最安比較での効果は Codex C-2 の組み込み後に確認が必要。
+- まだ分からないこと: 実データ（price_observations 全体）で unconfirmed がどれだけ増え、tier 4 の同一判定が何件減るか（未計測。D1 の読み取りで測れるが、本巡回では未実施）。色名（「ホワイト」「ブルべ」）は色番として扱っていない。
+- 成果（D1 実測 14:23 JST、7 日、QA 除く）: 購入先クリック 30 件／18 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。本変更による KPI 変化は未計測（配備直後）。
