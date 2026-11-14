@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Claude
 assignee: Claude Code（実装・調査支援）
 from: Cowork（統括）
@@ -43,4 +43,16 @@ kpi: purchase_clicks
 - 「レンズと同じ精度になった」と書くこと（評価セットの数字が出るまで）。
 
 ## Claude Code 記録
-未受領（11/14 Cowork 作成）。
+### 2026-11-14 20:25 JST（受信箱巡回 20:13 便）
+- **受領**: 2026-11-14 20:13 JST 頃。状態 ACKED → IN_PROGRESS（1. 完了、2.・3. は次の巡回で 1 つずつ [PATCH]）。
+- **担当範囲の理解**: 写真識別（/api/identify）の 1. 記録 → 2. 弱い語で検索しない＋行き止まりを作らない → 3. 候補画像との見比べ（スイッチ既定 false）。上位モデル・外部レンズ API・migration 適用・本番検索の操作はしない。Codex の C-1・C-8 は JAN 系で `search-input-analysis.mjs` に進行中の変更なし（Codex 記録・直近コミットで確認）。
+- **1. 実装（コミット a15420e／Issue #770）**: `identify_latency_log` に `provider`・`diagnostic`・`input_kind` を残す。
+  - 診断コードに Gemini の外れ方を追加: `G_TIMEOUT`／`G_HTTP_xxx`／`G_NETWORK`（呼び出し失敗）、`_RNOTEXT`（文字なし）／`_RNOJSON`（JSON でない）／`_RNOCAND`（JSON だが候補なし）。救済で答えた時も `OK__G_<理由>_V_<Vision状態>_E_T_J_B` が残る（例: 主モデルがタイムアウトして best guess で答えた＝`OK__G_TIMEOUT_...`、provider=`GOOGLE_VISION_BEST_GUESS_FALLBACK`）。失敗は provider=`FAILED`。
+  - 固定語彙（大文字英数と _）以外は書かない。写真・検索語・商品名・会員 ID・セッション ID は入れない。14 日で消す（既存の purge のまま）。API 応答には出さない（固定テスト）。
+  - `GEMINI_IDENTIFY_GROUNDING=true` で JSON 以外が返った時に `_RNOJSON` になる固定テストあり。
+  - **本番確認**: #770 の ✅（apply-patch: git am・npm test・deploy・health すべて success、2026-11-14 11:22 UTC = 20:22 JST、head a15420e）。手元 `npm test` 3195 件 pass。実際の識別リクエストでの書き込みは**未確認**（hoshilu.app へは届かない／直近 14 日 identify_latency_log が 0 行で、実利用が来るまで行が出ない）。
+- **Cowork へ依頼（承認が要る操作）**: migration `tools/line-worker/migrations/0097_identify_latency_provider.sql`（ALTER TABLE ADD COLUMN ×3、既定値 ''、既存行は変えない）を `apply-d1-migrations.yml` で適用してください。expected_pending は `0097_identify_latency_provider.sql` の 1 件（11/14 20:2x JST 時点、D1 の最終適用は 0096）。**未適用の間も Worker は従来の時間列だけで書く**ので壊れません（固定テストあり）。適用後の 7 日救済率の読み取り例: `SELECT provider, substr(diagnostic,1,instr(diagnostic||'_V','_V')-1) AS g, COUNT(*) FROM identify_latency_log WHERE created_at>=strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days') GROUP BY 1,2`。
+- **気づき（2. の着手前に共有）**: D1 の `identify_latency_log` は直近 14 日 0 行。/api/identify（「これですか？」の写真経路）は最近使われていないか、写真検索が /api/knowledge 側を通っている可能性がある。もう一つ、`identifyCandidateFromAnalysis` は `candidate_name` が無いと空カードを返すため、Vision 救済（OCR・best guess は candidate_name を作らない）で答えた時は /api/identify では「認識できませんでした」相当の行き止まりになっている。2. ではここを「候補 2〜3 個の確認カード」に変える（画面側の変更を含む）。
+- **入力の種類**: 画面が撮影か画像選択かを送っていないため、今は `url`／`image` の 2 種類。camera／screenshot の区別は画面からの送信が要る（2. の画面変更と一緒に入れる予定）。
+- **次（未着手）**: 2.（弱い語の拒否＋ページ題・エンティティ・OCR からブランド＋カテゴリ＋確認カード 2〜3 候補）→ 3.（`PHOTO_CANDIDATE_VERIFY_ENABLED` 既定 false、4 秒上限）。いずれも #770 の後に 1 つずつ [PATCH]。
+- **成果（D1 実測 20:2x JST、7 日、QA 除く）**: 購入先クリック（marketplace_click）30 件／18 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。本変更は記録の追加のみで KPI への効果はまだ無い（効果は 2.・3. と評価セットの数字で見る）。「レンズと同じ精度」とは書かない。
