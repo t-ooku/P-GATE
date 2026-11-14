@@ -1,5 +1,13 @@
 # HOSHILU 日次PDCA — 2026-11-06開始
 
+## 2026-11-14 13:41 JST P0根本原因調査・実行結果
+
+- **本番観測**：GitHub Actions [43557645243](https://github.com/t-ooku/P-GATE/actions/runs/43557645243) の正本成果物 `hoshilu-codex-kpi-43557645243`（artifact 14098079759、11/14 13:41 JST生成）で、新しい集計 `operational_diagnostics.search_purchase_destination_cooccurrence_7d` を確認。直近7日は `completed_sessions=60`、`completed_with_shown_sessions=60`、`completed_without_shown_event_sessions=0`、`completed_with_click_sessions=8`、`completed_shown_no_click_sessions=52`。QA/INTERNAL除外・個別session ID/商品名/検索語は出力しない。厳密な逐次ファネルではなく**同一7日窓・同一セッション併有**。60/60を「購入可能な具体商品が60件提示された」と解釈しない。
+- **計測処理を実装し本番反映**：`tools/line-worker/scripts/read-codex-kpi-snapshot.mjs` の読取専用SELECTで、既存 `search_completed` / `marketplace_shown` / `marketplace_click` を固定種別のセッション併有で集計。個人・検索・URLの原文、D1書込、課金なし。実装commit [9ea3680f](https://github.com/t-ooku/P-GATE/commit/9ea3680fb9b79167082d0c6f96a5222cdd3169da)、SQLite境界テストcommit [25d45d4e](https://github.com/t-ooku/P-GATE/commit/25d45d4ec44e5e057030fdf0d2fbe00b2702bb92)。CI 43557645243でテスト・deploy・production health・読取KPI全工程success。成果物の `public_health` は13:41 JST `HEALTHY,ok:true,missing0,weak0`。本変更は**計測の改善**であり、実利用者のクリック・売上改善を示さない。
+- **新しく確定した観測上の限界**：`public/growth-analytics.mjs` の `marketplace_shown` は `document.querySelectorAll('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link')` のDOM検出。外部モールの**汎用検索リンク** `.buy-link.marketplace-search-link` と、`app.js` の `price-compare-panel.hidden` 配下にある**折りたたまれた商品別リンク**を区別しない。したがって 60/60 は「ユーザーが直接購入できる商品リンクを視認した率」ではない。リンクの表示だけでなく**具体的な商品/購入先への到達価値**が未判定。
+- **次の1件の診断改善（最優先）**：`#resultCards` の現在検索実行にひもづく「販売先の具体商品への直リンク」「価格比較を開かないと見えない具体商品リンク」「汎用モール検索先だけ」「リンク無し」を固定enumで区別し、QA/内部除外・未取得と0区別・元データ非送信を守る。構造をテスト固定してから、既存CI→本番配備→実測。既存 `marketplace_shown` の定義は無断で遡及変更しない。クリック低下の原因をUIと断定せず、直リンク提示比率／有効な送料込み価格・在庫・検索意図の一致を評価した後で、1件の可逆的改善を決める。
+- **担当/重複防止**：Codexが診断・CI/本番最終確認を担当。既存 `claude-inbox/2026-11-14-mobile-purchase-cta-qa.md` は限定的な390px実画面QAとしてOPEN・受領未確認、同一実装を並行依頼しない。新規課金・営業・SNS・D1書込・料金変更・追加スケジュールなし。
+
 ## 2026-11-14 13:29 JST 優先課題の判断を補正（ボタン位置だけで決めない）
 
 - 指摘：前回の計画が390pxの購入先CTAの表示・押下位置に先行しすぎていた。**サイト全体の作り直しは現時点で不要と判断する根拠も必要と判断する根拠もない**。やるべきは「根本原因を特定して、その原因に応じて改善する」ことであり、「見た目を変えること」を目的にしない。
