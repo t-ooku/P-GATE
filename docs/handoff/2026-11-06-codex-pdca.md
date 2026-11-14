@@ -1,5 +1,16 @@
 # HOSHILU 日次PDCA — 2026-11-06開始
 
+## 2026-11-14 13:53 JST P0 次段階診断の実装・配備確認
+
+- 第1段階の読取専用実測（Actions43558674911のartifact 14099146769）は、直近7日検索完了60、`marketplace_shown`併有60、購入先クリック併有8、表示イベントありクリックなし52セッション。`marketplace_shown` はDOM上の汎用モール検索リンクや閉じた価格比較リンクも数えるため、直接購入できる具体商品のリンクを画面で見た証拠ではない。
+- 調査によって、`public/app.js` で候補の売価・送料を確認できない場合は「全部のモールで探す」などの汎用検索へ誘導し、複数の送料込み価格がある場合は価格比較のパネルを閉じて初期表示する仕様を確認。これはコード仕様であり、7日実利用の52セッションが該当した確証ではない。
+- 第2段階で `public/growth-analytics.mjs` の `hoshilu:search-completed` に接続して `#resultCards` の初期DOM構造を確認し、4つの固定段階 `search_result_direct_offer_rendered` / `search_result_direct_offer_collapsed` / `search_result_marketplace_search_only` / `search_result_no_destination` を送る。allowlist追加、既存読取専用KPIに `search_result_destination_stages_7d` を追加。商品・検索文・購入URL・セッションIDの外部集計出力なし、既存北極星KPI定義不変更。直接の見えるDOM判定は**初期レイアウト証拠であって、実機viewport可視性・商品実在庫・注文の証明ではない**。検査により必要な箇所だけ改修する。
+- `growth-analytics.mjs?v=23` に更新した際、pin固定資産テストが旧v22を期待して2件FAIL。トップ・login・buzz・seller shop全参照と `test/asset-versions.test.mjs` をv23で統一し、再試験。本番修正を無根拠に成功とは扱わず、実際のCIにより結果確認。
+- **最終コード** [12b06f06](https://github.com/t-ooku/P-GATE/commit/12b06f066a7d93bb7f0437b6f978a11872342d8d)。[CI+deploy 43558674911](https://github.com/t-ooku/P-GATE/actions/runs/43558674911) はテスト／検索品質ゲート／Worker配備／production health／KPI接続すべてsuccess。2026-11-14 **13:53:01 JST** Cloudflare Version `cf462436-bef9-4213-8209-1f9fc73f87f4`。13:53:04監視PASS、13:53:08 `public_health: HEALTHY, ok true, missing0/weak0`。KPI成果物 14099146769 で `search_result_destination_stages_7d.status=AVAILABLE`、`rows=[]`。**配備直後、計測導入前の過去7日には新段階イベントが無い**ため、これを商品リンク表示0件とは呼ばない。
+- 結果：**根本原因の診断コード・関連テスト・CI・配備・本番health/KPI接続は完了**、どの段階が実利用で最多か、購入先クリックが増えるかは**未判定**。次は新しい検索実利用の4段階実数を既存日次成果物から取得し、直リンク有無/比較パネル折畳み/汎用検索への偏りを評価。商品一致・価格鮮度/送料を固定QAでも確認し、根拠がある可逆的改善1件だけを投入する。
+- Claude既存モバイルQAはOPENで依頼記録に留まる。受領・結果確認なくDONE扱いしない。同じ修正の重複なし。新課金・D1書込・SNS公開・営業送信・料金/注意書き変更・追加スケジュールなし。
+
+
 ## 2026-11-14 13:41 JST P0根本原因調査・実行結果
 
 - **本番観測**：GitHub Actions [43557645243](https://github.com/t-ooku/P-GATE/actions/runs/43557645243) の正本成果物 `hoshilu-codex-kpi-43557645243`（artifact 14098079759、11/14 13:41 JST生成）で、新しい集計 `operational_diagnostics.search_purchase_destination_cooccurrence_7d` を確認。直近7日は `completed_sessions=60`、`completed_with_shown_sessions=60`、`completed_without_shown_event_sessions=0`、`completed_with_click_sessions=8`、`completed_shown_no_click_sessions=52`。QA/INTERNAL除外・個別session ID/商品名/検索語は出力しない。厳密な逐次ファネルではなく**同一7日窓・同一セッション併有**。60/60を「購入可能な具体商品が60件提示された」と解釈しない。
