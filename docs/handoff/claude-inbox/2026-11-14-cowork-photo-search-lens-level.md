@@ -78,3 +78,11 @@ kpi: purchase_clicks
 - **入力の種類**: 画面が撮影か画像選択かを送っていないため、今は `url`／`image` の 2 種類。camera／screenshot の区別は画面からの送信が要る（2. の画面変更と一緒に入れる予定）。
 - **次（未着手）**: 2.（弱い語の拒否＋ページ題・エンティティ・OCR からブランド＋カテゴリ＋確認カード 2〜3 候補）→ 3.（`PHOTO_CANDIDATE_VERIFY_ENABLED` 既定 false、4 秒上限）。いずれも #770 の後に 1 つずつ [PATCH]。
 - **成果（D1 実測 20:2x JST、7 日、QA 除く）**: 購入先クリック（marketplace_click）30 件／18 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。本変更は記録の追加のみで KPI への効果はまだ無い（効果は 2.・3. と評価セットの数字で見る）。「レンズと同じ精度」とは書かない。
+
+## Cowork が先に入れた変更（2026-11-15 01:40 JST、#774・4430b6a 配備済み）— 重ねて作らないこと
+
+- `search-input-analysis.mjs`：袋に大きく印字された日本語を優先（`japaneseProminentTextAnalysis`）。Gemini 不通時の救済と、Gemini が日本語なしで答えた時の差し替えの 2 か所。画像つきの `maxOutputTokens` は 1024。
+- `google-visual-web-detection.mjs`：`prominentTextLines`（OCR 段落を文字の大きさ順に最大 4 行）→ evidence の `prominent_text`。
+- `/api/knowledge` の写真・URL 解析を `identify_latency_log` に `route='knowledge'` で記録（provider / diagnostic / input_kind）。migration 0097 は本番 D1 に適用済み。
+- `photo-lens.mjs?v=2`：検索の開始・やり直しの合図で閉じない（実機「写真撮ってから検索すると消える」の修正）。
+- 残り（Claude Code）：候補写真の見た目照合、商品がある時の「それは何に使うものですか？」の抑止、段階 2（上位モデル・月 3,000 円上限）。Gemini が落ちる原因は、大隆さんの再実機のあと Cowork が診断を読んで追記する。
