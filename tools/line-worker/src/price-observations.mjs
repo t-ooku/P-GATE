@@ -1,3 +1,4 @@
+import { isInvalidJanProductKey } from './jan-validity.mjs';
 // 2026-10-02 大隆さん指示書「今ほしい人が買うためのサービス」§4④・§5: 価格推移の記録。
 //
 // 検索・BUZZ・希望価格の巡回で、楽天市場・Yahoo!ショッピングの API から実際に取れた価格を
@@ -120,7 +121,7 @@ export async function recordPriceObservations(env, candidates, options = {}) {
 export async function priceHistorySummary(env, recordKey, { now = new Date() } = {}) {
   const db = env?.PRODUCT_DB;
   const key = text(recordKey, 160);
-  if (!db || !key) return null;
+  if (!db || !key || isInvalidJanProductKey(key)) return null;
   const today = jstDate(now);
   const since = jstDate(new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000));
   let rows = [];

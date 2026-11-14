@@ -91,3 +91,16 @@ test('検索本文・会員IDは行に入らない（商品の公開情報だけ
   for (const key of Object.keys(row)) assert.ok(!/query|member|session/u.test(key), key);
   assert.ok(!JSON.stringify(row).includes('底が開く'));
 });
+
+test('price history rejects invalid JAN before querying stored observations', async () => {
+  const env = { PRODUCT_DB: { prepare: () => assert.fail('unexpected D1 access') } };
+  for (const key of ['JAN:0000000000000', 'JAN:2980000620539', 'JAN:4582356615598', 'jan:0000000000000']) {
+    assert.equal(await priceHistorySummary(env, key), null);
+  }
+  const good = 'JAN:4582356615597';
+  const read = { PRODUCT_DB: { prepare: () => ({ bind: key => {
+    assert.equal(key, good);
+    return { all: async () => ({ results: [{ observed_date: '2026-11-14', price: 1200 }] }) };
+  } }) } };
+  assert.equal((await priceHistorySummary(read, good, { now: new Date('2026-11-14T07:00:00Z') })).latest.price, 1200);
+});
