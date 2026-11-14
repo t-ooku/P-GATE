@@ -69,3 +69,19 @@ test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定
   assert.match(css, /@media\(max-width:480px\)\{\.price-compare-row\{display:grid/);
   assert.match(css, /\.price-compare-search-link\{grid-column:1\/-1[^}]*white-space:normal/);
 });
+
+// 2026-11-15 大隆さん指示: 写真で探す入口を検索窓のマイクの隣に。写真で探した結果は、写真を上に残して下からのシートで出す
+test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シートが読み込まれる（結果の描画後にだけ開く）', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=1">/);
+  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=1"><\/script>/);
+  assert.match(html, /id="searchCamera"/);
+  const lens = await readFile(new URL('../public/photo-lens.mjs', import.meta.url), 'utf8');
+  assert.match(lens, /label\.htmlFor = 'searchCamera'/);
+  assert.match(lens, /addEventListener\('hoshilu:results-rendered', showResults\)/);
+  assert.match(lens, /addEventListener\('hoshilu:search-execution-started', closeLens\)/, '探している間は開かない');
+  assert.doesNotMatch(lens, /fetch\(|google/iu, '写真を外へ送らない・他社の名前を使わない');
+  const css = await readFile(new URL('../public/photo-lens.css', import.meta.url), 'utf8');
+  assert.match(css, /body \.continuous-search-card\{grid-template-columns:minmax\(0,1fr\)\}/, '長い検索語で右へはみ出さない');
+});
