@@ -5,7 +5,8 @@
 // 14日で消す（古い数字は改善の判断に使わない）。
 export const IDENTIFY_LATENCY_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
 const CACHE_STATES = new Set(['hit', 'miss', 'off']);
-const ROUTES = new Set(['identify', 'ai_chat_identify']);
+// 2026-11-15: 写真検索は /api/knowledge を通ることが多い（11/15 の実機 11 回は identify に 0 行）。同じ表に route='knowledge' で残す。
+const ROUTES = new Set(['identify', 'ai_chat_identify', 'knowledge']);
 
 const milliseconds = (value) => Math.max(0, Math.min(600000, Math.round(Number(value) || 0)));
 

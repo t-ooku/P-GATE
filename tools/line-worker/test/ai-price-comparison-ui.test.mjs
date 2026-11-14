@@ -75,12 +75,14 @@ test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シ
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=1">/);
-  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=1"><\/script>/);
+  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=2"><\/script>/);
   assert.match(html, /id="searchCamera"/);
   const lens = await readFile(new URL('../public/photo-lens.mjs', import.meta.url), 'utf8');
   assert.match(lens, /label\.htmlFor = 'searchCamera'/);
   assert.match(lens, /addEventListener\('hoshilu:results-rendered', showResults\)/);
-  assert.match(lens, /addEventListener\('hoshilu:search-execution-started', closeLens\)/, '探している間は開かない');
+  // 2026-11-15 実機「写真撮ってから検索すると消えるよ」: 検索の開始・やり直しの合図では閉じない。写真は覚えておく
+  assert.doesNotMatch(lens, /addEventListener\('hoshilu:search-(?:execution-started|cancelled)', closeLens\)/);
+  assert.match(lens, /function rememberPhoto\(\)/);
   assert.doesNotMatch(lens, /fetch\(|google/iu, '写真を外へ送らない・他社の名前を使わない');
   const css = await readFile(new URL('../public/photo-lens.css', import.meta.url), 'utf8');
   assert.match(css, /body \.continuous-search-card\{grid-template-columns:minmax\(0,1fr\)\}/, '長い検索語で右へはみ出さない');

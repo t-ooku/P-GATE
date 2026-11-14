@@ -1017,3 +1017,45 @@ test('GEMINI_IDENTIFY_GROUNDING=true で JSON 以外が返ったら NOJSON と�
   assert.doesNotMatch(ok.diagnostic, /_R[A-Z]+$/u);
   assert.match(ok.diagnostic, /^OK__G_OK_/u);
 });
+
+// 2026-11-15 大隆さんの実機（11 枚の実物写真、8 枚中 4 枚が外れ）:
+// 日本語の袋なのに「chocolate bar Meiji」「Bathclin Bath Bomb」「convenience food」で検索していた。
+const ocrWord = (text, size, y = 0) => ({
+  symbols: [...text].map((character) => ({ text: character })),
+  boundingBox: { vertices: [{ x: 0, y }, { x: text.length * size, y }, { x: text.length * size, y: y + size }, { x: 0, y: y + size }] }
+});
+const ocrPage = (rows) => ({ text: rows.map(([text]) => text).join('\n'),
+  pages: [{ blocks: [{ paragraphs: rows.map(([text, size], index) => ({ words: [ocrWord(text, size, index * 100)] })) }] }] });
+
+test('写真: Web 一致のラベルが英語でも、袋に大きく印字された日本語で探す（Gemini 不通時）', async () => {
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: 'chocolate bar' }],
+        webEntities: [{ description: 'Meiji', score: 0.9 }, { description: 'Chocolate', score: 0.8 }],
+        fullMatchingImages: [{ url: 'https://a.example/1.jpg' }],
+        pagesWithMatchingImages: [{ url: 'https://a.example/p', pageTitle: 'Meiji Chocolate Snacks' }, { url: 'https://b.example/p', pageTitle: 'Meiji Takenoko' }]
+      }, fullTextAnnotation: ocrPage([['meiji', 12], ['明治チョコスナック', 14], ['たけのこの里', 60], ['チョコレート菓子', 10]]) }] });
+    }
+    return new Response('', { status: 503 });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_OCR_FALLBACK');
+  assert.equal(result.refined_query, 'たけのこの里 明治チョコスナック');
+  assert.doesNotMatch(result.refined_query, /chocolate|bar/iu);
+});
+
+test('写真: Gemini が英語の一般語で答えても、袋の日本語（大きい順）で探す。日本語の無い商品はそのまま', async () => {
+  const gemini = (query, brand = '') => Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+    refined_query: query, candidate_name: '', candidate_brand: brand, candidate_reason: '', matched_features: [], match_score: 40 }) }] } }] });
+  const run = (rows, query, brand) => analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [{ webDetection: {}, fullTextAnnotation: ocrPage(rows) }] });
+    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens, 1024, '写真の解析は出力の上限を広げる');
+    return gemini(query, brand);
+  });
+  const bath = await run([['つら〜い腰の痛みに', 20], ['きき湯', 70], ['マグネシウム炭酸湯', 24], ['HOTな健康を、明日へ。', 16]], 'Bathclin Bath Bomb', 'Bathclin');
+  assert.equal(bath.refined_query, 'Bathclin きき湯 マグネシウム炭酸湯');
+  const cnp = await run([['CNP Laboratory', 30], ['DERMA ANSWER ACTIVE BOOST AMPULE', 22], ['PDRN', 40]], 'CNP Laboratory DERMA ANSWER ACTIVE BOOST AMPULE PDRN', 'CNP Laboratory');
+  assert.equal(cnp.refined_query, 'CNP Laboratory DERMA ANSWER ACTIVE BOOST AMPULE PDRN', '日本語の印字が無ければ変えない');
+  const tea = await run([['おいしい', 50], ['無糖', 55], ['アイスティー', 30], ['午後の紅茶', 18]], '午後の紅茶 おいしい無糖 アイスティー', 'キリン');
+  assert.equal(tea.refined_query, '午後の紅茶 おいしい無糖 アイスティー', '日本語で答えた時は Gemini の答えのまま');
+});

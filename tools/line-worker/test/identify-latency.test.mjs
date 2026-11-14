@@ -24,7 +24,8 @@ test('所要時間はミリ秒とキャッシュ状態だけを残す（質問�
   assert.deepEqual(Object.keys(row), ['log_id', 'route', 'cache_state', 'ai_ms', 'preview_ms', 'total_ms', 'created_at']);
   assert.equal(row.ai_ms, 3210);
   // 想定外の値は書かない（未知の経路・未知のキャッシュ状態）。
-  assert.equal(identifyLatencyRow({ route: 'knowledge', cacheState: 'miss' }), null);
+  assert.equal(identifyLatencyRow({ route: 'other', cacheState: 'miss' }), null);
+  assert.equal(identifyLatencyRow({ route: 'knowledge', cacheState: 'off' }).route, 'knowledge');
   assert.equal(identifyLatencyRow({ route: 'identify', cacheState: 'unknown' }), null);
   // 異常な数値は丸める（負・巨大）。
   assert.equal(identifyLatencyRow({ route: 'identify', cacheState: 'hit', aiMs: -5, totalMs: 9e9 }).total_ms, 600000);

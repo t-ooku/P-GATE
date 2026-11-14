@@ -55,25 +55,52 @@ function ensureView() {
   return view;
 }
 
+// 撮った写真を覚えておく（検索のあとでプレビューが片づけられても、結果の上に残せるように）。
+// 2026-11-15 大隆さん実機「写真撮ってから検索すると消えるよ」: 検索の開始・やり直しの合図で閉じていたのをやめた。
+let photoSrc = '';
+let armed = false;      // 写真つきの検索の結果を待っている
+let userClosed = false; // 利用者が × で閉じた（同じ写真では勝手に開き直さない）
+let shown = false;      // この写真の結果を 1 度は出した
+function rememberPhoto() {
+  if (!hasPhoto()) return;
+  const src = previewImage.getAttribute('src');
+  if (src !== photoSrc) { userClosed = false; shown = false; }
+  photoSrc = src;
+  armed = true;
+}
+
 // 結果が描かれてから開く（探している間は今までどおりの画面。確認の操作が要る場面を隠さない）
 function showResults() {
-  if (!hasPhoto() || !results || results.classList.contains('hidden')) return;
-  ensureView().querySelector('img').src = previewImage.getAttribute('src');
+  rememberPhoto();
+  if (!armed || userClosed || !photoSrc || !results || results.classList.contains('hidden')) return;
+  ensureView().querySelector('img').src = photoSrc;
   const already = document.body.classList.contains('photo-lens-open');
   document.body.classList.add('photo-lens-open', 'photo-lens-ready');
+  shown = true;
   if (!already) { document.body.classList.remove('photo-lens-tall'); results.scrollTop = 0; }
 }
 
 export function closeLens() {
   const wasOpen = document.body.classList.contains('photo-lens-open');
   document.body.classList.remove('photo-lens-open', 'photo-lens-ready', 'photo-lens-tall');
+  if (wasOpen) userClosed = true;
   // 閉じたら、ふつうの画面の結果の位置へ（行き止まりにしない）
   if (wasOpen && results && !results.classList.contains('hidden')) results.scrollIntoView({ block: 'start' });
 }
 
+// 写真なしの新しい検索が始まったら、前の写真は使わない。
+// ただし、写真の結果をまだ 1 度も出していない間（写真の検索の続きの合図）と、開いている間は残す。
+function onSearchStarted() {
+  rememberPhoto();
+  if (!hasPhoto() && shown && !document.body.classList.contains('photo-lens-open')) { armed = false; photoSrc = ''; }
+}
+
 addCameraButton();
-document.addEventListener('hoshilu:search-execution-started', closeLens);
+if (previewImage) new MutationObserver(rememberPhoto).observe(previewImage, { attributes: true, attributeFilter: ['src'] });
+if (preview) new MutationObserver(rememberPhoto).observe(preview, { attributes: true, attributeFilter: ['class'] });
+document.querySelector('#removeScreenshot')?.addEventListener('click', () => { if (!document.body.classList.contains('photo-lens-open')) { armed = false; photoSrc = ''; } });
+document.addEventListener('hoshilu:search-execution-started', onSearchStarted);
+document.addEventListener('hoshilu:search-knowledge-started', onSearchStarted);
 document.addEventListener('hoshilu:results-rendered', showResults);
 document.addEventListener('hoshilu:search-completed', showResults);
-document.addEventListener('hoshilu:search-cancelled', closeLens);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeLens(); });

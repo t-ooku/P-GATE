@@ -69,7 +69,10 @@ const IMAGE_ANALYSIS_RULES = `Additional image rules:
 - Read a logo, barcode text, label, or model code only when it is actually visible; never invent a missing character.
 - When at least one non-person product or physical object is visible, refined_query must not be empty. If the exact identity is uncertain, return the most useful generic Japanese product category plus visible color, shape, material, use, logo text, or model-code clues.
 - If several objects are visible, choose the most prominent shoppable non-person object near the center. Ignore people, background furniture, screen chrome, captions, and unrelated packaging unless the remembered words clearly select another object.
-- Return empty fields only when there is no non-person product or physical object to search for.`;
+- Return empty fields only when there is no non-person product or physical object to search for.
+- refined_query is typed into Japanese marketplaces (Rakuten, Yahoo! Shopping). When Japanese text is printed on the product or package, build refined_query from that printed Japanese product name and brand exactly as printed. Never translate a Japanese product name into English and never answer with a generic English category such as "convenience food", "chocolate bar" or "bath bomb".
+- The largest printed text is usually the product name (prominent_text in the evidence lists the largest OCR text first). Re-read digits and small kana from the image itself when OCR text looks wrong.
+- A decorative sentence printed on an item (for example an English phrase on a mug) is not a product name. Use the item category in Japanese plus any brand or logo text that is actually visible.`;
 const SOCIAL_HOSTS = new Set([
   'instagram.com', 'www.instagram.com', 'm.instagram.com',
   'tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com',
@@ -417,6 +420,17 @@ export function janCodeSearchAnalysis(evidence = {}) {
   });
 }
 
+// 2026-11-15: 日本語の袋は、いちばん大きく印字された日本語で探す（英語の一般語より先に使う）。
+// prominent_text（文字の大きい順）のうち、日本語を含む上位 2 行。無ければ null。
+const hasJapanese = (line) => /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(String(line || ''));
+export function japaneseProminentTextAnalysis(evidence = {}) {
+  const lines = (Array.isArray(evidence?.prominent_text) ? evidence.prominent_text : [])
+    .map((line) => cleanText(line, 40)).filter((line) => line.length >= 2 && hasJapanese(line)).slice(0, 2);
+  const refinedQuery = cleanText(lines.join(' '), 200);
+  if (refinedQuery.length < 2) return null;
+  return normalizeSearchInputAnalysis({ refined_query: refinedQuery, matched_features: lines, match_score: 0 });
+}
+
 export function ocrTextSearchAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
   // detected_textは出現頻度順。日本語(かな・漢字)を含む行を優先し、
@@ -540,12 +554,12 @@ export async function analyzeSearchInput({
             contents: [{ role: 'user', parts }],
             ...(contextUrl ? { tools: [{ urlContext: {} }] } : (grounded ? { tools: [{ googleSearch: {} }] } : {})),
             generationConfig: (contextUrl || grounded)
-              ? { temperature: 0.1, maxOutputTokens: 384 }
+              ? { temperature: 0.1, maxOutputTokens: contextImage ? 1024 : 384 }
               : {
                 temperature: 0.1,
                 responseMimeType: 'application/json',
                 responseSchema: ANALYSIS_RESPONSE_SCHEMA,
-                maxOutputTokens: 384
+                maxOutputTokens: contextImage ? 1024 : 384
               }
           }),
           redirect: 'manual',
@@ -625,6 +639,12 @@ export async function analyzeSearchInput({
     const jan = janCodeSearchAnalysis(visualWebEvidence);
     if (jan) return { result: jan, provider: 'GOOGLE_VISION_JAN_FALLBACK' };
     const strong = strongGoogleVisualWebFallbackAnalysis(visualWebEvidence);
+    // 2026-11-15: Web 一致のラベルが英語だけで、袋に日本語が大きく印字されている時は、袋の日本語を優先する
+    // （実機: 「Bathclin Bath Bomb」「chocolate bar Meiji」で検索して外した）。
+    const japanesePackage = japaneseProminentTextAnalysis(visualWebEvidence);
+    if (japanesePackage && !(strong && hasJapanese(strong.refined_query))) {
+      return { result: japanesePackage, provider: 'GOOGLE_VISION_OCR_FALLBACK' };
+    }
     if (strong) return { result: strong, provider: 'GOOGLE_VISION_WEB_DETECTION_FALLBACK' };
     const ocr = ocrTextSearchAnalysis(visualWebEvidence);
     if (ocr) return { result: ocr, provider: 'GOOGLE_VISION_OCR_FALLBACK' };
@@ -746,6 +766,15 @@ export async function analyzeSearchInput({
     throw attachDiagnostic(new Error('SEARCH_INPUT_ANALYSIS_EMPTY'));
   }
   await awaitVision();
+  // 2026-11-15: 袋に日本語が大きく印字されているのに、検索語に日本語が 1 文字も無い時は、袋の日本語で探す
+  // （日本のモールで当たらない英語の一般語を使わない）。ブランドの仮説があれば先頭に残す。
+  if (normalizedImage && !rescuedByVision && result.refined_query && !hasJapanese(result.refined_query)) {
+    const japanesePackage = japaneseProminentTextAnalysis(visualWebEvidence);
+    if (japanesePackage) {
+      const brand = result.candidate_brand && !japanesePackage.refined_query.includes(result.candidate_brand) ? result.candidate_brand : '';
+      result = { ...result, refined_query: cleanText([brand, japanesePackage.refined_query].filter(Boolean).join(' '), 200) };
+    }
+  }
   // grounding を使ったときは、根拠にしたページを一緒に返す（連携先に無かったときの逃げ道）。
   const referenceUrls = groundImages && !rescuedByVision ? groundedReferenceUrls(responsePayload) : [];
   const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';

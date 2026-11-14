@@ -3001,6 +3001,15 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const latencyInputKind = validatedInput.ai_candidate_fallback ? 'confirmed'
       : validatedInput.search_image ? 'image' : validatedInput.social_url ? 'social' : 'text';
     let searchInputAnalysis = null;
+    // 2026-11-15: 写真・投稿URLの解析がどの経路で答えたか／どこで落ちたかを固定語彙で残す（写真・検索語は入れない）
+    const analysisStartedAt = Date.now();
+    const logKnowledgeAnalysis = (provider, diagnostic) => {
+      const record = recordIdentifyLatency(env, {
+        route: 'knowledge', cacheState: 'off', aiMs: Date.now() - analysisStartedAt, previewMs: 0, totalMs: Date.now() - analysisStartedAt,
+        provider, diagnostic, inputKind: validatedInput.search_image ? 'image' : 'url'
+      });
+      if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
+    };
     if (hasMultimodalInput) {
       try {
         searchInputAnalysis = await analyzeSearchInput({
@@ -3008,6 +3017,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
           social_url: validatedInput.social_url,
           image: validatedInput.search_image
         }, validatedInput.language, env, fetch);
+        logKnowledgeAnalysis(searchInputAnalysis?.provider || '', searchInputAnalysis?.diagnostic || '');
         if (searchInputAnalysis.visual_fallback_code) {
           queueSearchProviderDegradation(env, ctx, requestId, {
             component: 'visual_web_detection', provider: 'google_cloud_vision',
@@ -3019,6 +3029,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         // marketplace search if vision/grounding is temporarily unavailable.
         // Screenshot/URL-only requests and deictic text such as "これ" cannot
         // be interpreted without that evidence, so they fail explicitly.
+        logKnowledgeAnalysis('FAILED', String(error?.diagnostic || error?.message || ''));
         if (!isIndependentSearchText(submittedQuery)) throw error;
         queueSearchProviderDegradation(env, ctx, requestId, {
           component: 'search_input_analysis', provider: 'gemini',
