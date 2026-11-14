@@ -197,6 +197,32 @@ test('P0: search-completed sessions distinguish observed purchase-link beacons f
   sqlite.close();
 });
 
+test('P0 fixed destination stage aggregates contain no identifiers and exclude QA/internal', async () => {
+  const db = setup();
+  const ins = db.prepare(`INSERT INTO growth_events
+    (event_type,traffic_class,source,visitor_id,session_id,medium,campaign,content,occurred_at)
+    VALUES (?1,?2,'test','private-visitor',?3,'','','',?4)`);
+  const stamp = new Date(Date.now() - 60_000).toISOString();
+  for (const [type, traffic, session] of [
+    ['search_result_direct_offer_rendered','ATTRIBUTED','private-direct'],
+    ['search_result_direct_offer_collapsed','UNATTRIBUTED','private-collapsed'],
+    ['search_result_marketplace_search_only','ATTRIBUTED','private-search-only'],
+    ['search_result_no_destination','UNATTRIBUTED','private-no-link'],
+    ['search_result_no_destination','QA','private-qa'],
+    ['search_result_no_destination','INTERNAL','private-internal']
+  ]) ins.run(type,traffic,session,stamp);
+  const result = (await operationalDiagnostics(d1(db),['internal-1'])).search_result_destination_stages_7d;
+  assert.equal(result.status,'AVAILABLE');
+  assert.deepEqual(result.rows.map(x=>[x.event_type,x.events,x.sessions]),[
+    ['search_result_direct_offer_collapsed',1,1],
+    ['search_result_direct_offer_rendered',1,1],
+    ['search_result_marketplace_search_only',1,1],
+    ['search_result_no_destination',1,1]
+  ]);
+  assert.doesNotMatch(JSON.stringify(result),/private-visitor|private-direct|private-collapsed|private-search-only|private-no-link|private-qa|session_id/);
+  db.close();
+});
+
 test('KPI成果物へ無人取得できる公開healthの最小情報だけを格納する', async () => {
   const healthy = await readPublicHealth(async () => Response.json({
     ok: true, release: '1.22.1', missing: [], weak: [], secret_value: 'do-not-copy'
