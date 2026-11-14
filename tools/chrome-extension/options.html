@@ -1,24 +1,6 @@
 <!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="options.css">
-  <title>P-GATE 接続設定</title>
-</head>
-<body>
-  <main>
-    <img src="icons/icon.svg" width="64" height="64" alt="">
-    <p class="eyebrow">CONNECTION</p>
-    <h1>P-GATE接続設定</h1>
-    <p>管理者から案内されたP-GATEのHTTPS URLを入力してください。質問はURLのフラグメントで渡すため、WebサーバーのURLログには送信されません。</p>
-    <form id="optionsForm">
-      <label for="pwaBaseUrl">P-GATE URL</label>
-      <input id="pwaBaseUrl" type="url" required placeholder="https://p-gate.example">
-      <button type="submit">保存</button>
-      <p id="status" role="status"></p>
-    </form>
-  </main>
-  <script type="module" src="options.js"></script>
-</body>
-</html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="options.css"><title>ホシル 接続設定</title></head><body><main>
+<img src="icons/icon.svg" width="64" height="64" alt="ホシル"><p class="eyebrow">CONNECTION</p><h1>ホシル接続設定</h1><p>案内されたホシルの公開HTTPS URLを入力してください。相談内容はURLのフラグメントで受け渡すため、通常のWebサーバーログには送信されません。</p>
+<form id="optionsForm"><label for="pwaBaseUrl">ホシル URL</label><input id="pwaBaseUrl" type="url" required placeholder="https://hoshilu.app"><button type="submit">保存</button><p id="status" role="status"></p></form>
+<p><a href="https://hoshilu.app/privacy.html" target="_blank" rel="noopener noreferrer">プライバシー方針</a> ・ <a href="https://hoshilu.app/terms.html" target="_blank" rel="noopener noreferrer">利用上の注意</a></p>
+</main><script type="module" src="options.js"></script></body></html>

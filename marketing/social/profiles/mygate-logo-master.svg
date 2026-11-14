@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="0 0 2048 2048">
+  <defs>
+    <linearGradient id="mGradient" x1="350" y1="440" x2="1720" y2="1500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f238b5"/>
+      <stop offset="0.48" stop-color="#8a4cf4"/>
+      <stop offset="1" stop-color="#258cff"/>
+    </linearGradient>
+    <linearGradient id="doorGradient" x1="990" y1="1120" x2="1390" y2="1570" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9c4ff5"/>
+      <stop offset="1" stop-color="#376eea"/>
+    </linearGradient>
+    <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff8c7" stop-opacity="0.98"/>
+      <stop offset="0.55" stop-color="#ffd77a" stop-opacity="0.58"/>
+      <stop offset="1" stop-color="#ffd77a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="38" stdDeviation="42" flood-color="#7449e9" flood-opacity="0.22"/>
+    </filter>
+    <filter id="doorShadow" x="-40%" y="-40%" width="200%" height="200%">
+      <feDropShadow dx="18" dy="26" stdDeviation="25" flood-color="#4330bd" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <rect width="2048" height="2048" fill="#ffffff"/>
+  <ellipse cx="1024" cy="1645" rx="690" ry="115" fill="url(#lightGradient)" opacity="0.58"/>
+
+  <path d="M430 1575V610C430 513 548 465 616 534L945 865C989 909 1059 909 1103 865L1432 534C1500 465 1618 513 1618 610V1575"
+        fill="none" stroke="url(#mGradient)" stroke-width="270" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)"/>
+
+  <path d="M1080 1250L1372 1082V1552L1080 1692Z"
+        fill="url(#doorGradient)" stroke="#ffffff" stroke-opacity="0.20" stroke-width="8" stroke-linejoin="round" filter="url(#doorShadow)"/>
+  <path d="M1372 1082L1480 1175V1500L1372 1552Z" fill="#ffe19a" opacity="0.42"/>
+  <ellipse cx="1272" cy="1425" rx="25" ry="29" fill="#ffffff"/>
+  <ellipse cx="1272" cy="1425" rx="62" ry="70" fill="url(#lightGradient)" opacity="0.42"/>
+</svg>

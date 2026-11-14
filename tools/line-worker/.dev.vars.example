@@ -1,0 +1,37 @@
+# Public configuration
+GAS_BACKEND_URL=https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec
+PWA_ORIGIN=https://hoshilu.app
+TURNSTILE_SITE_KEY=replace-with-public-site-key
+
+# Generate independent random values of at least 32 characters.
+# Never commit real values or paste them into documents/chat.
+GAS_BRIDGE_SECRET=replace-with-random-secret-at-least-32-characters
+TRACKING_SIGNING_SECRET=replace-with-another-random-secret-at-least-32-characters
+
+# Operator console: all three values are required and must not be reused elsewhere.
+ADMIN_AUTH_ID=replace-with-operator-id
+ADMIN_AUTH_PASSWORD=replace-with-unique-password-at-least-16-characters
+ADMIN_SESSION_SECRET=replace-with-independent-random-secret-at-least-64-characters
+
+# Seller console: use credentials and a signing secret independent from operator values.
+SELLER_AUTH_ID=replace-with-seller-id
+SELLER_AUTH_PASSWORD=replace-with-unique-password-at-least-12-characters
+AUTH_SESSION_SECRET=replace-with-independent-random-secret-at-least-64-characters
+SELLER_ACCOUNT_NAME=Seller
+SELLER_ALLOWED_TENANTS=itg
+SELLER_PLAN=LITE
+
+# LINE Messaging API: leave both empty until the official account is ready.
+LINE_CHANNEL_SECRET=
+LINE_CHANNEL_ACCESS_TOKEN=
+
+# LINE Login is independent from Messaging API.
+LINE_LOGIN_CHANNEL_ID=
+LINE_LOGIN_CHANNEL_SECRET=
+LINE_LOGIN_CALLBACK_URL=https://hoshilu.app/api/member/line/callback
+
+# Amazon Creators API (Amazon.co.jp Associates)
+AMAZON_CREATORS_CREDENTIAL_ID=
+AMAZON_CREATORS_CREDENTIAL_SECRET=
+AMAZON_CREATORS_CREDENTIAL_VERSION=2.3
+AMAZON_ASSOCIATE_TAG=

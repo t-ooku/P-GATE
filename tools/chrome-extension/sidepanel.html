@@ -1,34 +1,7 @@
 <!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="panel.css">
-  <title>P-GATE 商品相談</title>
-</head>
-<body>
-  <header>
-    <img src="icons/icon.svg" width="36" height="36" alt="">
-    <div><strong>P-GATE</strong><span>商品相談</span></div>
-  </header>
-  <main>
-    <p class="eyebrow">CURRENT PAGE</p>
-    <h1>見ている商品について相談</h1>
-    <p class="description">商品名または選択した文字を確認してから、P-GATEへ渡します。閲覧履歴全体は取得しません。</p>
-
-    <label for="query">相談内容</label>
-    <textarea id="query" minlength="2" maxlength="200" placeholder="商品ページを開いて、もう一度P-GATEを押してください"></textarea>
-    <p id="sourceStatus" class="status" role="status"></p>
-
-    <label class="consent">
-      <input id="consent" type="checkbox">
-      <span>上の文字をP-GATE相談画面へ渡すことに同意します。</span>
-    </label>
-
-    <button id="consult" type="button">P-GATEで相談する <span>→</span></button>
-    <button id="settings" class="text-button" type="button">接続先を設定</button>
-    <p id="error" class="error" role="alert"></p>
-  </main>
-  <script type="module" src="sidepanel.js"></script>
-</body>
-</html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="panel.css"><title>ホシル｜HOSHILU</title></head>
+<body><header><img src="icons/icon.svg" width="38" height="38" alt="ホシル"><div><strong>HOSHILU</strong><span>欲しいを、ちゃんと見つける。</span></div></header><main>
+<p class="eyebrow">ホシル</p><h1>見ている商品について話そう。</h1><p class="description">商品名や選択した言葉を読み取り、ホシルの会話画面へ安全に引き継ぎます。閲覧履歴全体は取得しません。</p>
+<label for="query">相談する内容</label><textarea id="query" maxlength="200"></textarea><p id="sourceStatus" class="source-status"></p>
+<label class="consent"><input id="consent" type="checkbox"><span>上の文字をホシルへ渡すことに同意します。</span></label><button id="consult" type="button">ホシルで相談する <span>→</span></button><button id="settings" class="text-button" type="button">接続先を設定</button><p id="error" class="error" role="alert"></p>
+</main><script type="module" src="sidepanel.js"></script></body></html>

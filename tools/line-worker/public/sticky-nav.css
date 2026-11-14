@@ -1,0 +1,74 @@
+.topbar {
+  min-height: 60px;
+  padding-block: 7px;
+  top: 0;
+  z-index: 30;
+  position: sticky;
+}
+
+.feature-pills {
+  position: sticky;
+  top: var(--topbar-height, 60px);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 180px));
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 7px max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(48, 35, 102, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.feature-pills button {
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(105deg, var(--pink), var(--violet), var(--cyan));
+  box-shadow: 0 7px 18px rgba(115, 87, 255, 0.22);
+}
+
+.feature-pills button:nth-child(2) {
+  background: linear-gradient(105deg, #7357ff, #9d55ef, #ff4f9a);
+}
+
+.hero {
+  padding: 26px 4px 24px;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    min-height: 56px;
+    padding-block: 6px;
+  }
+
+  .feature-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px 7px;
+  }
+
+  .feature-pills button {
+    min-height: 30px;
+    padding-inline: 3px;
+    overflow: visible;
+    font-size: clamp(7.5px, 2.1vw, 9.5px);
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .hero {
+    padding-top: 20px;
+  }
+}

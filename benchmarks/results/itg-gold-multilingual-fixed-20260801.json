@@ -1,0 +1,963 @@
+{
+  "schema_version": "1.0",
+  "label": "multilingual-fixed-20260801",
+  "generated_at": "2026-08-01T04:19:31.196Z",
+  "dataset": {
+    "targets": 30,
+    "cases": 15,
+    "tenant": "itg"
+  },
+  "overall": {
+    "cases": 15,
+    "top1": 0.2,
+    "top3": 0.6,
+    "top10": 1,
+    "category_match": 0.8,
+    "mrr": 0.4677777777777778,
+    "ndcg_at_3": 0.4349146009523887,
+    "ndcg_at_10": 0.5984204740139756,
+    "no_answer_rate": 0,
+    "wrong_answer_rate": 0,
+    "clarification_rate": 1,
+    "mywish_offer_rate": 0,
+    "safe_response_rate": 1
+  },
+  "by_locale": {
+    "ja": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    },
+    "en": {
+      "cases": 5,
+      "top1": 0.2,
+      "top3": 0.6,
+      "top10": 1,
+      "category_match": 0.8,
+      "mrr": 0.49000000000000005,
+      "ndcg_at_3": 0.452371901428583,
+      "ndcg_at_10": 0.61587777449017,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "zh": {
+      "cases": 5,
+      "top1": 0.2,
+      "top3": 0.6,
+      "top10": 1,
+      "category_match": 0.8,
+      "mrr": 0.45666666666666667,
+      "ndcg_at_3": 0.42618595071429155,
+      "ndcg_at_10": 0.5896918237758785,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "ko": {
+      "cases": 5,
+      "top1": 0.2,
+      "top3": 0.6,
+      "top10": 1,
+      "category_match": 0.8,
+      "mrr": 0.45666666666666667,
+      "ndcg_at_3": 0.42618595071429155,
+      "ndcg_at_10": 0.5896918237758785,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    }
+  },
+  "by_information_level": {
+    "rich": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    },
+    "ambiguous": {
+      "cases": 15,
+      "top1": 0.2,
+      "top3": 0.6,
+      "top10": 1,
+      "category_match": 0.8,
+      "mrr": 0.4677777777777778,
+      "ndcg_at_3": 0.4349146009523887,
+      "ndcg_at_10": 0.5984204740139756,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "ultra_ambiguous": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    }
+  },
+  "by_query_type": {
+    "category_branch": {
+      "cases": 3,
+      "top1": 0,
+      "top3": 0,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.20000000000000004,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.38685280723454163,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "color_package": {
+      "cases": 6,
+      "top1": 0.5,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.6944444444444445,
+      "ndcg_at_3": 0.7718216255952429,
+      "ndcg_at_10": 0.7718216255952429,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "compatibility": {
+      "cases": 3,
+      "top1": 0,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "sensory": {
+      "cases": 3,
+      "top1": 1,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "shape_function": {
+      "cases": 12,
+      "top1": 0,
+      "top3": 0.5,
+      "top10": 1,
+      "category_match": 0.75,
+      "mrr": 0.3347222222222222,
+      "ndcg_at_3": 0.29364325119048584,
+      "ndcg_at_10": 0.49802559251746953,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "usage_scene": {
+      "cases": 3,
+      "top1": 0,
+      "top3": 0,
+      "top10": 1,
+      "category_match": 0,
+      "mrr": 0.25,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.43067655807339306,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    }
+  },
+  "evaluations": [
+    {
+      "case_id": "T03-en-1",
+      "target_id": "T03",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "a lavender scented soy candle in a glass jar",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-zh-1",
+      "target_id": "T03",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "玻璃罐装的薰衣草香味大豆蜡烛",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-ko-1",
+      "target_id": "T03",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "유리병에 담긴 라벤더 향 소이 캔들",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T04-en-1",
+      "target_id": "T04",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "small wired earbuds that fit inside the ear",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"headphone\"*",
+      "rank": 5,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.2,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.38685280723454163,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -17.615556657219518
+        },
+        {
+          "asin": "B00UWKHE7U",
+          "product_name": "KIDSSAFE HEADPHONES",
+          "manufacturer": "Maxell",
+          "text_rank": -14.182584815149333
+        },
+        {
+          "asin": "B000GX9NVI",
+          "product_name": "ED1TC HEADPHONES",
+          "manufacturer": "Koss",
+          "text_rank": -14.182584815149333
+        }
+      ]
+    },
+    {
+      "case_id": "T04-zh-1",
+      "target_id": "T04",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "小巧的有线入耳式耳机",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"headphone\"*",
+      "rank": 5,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.2,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.38685280723454163,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -17.615556657219518
+        },
+        {
+          "asin": "B00UWKHE7U",
+          "product_name": "KIDSSAFE HEADPHONES",
+          "manufacturer": "Maxell",
+          "text_rank": -14.182584815149333
+        },
+        {
+          "asin": "B000GX9NVI",
+          "product_name": "ED1TC HEADPHONES",
+          "manufacturer": "Koss",
+          "text_rank": -14.182584815149333
+        }
+      ]
+    },
+    {
+      "case_id": "T04-ko-1",
+      "target_id": "T04",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "귀에 넣는 작은 유선 이어폰",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"headphone\"*",
+      "rank": 5,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.2,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.38685280723454163,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -17.615556657219518
+        },
+        {
+          "asin": "B00UWKHE7U",
+          "product_name": "KIDSSAFE HEADPHONES",
+          "manufacturer": "Maxell",
+          "text_rank": -14.182584815149333
+        },
+        {
+          "asin": "B000GX9NVI",
+          "product_name": "ED1TC HEADPHONES",
+          "manufacturer": "Koss",
+          "text_rank": -14.182584815149333
+        }
+      ]
+    },
+    {
+      "case_id": "T19-en-1",
+      "target_id": "T19",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "a very slim jet black wallet that fits in a pocket",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-zh-1",
+      "target_id": "T19",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "能放进口袋的超薄黑色钱包",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T19-ko-1",
+      "target_id": "T19",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "주머니에 들어가는 아주 얇은 검정 지갑",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T28-en-1",
+      "target_id": "T28",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "a clear narrow organizer bin for the refrigerator",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "\"organizer\"* OR \"storage\"* OR \"container\"*",
+      "rank": 4,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.25,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.43067655807339306,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001KN12PI",
+          "product_name": "Sterilite ClearView 3 Storage Drawer Organizer by STERILITE",
+          "manufacturer": "Sterilite",
+          "text_rank": -23.811471835272812
+        },
+        {
+          "asin": "B005LAHBQU",
+          "product_name": "Quantum Storage Systems COV91000CO Cover for Dividable Grid Container DG91035 and DG91050 Black Conductive 10-Pack by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -21.066405702202424
+        },
+        {
+          "asin": "B0051XS4UO",
+          "product_name": "Quantum QUS984MOB Plastic Storage Stacking Hulk Container 30-Inch by 16-Inch by 14-Inch Yellow Case of 1 by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -20.243308719747773
+        }
+      ]
+    },
+    {
+      "case_id": "T28-zh-1",
+      "target_id": "T28",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "冰箱里用的透明细长收纳盒",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "\"organizer\"* OR \"storage\"* OR \"container\"*",
+      "rank": 4,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.25,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.43067655807339306,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001KN12PI",
+          "product_name": "Sterilite ClearView 3 Storage Drawer Organizer by STERILITE",
+          "manufacturer": "Sterilite",
+          "text_rank": -23.811471835272812
+        },
+        {
+          "asin": "B005LAHBQU",
+          "product_name": "Quantum Storage Systems COV91000CO Cover for Dividable Grid Container DG91035 and DG91050 Black Conductive 10-Pack by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -21.066405702202424
+        },
+        {
+          "asin": "B0051XS4UO",
+          "product_name": "Quantum QUS984MOB Plastic Storage Stacking Hulk Container 30-Inch by 16-Inch by 14-Inch Yellow Case of 1 by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -20.243308719747773
+        }
+      ]
+    },
+    {
+      "case_id": "T28-ko-1",
+      "target_id": "T28",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "냉장고에 쓰는 투명하고 긴 수납함",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "\"organizer\"* OR \"storage\"* OR \"container\"*",
+      "rank": 4,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.25,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.43067655807339306,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001KN12PI",
+          "product_name": "Sterilite ClearView 3 Storage Drawer Organizer by STERILITE",
+          "manufacturer": "Sterilite",
+          "text_rank": -23.811471835272812
+        },
+        {
+          "asin": "B005LAHBQU",
+          "product_name": "Quantum Storage Systems COV91000CO Cover for Dividable Grid Container DG91035 and DG91050 Black Conductive 10-Pack by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -21.066405702202424
+        },
+        {
+          "asin": "B0051XS4UO",
+          "product_name": "Quantum QUS984MOB Plastic Storage Stacking Hulk Container 30-Inch by 16-Inch by 14-Inch Yellow Case of 1 by Quantum Storage Systems",
+          "manufacturer": "QUANTUM STORAGE SYSTEMS",
+          "text_rank": -20.243308719747773
+        }
+      ]
+    },
+    {
+      "case_id": "T29-en-1",
+      "target_id": "T29",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "a compact USB-C hub with multiple ports for a laptop",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-zh-1",
+      "target_id": "T29",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "笔记本电脑用的小型多接口USB-C转接器",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-ko-1",
+      "target_id": "T29",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    }
+  ]
+}

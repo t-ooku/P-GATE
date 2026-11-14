@@ -1,0 +1,15 @@
+{
+  "accessory_terms": {
+    "ja": ["アクセサリー", "カバー", "バッグ", "ケースのみ", "マウスパッド", "シューズラック", "靴ラック", "スタンド", "保護フィルム", "交換部品"],
+    "en": ["accessory", "cover", "camera bag", "case only", "mousepad", "mouse pad", "shoe rack", "stand only", "screen protector", "replacement part"],
+    "ko": ["액세서리", "커버", "카메라 가방", "마우스 패드", "신발장", "스탠드", "보호 필름"],
+    "zh": ["配件", "保护套", "相机包", "鼠标垫", "鞋架", "支架", "保护膜"]
+  },
+  "body_terms": {
+    "CAMERA": ["camera body", "mirrorless camera", "カメラ本体", "ミラーレスカメラ", "카메라 본체", "相机机身"],
+    "FAN": ["desk fan", "usb fan", "扇風機本体", "USB扇風機", "선풍기 본체", "风扇主机"],
+    "MOUSE": ["wireless mouse", "mouse body", "マウス本体", "ワイヤレスマウス", "마우스 본체", "鼠标主体"],
+    "SHOES": ["sneakers", "shoes", "スニーカー", "靴本体", "운동화", "鞋子"],
+    "TABLET": ["tablet body", "タブレット本体", "태블릿 본체", "平板电脑主机"]
+  }
+}

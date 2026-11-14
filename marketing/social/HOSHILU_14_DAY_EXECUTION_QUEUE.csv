@@ -1,0 +1,15 @@
+day,campaign_id,content_id,channel,series,hook,prefill_query,cta,disclosure,status
+1,launch_01,brand_rename,INSTAGRAM,ブランド宣言,"検索語が分からないなら、検索する前にホシル。","インスタで見た、名前の分からないもの","覚えていることをホシルへ",NONE,READY
+2,launch_01,camera_quiz,TIKTOK,#これ何て検索する,"ピンクで小さいカメラみたいな、あれ。","SNSで見た、ピンクの小さいカメラみたいなもの","検索語をコメント","回答は匿名集計しサービス改善に利用します",READY
+3,launch_01,phone_case_quiz,X,#これ何て検索する,"TikTokで見た、光るスマホケース。","TikTokで見た光るスマホケース","ホシルで条件に変える","回答は匿名集計しサービス改善に利用します",READY
+4,launch_01,search_demo,YOUTUBE,#今日のホシル,"曖昧な一言が検索ワードになるまで。","推し活で使える小さな写真プリンター","同じ条件で探す",NONE,READY
+5,launch_01,want_poll,INSTAGRAM,参加型質問,"今いちばん探したいものは？","最近SNSで見て気になったもの","コメントで教えて","回答は匿名集計しサービス改善に利用します",READY
+6,launch_01,earphone_demo,TIKTOK,#今日のホシル,"韓国っぽい透明のイヤホン、で探せる？","韓国っぽい透明のワイヤレスイヤホン","条件を引き継いで探す",NONE,READY
+7,launch_01,save_habit,X,#ほしっとく,"今日見つからなくても、検索を終わらせない。","夏フェスで使える小さい扇風機","今の検索をほしっとく",NONE,READY
+8,launch_02,desk_light_quiz,INSTAGRAM,#これ何て検索する,"机の端につける、丸く光るライト。","机の端につける丸く光るライト","何て検索するかコメント","回答は匿名集計しサービス改善に利用します",READY
+9,launch_02,amazon_bridge,TIKTOK,検索支援,"ホシルで整えて、Amazonでそのまま探す。","一人暮らしの部屋に置ける静かな加湿器","検索ワードをコピー",NONE,READY
+10,launch_02,watch_habit,YOUTUBE,#これホシっといて,"値下げまで、毎日検索しなくていい。","旅行用の軽いモバイルバッテリー","通知条件を保存",NONE,READY
+11,launch_02,fashion_poll,X,参加型質問,"バッグにつける小さいぬいぐるみ、何て呼ぶ？","バッグにつける小さいぬいぐるみ","呼び方を返信","回答は匿名集計しサービス改善に利用します",READY
+12,launch_02,room_demo,INSTAGRAM,#今日のホシル,"部屋をおしゃれにする、夕焼けみたいなライト。","夕焼けみたいな色が壁に映るライト","ホシルで探す",NONE,READY
+13,launch_02,pet_quiz,TIKTOK,#これ何て検索する,"留守番中の猫に水を飲ませる、あれ。","留守番中の猫が飲める自動の水入れ","用途から検索",NONE,READY
+14,launch_02,week_review,X,#ホシった,"今週みんなが探した『名前のない欲しい』。","今週SNSで見て気になったもの","次の欲しいをホシルへ","集計値のみ掲載し原コメントは許可なく引用しません",READY

@@ -1181,6 +1181,648 @@ var DatabaseEngine = (function () {
 }());
 
 /**
+ * HOSHILU公開検索用D1へ、Master_Databaseで変更された商品だけを転送する。
+ * Spreadsheetは監査用SSoT、D1は高速検索用の再構築可能な索引として扱う。
+ */
+var ProductIndexSyncEngine = (function () {
+  'use strict';
+  var MAX_RECORDS_PER_REQUEST = 200;
+  var DEFAULT_ENDPOINT = 'https://hoshilu.app/api/internal/products/sync';
+
+  function property(name, fallback) {
+    return PropertiesService.getScriptProperties().getProperty(name) || fallback || '';
+  }
+
+  function publicRecord(record) {
+    return {
+      record_key: record.record_key,
+      asin: record.asin,
+      sku: record.sku || '',
+      product_name: record.product_name,
+      manufacturer: record.manufacturer || '',
+      image: record.image || '',
+      stock: Number(record.stock || 0),
+      amazon_jp_url: record.amazon_jp_url || '',
+      amazon_us_url: record.amazon_us_url || '',
+      search_aliases: record.search_aliases || [],
+      localized_content: record.localized_content || {},
+      row_hash: record.row_hash,
+      imported_at: record.imported_at
+    };
+  }
+
+  function sync(tenant, batchId, records) {
+    records = records || [];
+    if (records.length === 0) { return { requests: 0, sent: 0 }; }
+    var secret = property('PRODUCT_SYNC_SECRET', property('LINE_BRIDGE_SECRET', ''));
+    if (secret.length < 32) {
+      throw Utility.createError('PRODUCT_SYNC_SECRET_MISSING', 'PRODUCT_SYNC_SECRETまたはLINE_BRIDGE_SECRETが未設定です。');
+    }
+    var endpoint = property('PRODUCT_INDEX_SYNC_URL', DEFAULT_ENDPOINT);
+    var requests = 0;
+    var sent = 0;
+    for (var offset = 0; offset < records.length; offset += MAX_RECORDS_PER_REQUEST) {
+      var chunk = records.slice(offset, offset + MAX_RECORDS_PER_REQUEST).map(publicRecord);
+      var response = UrlFetchApp.fetch(endpoint, {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { Authorization: 'Bearer ' + secret },
+        payload: JSON.stringify({
+          tenant: tenant,
+          batch_id: batchId + ':' + Math.floor(offset / MAX_RECORDS_PER_REQUEST),
+          records: chunk
+        }),
+        muteHttpExceptions: true
+      });
+      requests += 1;
+      if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
+        throw Utility.createError('PRODUCT_SYNC_HTTP_ERROR', 'D1商品索引への同期に失敗しました。', {
+          status: response.getResponseCode(), offset: offset
+        });
+      }
+      sent += chunk.length;
+    }
+    return { requests: requests, sent: sent };
+  }
+
+  return {
+    MAX_RECORDS_PER_REQUEST: MAX_RECORDS_PER_REQUEST,
+    publicRecord: publicRecord,
+    sync: sync
+  };
+}());
+
+/**
+ * 輸入不可・キャンセル需要を匿名化し、国内代替候補の検索条件へ変換する。
+ * 注文番号原文・氏名・住所・連絡先・理由全文は保存しない。
+ */
+var UnmetDemandEngine = (function () {
+  'use strict';
+  var MAX_RECORDS_PER_REQUEST = 200;
+  var DEFAULT_SYNC_ENDPOINT = 'https://hoshilu.app/api/internal/unmet-demand/sync';
+  var RULES = [
+    { code: 'LITHIUM_BATTERY', risk: 'HIGH', words: ['リチウム','バッテリー','電池','lithium','battery'] },
+    { code: 'LIQUID', risk: 'HIGH', words: ['液体','リキッド','液状','liquid','fluid','ml','oz'] },
+    { code: 'HAZARDOUS_AIR_CARGO', risk: 'HIGH', words: ['危険物','可燃','引火','エアゾール','スプレー','hazardous','flammable','aerosol'] },
+    { code: 'OVERSIZE_OR_OVERWEIGHT', risk: 'MEDIUM', words: ['大型','重量','重すぎ','サイズ超過','oversize','overweight','too large'] },
+    { code: 'FOOD_PLANT_ANIMAL', risk: 'HIGH', words: ['食品','肉','植物','種子','動物','food','meat','plant','seed','animal'] },
+    { code: 'REGULATORY_OR_CERTIFICATION', risk: 'HIGH', words: ['医薬品','薬機法','pse','技適','認証','規制','medical','certification','regulated'] },
+    { code: 'OUT_OF_STOCK', risk: 'LOW', words: ['在庫切れ','欠品','売り切れ','out of stock','unavailable'] },
+    { code: 'DELIVERY_TIME', risk: 'LOW', words: ['納期','間に合わ','遅い','delivery','too late'] },
+    { code: 'PRICE', risk: 'LOW', words: ['価格','高い','予算','price','expensive','cost'] },
+    { code: 'CUSTOMER_CHANGED_MIND', risk: 'LOW', words: ['不要になった','気が変わった','間違え','changed mind','ordered by mistake'] }
+  ];
+
+  function normalize(value) {
+    return String(value || '').normalize ? String(value || '').normalize('NFKC').toLowerCase() : String(value || '').toLowerCase();
+  }
+
+  function classify(reason) {
+    var text = normalize(reason);
+    for (var i = 0; i < RULES.length; i += 1) {
+      for (var j = 0; j < RULES[i].words.length; j += 1) {
+        if (text.indexOf(RULES[i].words[j]) >= 0) {
+          return { restriction_class: RULES[i].code, risk: RULES[i].risk, evidence_code: RULES[i].words[j] };
+        }
+      }
+    }
+    return { restriction_class: 'UNKNOWN', risk: 'MEDIUM', evidence_code: '' };
+  }
+
+  function occurredMonth(value) {
+    var date = value instanceof Date ? value : new Date(value);
+    return isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 7);
+  }
+
+  function buildRecord(input) {
+    input = input || {};
+    var classification = classify(input.import_restriction || input.customer_cancellation || '');
+    return {
+      tenant: Utility.trim(input.tenant).toLowerCase(),
+      source_order_hash: Utility.sha256(Utility.trim(input.order_id)),
+      source_product_id: Utility.trim(input.asin || input.product_id).toUpperCase(),
+      desired_use: Utility.trim(input.desired_use).slice(0, 200),
+      desired_function: Utility.trim(input.desired_function).slice(0, 200),
+      desired_ingredient_or_material: Utility.trim(input.desired_ingredient_or_material).slice(0, 200),
+      restriction_class: classification.restriction_class,
+      restriction_evidence: classification.evidence_code,
+      requested_country: Utility.trim(input.requested_country || 'JP').toUpperCase(),
+      occurred_month: occurredMonth(input.occurred_at),
+      anonymous_demand_count: 1,
+      domestic_alternative_status: 'UNRESOLVED',
+      verification_level: classification.risk === 'HIGH' ? 'HUMAN_REQUIRED' : 'UNVERIFIED'
+    };
+  }
+
+  function alternativeSearchTerms(record, productName) {
+    var terms = [Utility.trim(productName), record.desired_use, record.desired_function, record.desired_ingredient_or_material];
+    if (record.restriction_class === 'LIQUID') { terms.push('国内販売', '同用途', '非液体'); }
+    if (record.restriction_class === 'LITHIUM_BATTERY') { terms.push('国内PSE', '電池別売'); }
+    if (record.restriction_class === 'OVERSIZE_OR_OVERWEIGHT') { terms.push('小型', '軽量', '国内配送'); }
+    if (record.restriction_class === 'HAZARDOUS_AIR_CARGO') { terms.push('非危険物', '国内販売'); }
+    var seen = {};
+    return terms.filter(function (term) {
+      term = Utility.trim(term);
+      if (!term || seen[term]) { return false; }
+      seen[term] = true;
+      return true;
+    });
+  }
+
+  function syncRecord(record) {
+    return {
+      tenant: Utility.trim(record.tenant).toLowerCase(),
+      source_order_hash: Utility.trim(record.source_order_hash).toLowerCase(),
+      source_product_id: Utility.trim(record.source_product_id).toUpperCase(),
+      restriction_class: Utility.trim(record.restriction_class).toUpperCase(),
+      occurred_month: Utility.trim(record.occurred_month),
+      anonymous_demand_count: Math.max(1, Number(record.anonymous_demand_count || 1)),
+      domestic_alternative_status: Utility.trim(record.domestic_alternative_status || 'UNRESOLVED').toUpperCase(),
+      verified_alternative_ids: (record.verified_alternative_ids || []).slice(0, 3),
+      verification_level: Utility.trim(record.verification_level || 'UNVERIFIED').toUpperCase()
+    };
+  }
+
+  function sync(records) {
+    records = records || [];
+    if (!records.length) { return { requests: 0, sent: 0 }; }
+    var properties = PropertiesService.getScriptProperties();
+    var secret = properties.getProperty('UNMET_DEMAND_SYNC_SECRET') || '';
+    if (secret.length < 32) {
+      throw Utility.createError('UNMET_DEMAND_SYNC_SECRET_MISSING', 'UNMET_DEMAND_SYNC_SECRETが未設定です。');
+    }
+    var endpoint = properties.getProperty('UNMET_DEMAND_SYNC_URL') || DEFAULT_SYNC_ENDPOINT;
+    var requests = 0;
+    var sent = 0;
+    for (var offset = 0; offset < records.length; offset += MAX_RECORDS_PER_REQUEST) {
+      var chunk = records.slice(offset, offset + MAX_RECORDS_PER_REQUEST).map(syncRecord);
+      var response = UrlFetchApp.fetch(endpoint, {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { 'x-hoshilu-internal-secret': secret },
+        payload: JSON.stringify({ records: chunk }),
+        muteHttpExceptions: true
+      });
+      requests += 1;
+      if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
+        throw Utility.createError('UNMET_DEMAND_SYNC_HTTP_ERROR', '輸入制限Knowledgeの同期に失敗しました。', {
+          status: response.getResponseCode(), offset: offset
+        });
+      }
+      sent += chunk.length;
+    }
+    return { requests: requests, sent: sent };
+  }
+
+  return {
+    MAX_RECORDS_PER_REQUEST: MAX_RECORDS_PER_REQUEST,
+    RULES: RULES.slice(),
+    classify: classify,
+    buildRecord: buildRecord,
+    alternativeSearchTerms: alternativeSearchTerms,
+    syncRecord: syncRecord,
+    sync: sync
+  };
+}());
+
+/**
+ * MYGATE - SocialKnowledgeEngine.gs
+ *
+ * SNSのコメント・アンケート回答を、同意告知、匿名化、人手審査を経て
+ * MYTREASURE向けの匿名需要集計へ変換する。
+ * 既存のKnowledge_Query_Logや商品Masterへ直接書き込まない。
+ */
+var SocialKnowledgeEngine = (function () {
+  'use strict';
+
+  var INBOX_SHEET_NAME = 'Social_Knowledge_Inbox';
+  var AGGREGATE_SHEET_NAME = 'Social_Knowledge_Aggregates';
+  var HASHTAG_AGGREGATE_SHEET_NAME = 'Social_Hashtag_Aggregates';
+  var INBOX_HEADERS = [
+    'Response_ID', 'Collected_At', 'Source', 'Post_ID', 'Campaign_ID',
+    'Response_Type', 'Response_Text_Redacted', 'Poll_Option', 'Language',
+    'Consent_Basis', 'Disclosure_Version', 'Author_Hash', 'Duplicate_Hash',
+    'Suggested_Category', 'Suggested_Need_Key', 'Approved_Category',
+    'Approved_Need_Key', 'Review_Status', 'Reviewed_At', 'Reviewer',
+    'Exclusion_Reason'
+  ];
+  var AGGREGATE_HEADERS = [
+    'Need_Key', 'Category', 'Language', 'Response_Count', 'Unique_Authors',
+    'First_Seen_At', 'Last_Seen_At', 'Source_Count', 'Campaign_Count', 'Updated_At'
+  ];
+  var HASHTAG_HEADERS = [
+    'Hashtag', 'Response_Count', 'Unique_Authors', 'Source_Count',
+    'Campaign_Count', 'First_Seen_At', 'Last_Seen_At', 'Updated_At'
+  ];
+  var ALLOWED_SOURCES = ['INSTAGRAM', 'TIKTOK', 'X', 'YOUTUBE', 'LINE', 'WEB', 'MANUAL'];
+  var ALLOWED_RESPONSE_TYPES = ['COMMENT', 'POLL', 'FORM'];
+  var ALLOWED_CONSENT_BASES = ['EXPLICIT', 'POST_DISCLOSURE'];
+  var AUTO_REJECT_CATEGORIES = [
+    'THREAT', 'HATE', 'SEXUAL_EXPLOITATION', 'PERSONAL_DATA', 'MALICIOUS_SPAM'
+  ];
+  var FLAG_CATEGORIES = [
+    'HARASSMENT', 'SEXUAL', 'PROFANITY', 'SELF_HARM', 'OFF_TOPIC', 'COMMERCIAL_SPAM'
+  ];
+
+  function ensureSheets() {
+    var spreadsheet = Config.getSpreadsheet();
+    return {
+      inbox: Utility.ensureSheet(spreadsheet, INBOX_SHEET_NAME, INBOX_HEADERS),
+      aggregates: Utility.ensureSheet(spreadsheet, AGGREGATE_SHEET_NAME, AGGREGATE_HEADERS),
+      hashtags: Utility.ensureSheet(
+        spreadsheet,
+        HASHTAG_AGGREGATE_SHEET_NAME,
+        HASHTAG_HEADERS
+      )
+    };
+  }
+
+  function required(value, code, message) {
+    var text = Utility.trim(value);
+    if (!text) {
+      throw Utility.createError(code, message);
+    }
+    return text;
+  }
+
+  function allowed(value, values, code, label) {
+    var normalized = required(value, code, label + 'は必須です。').toUpperCase();
+    if (values.indexOf(normalized) < 0) {
+      throw Utility.createError(code, label + 'が許可値ではありません。', {
+        value: normalized,
+        allowed: values
+      });
+    }
+    return normalized;
+  }
+
+  function normalizeText(value) {
+    var text = String(value == null ? '' : value);
+    if (text.normalize) {
+      text = text.normalize('NFKC');
+    }
+    return text.replace(/[\s\u3000]+/g, ' ').trim();
+  }
+
+  function redactPersonalData(value) {
+    var text = normalizeText(value);
+    return text
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[EMAIL]')
+      .replace(/https?:\/\/\S+/gi, '[URL]')
+      .replace(/(^|\s)@[A-Z0-9_\.]+/gi, '$1[HANDLE]')
+      .replace(/(?:\+?81[-\s]?)?(?:0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})/g, '[PHONE]')
+      .slice(0, 1000);
+  }
+
+  function extractHashtags(value) {
+    var text = normalizeText(value);
+    var matches = text.match(/[#＃][\p{L}\p{N}_ー-]{1,50}/gu) || [];
+    var seen = {};
+    return matches.map(function (tag) {
+      return tag.replace(/^[#＃]/, '').toLowerCase();
+    }).filter(function (tag) {
+      if (!tag || seen[tag]) { return false; }
+      seen[tag] = true;
+      return true;
+    }).slice(0, 20);
+  }
+
+  /**
+   * 固定ルールと外部AI判定結果を統合する。
+   * 正当な批判や商品への不満は除外しない。高危険度のみ自動除外し、
+   * 曖昧な内容は必ず人手確認へ回す。
+   */
+  function moderateContent(text, aiModeration) {
+    var normalized = normalizeText(text);
+    var lower = normalized.toLowerCase();
+    var categories = [];
+    var reasons = [];
+    var highRiskPatterns = [
+      { category: 'THREAT', pattern: /(?:殺す|死ね|消えろ|危害|kill\s+you|i(?:'|’)ll\s+kill)/i },
+      { category: 'PERSONAL_DATA', pattern: /\[(?:EMAIL|PHONE)\]/i },
+      { category: 'MALICIOUS_SPAM', pattern: /(?:今すぐ稼げる|必ず儲かる|送金して|口座番号|暗号資産を送|guaranteed\s+profit|send\s+(?:money|crypto))/i }
+    ];
+    var reviewPatterns = [
+      { category: 'HARASSMENT', pattern: /(?:バカ|馬鹿|アホ|無能|きもい|クズ|idiot|stupid|moron)/i },
+      { category: 'PROFANITY', pattern: /(?:くそ|クソ|fuck|shit)/i },
+      { category: 'OFF_TOPIC', pattern: /(?:フォローして|相互フォロー|follow\s+me|dm\s+me)/i },
+      { category: 'COMMERCIAL_SPAM', pattern: /(?:副業紹介|無料プレゼント|限定オファー|promo\s+code|buy\s+followers)/i }
+    ];
+
+    highRiskPatterns.concat(reviewPatterns).forEach(function (rule) {
+      if (rule.pattern.test(lower) && categories.indexOf(rule.category) < 0) {
+        categories.push(rule.category);
+        reasons.push('RULE:' + rule.category);
+      }
+    });
+
+    aiModeration = aiModeration || {};
+    var aiCategories = aiModeration.categories || [];
+    var aiConfidence = Number(aiModeration.confidence || 0);
+    for (var i = 0; i < aiCategories.length; i += 1) {
+      var aiCategory = String(aiCategories[i] || '').toUpperCase();
+      if (aiCategory && categories.indexOf(aiCategory) < 0) {
+        categories.push(aiCategory);
+      }
+    }
+    if (aiCategories.length) {
+      reasons.push('AI:' + categories.join(',') + ':' + aiConfidence.toFixed(2));
+    }
+
+    var autoReject = categories.some(function (category) {
+      return AUTO_REJECT_CATEGORIES.indexOf(category) >= 0;
+    }) && (!aiCategories.length || aiConfidence >= 0.85 || reasons.some(function (reason) {
+      return reason.indexOf('RULE:') === 0;
+    }));
+    var flagged = categories.some(function (category) {
+      return FLAG_CATEGORIES.indexOf(category) >= 0;
+    }) || (aiCategories.length > 0 && aiConfidence >= 0.5);
+
+    return {
+      status: autoReject ? 'AUTO_REJECTED' : (flagged ? 'REVIEW_FLAGGED' : 'REVIEW'),
+      categories: categories,
+      reason: reasons.join('|').slice(0, 500)
+    };
+  }
+
+  function findDuplicate(sheet, duplicateHash) {
+    if (sheet.getLastRow() < 2) { return ''; }
+    var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, INBOX_HEADERS.length).getValues();
+    var duplicateColumn = INBOX_HEADERS.indexOf('Duplicate_Hash');
+    for (var i = 0; i < values.length; i += 1) {
+      if (String(values[i][duplicateColumn]) === duplicateHash) {
+        return String(values[i][0]);
+      }
+    }
+    return '';
+  }
+
+  function ingest(request) {
+    request = request || {};
+    var sheets = ensureSheets();
+    var source = allowed(request.source, ALLOWED_SOURCES, 'SOCIAL_SOURCE_INVALID', 'Source');
+    var responseType = allowed(
+      request.response_type,
+      ALLOWED_RESPONSE_TYPES,
+      'SOCIAL_RESPONSE_TYPE_INVALID',
+      'Response_Type'
+    );
+    var consentBasis = allowed(
+      request.consent_basis,
+      ALLOWED_CONSENT_BASES,
+      'SOCIAL_CONSENT_REQUIRED',
+      'Consent_Basis'
+    );
+    var disclosureVersion = required(
+      request.disclosure_version,
+      'SOCIAL_DISCLOSURE_REQUIRED',
+      'Disclosure_Versionは必須です。'
+    );
+    var postId = required(request.post_id, 'SOCIAL_POST_ID_REQUIRED', 'Post_IDは必須です。');
+    var platformResponseId = required(
+      request.platform_response_id,
+      'SOCIAL_RESPONSE_ID_REQUIRED',
+      'Platform response IDは必須です。'
+    );
+    var redactedText = redactPersonalData(request.response_text);
+    var pollOption = normalizeText(request.poll_option).slice(0, 200);
+    if (!redactedText && !pollOption) {
+      throw Utility.createError('SOCIAL_RESPONSE_EMPTY', 'コメント本文または投票選択肢が必要です。');
+    }
+    var authorHash = request.author_platform_id
+      ? Utility.sha256(source + ':' + String(request.author_platform_id)) : '';
+    var duplicateHash = Utility.sha256(source + ':' + postId + ':' + platformResponseId);
+    var existingId = findDuplicate(sheets.inbox, duplicateHash);
+    if (existingId) {
+      return { status: 'DUPLICATE', response_id: existingId };
+    }
+
+    var responseId = Utility.uuid();
+    var collectedAt = Utility.nowIso();
+    var moderation = moderateContent(redactedText || pollOption, request.ai_moderation);
+    sheets.inbox.getRange(
+      sheets.inbox.getLastRow() + 1,
+      1,
+      1,
+      INBOX_HEADERS.length
+    ).setValues([[
+      responseId,
+      collectedAt,
+      source,
+      postId,
+      Utility.trim(request.campaign_id),
+      responseType,
+      redactedText,
+      pollOption,
+      Utility.trim(request.language || 'JA').toUpperCase(),
+      consentBasis,
+      disclosureVersion,
+      authorHash,
+      duplicateHash,
+      Utility.trim(request.suggested_category).toUpperCase(),
+      Utility.trim(request.suggested_need_key).toLowerCase(),
+      '',
+      '',
+      moderation.status,
+      '',
+      moderation.status === 'AUTO_REJECTED' ? 'AUTO_MODERATION' : '',
+      moderation.reason
+    ]]);
+    return {
+      status: moderation.status,
+      response_id: responseId,
+      moderation_categories: moderation.categories
+    };
+  }
+
+  function ingestMany(requests) {
+    requests = requests || [];
+    var results = [];
+    for (var i = 0; i < requests.length; i += 1) {
+      try {
+        results.push(ingest(requests[i]));
+      } catch (error) {
+        results.push({ status: 'ERROR', error: Utility.serializeError(error) });
+      }
+    }
+    return results;
+  }
+
+  function review(responseId, decision) {
+    decision = decision || {};
+    var sheets = ensureSheets();
+    var values = sheets.inbox.getDataRange().getValues();
+    var status = Utility.trim(decision.status).toUpperCase();
+    if (['APPROVED', 'REJECTED'].indexOf(status) < 0) {
+      throw Utility.createError('SOCIAL_REVIEW_STATUS_INVALID', 'StatusはAPPROVEDまたはREJECTEDです。');
+    }
+    for (var i = 1; i < values.length; i += 1) {
+      if (String(values[i][0]) !== String(responseId)) { continue; }
+      if (status === 'APPROVED') {
+        var category = required(
+          decision.category,
+          'SOCIAL_CATEGORY_REQUIRED',
+          '承認時はCategoryが必要です。'
+        ).toUpperCase();
+        var needKey = required(
+          decision.need_key,
+          'SOCIAL_NEED_KEY_REQUIRED',
+          '承認時はNeed_Keyが必要です。'
+        ).toLowerCase();
+        values[i][INBOX_HEADERS.indexOf('Approved_Category')] = category;
+        values[i][INBOX_HEADERS.indexOf('Approved_Need_Key')] = needKey;
+      }
+      values[i][INBOX_HEADERS.indexOf('Review_Status')] = status;
+      values[i][INBOX_HEADERS.indexOf('Reviewed_At')] = Utility.nowIso();
+      values[i][INBOX_HEADERS.indexOf('Reviewer')] = Utility.trim(decision.reviewer);
+      values[i][INBOX_HEADERS.indexOf('Exclusion_Reason')] = Utility.trim(decision.exclusion_reason);
+      sheets.inbox.getRange(i + 1, 1, 1, INBOX_HEADERS.length).setValues([values[i]]);
+      rebuildAggregates();
+      return { status: status, response_id: responseId };
+    }
+    throw Utility.createError('SOCIAL_RESPONSE_NOT_FOUND', 'Response_IDが見つかりません。');
+  }
+
+  function uniqueCount(map) {
+    return Object.keys(map).length;
+  }
+
+  function rebuildAggregates() {
+    var sheets = ensureSheets();
+    var values = sheets.inbox.getDataRange().getValues();
+    var indexes = {};
+    for (var h = 0; h < INBOX_HEADERS.length; h += 1) { indexes[INBOX_HEADERS[h]] = h; }
+    var groups = {};
+    var hashtagGroups = {};
+    for (var i = 1; i < values.length; i += 1) {
+      var row = values[i];
+      if (String(row[indexes.Review_Status]) !== 'APPROVED') { continue; }
+      var needKey = String(row[indexes.Approved_Need_Key] || '');
+      var category = String(row[indexes.Approved_Category] || '');
+      var language = String(row[indexes.Language] || 'JA');
+      if (!needKey || !category) { continue; }
+      var key = [needKey, category, language].join('|');
+      if (!groups[key]) {
+        groups[key] = {
+          needKey: needKey,
+          category: category,
+          language: language,
+          count: 0,
+          authors: {},
+          sources: {},
+          campaigns: {},
+          first: String(row[indexes.Collected_At]),
+          last: String(row[indexes.Collected_At])
+        };
+      }
+      var group = groups[key];
+      group.count += 1;
+      if (row[indexes.Author_Hash]) { group.authors[String(row[indexes.Author_Hash])] = true; }
+      group.sources[String(row[indexes.Source])] = true;
+      if (row[indexes.Campaign_ID]) { group.campaigns[String(row[indexes.Campaign_ID])] = true; }
+      var collectedAt = String(row[indexes.Collected_At]);
+      if (collectedAt < group.first) { group.first = collectedAt; }
+      if (collectedAt > group.last) { group.last = collectedAt; }
+
+      extractHashtags(row[indexes.Response_Text_Redacted]).forEach(function (tag) {
+        if (!hashtagGroups[tag]) {
+          hashtagGroups[tag] = {
+            count: 0, authors: {}, sources: {}, campaigns: {},
+            first: collectedAt, last: collectedAt
+          };
+        }
+        var hashtag = hashtagGroups[tag];
+        hashtag.count += 1;
+        if (row[indexes.Author_Hash]) { hashtag.authors[String(row[indexes.Author_Hash])] = true; }
+        hashtag.sources[String(row[indexes.Source])] = true;
+        if (row[indexes.Campaign_ID]) { hashtag.campaigns[String(row[indexes.Campaign_ID])] = true; }
+        if (collectedAt < hashtag.first) { hashtag.first = collectedAt; }
+        if (collectedAt > hashtag.last) { hashtag.last = collectedAt; }
+      });
+    }
+
+    var rows = Object.keys(groups).sort().map(function (key) {
+      var group = groups[key];
+      return [
+        group.needKey,
+        group.category,
+        group.language,
+        group.count,
+        uniqueCount(group.authors),
+        group.first,
+        group.last,
+        uniqueCount(group.sources),
+        uniqueCount(group.campaigns),
+        Utility.nowIso()
+      ];
+    });
+    if (sheets.aggregates.getLastRow() > 1) {
+      sheets.aggregates.getRange(
+        2,
+        1,
+        sheets.aggregates.getLastRow() - 1,
+        AGGREGATE_HEADERS.length
+      ).clearContent();
+    }
+    if (rows.length > 0) {
+      sheets.aggregates.getRange(2, 1, rows.length, AGGREGATE_HEADERS.length).setValues(rows);
+    }
+    var hashtagRows = Object.keys(hashtagGroups).sort().map(function (tag) {
+      var item = hashtagGroups[tag];
+      return [
+        tag, item.count, uniqueCount(item.authors), uniqueCount(item.sources),
+        uniqueCount(item.campaigns), item.first, item.last, Utility.nowIso()
+      ];
+    });
+    if (sheets.hashtags.getLastRow() > 1) {
+      sheets.hashtags.getRange(
+        2, 1, sheets.hashtags.getLastRow() - 1, HASHTAG_HEADERS.length
+      ).clearContent();
+    }
+    if (hashtagRows.length > 0) {
+      sheets.hashtags.getRange(
+        2, 1, hashtagRows.length, HASHTAG_HEADERS.length
+      ).setValues(hashtagRows);
+    }
+    return { aggregate_count: rows.length, hashtag_count: hashtagRows.length };
+  }
+
+  return {
+    INBOX_SHEET_NAME: INBOX_SHEET_NAME,
+    AGGREGATE_SHEET_NAME: AGGREGATE_SHEET_NAME,
+    HASHTAG_AGGREGATE_SHEET_NAME: HASHTAG_AGGREGATE_SHEET_NAME,
+    ensureSheets: ensureSheets,
+    redactPersonalData: redactPersonalData,
+    extractHashtags: extractHashtags,
+    moderateContent: moderateContent,
+    ingest: ingest,
+    ingestMany: ingestMany,
+    review: review,
+    rebuildAggregates: rebuildAggregates
+  };
+}());
+
+function importSocialKnowledgeResponse(request) {
+  'use strict';
+  return SocialKnowledgeEngine.ingest(request);
+}
+
+function importSocialKnowledgeResponses(requests) {
+  'use strict';
+  return SocialKnowledgeEngine.ingestMany(requests);
+}
+
+function reviewSocialKnowledgeResponse(responseId, decision) {
+  'use strict';
+  return SocialKnowledgeEngine.review(responseId, decision);
+}
+
+function rebuildSocialKnowledgeAggregates() {
+  'use strict';
+  return SocialKnowledgeEngine.rebuildAggregates();
+}
+
+/**
  * Project GATE - OpportunityEngine.gs
  * MVP範囲のProfitとSEOを100点満点で別々に出力する。
  * SEOは固定費ゼロの再現可能な情報充足度スコアとし、結果をAI_Cacheへ保存する。
@@ -2277,7 +2919,8 @@ var MarketplaceEngine = (function () {
   var HEADERS = [
     'Offer_ID', 'Tenant', 'ASIN', 'Marketplace', 'External_Product_ID', 'Product_URL',
     'Price', 'Shipping_Fee', 'Currency', 'Stock_Status', 'Delivery_Days',
-    'Seller_Name', 'Approved', 'Updated_At'
+    'Seller_Name', 'Approved', 'Updated_At', 'Merchant_ID', 'Seller_SKU', 'Offer_Listing_ID',
+    'Seller_Plan', 'Registered_At', 'Listing_Status'
   ];
   var MARKETPLACES = {
     AMAZON_JP: ['amazon.co.jp'],
@@ -2285,6 +2928,8 @@ var MarketplaceEngine = (function () {
     YAHOO_JP: ['shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp']
   };
   var STOCK_STATUSES = { IN_STOCK: true, OUT_OF_STOCK: true, UNKNOWN: true };
+  var SELLER_PLANS = { PARTNER: 0, PRO: 1, GROWTH: 2, LITE: 3 };
+  var LISTING_STATUSES = { ACTIVE: true, INACTIVE: true, SUSPENDED: true, REMOVED: true };
   var MAX_OFFERS_PER_PRODUCT = 3;
   var VALIDATION_HEADERS = [
     'Row_Number', 'Offer_ID', 'Tenant', 'ASIN', 'Marketplace',
@@ -2317,7 +2962,12 @@ var MarketplaceEngine = (function () {
       .requireValueInList(Object.keys(STOCK_STATUSES), true).setAllowInvalid(false)
       .setHelpText('在庫あり、在庫切れ、不明のいずれかを選択してください。').build();
     var approvedRule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+    var planRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(SELLER_PLANS), true).setAllowInvalid(false).build();
+    var listingRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(LISTING_STATUSES), true).setAllowInvalid(false).build();
 
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
     sheet.setFrozenColumns(3);
     sheet.getRange(2, 4, dataRows, 1).setDataValidation(marketplaceRule);
@@ -2327,12 +2977,18 @@ var MarketplaceEngine = (function () {
     sheet.getRange(2, 10, dataRows, 1).setDataValidation(stockRule);
     sheet.getRange(2, 11, dataRows, 1).setDataValidation(nonNegativeRule).setNumberFormat('0');
     sheet.getRange(2, 13, dataRows, 1).setDataValidation(approvedRule);
+    sheet.getRange(2, 18, dataRows, 1).setDataValidation(planRule);
+    sheet.getRange(2, 20, dataRows, 1).setDataValidation(listingRule);
     sheet.getRange(1, 1, 1, HEADERS.length).setNotes([[
       '自動生成または任意の一意ID', '商品マスターと同じtenant', '英数字10文字',
       'プルダウンから選択', 'EC側の商品ID（公開しない）', '許可ECのHTTPS URL',
       '0より大きい販売価格', '0以上の送料', 'JPY', '在庫状態',
       '配送目安日数。未確認は0', '内部管理用（公開しない）',
-      '担当者確認後のみチェック', '最終確認日時'
+      '担当者確認後のみチェック', '最終確認日時',
+      '契約時に登録するEC側マーチャントID（内部管理用）', 'セラー側SKU（内部管理用）',
+      'Amazon等のオファー識別子。直接送客URL生成に必要な場合のみ登録',
+      'PARTNER、PRO、GROWTH、LITEのいずれか', '契約後の初回登録日時。運営管理値',
+      'ACTIVE、INACTIVE、SUSPENDED、REMOVEDのいずれか'
     ]]);
     return sheet;
   }
@@ -2374,6 +3030,8 @@ var MarketplaceEngine = (function () {
     var asin = Utility.trim(input.asin).toUpperCase();
     var productUrl = Utility.trim(input.product_url);
     var stockStatus = Utility.trim(input.stock_status || 'UNKNOWN').toUpperCase();
+    var sellerPlan = Utility.trim(input.seller_plan || 'LITE').toUpperCase();
+    var listingStatus = Utility.trim(input.listing_status || 'ACTIVE').toUpperCase();
     if (!Utility.trim(input.offer_id)) {
       throw Utility.createError('MARKETPLACE_OFFER_ID_REQUIRED', 'Offer_IDは必須です。');
     }
@@ -2391,6 +3049,12 @@ var MarketplaceEngine = (function () {
     }
     if (!STOCK_STATUSES[stockStatus]) {
       throw Utility.createError('MARKETPLACE_STOCK_INVALID', 'Stock_StatusはIN_STOCK、OUT_OF_STOCK、UNKNOWNのいずれかです。');
+    }
+    if (SELLER_PLANS[sellerPlan] == null) {
+      throw Utility.createError('MARKETPLACE_SELLER_PLAN_INVALID', 'Seller_PlanはPARTNER、PRO、GROWTH、LITEのいずれかです。');
+    }
+    if (!LISTING_STATUSES[listingStatus]) {
+      throw Utility.createError('MARKETPLACE_LISTING_STATUS_INVALID', 'Listing_Statusが不正です。');
     }
     var price = nonNegativeNumber(input.price, 'PRICE');
     if (price <= 0) {
@@ -2411,6 +3075,12 @@ var MarketplaceEngine = (function () {
       stock_status: stockStatus,
       delivery_days: nonNegativeNumber(input.delivery_days, 'DELIVERY_DAYS'),
       seller_name: Utility.trim(input.seller_name),
+      merchant_id: Utility.trim(input.merchant_id),
+      seller_sku: Utility.trim(input.seller_sku),
+      offer_listing_id: Utility.trim(input.offer_listing_id),
+      seller_plan: sellerPlan,
+      registered_at: Utility.trim(input.registered_at),
+      listing_status: listingStatus,
       approved: isTrue(input.approved),
       updated_at: Utility.trim(input.updated_at)
     };
@@ -2421,32 +3091,40 @@ var MarketplaceEngine = (function () {
       offer_id: row[0], tenant: row[1], asin: row[2], marketplace: row[3],
       external_product_id: row[4], product_url: row[5], price: row[6],
       shipping_fee: row[7], currency: row[8], stock_status: row[9],
-      delivery_days: row[10], seller_name: row[11], approved: row[12], updated_at: row[13]
+      delivery_days: row[10], seller_name: row[11], approved: row[12], updated_at: row[13],
+      merchant_id: row[14], seller_sku: row[15], offer_listing_id: row[16],
+      seller_plan: row[17], registered_at: row[18], listing_status: row[19]
     });
   }
 
   function rankOffers(offers) {
-    return offers.slice().sort(function (left, right) {
+    return offers.filter(function (offer) {
+      return offer.listing_status === 'ACTIVE' && offer.stock_status !== 'OUT_OF_STOCK';
+    }).sort(function (left, right) {
       var leftAvailable = left.stock_status === 'OUT_OF_STOCK' ? 1 : 0;
       var rightAvailable = right.stock_status === 'OUT_OF_STOCK' ? 1 : 0;
       if (leftAvailable !== rightAvailable) { return leftAvailable - rightAvailable; }
-      if (left.total_cost !== right.total_cost) { return left.total_cost - right.total_cost; }
-      if (left.delivery_days !== right.delivery_days) { return left.delivery_days - right.delivery_days; }
-      if (left.marketplace !== right.marketplace) { return left.marketplace.localeCompare(right.marketplace); }
+      var planDifference = SELLER_PLANS[left.seller_plan] - SELLER_PLANS[right.seller_plan];
+      if (planDifference !== 0) { return planDifference; }
+      var leftRegistered = Date.parse(left.registered_at) || Number.MAX_SAFE_INTEGER;
+      var rightRegistered = Date.parse(right.registered_at) || Number.MAX_SAFE_INTEGER;
+      if (leftRegistered !== rightRegistered) { return leftRegistered - rightRegistered; }
       return left.offer_id.localeCompare(right.offer_id);
     }).slice(0, MAX_OFFERS_PER_PRODUCT);
   }
 
-  function loadApprovedOffers(sheet, tenant) {
+  function loadApprovedOffers(sheet) {
     if (!sheet || sheet.getLastRow() < 2) { return {}; }
-    var normalizedTenant = Utility.trim(tenant).toLowerCase();
     var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues();
     var map = {};
+    var seenOfferIds = {};
     rows.forEach(function (row) {
       try {
         var offer = fromRow(row);
-        if (!offer.approved || offer.tenant !== normalizedTenant) { return; }
-        var key = offer.tenant + '|' + offer.asin;
+        var uniqueOfferKey = offer.tenant + '|' + offer.offer_id;
+        if (!offer.approved || seenOfferIds[uniqueOfferKey]) { return; }
+        seenOfferIds[uniqueOfferKey] = true;
+        var key = offer.asin;
         map[key] = map[key] || [];
         map[key].push(offer);
       } catch (ignoreInvalidOffer) {}
@@ -2459,7 +3137,7 @@ var MarketplaceEngine = (function () {
     return records.map(function (record) {
       var copy = {};
       Object.keys(record).forEach(function (key) { copy[key] = record[key]; });
-      var key = Utility.trim(record.tenant).toLowerCase() + '|' + Utility.trim(record.asin).toUpperCase();
+      var key = Utility.trim(record.asin).toUpperCase();
       copy.marketplace_offers = (offerMap[key] || []).map(function (offer) {
         return {
           marketplace: offer.marketplace,
@@ -2469,7 +3147,12 @@ var MarketplaceEngine = (function () {
           total_cost: offer.total_cost,
           currency: offer.currency,
           stock_status: offer.stock_status,
-          delivery_days: offer.delivery_days
+          delivery_days: offer.delivery_days,
+          seller_plan: offer.seller_plan,
+          registered_at: offer.registered_at,
+          listing_status: offer.listing_status,
+          merchant_id: offer.merchant_id,
+          offer_listing_id: offer.offer_listing_id
         };
       });
       return copy;
@@ -2499,7 +3182,8 @@ var MarketplaceEngine = (function () {
       drafts.push([
         'LEGACY-AMAZON-' + tenant + '-' + asin, tenant, asin, 'AMAZON_JP', asin, url,
         price > 0 ? price : '', shipping, 'JPY', Number(record.stock || 0) > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
-        '', '', false, Utility.trim(record.updated_at || record.imported_at || nowIso)
+        '', '', false, Utility.trim(record.updated_at || record.imported_at || nowIso), '', '', '',
+        'LITE', Utility.trim(record.registered_at || nowIso), 'INACTIVE'
       ]);
       keys[key] = true;
     });
@@ -3138,15 +3822,15 @@ var KnowledgeEngine = (function () {
     for (var i = 0; i < japanese.length; i += 1) {
       var segment = japanese[i];
       tokens.push(segment);
-      for (var j = 0; j < segment.length - 1; j += 1) {
-        tokens.push(segment.slice(j, j + 2));
+      for (var j = 0; j < segment.length - 2; j += 1) {
+        tokens.push(segment.slice(j, j + 3));
       }
     }
     var korean = text.match(/[\uac00-\ud7af]{2,}/g) || [];
     for (var k = 0; k < korean.length; k += 1) {
       tokens.push(korean[k]);
-      for (var h = 0; h < korean[k].length - 1; h += 1) {
-        tokens.push(korean[k].slice(h, h + 2));
+      for (var h = 0; h < korean[k].length - 2; h += 1) {
+        tokens.push(korean[k].slice(h, h + 3));
       }
     }
     var seen = {};
@@ -3189,9 +3873,12 @@ var KnowledgeEngine = (function () {
         matched.push(queryTokens[i]);
       }
     }
+    var exactQueryMatch = normalizedQuery.length >= 2 && searchable.indexOf(normalizedQuery) >= 0;
     var relevance = queryTokens.length > 0 ? matched.length / queryTokens.length : 0;
-    if (normalizedQuery.length >= 2 && searchable.indexOf(normalizedQuery) >= 0) {
+    if (exactQueryMatch) {
       relevance = 1;
+    } else if (/[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(normalizedQuery) && matched.length < 2) {
+      relevance = 0;
     }
     var info = informationScore(record);
     var matchScore = Math.round((relevance * 85 + (info / 100) * 15) * 100) / 100;
@@ -3289,7 +3976,10 @@ var KnowledgeEngine = (function () {
     var allRecords = DatabaseEngine.getAllRecords();
     var tenantRecords = filterRecordsByTenant(allRecords, contract.tenant);
     var offerSheet = MarketplaceEngine.ensureSheet();
-    var offerMap = MarketplaceEngine.loadApprovedOffers(offerSheet, contract.tenant);
+    // Product records remain tenant-isolated. Only operator-approved outbound
+    // offers are pooled globally by ASIN so contracted sellers can compete
+    // under the shared plan/registration priority policy.
+    var offerMap = MarketplaceEngine.loadApprovedOffers(offerSheet);
     tenantRecords = MarketplaceEngine.attachOffers(tenantRecords, offerMap);
     var aliasSheets = MultilingualSeoEngine.ensureSheets();
     var aliasMap = MultilingualSeoEngine.loadApprovedAliases(aliasSheets.aliases, contract.tenant);
@@ -3982,6 +4672,13 @@ function processZipFile_(file) {
     // Master_Databaseには過去バッチ・複数tenantの履歴を保持するため、全件を再採点しない。
     var opportunityResult = OpportunityEngine.refresh(validation.validRecords);
     AppLogger.info('DATABASE_SYNCED', 'Master Databaseを同期しました。', syncResult);
+    try {
+      var indexResult = ProductIndexSyncEngine.sync(tenant, batchId, syncResult.changedRecords);
+      AppLogger.info('PRODUCT_INDEX_SYNCED', 'D1商品検索索引を差分同期しました。', indexResult);
+    } catch (indexError) {
+      // D1は再構築可能な検索索引。失敗してもSpreadsheetの正本取込はロールバックしない。
+      AppLogger.warn('PRODUCT_INDEX_SYNC_DEFERRED', 'D1商品検索索引の同期を保留しました。', { code: indexError.code || 'SYNC_ERROR' });
+    }
     AppLogger.info('OPPORTUNITY_UPDATED', 'Opportunityを更新しました。', opportunityResult);
 
     DriveService.moveFile(file, Config.getRequired('ARCHIVE_FOLDER_ID'));
@@ -4061,12 +4758,16 @@ function setupProjectGate() {
   MultilingualSeoEngine.ensureSheets();
   ProductIdentifierEngine.ensureSheets();
   KnowledgeEngine.ensureSheet();
+  SocialKnowledgeEngine.ensureSheets();
   LineIntegration.ensureSheet();
   PreflightEngine.ensureSheet();
   Utility.ensureSheet(Config.getSpreadsheet(), 'MVP_Target', ['ASIN', 'Enabled', 'Note']);
-  SpreadsheetApp.getUi().alert(
-    '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。'
-  );
+  var setupMessage = '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。';
+  var spreadsheet = Config.getSpreadsheet();
+  if (spreadsheet && typeof spreadsheet.toast === 'function') {
+    spreadsheet.toast(setupMessage, 'MYGATE / Project GATE', 10);
+  }
+  Logger.log(setupMessage);
 }
 
 /**
@@ -4107,4 +4808,190 @@ function onOpen() {
     .addItem('5分トリガーを設定', 'installProjectGateTrigger')
     .addItem('トリガーを解除', 'uninstallProjectGateTrigger')
     .addToUi();
+}
+
+/**
+ * Project GATE - DriveMaintenanceEngine.gs
+ *
+ * Safe archive maintenance policy:
+ * - Never deletes files from 01_Input_Zip.
+ * - Only handles ZIP files in 03_Archive.
+ * - Moves ZIP files older than 30 days to Google Drive trash.
+ * - Processes at most 500 files per run.
+ * - Dry-run and production entry points are explicit.
+ */
+var DriveMaintenanceEngine = (function () {
+  'use strict';
+
+  var DEFAULT_ARCHIVE_RETENTION_DAYS = 30;
+  var DEFAULT_MAX_FILES_PER_RUN = 500;
+
+  function getPositiveInteger_(key, defaultValue) {
+    var raw = Config.get(key, String(defaultValue));
+    var value = Number(raw);
+    if (!isFinite(value) || value < 1) {
+      return defaultValue;
+    }
+    return Math.floor(value);
+  }
+
+  function cleanupArchiveFolder(dryRun) {
+    Config.validate();
+
+    var retentionDays = getPositiveInteger_(
+      'ARCHIVE_RETENTION_DAYS',
+      DEFAULT_ARCHIVE_RETENTION_DAYS
+    );
+    var maxFiles = getPositiveInteger_(
+      'DRIVE_MAINTENANCE_MAX_FILES_PER_RUN',
+      DEFAULT_MAX_FILES_PER_RUN
+    );
+    var folder = DriveService.getFolder(
+      Config.getRequired('ARCHIVE_FOLDER_ID')
+    );
+    var cutoff = new Date(
+      Date.now() - retentionDays * 24 * 60 * 60 * 1000
+    );
+    var iterator = folder.getFiles();
+    var candidates = [];
+
+    while (iterator.hasNext()) {
+      var file = iterator.next();
+      var name = String(file.getName() || '');
+
+      if (!/\.zip$/i.test(name)) {
+        continue;
+      }
+      if (file.getLastUpdated().getTime() >= cutoff.getTime()) {
+        continue;
+      }
+
+      candidates.push(file);
+    }
+
+    candidates.sort(function (a, b) {
+      return a.getLastUpdated().getTime() - b.getLastUpdated().getTime();
+    });
+
+    var selected = candidates.slice(0, maxFiles);
+    selected.forEach(function (file) {
+      if (!dryRun) {
+        file.setTrashed(true);
+      }
+
+      AppLogger.info(
+        dryRun ? 'ARCHIVE_DELETE_DRY_RUN' : 'ARCHIVE_TRASHED',
+        file.getName(),
+        {
+          id: file.getId(),
+          lastUpdated: file.getLastUpdated().toISOString(),
+          retentionDays: retentionDays
+        }
+      );
+    });
+
+    var result = {
+      dryRun: dryRun,
+      retentionDays: retentionDays,
+      cutoff: cutoff.toISOString(),
+      candidateCount: candidates.length,
+      processedCount: selected.length,
+      remainingCount: Math.max(0, candidates.length - selected.length)
+    };
+
+    AppLogger.info(
+      dryRun ? 'ARCHIVE_MAINTENANCE_DRY_RUN_SUMMARY' : 'ARCHIVE_MAINTENANCE_SUMMARY',
+      'Archive maintenance completed.',
+      result
+    );
+
+    return result;
+  }
+
+  function executeWithConfig(dryRun) {
+    return cleanupArchiveFolder(dryRun !== false);
+  }
+
+  return {
+    execute: function () {
+      return executeWithConfig(true);
+    },
+    executeWithConfig: executeWithConfig,
+    cleanupArchiveFolder: cleanupArchiveFolder
+  };
+})();
+
+/** Preview only. This function never deletes files. */
+function runDriveMaintenanceDryRun() {
+  var batchId = 'drive-maintenance-dry-run-' + Utilities.getUuid();
+  AppLogger.startBatch(batchId);
+
+  try {
+    var result = DriveMaintenanceEngine.executeWithConfig(true);
+    Logger.log(JSON.stringify(result));
+    return result;
+  } catch (error) {
+    AppLogger.error(
+      'DRIVE_MAINTENANCE_DRY_RUN_ERROR',
+      'Archive maintenance dry-run failed.',
+      error
+    );
+    throw error;
+  } finally {
+    AppLogger.flush();
+  }
+}
+
+/** Production cleanup. Files are moved to Google Drive trash. */
+function runDriveMaintenanceProduction() {
+  var batchId = 'drive-maintenance-production-' + Utilities.getUuid();
+  AppLogger.startBatch(batchId);
+
+  try {
+    var result = DriveMaintenanceEngine.executeWithConfig(false);
+    Logger.log(JSON.stringify(result));
+    return result;
+  } catch (error) {
+    AppLogger.error(
+      'DRIVE_MAINTENANCE_PRODUCTION_ERROR',
+      'Archive maintenance production run failed.',
+      error
+    );
+    throw error;
+  } finally {
+    AppLogger.flush();
+  }
+}
+
+/** Installs one daily production trigger at approximately 03:00. */
+function installDriveMaintenanceDailyTrigger() {
+  var handler = 'runDriveMaintenanceProduction';
+
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === handler) {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  ScriptApp.newTrigger(handler)
+    .timeBased()
+    .everyDays(1)
+    .atHour(3)
+    .create();
+
+  Logger.log('Daily archive maintenance trigger installed.');
+}
+
+function uninstallDriveMaintenanceDailyTrigger() {
+  var handler = 'runDriveMaintenanceProduction';
+  var removed = 0;
+
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === handler) {
+      ScriptApp.deleteTrigger(trigger);
+      removed += 1;
+    }
+  });
+
+  Logger.log('Removed triggers: ' + removed);
 }
