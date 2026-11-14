@@ -1,3 +1,4 @@
+import { isInvalidJanProductKey } from './jan-validity.mjs';
 // 2026-11-07 大隆さん（office hours「ホシルの売上を爆速で伸ばしたい」→ B「通知で戻ってくる」を選択、11/8「とりあえず進めて」）:
 // 値下がりカードの「もっと下がったらLINEで知らせる」。メール登録・6桁コード・LINEログインなしで、
 // LINE の「送信」1 回（友だち追加していなければ追加も）で、その商品の見張りが始まる。
@@ -56,6 +57,7 @@ export function productPageUrl(recordKey, from = 'line_watch') {
 
 // その商品の最新の記録（直近 3 日、同じ日に複数あれば最安）。記録が無ければ null。
 export async function latestObservation(db, recordKey, now = new Date()) {
+  if (isInvalidJanProductKey(recordKey)) return null;
   const row = await db.prepare(`SELECT record_key, product_name, MIN(price) AS price, observed_date FROM price_observations
       WHERE record_key=?1 AND observed_date>=?2 GROUP BY observed_date ORDER BY observed_date DESC LIMIT 1`)
     .bind(recordKey, daysAgo(now, OBSERVATION_FRESH_DAYS)).first();

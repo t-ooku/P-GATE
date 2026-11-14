@@ -1,3 +1,4 @@
+import { isInvalidJanProductKey } from './jan-validity.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
@@ -89,7 +90,7 @@ export function sameProduct(wish,candidate){
   const key=String(wish.target_product_key||'').trim();
   // A saved identifier must not fall through to title similarity on mismatch.
   // Punctuation is significant (item-1 and item_1 are different listings).
-  if(key)return key===targetPriceProductKey(candidate);
+  if(key)return !isInvalidJanProductKey(key) && key===targetPriceProductKey(candidate);
   const title=wish.target_product_name||wish.query_text;
   const expected=identityTokens(title);
   const actual=clean(candidate.display_name||candidate.product_name);
@@ -256,6 +257,7 @@ export async function purgeTargetPriceObservations(env,now=new Date()){
 }
 
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
+  if(isInvalidJanProductKey(wish?.target_product_key))return{scanned:false,notified:false};
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=targetPriceSearchQuery(wish);
   const cached=await cachedRakutenCandidate(env,wish,now);
