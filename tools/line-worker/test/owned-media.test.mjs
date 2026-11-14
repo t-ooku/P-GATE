@@ -479,3 +479,16 @@ test('ジャンル・場面: 読めない時は1回読み直し、それでも�
   assert.equal(none.status, 503);
   assert.ok(calls > 0);
 });
+
+test('invalid JAN drops cannot affect the price baseline or consume the result limit', async () => {
+  const env = envWith(db => {
+    for (const [id, prices] of [['shop:bad', [3000, 2600, 1500]], ['shop:good', [2000, 1900, 1700]]]) {
+      ['2026-10-10', '2026-10-12', '2026-10-14'].forEach((date, i) => observe(db, { id, date, price: prices[i] }));
+    }
+    db.exec(`UPDATE price_observations SET record_key='JAN:0000000000000' WHERE external_product_id='shop:bad'`);
+    observe(db, { id: 'shop:good', date: '2026-10-09', price: 4000 });
+    db.exec(`UPDATE price_observations SET record_key='JAN:2980000620539' WHERE external_product_id='shop:good' AND observed_date='2026-10-09'`);
+  });
+  const drops = await loadPriceDrops(env, { now: NOW, rules: { ...DROP_RULES, limit: 1 } });
+  assert.deepEqual(drops.map(row => [row.record_key, row.max_price]), [['RAKUTEN:shop:good', 2000]]);
+});

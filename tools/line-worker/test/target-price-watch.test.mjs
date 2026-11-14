@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
 import {
   brandToken, identityTokens, modelCodeTokens, observationReason, purgeTargetPriceObservations,
-  runTargetPriceScan, sameProduct, targetPriceProviderOutcome, targetPriceSearchQuery
+  runTargetPriceScan, sameProduct, scanTargetPriceWish, targetPriceProviderOutcome, targetPriceSearchQuery
 } from '../src/target-price-watch.mjs';
 
 globalThis.crypto??=cryptoModule.webcrypto;
@@ -240,4 +240,16 @@ test('保存IDと違う商品は同じタイトル・型番でも通知せず、
   assert.deepEqual(await runTargetPriceScan(env, now, yahooFetch(1000)), { scanned: 1, notifications_sent: 0 });
   assert.equal(sqlite.prepare('SELECT count(*) AS n FROM mywatch_notifications').get().n, 0);
   assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason, 'NO_MATCH');
+});
+
+test('invalid saved JAN never matches and is skipped before provider calls or database access', async () => {
+  for (const key of ['JAN:0000000000000', 'JAN:2980000620539', 'JAN:4582356615598']) {
+    const wish = { watch_price: 1, target_price_jpy: 1200, target_product_key: key, target_product_name: 'fixture serum 30ml' };
+    assert.equal(sameProduct(wish, { record_key: key, display_name: wish.target_product_name }), false);
+    const env = { YAHOO_SHOPPING_CLIENT_ID: 'fixture', PRODUCT_DB: { prepare: () => assert.fail('unexpected D1 access') } };
+    const result = await scanTargetPriceWish(env, wish, '2026-11-14T07:00:00Z', () => assert.fail('unexpected fetch'));
+    assert.deepEqual(result, { scanned: false, notified: false });
+  }
+  const key = 'JAN:4582356615597';
+  assert.equal(sameProduct({ target_product_key: key }, { record_key: key }), true);
 });

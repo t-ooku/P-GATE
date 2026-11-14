@@ -1,3 +1,4 @@
+import { isInvalidJanProductKey } from './jan-validity.mjs';
 // 2026-10-14 大隆さん指示「オウンドメディア作って」。
 //
 // ホシルの読みもの（/media）。既存の買い物ガイド 142 本の実測（8/12〜10/14）では、一般的な「○○の選び方」は
@@ -26,7 +27,7 @@ const CACHE_SECONDS = 1800;
 // 2026-10-19 v8: 値下がりの並びを服寄りに（服 2 → 服以外 1）。古いキャッシュの並びを使わない。
 // （#682 は push 後の wrangler deploy だけが失敗したため、この行で反映し直す）
 // 2026-11-10 v13: D1 の一時読取失敗を 200/noindex として保存した旧キャッシュを即時に切り離す。
-export const MEDIA_TEMPLATE_VERSION = '13';
+export const MEDIA_TEMPLATE_VERSION = '14';
 const PRICE_RECORD_STARTED = '2026-10-03';
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 
@@ -166,25 +167,31 @@ export async function loadPriceDrops(env, { now = new Date(), rules = DROP_RULES
   const since = daysAgo(now, rules.windowDays);
   const freshSince = daysAgo(now, rules.freshDays);
   try {
+    const { results: janKeys = [] } = await db.prepare(`SELECT DISTINCT record_key FROM price_observations
+      WHERE observed_date >= ?1 AND observed_date <= ?2 AND record_key LIKE 'JAN:%'`).bind(since, today).all();
+    const invalidKeys = JSON.stringify(janKeys.map(({ record_key }) => record_key).filter(isInvalidJanProductKey));
     const { results = [] } = await db.prepare(`WITH w AS (
         SELECT marketplace, external_product_id, seller_id, record_key, product_name, observed_date, price, stock_status,
           ROW_NUMBER() OVER (PARTITION BY marketplace, external_product_id, seller_id ORDER BY observed_date DESC) AS rn,
           MAX(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS max_price,
           MIN(price) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS min_price,
           COUNT(*) OVER (PARTITION BY marketplace, external_product_id, seller_id) AS days
-        FROM price_observations WHERE observed_date >= ?1 AND observed_date <= ?2)
+        FROM price_observations WHERE observed_date >= ?1 AND observed_date <= ?2
+          AND record_key NOT IN (SELECT value FROM json_each(?8)))
       SELECT w.marketplace, w.seller_id, w.record_key, w.product_name, w.observed_date AS latest_date, w.price AS latest_price,
         w.max_price, w.min_price, w.days,
         (SELECT MAX(m.observed_date) FROM price_observations m WHERE m.marketplace = w.marketplace
           AND m.external_product_id = w.external_product_id AND m.seller_id = w.seller_id
-          AND m.price = w.max_price AND m.observed_date >= ?1) AS max_date
+          AND m.price = w.max_price AND m.observed_date BETWEEN ?1 AND ?2
+          AND m.record_key NOT IN (SELECT value FROM json_each(?8))) AS max_date
       FROM w
       WHERE w.rn = 1 AND w.days >= ?3 AND w.observed_date >= ?4 AND w.stock_status <> 'OUT_OF_STOCK'
         AND w.price <= w.max_price * (1 - ?5) AND w.price >= w.max_price * (1 - ?6)
         AND EXISTS (SELECT 1 FROM price_observations r WHERE r.marketplace = w.marketplace
-          AND r.external_product_id = w.external_product_id AND r.source IN (${DROP_SOURCES.map((source) => `'${source}'`).join(',')}))
+          AND r.external_product_id = w.external_product_id
+          AND (r.record_key NOT LIKE 'JAN:%' OR r.record_key = w.record_key) AND r.source IN (${DROP_SOURCES.map((source) => `'${source}'`).join(',')}))
       ORDER BY (w.max_price - w.price) * 1.0 / w.max_price DESC, w.observed_date DESC
-      LIMIT ?7`).bind(since, today, rules.minDays, freshSince, rules.minDropRate, rules.maxDropRate, rules.limit).all();
+      LIMIT ?7`).bind(since, today, rules.minDays, freshSince, rules.minDropRate, rules.maxDropRate, rules.limit, invalidKeys).all();
     return results.map((row) => ({
       record_key: String(row.record_key || ''),
       marketplace: String(row.marketplace || ''),
