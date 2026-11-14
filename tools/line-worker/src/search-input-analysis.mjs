@@ -464,6 +464,13 @@ export async function analyzeSearchInput({
   let visualFallbackCode = '';
   let visualFailureDetail = '';
   let geminiFailureDetail = '';
+  // Geminiは応答したが使えなかった時の種類（NOTEXT=文字なし／NOJSON=JSONでない／
+  // NOCAND=JSONだが候補なし）。最初の1回だけ残す（主モデルが外れた理由を見たい）。
+  let geminiReplyKind = '';
+  const noteGeminiReply = (payload, parsedValue, usable) => {
+    if (geminiReplyKind || usable) return;
+    geminiReplyKind = !geminiText(payload) ? 'NOTEXT' : parsedValue ? 'NOCAND' : 'NOJSON';
+  };
   let visualWebStatus = normalizedImage && googleVisualWebDetectionConfigured(env)
     ? 'ATTEMPTED' : 'NOT_CONFIGURED';
   let visionSettled = visualWebStatus !== 'ATTEMPTED';
@@ -565,18 +572,22 @@ export async function analyzeSearchInput({
   // 失敗の切り分け用に、入力断片を含まない固定語彙だけで「どの段階が・何で」
   // 落ちたかを1コードにまとめる(運用テレメトリと構造化ログにだけ載せ、
   // 利用者向けエラーコードは従来どおり)。
-  const attachDiagnostic = (error) => {
-    if (!error || typeof error !== 'object') return error;
+  const buildDiagnostic = (base) => {
     const vision = visualFailureDetail
       ? `VFAIL_${visualFailureDetail}` : `V_${visualWebStatus}`;
     const entities = Array.isArray(visualWebEvidence?.web_entities) ? visualWebEvidence.web_entities.length : 0;
     const textLines = String(visualWebEvidence?.detected_text || '').split('\n').filter(Boolean).length;
     const jan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes.length : 0;
     const guesses = Array.isArray(visualWebEvidence?.best_guess_labels) ? visualWebEvidence.best_guess_labels.length : 0;
-    const base = String(error.message || 'SEARCH_INPUT_ANALYSIS_FAILED');
-    const gemini = base === 'SEARCH_INPUT_ANALYSIS_FAILED' ? `G_${geminiFailureDetail || 'UNKNOWN'}_` : 'G_OK_';
-    error.diagnostic = `${base}__${gemini}${vision}_E${Math.min(99, entities)}_T${Math.min(99, textLines)}_J${jan}_B${Math.min(9, guesses)}`
+    const gemini = base === 'SEARCH_INPUT_ANALYSIS_FAILED' || (base === 'OK' && geminiFailureDetail)
+      ? `G_${geminiFailureDetail || 'UNKNOWN'}_` : 'G_OK_';
+    const reply = geminiReplyKind ? `_R${geminiReplyKind}` : '';
+    return `${base}__${gemini}${vision}_E${Math.min(99, entities)}_T${Math.min(99, textLines)}_J${jan}_B${Math.min(9, guesses)}${reply}`
       .replace(/[^A-Z0-9_]/gu, '').slice(0, 80);
+  };
+  const attachDiagnostic = (error) => {
+    if (!error || typeof error !== 'object') return error;
+    error.diagnostic = buildDiagnostic(String(error.message || 'SEARCH_INPUT_ANALYSIS_FAILED'));
     return error;
   };
   // 単発の429/5xx/瞬断でユーザーの写真検索を即失敗させない。再試行は
@@ -658,6 +669,7 @@ export async function analyzeSearchInput({
       visual_pipeline: 'WEB_VISUAL_V1',
       web_match_tier: visualWebEvidence?.match_tier || visualWebStatus,
       visual_fallback_code: visualFallbackCode,
+      diagnostic: buildDiagnostic('OK'),
       ...rescuedByVision.result
     };
   }
@@ -684,6 +696,7 @@ export async function analyzeSearchInput({
   }
   let parsed = parseJsonText(geminiText(responsePayload));
   let result = normalizeSearchInputAnalysis(parsed || {});
+  noteGeminiReply(responsePayload, parsed, Boolean(result.refined_query));
   if (!result.refined_query && socialUrl && usedUrlContext && normalizedImage) {
     // Successful URL retrieval is not enough if the candidate has no usable,
     // policy-safe hypothesis. Preserve the independently supplied screenshot
@@ -695,6 +708,7 @@ export async function analyzeSearchInput({
     usedUrlContext = false;
     parsed = parseJsonText(geminiText(responsePayload));
     result = normalizeSearchInputAnalysis(parsed || {});
+    noteGeminiReply(responsePayload, parsed, Boolean(result.refined_query));
   }
   if (!result.refined_query && normalizedImage && !usedFallbackModel
     && fallbackModel && fallbackModel !== model && !isIndependentSearchText(rememberedQuery)) {
@@ -706,6 +720,7 @@ export async function analyzeSearchInput({
       usedFallbackModel = true;
       parsed = parseJsonText(geminiText(responsePayload));
       const secondary = normalizeSearchInputAnalysis(parsed || {});
+      noteGeminiReply(responsePayload, parsed, Boolean(secondary.refined_query));
       if (secondary.refined_query) result = secondary;
     } catch {
       // 縮退はこの後のVision救済に任せる。
@@ -748,6 +763,8 @@ export async function analyzeSearchInput({
     // Server-only fixed enum used for anonymous operational telemetry. The
     // API response intentionally omits this field.
     visual_fallback_code: visualFallbackCode,
+    // Server-only fixed-vocabulary stage code for identify_latency_log.
+    diagnostic: buildDiagnostic('OK'),
     reference_urls: referenceUrls,
     ...result
   };

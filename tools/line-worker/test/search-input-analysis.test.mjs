@@ -894,7 +894,8 @@ test('失敗時は段階付きの固定診断コードを error.diagnostic に�
     (error) => {
       assert.equal(error.message, 'SEARCH_INPUT_ANALYSIS_EMPTY');
       assert.match(error.diagnostic, /^SEARCH_INPUT_ANALYSIS_EMPTY__G_OK_V_/u);
-      assert.match(error.diagnostic, /_B1$/u);
+      // 空のJSON（候補なし）だったことも固定語彙で分かる。
+      assert.match(error.diagnostic, /_B1_RNOCAND$/u);
       return true;
     }
   );
@@ -963,4 +964,56 @@ test('Visionが遅くてもGeminiは先行時間を過ぎたら待たずに進�
   assert.equal(result.refined_query, 'ハンディファン');
   assert.equal(result.web_match_tier, 'PROVIDER_FALLBACK');
   assert.equal(result.visual_fallback_code, 'GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+});
+
+// 2026-11-14 Cowork 依頼（写真検索 第1段）: 救済で答えた時も「Gemini がなぜ外れたか」を
+// 固定語彙で残す（タイムアウト／文字なし／JSONでない／候補なし）。
+test('救済で答えた時も Gemini の外れ方が診断コードに残る（入力断片は含めない）', async () => {
+  const vision = () => Response.json({ responses: [{
+    webDetection: { bestGuessLabels: [{ label: 'trackball' }], webEntities: [{ description: 'Elecom' }] }
+  }] });
+  for (const [reply, expected] of [
+    ['', /_RNOTEXT$/u],
+    ['すみません、商品は分かりません private', /_RNOJSON$/u],
+    ['{"refined_query":""}', /_RNOCAND$/u]
+  ]) {
+    const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) return vision();
+      return Response.json({ candidates: [{ content: { parts: reply ? [{ text: reply }] : [] } }] });
+    });
+    assert.equal(result.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+    assert.match(result.diagnostic, /^OK__G_OK_/u);
+    assert.match(result.diagnostic, expected);
+    assert.match(result.diagnostic, /^[A-Z][A-Z0-9_]{1,79}$/u);
+    assert.doesNotMatch(result.diagnostic, /PRIVATE|TRACKBALL|ELECOM/u);
+  }
+  const timedOut = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return vision();
+    throw Object.assign(new Error('timeout'), { name: 'TimeoutError' });
+  });
+  assert.equal(timedOut.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+  assert.match(timedOut.diagnostic, /^OK__G_TIMEOUT_/u);
+});
+
+test('GEMINI_IDENTIFY_GROUNDING=true で JSON 以外が返ったら NOJSON として分かる', async () => {
+  const env = { ...VISUAL_ENV, GEMINI_IDENTIFY_GROUNDING: 'true' };
+  let groundedCalls = 0;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', env, async (url, init) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: { bestGuessLabels: [{ label: 'trackball' }] } }] });
+    }
+    if (JSON.parse(init.body).tools?.some((tool) => tool.googleSearch)) groundedCalls += 1;
+    return Response.json({ candidates: [{ content: { parts: [{ text: 'これはトラックボールのようです。' }] } }] });
+  });
+  assert.ok(groundedCalls >= 1);
+  assert.equal(result.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+  assert.match(result.diagnostic, /_RNOJSON$/u);
+  // 正常に JSON が返れば R は付かない。
+  const ok = await analyzeSearchInput({ image: JPEG }, 'JA', env, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [{}] });
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{"refined_query":"エレコム トラックボール","candidate_name":"エレコム トラックボール"}' }] } }] });
+  });
+  assert.equal(ok.provider, 'GEMINI_SEARCH_GROUNDED');
+  assert.doesNotMatch(ok.diagnostic, /_R[A-Z]+$/u);
+  assert.match(ok.diagnostic, /^OK__G_OK_/u);
 });

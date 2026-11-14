@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  IDENTIFY_LATENCY_RETENTION_MS, identifyLatencyRow, purgeIdentifyLatencyLog, recordIdentifyLatency
+  IDENTIFY_LATENCY_RETENTION_MS, identifyLatencyDetail, identifyLatencyRow, purgeIdentifyLatencyLog, recordIdentifyLatency
 } from '../src/identify-latency.mjs';
-import { deferredPreviewResponse, isIdentifyPreviewKey, readIdentifyPreviews } from '../src/identify-route.mjs';
+import { deferredPreviewResponse, identifyCandidateFromAnalysis, isIdentifyPreviewKey, readIdentifyPreviews } from '../src/identify-route.mjs';
 import { writeIdentifyCache } from '../src/ai-identify-cache.mjs';
 
 function databaseEnv() {
@@ -82,4 +82,57 @@ test('写真からの特定は毎回 Google 検索を引く（見つかること
   assert.match(analysis, /requestAnalysisOnce\('', normalizedImage, IMAGE_ANALYSIS_RETRY_TIMEOUT_MS, fallbackModel, false\)/u);
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   assert.equal(wrangler.vars.GEMINI_IDENTIFY_GROUNDING, 'true');
+});
+
+// 2026-11-14 Cowork 依頼（写真検索 第1段 その1）: どの経路で答えたか・どこで落ちたかを残す。
+test('経路・診断コード・入力の種類は固定語彙だけを残し、想定外の形は空にする', () => {
+  assert.deepEqual(identifyLatencyDetail({
+    provider: 'GOOGLE_VISION_BEST_GUESS_FALLBACK',
+    diagnostic: 'OK__G_TIMEOUT_V_USED_E5_T0_J0_B1',
+    inputKind: 'image'
+  }), { provider: 'GOOGLE_VISION_BEST_GUESS_FALLBACK', diagnostic: 'OK__G_TIMEOUT_V_USED_E5_T0_J0_B1', input_kind: 'image' });
+  // 検索語・商品名・小文字や空白入りの値は書かない。
+  assert.deepEqual(identifyLatencyDetail({ provider: 'エレコム トラックボール', diagnostic: 'mouse Computer', inputKind: 'raw' }),
+    { provider: '', diagnostic: '', input_kind: '' });
+  assert.equal(identifyLatencyDetail({ diagnostic: 'A'.repeat(81) }).diagnostic, '');
+  // 行の基本形（時間の列）は変えない。
+  const row = identifyLatencyRow({ route: 'identify', cacheState: 'miss', provider: 'GEMINI_SEARCH_GROUNDED' });
+  assert.equal('provider' in row, false);
+});
+
+test('0097 適用後は経路・診断も残り、未適用でも時間だけは従来どおり残る', async () => {
+  const now = new Date('2026-11-14T00:00:00.000Z');
+  const input = {
+    route: 'identify', cacheState: 'miss', aiMs: 9000, totalMs: 9500, now,
+    provider: 'FAILED', diagnostic: 'SEARCH_INPUT_ANALYSIS_FAILED__G_TIMEOUT_V_USED_E2_T0_J0_B1', inputKind: 'url'
+  };
+  const legacy = databaseEnv();
+  assert.equal(await recordIdentifyLatency(legacy.env, input), true);
+  assert.equal(legacy.db.prepare('SELECT COUNT(*) AS n FROM identify_latency_log').get().n, 1);
+  const applied = databaseEnv();
+  applied.db.exec(readFileSync(new URL('../migrations/0097_identify_latency_provider.sql', import.meta.url), 'utf8'));
+  assert.equal(await recordIdentifyLatency(applied.env, input), true);
+  const stored = applied.db.prepare('SELECT provider, diagnostic, input_kind, ai_ms FROM identify_latency_log').get();
+  assert.deepEqual({ ...stored }, {
+    provider: 'FAILED', diagnostic: 'SEARCH_INPUT_ANALYSIS_FAILED__G_TIMEOUT_V_USED_E2_T0_J0_B1', input_kind: 'url', ai_ms: 9000
+  });
+  // 既存の行（時間だけ）は空文字の既定値で読める。
+  assert.equal(await recordIdentifyLatency(applied.env, { route: 'identify', cacheState: 'hit', now }), true);
+  assert.equal(applied.db.prepare("SELECT COUNT(*) AS n FROM identify_latency_log WHERE provider=''").get().n, 1);
+  // 14日で消える（列が増えても同じ）。
+  await purgeIdentifyLatencyLog(applied.env, new Date(now.getTime() + IDENTIFY_LATENCY_RETENTION_MS + 1000));
+  assert.equal(applied.db.prepare('SELECT COUNT(*) AS n FROM identify_latency_log').get().n, 0);
+  const migration = readFileSync(new URL('../migrations/0097_identify_latency_provider.sql', import.meta.url), 'utf8');
+  assert.doesNotMatch(migration, /query|session|member|image_data|candidate/iu);
+});
+
+test('識別APIは経路・診断を記録に渡し、利用者への応答には出さない', () => {
+  const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(index, /provider: analysis\?\.provider \|\| '', diagnostic: analysis\?\.diagnostic \|\| ''/u);
+  assert.match(index, /provider: 'FAILED', diagnostic: String\(error\?\.diagnostic \|\| code\)/u);
+  const candidate = identifyCandidateFromAnalysis({
+    candidate_name: 'エレコム トラックボール', provider: 'GEMINI_SEARCH_GROUNDED', diagnostic: 'OK__G_OK_V_USED_E1_T0_J0_B1'
+  });
+  assert.equal('provider' in candidate, false);
+  assert.equal('diagnostic' in candidate, false);
 });

@@ -22,9 +22,35 @@ export function identifyLatencyRow({ route = '', cacheState = '', aiMs = 0, prev
   };
 }
 
+// 2026-11-14 Cowork 依頼: どの経路で答えたか・どこで落ちたかも残す（固定語彙だけ）。
+// 想定外の形の値は空にする（入力断片が紛れ込んでも書かない）。
+const INPUT_KINDS = new Set(['camera', 'screenshot', 'url', 'image']);
+export function identifyLatencyDetail({ provider = '', diagnostic = '', inputKind = '' } = {}) {
+  const providerText = String(provider || '');
+  const diagnosticText = String(diagnostic || '');
+  return {
+    provider: /^[A-Z][A-Z0-9_]{2,59}$/u.test(providerText) ? providerText : '',
+    diagnostic: /^[A-Z][A-Z0-9_]{1,79}$/u.test(diagnosticText) ? diagnosticText : '',
+    input_kind: INPUT_KINDS.has(String(inputKind || '')) ? String(inputKind) : ''
+  };
+}
+
 export async function recordIdentifyLatency(env, input = {}) {
   const row = identifyLatencyRow(input);
   if (!env?.PRODUCT_DB || !row) return false;
+  const detail = identifyLatencyDetail(input);
+  if (detail.provider || detail.diagnostic || detail.input_kind) {
+    try {
+      await env.PRODUCT_DB.prepare(
+        `INSERT INTO identify_latency_log (log_id,route,cache_state,ai_ms,preview_ms,total_ms,created_at,provider,diagnostic,input_kind)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+      ).bind(row.log_id, row.route, row.cache_state, row.ai_ms, row.preview_ms, row.total_ms, row.created_at,
+        detail.provider, detail.diagnostic, detail.input_kind).run();
+      return true;
+    } catch {
+      // 0097 未適用の間は列が無い。時間だけは従来どおり残す。
+    }
+  }
   try {
     await env.PRODUCT_DB.prepare(
       `INSERT INTO identify_latency_log (log_id,route,cache_state,ai_ms,preview_ms,total_ms,created_at)

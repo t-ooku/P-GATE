@@ -2284,12 +2284,17 @@ async function handleIdentifyApi(request, env, ctx) {
   const startedAt = Date.now();
   const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId };
   // 「これですか？」が出るまで何秒かかっているかを段階ごとに残す（ミリ秒だけ）。
+  // 2026-11-14 Cowork 依頼: どの経路で答えたか（provider）・どこで落ちたか（diagnostic）・
+  // 入力の種類も固定語彙で残す。写真・検索語・候補名は入れない。
+  let latencyDetail = { provider: '', diagnostic: '', inputKind: '' };
   const logLatency = (cacheState, aiMs, previewMs) => {
     const record = recordIdentifyLatency(env, {
-      route: 'identify', cacheState, aiMs, previewMs, totalMs: Date.now() - startedAt
+      route: 'identify', cacheState, aiMs, previewMs, totalMs: Date.now() - startedAt, ...latencyDetail
     });
     if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
   };
+  let analysisStartedAtForLog = 0;
+  let cacheStateForLog = 'off';
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
@@ -2323,11 +2328,17 @@ async function handleIdentifyApi(request, env, ctx) {
         headers: { ...headers, 'x-identify-cache': 'hit' }
       });
     }
+    // 画面は撮影か画像選択かを送っていないので、今は url / image の2種類（camera/screenshot は未区別）。
+    latencyDetail = { ...latencyDetail, inputKind: input.social_url ? 'url' : 'image' };
+    cacheStateForLog = cacheKey ? 'miss' : 'off';
     const analysisStartedAt = Date.now();
+    analysisStartedAtForLog = analysisStartedAt;
     const analysis = await analyzeSearchInput({
       query: input.query, social_url: input.social_url, image: input.search_image
     }, input.language, env, fetch, { rejectedCandidates });
     const analysisMs = Date.now() - analysisStartedAt;
+    analysisStartedAtForLog = 0;
+    latencyDetail = { ...latencyDetail, provider: analysis?.provider || '', diagnostic: analysis?.diagnostic || '' };
     const candidate = identifyCandidateFromAnalysis(analysis);
     if (!candidate) {
       logLatency(cacheKey ? 'miss' : 'off', analysisMs, 0);
@@ -2370,6 +2381,11 @@ async function handleIdentifyApi(request, env, ctx) {
     const code = String(error.message || 'IDENTIFY_FAILED').slice(0, 80);
     const clientErrors = ['PROCESSING_NOTICE_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'QUERY_LENGTH_INVALID', 'IDENTIFY_INPUT_REQUIRED', 'TURNSTILE_VERIFICATION_FAILED'];
     const status = publicApiErrorStatus(code, clientErrors, 500);
+    if (analysisStartedAtForLog) {
+      // 写真の解析で落ちた件も「どこで落ちたか」だけ残す（数えられないと救済率が出せない）。
+      latencyDetail = { ...latencyDetail, provider: 'FAILED', diagnostic: String(error?.diagnostic || code) };
+      logLatency(cacheStateForLog, Date.now() - analysisStartedAtForLog, 0);
+    }
     console.error('IDENTIFY_REQUEST_FAILED', { requestId, code, status });
     return Response.json({ ok: false, error: code, request_id: requestId }, { status, headers });
   }
