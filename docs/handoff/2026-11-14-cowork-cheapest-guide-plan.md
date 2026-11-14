@@ -51,13 +51,13 @@ source: 大隆さん「HOSHILU 最安値案内の実現指示書【Cowork統括�
 | P4 | 実際に支払う金額：配送先別送料・必須手数料。ポイント・条件付きクーポンは差し引かず別に表示 | Codex（調査 → 仕様は Cowork） | 未着手 |
 | P5 | 最安店へ迷わず進む：店名・支払総額・送料・確認時刻・条件・購入ボタンを並べ、商品ページへ直接案内。アフィリエイト報酬で順位を変えない | Codex（390px は Claude Code の QA 結果を待つ） | 未着手 |
 | P6 | 比較先を広げる：化粧品に強い販売先の公式 API・許諾フィード・提携データの条件・費用・規約・承認を整理 | Cowork（調査） | 未着手 |
-| E | 化粧品 20 商品の評価セット（手で正解を確かめる） | Cowork | 未着手（下の 4.） |
+| E | 化粧品 20 商品の評価セット（手で正解を確かめる） | Cowork | 一部実装：`docs/eval/cosmetics-cheapest-v1.md` に 20 商品の候補（D1 の記録から）。商品ページで確かめた正解は 0/20 |
 
 ## 3. 必須テストの置き場所
 
 | 必須テスト | 置き場所 | 状態 |
 |---|---|---|
-| ロムアンド #04 を S04・ミニ・セットと混同しない | P3 の純関数テスト（Claude Code）＋評価セット | 未 |
+| ロムアンド #04 を S04・ミニ・セットと混同しない | P3 の純関数テスト（Claude Code）＋評価セット | 純関数テストは済（21e6984）。検索の流れへの組み込みは未（Codex C-2） |
 | 楽天・Yahoo! 両方の実オファーが比較欄に出る | P2（Codex） | 未 |
 | 「ハンドクリーム 1000円以内」で予算超過を一致にしない。コスメ検索に自動車部品・蛇口を混ぜない | Codex（既存の固定 QA に追加） | 未 |
 | 送料不明・在庫切れ・古い価格・API 失敗・1 店のみで虚偽の最安を出さない | `test/ai-price-comparison.test.mjs`・`test/price-comparison-api.test.mjs`（P1） | **済**（API 失敗は既存テスト） |
@@ -82,9 +82,9 @@ source: 大隆さん「HOSHILU 最安値案内の実現指示書【Cowork統括�
 
 | 日時 (JST) | 依頼先 | 内容 | ファイル | 状態 |
 |---|---|---|---|---|
-| 11/14 | Codex | P2・P4・P5・C-3・計測・必須テストの一部・P1 の本番確認 | `docs/handoff/2026-11-14-cowork-to-codex-cheapest-guide.md` | 依頼済み・未受領 |
-| 11/14 | Claude Code | P3（同一性の照合を足す純関数とテスト）。既存の 390px QA は継続 | `docs/handoff/claude-inbox/2026-11-14-cowork-variant-identity-guard.md` | 依頼済み・未受領 |
-| 11/14 | （既存）Claude Code | 390px 購入 CTA の実画面 QA（Codex 起票） | `docs/handoff/claude-inbox/2026-11-14-mobile-purchase-cta-qa.md` | OPEN・未受領 |
+| 11/14 | Codex | P2・P4・P5・C-3・計測・必須テストの一部・P1 の本番確認 | `docs/handoff/2026-11-14-cowork-to-codex-cheapest-guide.md` | **受領（11/14 14:13 JST、c691fe9）**。C-0：実装済み・本番未確認。C-1：不具合あり（再現済み・修正前）。C-3：(a) 案を提案予定。C-2・C-4〜C-7：要確認。C-8：受領・読み取り点検済み（f676e55）。価格履歴・値下がり一覧・希望価格／LINE 見張り・`/product` に「不具合あり」（無効 JAN を参照時に拒否していない）、`/go` は要確認。修正は Cowork と調整してから |
+| 11/14 | Claude Code | P3（同一性の照合を足す純関数とテスト）。既存の 390px QA は継続 | `docs/handoff/claude-inbox/2026-11-14-cowork-variant-identity-guard.md` | 実装コミットあり（21e6984：`product-variant-identity.mjs`、tier 4 は `same` の時だけ一致。Cowork がテスト 30 件通過を確認）。受信箱の status は OPEN のまま。追記分（有効 JAN でも矛盾なら要確認）は未 |
+| 11/14 | （既存）Claude Code | 390px 購入 CTA の実画面 QA（Codex 起票） | `docs/handoff/claude-inbox/2026-11-14-mobile-purchase-cta-qa.md` | **DONE（調査完了、1ecc76c）**。結果は `2026-11-14-mobile-purchase-cta-qa-results.md`：P1「価格比較」を押すと購入先へも飛び、その送客が計測されない／P2 購入先へ行くボタンが見た目に無い／P3 自動スクロールで件数と並べ替えが隠れる。修正は Codex（C-5）で未着手 |
 
 ## 6. Cowork が実行した最初の改善（P1）
 
