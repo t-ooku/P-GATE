@@ -15,11 +15,11 @@ const DEFAULT_DIRECT_MARKETPLACES = ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUK
 const copy = {
   JA: {
     button: '価格比較', title: '価格比較（AI最安比較）', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
-    realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
+    realLabel: '送料込み・確認済み', estimateLabel: 'AI推定', unavailableLabel: '価格未取得', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
   },
   EN: {
     button: 'AI Price Compare', title: 'AI Price Compare', loading: 'Comparing…', error: 'Comparison failed. Please try again.', retry: 'Try again', close: 'Close',
-    realLabel: 'Real price', estimateLabel: 'AI estimate', unavailableLabel: 'Cannot estimate', search: 'View lowest price first', searchDefault: 'Search this phrase', empty: 'No comparison data available.'
+    realLabel: 'Confirmed total', estimateLabel: 'AI estimate', unavailableLabel: 'Price not retrieved', search: 'View lowest price first', searchDefault: 'Search this phrase', empty: 'No comparison data available.'
   },
   ZH: {
     button: 'AI比价', title: 'AI比价', loading: '正在比较…', error: '比较失败，请重试。', retry: '重试', close: '关闭',

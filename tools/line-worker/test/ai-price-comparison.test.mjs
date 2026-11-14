@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  PRICE_ESTIMATE_DISCLAIMER, realPriceRows, validateAiEstimates, buildPriceComparison,
+  PRICE_ESTIMATE_DISCLAIMER, realPriceRows, comparableRealOffer, validateAiEstimates, buildPriceComparison,
   requestAiPriceEstimates, partitionOffersByProductIdentity, confidenceLabel,
   validateCandidatePriceEstimates, requestAiCandidatePriceEstimates, buildAiCheapestRanking
 } from '../src/ai-price-comparison.mjs';
@@ -10,15 +10,32 @@ import { normalizeOffer } from '../src/hoshilu-product-schema.mjs';
 // v4.3 指示書 Priority 3: AI最安比較。
 
 test('v4.3項目13: realPriceRowsはIntegratedモールの実オファーのみを拾い、Directは無視する', () => {
+  const ok = { shipping_fee_confirmed: true, shipping_fee: 0, stock_status: 'IN_STOCK' };
   const rows = realPriceRows([
-    { marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
-    { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' },
-    { marketplace: 'LOFT_JP', total_cost: 8000, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=c' },
-    { marketplace: 'YAHOO_JP', total_cost: 0, currency: 'JPY', tracking_url: '' }
+    { ...ok, marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
+    { ...ok, marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' },
+    { ...ok, marketplace: 'LOFT_JP', total_cost: 8000, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=c' },
+    { ...ok, marketplace: 'YAHOO_JP', total_cost: 0, currency: 'JPY', tracking_url: '' }
   ]);
   assert.equal(rows.length, 1);
   assert.deepEqual(rows.map((row) => row.marketplace), ['RAKUTEN_JP']);
   assert.equal(rows[0].source, 'REAL');
+});
+
+// 2026-11-14 大隆さん「最安案内の実現指示書」: 送料不明・在庫切れ/不明・古い価格・リンクなしは最安の順位に入れない
+test('最安案内: 送料が確かめられない・在庫が無い/分からない・古い・リンクが無い実オファーは比べない', () => {
+  const now = Date.parse('2026-11-14T12:00:00Z');
+  const base = { marketplace: 'RAKUTEN_JP', total_cost: 1500, shipping_fee: 0, shipping_fee_confirmed: true, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=x', observed_at: '2026-11-14T11:00:00Z' };
+  assert.equal(comparableRealOffer(base, now), true);
+  assert.equal(comparableRealOffer({ ...base, shipping_fee_confirmed: false }, now), false, '送料不明を0円にしない');
+  assert.equal(comparableRealOffer({ ...base, stock_status: 'OUT_OF_STOCK' }, now), false, '在庫切れ');
+  assert.equal(comparableRealOffer({ ...base, stock_status: 'UNKNOWN' }, now), false, '在庫不明');
+  assert.equal(comparableRealOffer({ ...base, observed_at: '2026-11-12T11:00:00Z' }, now), false, '24時間より古い価格');
+  assert.equal(comparableRealOffer({ ...base, tracking_url: '' }, now), false, '購入ページへのリンクが無い');
+  assert.equal(comparableRealOffer({ ...base, marketplace: 'LOFT_JP' }, now), false, 'API連携していないモール');
+  const rows = realPriceRows([base, { ...base, marketplace: 'YAHOO_JP', total_cost: 1200, shipping_fee_confirmed: false }], { now });
+  assert.deepEqual(rows.map((row) => row.marketplace), ['RAKUTEN_JP'], '安く見えても送料不明なら勝者にしない');
+  assert.equal(rows[0].observed_at, '2026-11-14T11:00:00.000Z');
 });
 
 test('v4.3項目14: AI推定は範囲(min<max)のみ許可し、単一の精密な数字は拒否する', () => {
@@ -61,7 +78,7 @@ test('v4.3項目15: AI推定が1件でもあれば、必須の注意書きが付
   assert.equal(withoutAi.disclaimer_text, null);
 });
 
-test('v4.3項目16: 実価格同士なら断定できるが、AI推定を含む場合は断定せずヘッジする', () => {
+test('v4.3項目16: 実価格同士なら「確認できた○モールの中で」と範囲つきで最安を言い、AI推定は最安の候補に名前を出さない', () => {
   const comparison = buildPriceComparison({
     real: [
       { marketplace: 'YAHOO_JP', total_cost: 8980 },
@@ -71,16 +88,12 @@ test('v4.3項目16: 実価格同士なら断定できるが、AI推定を含む�
     requestedDirectMarketplaces: ['LOFT_JP'],
     language: 'JA'
   });
-  // 実価格同士の断定は許可(Yahoo!が最安)
   assert.equal(comparison.cheapest_claim.definitive, true);
   assert.equal(comparison.cheapest_claim.marketplace, 'YAHOO_JP');
-  assert.match(comparison.cheapest_claim.text, /最安/);
-  // AI推定(ロフト:7000-8500)がAmazonの実価格(8980)より安い可能性があるので、
-  // 断定ではなくヘッジされた文言が別枠で付く
-  assert.equal(comparison.hedged_claim.definitive, false);
-  assert.equal(comparison.hedged_claim.marketplace, 'LOFT_JP');
-  assert.match(comparison.hedged_claim.text, /可能性があります/);
-  assert.doesNotMatch(comparison.hedged_claim.text, /最安です。$/);
+  assert.equal(comparison.cheapest_claim.compared_count, 2);
+  assert.equal(comparison.cheapest_claim.text, '送料込みの価格を確認できた2モールの中では、Yahoo!ショッピングが最安です。');
+  // 2026-11-14 指示書 §4: AI推定・古い価格・検索リンクを最安の勝者にしない
+  assert.equal(comparison.hedged_claim, null);
 });
 
 test('v4.3項目16: 実価格が1件も無ければ断定できる相手が無い(cheapest_claimはnull)', () => {
@@ -89,6 +102,7 @@ test('v4.3項目16: 実価格が1件も無ければ断定できる相手が無�
     requestedDirectMarketplaces: ['LOFT_JP'], language: 'JA'
   });
   assert.equal(comparison.cheapest_claim, null);
+  assert.match(comparison.confirmed_price_note, /確認できたモールがないため、最安は出していません/);
 });
 
 test('実価格が1モールだけなら最安と断定せず、確認できたモールだけを案内する', () => {
@@ -97,7 +111,7 @@ test('実価格が1モールだけなら最安と断定せず、確認できた�
     aiEstimates: [], requestedDirectMarketplaces: ['LOFT_JP'], language: 'JA'
   });
   assert.equal(comparison.cheapest_claim, null);
-  assert.match(comparison.confirmed_price_note, /楽天市場のみ/);
+  assert.equal(comparison.confirmed_price_note, '比較未成立：送料込みの価格を確認できたのは楽天市場のみです。');
   assert.doesNotMatch(comparison.confirmed_price_note, /最安/);
 });
 

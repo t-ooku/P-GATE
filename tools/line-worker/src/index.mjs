@@ -2573,7 +2573,10 @@ async function handlePriceComparisonApi(request, env) {
     // 既に実価格が確認できているDirectモールは無い(realPriceRowsはIntegrated
     // のみを返す)ため、依頼されたdirect_marketplacesは常にそのままAI推定の
     // 対象になる。
-    const aiPromise = requestAiPriceEstimates(
+    // 2026-11-14 指示書 §4・§6: 取得できない価格をAI推定で埋めない。AI推定は既定で止める
+    // (PRICE_COMPARISON_AI_ESTIMATES='true' のときだけ、参考の価格帯として別枠で出す)。
+    const aiEstimatesEnabled = String(env.PRICE_COMPARISON_AI_ESTIMATES || '').toLowerCase() === 'true';
+    const aiPromise = !aiEstimatesEnabled ? Promise.resolve({ estimates: [], provider: null }) : requestAiPriceEstimates(
         {
           title: input.product.title,
           brand: input.product.brand,

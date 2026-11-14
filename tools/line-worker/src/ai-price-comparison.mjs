@@ -63,13 +63,31 @@ export function partitionOffersByProductIdentity(targetOffer, offers) {
 // realOffers: candidate.offers 相当(price/shipping_fee/total_cost/marketplace
 // を持つ、HOSHILUが既に確認済みの実オファー)。Integrated以外は無視する -
 // Directモールの「実価格」は原理的に存在しない(HOSHILUがAPI連携していない)。
-export function realPriceRows(realOffers) {
+// 2026-11-14 大隆さん「最安案内の実現指示書」§3・§4: 根拠のない最安を出さない。
+// 比べてよいのは、送料込みの支払額が確かめられ(送料不明を0円にしない)、在庫あり、
+// 商品ページへのリンクがあり、確認から REAL_PRICE_MAX_AGE_MS 以内の実オファーだけ。
+// どれか1つでも欠けたら順位付けに入れない(画面には「比較できた範囲」だけを出す)。
+export const REAL_PRICE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+export function comparableRealOffer(offer, now = Date.now()) {
+  if (!isIntegratedMarketplace(offer?.marketplace)) return false;
+  if (!(Number(offer?.total_cost) > 0)) return false;
+  if (!(offer?.shipping_fee_confirmed === true || Number(offer?.shipping_fee_confirmed) === 1)) return false;
+  if (String(offer?.stock_status || '').toUpperCase() !== 'IN_STOCK') return false;
+  if (!/^https:\/\//iu.test(String(offer?.tracking_url || ''))) return false;
+  const observed = Date.parse(String(offer?.observed_at || ''));
+  if (Number.isFinite(observed) && now - observed > REAL_PRICE_MAX_AGE_MS) return false;
+  return true;
+}
+
+export function realPriceRows(realOffers, { now = Date.now() } = {}) {
   return (Array.isArray(realOffers) ? realOffers : [])
-    .filter((offer) => isIntegratedMarketplace(offer?.marketplace) && Number(offer?.total_cost) > 0)
+    .filter((offer) => comparableRealOffer(offer, now))
     .map((offer) => ({
       marketplace: String(offer.marketplace),
       total_cost: Number(offer.total_cost),
+      shipping_fee: Number(offer.shipping_fee) >= 0 ? Number(offer.shipping_fee) : null,
       currency: String(offer.currency || 'JPY'),
+      ...(Number.isFinite(Date.parse(String(offer.observed_at || ''))) ? { observed_at: new Date(offer.observed_at).toISOString() } : {}),
       source: 'REAL',
       tracking_url: String(offer.tracking_url || '')
     }))
@@ -378,41 +396,41 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
     .filter((marketplace) => !estimatedMarketplaces.has(marketplace))
     .map((marketplace) => withSearchLink({ marketplace, source: 'UNAVAILABLE' }));
 
+  // 2026-11-14 指示書 §4: 最安は「確認できた○店の中で」と範囲を必ず書く。1店だけなら「比較未成立」、
+  // 0店ならその旨。AI推定は最安の候補として名前を出さない(hedged_claim は常に null)。
   let cheapestClaim = null;
   let confirmedPriceNote = null;
-  if (realRows.length >= 2) {
+  const count = realRows.length;
+  if (count >= 2) {
+    const name = marketplaceLabel(realRows[0].marketplace, language);
     cheapestClaim = {
       definitive: true,
       marketplace: realRows[0].marketplace,
+      compared_count: count,
       text: {
-        JA: `現在確認できた実価格では${marketplaceLabel(realRows[0].marketplace, language)}が最安です。`,
-        EN: `Among confirmed real prices, ${marketplaceLabel(realRows[0].marketplace, language)} is currently the cheapest.`,
-        ZH: `在已确认的实际价格中，${marketplaceLabel(realRows[0].marketplace, language)}目前最便宜。`,
-        KO: `현재 확인된 실제 가격 중에서는 ${marketplaceLabel(realRows[0].marketplace, language)}가 가장 저렴합니다.`
+        JA: `送料込みの価格を確認できた${count}モールの中では、${name}が最安です。`,
+        EN: `Among the ${count} marketplaces with a confirmed total including shipping, ${name} is the cheapest.`,
+        ZH: `在已确认含运费价格的${count}个商城中，${name}最便宜。`,
+        KO: `배송비 포함 가격이 확인된 ${count}개 쇼핑몰 중에서는 ${name}가 가장 저렴합니다.`
       }[language] || null
     };
-  } else if (realRows.length === 1) {
+  } else if (count === 1) {
+    const name = marketplaceLabel(realRows[0].marketplace, language);
     confirmedPriceNote = {
-      JA: `実価格を確認できたモールは${marketplaceLabel(realRows[0].marketplace, language)}のみです。ほかのモールは参考推定または検索先をご案内します。`,
-      EN: `${marketplaceLabel(realRows[0].marketplace, language)} is the only marketplace with a confirmed real price. Other rows are estimates or search links.`,
-      ZH: `目前只有${marketplaceLabel(realRows[0].marketplace, language)}取得了已确认的实际价格。其他商城显示参考推测或搜索链接。`,
-      KO: `실제 가격이 확인된 쇼핑몰은 ${marketplaceLabel(realRows[0].marketplace, language)}뿐입니다. 다른 쇼핑몰은 참고 추정 또는 검색 링크입니다.`
+      JA: `比較未成立：送料込みの価格を確認できたのは${name}のみです。`,
+      EN: `No comparison yet: ${name} is the only marketplace with a confirmed total including shipping.`,
+      ZH: `尚未形成比较：目前只有${name}确认了含运费价格。`,
+      KO: `비교 불가: 배송비 포함 가격이 확인된 곳은 ${name}뿐입니다.`
+    }[language] || null;
+  } else {
+    confirmedPriceNote = {
+      JA: '送料込みの価格を確認できたモールがないため、最安は出していません。',
+      EN: 'No marketplace has a confirmed total including shipping, so no cheapest store is shown.',
+      ZH: '没有商城确认了含运费价格，因此不显示最便宜的商城。',
+      KO: '배송비 포함 가격이 확인된 쇼핑몰이 없어 최저가를 표시하지 않습니다.'
     }[language] || null;
   }
-  // AI推定側に、確定済みの最安実価格より安い可能性がある候補があれば、
-  // 断定はせずヘッジした文言だけを別枠で添える(実価格の断定と混同させない)。
-  const cheapestRealCost = realRows[0]?.total_cost ?? Infinity;
-  const cheaperEstimate = aiRows.find((row) => row.range_min < cheapestRealCost);
-  const hedgedClaim = cheaperEstimate ? {
-    definitive: false,
-    marketplace: cheaperEstimate.marketplace,
-    text: {
-      JA: `AI推定では${marketplaceLabel(cheaperEstimate.marketplace, language)}が安い可能性があります。`,
-      EN: `Based on AI estimates, ${marketplaceLabel(cheaperEstimate.marketplace, language)} might be cheaper.`,
-      ZH: `根据AI推测，${marketplaceLabel(cheaperEstimate.marketplace, language)}可能更便宜。`,
-      KO: `AI 추정으로는 ${marketplaceLabel(cheaperEstimate.marketplace, language)}가 더 저렴할 수 있습니다.`
-    }[language] || null
-  } : null;
+  const hedgedClaim = null;
 
   return {
     real: realRows,

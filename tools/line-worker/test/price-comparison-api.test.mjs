@@ -27,8 +27,8 @@ function request(body) {
     body: JSON.stringify({
       product: { title: 'ハンディファン ホワイト', brand: 'HOSHILU', category: '家電' },
       real_offers: [
-        { marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
-        { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' }
+        { marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a', shipping_fee_confirmed: true, stock_status: 'IN_STOCK' },
+        { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b', shipping_fee_confirmed: true, stock_status: 'IN_STOCK' }
       ],
       direct_marketplaces: ['LOFT_JP', 'HANDS_JP'],
       search_query: '携帯扇風機',
@@ -111,7 +111,7 @@ test('v4.3項目12・13: API連携中の実価格(楽天)とAI推定(ロフト/�
     }
     throw new Error(`UNEXPECTED_FETCH:${target}`);
   };
-  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32), PRICE_COMPARISON_AI_ESTIMATES: 'true' };
   try {
     const response = await worker.fetch(request({}), env, context);
     const payload = await response.json();
@@ -153,7 +153,7 @@ test('価格昇順リンクは親階層語を残さず最終小ジャンルで�
     }) }] } }] });
     throw new Error(`UNEXPECTED_FETCH:${target}`);
   };
-  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32), PRICE_COMPARISON_AI_ESTIMATES: 'true' };
   try {
     const response = await worker.fetch(request({
       product: { title: 'LILMOON 度あり カラコン', brand: 'LILMOON', category: 'カラーコンタクトレンズ' },
@@ -179,7 +179,7 @@ test('v4.3項目9: AI障害時でも実価格側は正常に返り、比較API�
     if (target.includes('siteverify')) return Response.json({ success: true });
     return new Response('down', { status: 503 });
   };
-  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32), PRICE_COMPARISON_AI_ESTIMATES: 'true' };
   try {
     const response = await worker.fetch(request({}), env, context);
     const payload = await response.json();
@@ -198,6 +198,32 @@ test('Turnstile検証に失敗すれば400で拒否される(通常検索と同�
   try {
     const response = await worker.fetch(request({}), environment(), context);
     assert.equal(response.status, 400);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// 2026-11-14 大隆さん「最安案内の実現指示書」§4・§6: 取得できない価格をAI推定で埋めない（既定でAIを呼ばない）
+test('最安案内: 既定ではAI推定を呼ばず、未取得のモールは「価格未取得」と検索リンクだけ。1モールなら比較未成立', async () => {
+  const originalFetch = globalThis.fetch;
+  const called = [];
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    called.push(target);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    throw new Error(`UNEXPECTED_FETCH:${target}`);
+  };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  try {
+    const response = await worker.fetch(request({}), env, context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(called.some((url) => url.includes('generativelanguage') || url.includes('openai')), false);
+    assert.deepEqual(payload.result.ai_estimated, []);
+    assert.equal(payload.result.hedged_claim, null);
+    assert.equal(payload.result.cheapest_claim, null);
+    assert.match(payload.result.confirmed_price_note, /^比較未成立：/u);
+    assert.deepEqual(payload.result.unavailable.map((row) => row.marketplace).sort(), ['HANDS_JP', 'LOFT_JP']);
   } finally {
     globalThis.fetch = originalFetch;
   }

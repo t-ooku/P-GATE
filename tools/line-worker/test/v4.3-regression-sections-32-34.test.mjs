@@ -54,8 +54,8 @@ test('v4.3項目33: AI会話検索の一連の要件(検索文引継ぎ・CTA・
 test('v4.3項目34: 1商品について実価格・AI推定・注意書き・最安判定文言が揃い、混同されない', () => {
   const comparison = buildPriceComparison({
     real: realPriceRows([
-      { marketplace: 'YAHOO_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
-      { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' }
+      { marketplace: 'YAHOO_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a', shipping_fee_confirmed: true, stock_status: 'IN_STOCK' },
+      { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b', shipping_fee_confirmed: true, stock_status: 'IN_STOCK' }
     ]),
     aiEstimates: [
       { marketplace: 'LOFT_JP', range_min: 8000, range_max: 10000, confidence: 'HIGH' },
