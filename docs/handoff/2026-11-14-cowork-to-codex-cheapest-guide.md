@@ -93,3 +93,18 @@ plan: docs/handoff/2026-11-14-cowork-cheapest-guide-plan.md
 - **C-1 の次の実装**：既存の照会予算・タイムアウトを確認し、JANを入力とする楽天照会と名称／説明内の完全13桁根拠を固定データで検証。根拠のない名称寄せはしない。既存 normalizer はペアごとの連結を行うため、そのまま全候補に適用せず、C-2の矛盾・不明判定を取り込んだうえで既存同一性判定の再利用範囲を決める。C-2受信箱はOPENで、同じ照合は実装しない。評価セット到着後に前後の比較成立率、誤一致、応答時間を測る。
 - **購入先導線との境界**：v23 は[既存配備済み](https://github.com/t-ooku/P-GATE/actions/runs/43558674911)。C-1のバックエンド側の再現・照会とイベントコードは直接競合しない。一方、C-1で有効オファーが増えると配備後の直リンク／検索フォールバック内訳は変わり得るため、切替点を記録する。C-5の比較欄・購入CTAとC-7のイベントは変更前にCoworkと調整し、既存390px QA結果を待つ。v23の定義・CTAは今回変更しない。
 - **C-2／C-4〜C-7：要確認**（依存・既存実装範囲の確認待ち）。**C-3：要確認**。支払総額が確認できたものだけで順位を付ける案(a)を提案する。表示文言は合意前に変更しない。
+
+### 2026-11-14 JST — C-8 読み取り点検（21e69843）
+
+C-8を受領。C-1の楽天JAN照会は `isUniqueJan` を通過したJANのみ。現行C-1の照会は既定方針どおり完全一致する13桁の表記を根拠とし、無効・共通JANを送信しない。C-2の色・容量等の矛盾判定は別途必要。C-1の楽天照会の実装は今回行っていない。
+
+| 経路 | 状態と証拠 |
+| --- | --- |
+| 価格履歴 | **不具合あり**。[price-observations.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/price-observations.mjs) の `priceHistorySummary` はキーの完全一致で日別最小を集計するが無効JANを拒否しない。関数本体とモックD1で、共通キーに別商品の300円と900円を日違いで置くと、1本の計測可能な価格系列に混ざることを再現。新規観測行の変換にもJAN妥当性ゲートがない。 |
+| 値下がり一覧・トップ | **不具合あり**。[owned-media.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/owned-media.mjs) の `loadPriceDrops` はモール・外部商品ID・店で分けるが、返すキーに無効JAN除外なし。Yahoo! 観測の外部IDにJANキーを使う場合、同一店内の複数商品が同一バケットになる余地がある。単独の行でも無効キーで商品詳細へ案内され得る。画像参照もキー単位、現行掲載件数は未計測。 |
+| 希望価格・LINE見張り | **不具合あり**。[target-price-product-key.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/target-price-product-key.mjs) がゼロJANを受理することを固定データで再現。[target-price-watch.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/target-price-watch.mjs) の保存キー照合はキーの等値をそのまま採る。[line-price-watch.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/line-price-watch.mjs) の `latestObservation` は無効JANを拒否せず、同日内の最小値を購読開始・巡回で参照する。既存購読や誤通知の実数は未計測、通知テストなし。 |
+| /product | **不具合あり**。[product-detail.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/product-detail.mjs) は無効JANをSEOスナップショット／サイトマップでは除外するが、公開詳細と /api/product の入口は形式のみ。APIは旧履歴を返し得る。現在価格確認・観測の書込みを伴い得るため、本番 /api/product は実行せず。 |
+| /go | **要確認**。[index.mjs](https://github.com/t-ooku/P-GATE/blob/21e69843d7449dbdf3487abac6aff25b118244e0/tools/line-worker/src/index.mjs) は署名と許可先を検証するが、署名に入ったURLがキーの商品かは再照合しない。誤ったオファーが署名された場合の防止は上流に必要。現時点の誤遷移の有無は未確認。リンクは押さず、計測・課金処理を起動していない。 |
+| 補足：取込・合流 | **一部実装**。楽天の取込は店舗を含む itemCode 系キー。Yahoo! の#759対策とは別に、外部オファーフィードは入力record_keyを受け取り、商品索引はその等値で付加する。候補の rank/ランキング合流にもキー等値の箇所が残る。旧キャッシュ・市場横断の実数およびAmazon別入口は未確認。 |
+
+#706の過去事例（19店舗・17商品名）は履歴上の証拠であり、現在件数ではない。今回利用できたのはソースと固定データで、現行D1の集計結果は未取得（0ではない）。次は読取専用で無効JANキーの観測行数・キー数、値下がり採用数・稼働見張り数を集計し、識別子の妥当性を**参照時に**検証する修正をCoworkと調整する。比較・通知・購入リンクの生成側を先に閉じ、正しい店舗別キーのオファーは維持する。既存価格履歴の書換え・削除、D1書込み、SNS・送客操作、コード変更・配備はなし。
