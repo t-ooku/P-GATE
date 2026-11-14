@@ -116,6 +116,13 @@ const EVENTS = new Set([
   // 検索結果に導線が出たモールを、実行1回につき1モール1件だけ記録する。
   // 検索文・商品名・URLは送らない(モール名の列挙のみ)。
   'marketplace_shown',
+  // 2026-11-14 P0: distinguish a directly linked product offer from hidden
+  // comparison-panel links, generic mall searches, or no purchase destination.
+  // Four fixed enums only; never send product text, price, search query or URL.
+  'search_result_direct_offer_rendered',
+  'search_result_direct_offer_collapsed',
+  'search_result_marketplace_search_only',
+  'search_result_no_destination',
   'marketplace_click',
   'marketplace_fallback_click',
   'share_started',
