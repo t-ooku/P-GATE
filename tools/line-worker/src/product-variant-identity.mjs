@@ -135,6 +135,8 @@ function extractPackCount(text, parsed) {
   const values = [];
   for (const m of text.matchAll(/(\d+)\s*(?:本|個|枚|袋|箱|包|缶|足|点)\s*(?:セット|入り?|組|パック)/g)) values.push(Number(m[1]));
   for (const m of text.matchAll(/(?<![0-9A-Za-z])(\d+)\s*(?:セット|パック|個パック)/g)) values.push(Number(m[1]));
+  // 「1個」「2袋」のような単独の入り数（「3個口」は配送の数なので除く）。
+  for (const m of text.matchAll(/(?<![0-9A-Za-z.])(\d+)\s*(?:個|袋|箱|缶|枚|足|点)(?!口|目)/g)) values.push(Number(m[1]));
   for (const m of text.matchAll(/(?<!\d)\s*(?:×|\*|(?<![A-Za-z])[xX])\s*(\d+)(?![0-9.]|\s*(?:cm|mm|m\b|g|ml))/g)) values.push(Number(m[1]));
   const counted = values.filter((n) => Number.isFinite(n) && n > 0);
   return reduceValues(counted);

@@ -152,3 +152,30 @@ test('JAN の一致は照合の影響を受けない', () => {
   const b = offer({ source_product_id: 'V8', source_marketplace: 'YAHOO_JP', jan: '4912345678904', title: 'グロス S04' });
   assert.equal(matchProductIdentity(a, b).tier, 'jan');
 });
+
+// 追記（11/14 大隆さん）: 正しい JAN/GTIN が同じでも属性が矛盾したら要確認
+test('JAN が同じでも容量・入り数が矛盾すれば同一にしない（要確認 variant_conflict）', () => {
+  const a = offer({ source_product_id: 'J1', jan: '4912345678904', title: 'ハンドクリーム 50g 1個', price: 1200 });
+  const b = offer({ source_product_id: 'J2', source_marketplace: 'YAHOO_JP', jan: '4912345678904', title: 'ハンドクリーム 50g 2個セット', price: 2400 });
+  assert.deepEqual(matchProductIdentity(a, b), { tier: null, matched: false, review: 'variant_conflict' });
+});
+
+test('JAN が同じで属性の矛盾がなければ同一（tier=jan）', () => {
+  const a = offer({ source_product_id: 'J3', jan: '4912345678904', title: 'ハンドクリーム 50g 1個' });
+  const b = offer({ source_product_id: 'J4', source_marketplace: 'YAHOO_JP', jan: '4912345678904', title: 'ハンドクリーム 50g 1個 送料無料' });
+  assert.deepEqual(matchProductIdentity(a, b), { tier: 'jan', matched: true });
+});
+
+test('GTIN が同じでも容量が矛盾すれば要確認、未確認（片方だけ入り数）は GTIN 一致を優先', () => {
+  const a = offer({ source_product_id: 'G1', gtin: '04912345678904', title: '化粧水 200ml' });
+  const b = offer({ source_product_id: 'G2', source_marketplace: 'YAHOO_JP', gtin: '04912345678904', title: '化粧水 400ml' });
+  assert.equal(matchProductIdentity(a, b).review, 'variant_conflict');
+  const c = offer({ source_product_id: 'G3', source_marketplace: 'YAHOO_JP', gtin: '04912345678904', title: '化粧水 200ml 3本セット' });
+  assert.deepEqual(matchProductIdentity(a, c), { tier: 'gtin', matched: true });
+});
+
+test('入り数: 「1個」と「2個セット」は different、「3個口」は入り数にしない', () => {
+  assert.equal(variantAttributes('ハンドクリーム 1個').pack_count, 1);
+  assert.equal(compareVariants('ハンドクリーム 50g 1個', 'ハンドクリーム 50g 2個セット'), 'different');
+  assert.equal(variantAttributes('収納ケース 3個口').pack_count, null);
+});

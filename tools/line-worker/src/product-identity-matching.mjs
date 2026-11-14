@@ -17,7 +17,9 @@
 
 import { isUniqueJan } from './jan-validity.mjs';
 
-import { compareVariants, VARIANT_SAME } from './product-variant-identity.mjs';
+import { compareVariants, VARIANT_SAME, VARIANT_DIFFERENT } from './product-variant-identity.mjs';
+
+const variantConflict = () => ({ tier: null, matched: false, review: 'variant_conflict' });
 
 function normalizedValue(value) {
   const cleaned = String(value ?? '').trim();
@@ -55,11 +57,17 @@ export function matchProductIdentity(offerA, offerB) {
   const janA = normalizedValue(offerA.jan);
   const janB = normalizedValue(offerB.jan);
   // 2026-11-14: 無効・共通の JAN/GTIN の一致は同一商品の根拠にしない（jan-validity.mjs）。
-  if (janA && janB && janA === janB && isUniqueJan(janA)) return { tier: 'jan', matched: true };
+  // 2026-11-14 大隆さん追記: 正しい JAN/GTIN が同じでも、色番・容量・入り数などが矛盾したら要確認
+  // （最安の比較に入れない）。unconfirmed は JAN/GTIN の一致を優先して同一のまま。
+  if (janA && janB && janA === janB && isUniqueJan(janA)) {
+    return compareVariants(offerA, offerB) === VARIANT_DIFFERENT ? variantConflict() : { tier: 'jan', matched: true };
+  }
 
   const gtinA = normalizedValue(offerA.gtin);
   const gtinB = normalizedValue(offerB.gtin);
-  if (gtinA && gtinB && gtinA === gtinB && !/^(.)\1*$/u.test(gtinA) && (isUniqueJan(gtinA) || !/^(?:\d{8}|\d{13})$/u.test(gtinA))) return { tier: 'gtin', matched: true };
+  if (gtinA && gtinB && gtinA === gtinB && !/^(.)\1*$/u.test(gtinA) && (isUniqueJan(gtinA) || !/^(?:\d{8}|\d{13})$/u.test(gtinA))) {
+    return compareVariants(offerA, offerB) === VARIANT_DIFFERENT ? variantConflict() : { tier: 'gtin', matched: true };
+  }
 
   const asinA = normalizedValue(offerA.asin);
   const asinB = normalizedValue(offerB.asin);
