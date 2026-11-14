@@ -114,3 +114,25 @@ test('watch entry and notification revisit reach mall click without leaking prod
   assert.doesNotMatch(JSON.stringify(b.events), /private-fixture|private-product-fixture|notification_id|product_name/u);
   assert.equal(b.events.some((event) => event.event_type === 'target_price_watch_set'), false, 'completion belongs to server, not button click');
 });
+
+test('comparison click cancels card navigation and records only one comparison open', () => {
+  const b = browser();
+  let buttonClick;
+  const button = new b.Element();
+  Object.assign(button, { tagName: 'BUTTON', dataset: {}, matches: () => false,
+    addEventListener(type, fn) { if (type === 'click') buttonClick = fn; },
+    classList: { contains: name => name === 'ai-price-compare-button' },
+    closest: selector => selector === 'a,button' ? button : null });
+  b.document.createElement = () => button;
+  b.document.querySelector = () => null;
+  const source = readFileSync(new URL('../public/ai-price-comparison-ui.mjs', import.meta.url), 'utf8');
+  runInNewContext(source + '\nopenComparisonDialog = () => { window.openCount = (window.openCount || 0) + 1; };', b.context);
+  b.context.HoshiluPriceComparison.attach({ querySelector: () => null, append() {} }, {});
+  const event = { type: 'click', target: button, defaultPrevented: false,
+    preventDefault() { this.defaultPrevented = true; }, stopPropagation() { assert.fail('delegated analytics needs bubbling'); } };
+  buttonClick(event);
+  b.dispatch(event);
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(b.context.openCount, 1);
+  assert.deepEqual(b.events.map(e => e.event_type), ['price_comparison_opened']);
+});

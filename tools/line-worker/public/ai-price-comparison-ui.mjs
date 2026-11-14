@@ -179,7 +179,12 @@ function attach(card, candidate) {
   button.type = 'button';
   button.className = 'ai-price-compare-button';
   button.textContent = (copy[currentLanguage()] || copy.JA).button;
-  button.addEventListener('click', () => openComparisonDialog(candidate));
+  button.addEventListener('click', (event) => {
+    // This button can be mounted inside the card's purchase link.
+    event.preventDefault();
+    // Keep bubbling: delegated growth analytics records the comparison open.
+    openComparisonDialog(candidate);
+  });
   card.append(button);
 }
 
