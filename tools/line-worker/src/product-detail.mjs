@@ -11,7 +11,7 @@
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 import { recordPriceObservations, priceHistorySummary } from './price-observations.mjs';
-import { isUniqueJan } from './jan-validity.mjs';
+import { isInvalidJanProductKey, isUniqueJan } from './jan-validity.mjs';
 
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 const KEY_PATTERN = /^(?:RAKUTEN:[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}|YAHOO:[A-Za-z0-9][A-Za-z0-9_.:-]{0,120}|JAN:\d{8}(?:\d{5})?)$/u;
@@ -267,7 +267,7 @@ export async function handleProductDetailRoutes(request, env, ctx, deps = {}) {
   if (url.pathname === SITEMAP_PRODUCTS_PATH) return renderProductsSitemap(env, { origin: url.origin });
   if (url.pathname === '/product') {
     const key = normalizeProductKey(url.searchParams.get('key'));
-    if (!key) return new Response('商品が見つかりません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    if (!key || isInvalidJanProductKey(key)) return new Response('商品が見つかりません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
     const snapshot = await productSeoSnapshot(env, key, { now: deps.now || new Date() });
     let buyUrl = '';
     if (snapshot?.product_url && deps.sign) {
@@ -277,7 +277,7 @@ export async function handleProductDetailRoutes(request, env, ctx, deps = {}) {
   }
   if (url.pathname === '/api/product') {
     const key = normalizeProductKey(url.searchParams.get('key'));
-    if (!key) return json({ ok: false, error: 'PRODUCT_KEY_INVALID' }, 400);
+    if (!key || isInvalidJanProductKey(key)) return json({ ok: false, error: 'PRODUCT_KEY_INVALID' }, 400);
     try {
       const detail = await buildProductDetail(env, key, { fetcher: deps.fetcher || fetch, sign: deps.sign || null, origin: url.origin });
       return json(detail);

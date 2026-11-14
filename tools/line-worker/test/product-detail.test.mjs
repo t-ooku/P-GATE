@@ -171,7 +171,7 @@ test('共通・無効 JAN はサイトマップにも index にも入れない�
   assert.equal(isSeoIndexableKey('JAN:0000000000000'), false);
   assert.equal(isSeoIndexableKey('RAKUTEN:shop-a:item-1'), true);
   assert.equal(isSeoIndexableKey('AMAZON:B000'), false);
-  assert.equal(normalizeProductKey('JAN:0000000000000'), 'JAN:0000000000000', '既存リンクは開ける（noindex）');
+  assert.equal(normalizeProductKey('JAN:0000000000000'), 'JAN:0000000000000', '形式の正規化は入口での妥当性判定とは別');
 
   const { DatabaseSync } = await import('node:sqlite');
   const sqlite = new DatabaseSync(':memory:');
@@ -205,11 +205,8 @@ test('共通・無効 JAN はサイトマップにも index にも入れない�
   assert.equal(xmlResponse.headers.get('x-product-count'), '1', '件数はサイトマップに出した URL 数');
 
   const common = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=JAN:0000000000000'), env, {}, { sign });
-  assert.equal(common.status, 200);
-  assert.equal(common.headers.get('x-robots-tag'), 'noindex');
-  const commonHtml = await common.text();
-  assert.match(commonHtml, /<meta name="robots" content="noindex">/u);
-  assert.doesNotMatch(commonHtml, /application\/ld\+json|rel="canonical"|class="product-name"/u, '共通 JAN は Product JSON-LD・h1 を出さない');
+  assert.equal(common.status, 404);
+  assert.doesNotMatch(await common.text(), /class="product-buy"|<script/u);
 
   const noname = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-n:noname'), env, {}, { sign });
   assert.equal(noname.headers.get('x-robots-tag'), 'noindex', '商品名なしは noindex');
@@ -233,4 +230,17 @@ test('共通・無効 JAN はサイトマップにも index にも入れない�
   assert.equal(detail.key, 'JAN:4975479418907');
   assert.equal(detail.current.status, 'OK');
   assert.equal(detail.product.name, 'テスト加湿器', 'SSR の h1 と同じ商品');
+});
+
+test('public product detail rejects invalid JAN before reads, provider calls, or link signing', async () => {
+  const fail = () => assert.fail('invalid JAN reached data or signing');
+  for (const key of ['JAN:0000000000000', 'JAN:2980000620539', 'JAN:4582356615598']) {
+    const env = { PRODUCT_DB: { prepare: fail } };
+    const deps = { fetcher: fail, sign: fail };
+    const page = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=' + key), env, {}, deps);
+    assert.equal(page.status, 404);
+    const api = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=' + key), env, {}, deps);
+    assert.equal(api.status, 400);
+    assert.deepEqual(await api.json(), { ok: false, error: 'PRODUCT_KEY_INVALID' });
+  }
 });
