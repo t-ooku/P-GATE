@@ -107,7 +107,7 @@ export async function buildProductDetail(env, key, { fetcher = fetch, now = new 
 }
 
 const PAGE_HEAD_START = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">`;
-const PAGE_HEAD_END = `<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/product-detail.css?v=3"><link rel="icon" href="/icons/icon.svg">`;
+const PAGE_HEAD_END = `<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/product-detail.css?v=4"><link rel="icon" href="/icons/icon.svg">`;
 const PAGE_SCRIPTS = `<script type="module" src="/growth-analytics.mjs?v=22"></script><script type="module" src="/product-detail.mjs?v=5"></script>`;
 const PAGE_FOOTER = `<footer><span>© HOSHILU</span><span class="associate-disclosure">楽天アフィリエイト、およびバリューコマース（Yahoo!ショッピング等）のリンクから収入を得る場合があります。価格・送料・在庫は取得時点の確認値で、購入前に販売先でご確認ください。</span></footer>`;
 const PAGE_HEADER = `<header class="topbar"><a class="brand" href="/"><img src="/icons/icon.svg" width="40" height="40" alt=""><span>HOSHILU</span></a></header>`;
@@ -242,6 +242,20 @@ export function renderProductPage(key, snapshot = null, { origin = 'https://hosh
   return new Response(`${PAGE_HEAD_START}${head}${PAGE_HEAD_END}<title>${esc(title)}</title></head><body>${body}</body></html>`, { headers });
 }
 
+// 商品を 1 つに決められない鍵のときの画面。商品名で探し直す入口（トップの検索へ ?q= で渡す）と、今週の値下がりへの道を出す。
+// 価格・商品名・購入リンクは出さない。検索エンジンには載せない。
+export function renderProductSearchAgainPage({ status = 200 } = {}) {
+  const main = `<main class="product-detail" id="productDetail">
+<section class="product-again"><h1 class="product-name">ホシルで、この商品を探します</h1>
+<p class="product-again-lead">商品名を入れると、楽天市場・Yahoo!ショッピングなどから、今の価格をまとめて探します。</p>
+<form class="product-again-form" action="/" method="get" role="search"><label class="product-again-label" for="productAgainQuery">探したい商品</label><input class="product-again-input" id="productAgainQuery" name="q" type="search" inputmode="search" enterkeyhint="search" maxlength="200" placeholder="例：ロムアンド グラスティングカラーグロス 04" required><button class="product-buy product-again-button" type="submit">ホシルで探す</button></form></section>
+<section class="product-again-more"><h2>ほかの探し方</h2><p class="product-buy-row"><a class="product-again-link" href="/media/price-drops">今週値下がりした商品を見る</a></p><p class="product-buy-row"><a class="product-again-link" href="/">写真やあいまいな言葉で探す</a></p></section>
+</main>`;
+  return new Response(`${PAGE_HEAD_START}<meta name="robots" content="noindex">${PAGE_HEAD_END}<title>商品を探す｜ホシル</title></head><body>${PAGE_HEADER}\n${main}\n${PAGE_FOOTER}</body></html>`, {
+    status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' }
+  });
+}
+
 // 検索エンジン向けの商品一覧（記録 SEO_MIN_DAYS 日以上・商品名あり）。D1 だけ読む。1 時間キャッシュ。
 export async function renderProductsSitemap(env, { origin = 'https://hoshilu.app' } = {}) {
   const db = env?.PRODUCT_DB;
@@ -267,7 +281,11 @@ export async function handleProductDetailRoutes(request, env, ctx, deps = {}) {
   if (url.pathname === SITEMAP_PRODUCTS_PATH) return renderProductsSitemap(env, { origin: url.origin });
   if (url.pathname === '/product') {
     const key = normalizeProductKey(url.searchParams.get('key'));
-    if (!key || isInvalidJanProductKey(key)) return new Response('商品が見つかりません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    // 2026-11-14 大隆さん「『商品が見つかりません』はだめ。表示して。ほかの AI に頼られて離脱する」:
+    // 開けない鍵（形が違う・無効/共通の JAN）でも行き止まりにしない。ホシルで探し直す画面を出す。
+    // D1・外部照会・購入リンクの署名はしない（別の商品の価格やリンクを出さない）。
+    if (!key) return renderProductSearchAgainPage({ status: 404 });
+    if (isInvalidJanProductKey(key)) return renderProductSearchAgainPage({ status: 200 });
     const snapshot = await productSeoSnapshot(env, key, { now: deps.now || new Date() });
     let buyUrl = '';
     if (snapshot?.product_url && deps.sign) {

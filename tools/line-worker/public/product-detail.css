@@ -28,3 +28,11 @@
 
 /* 2026-10-25 検索エンジン向けにサーバーで組み立てた本文: 今いくら？の直下に買うボタン */
 .product-buy-row{margin:10px 0 0}.product-buy-row .product-buy{font-size:14px;padding:11px 16px}
+/* 2026-11-14 商品を 1 つに決められない鍵のとき: 行き止まりにせず、探し直す入口を出す */
+.product-again-lead{margin:8px 0 14px;color:var(--muted);font-size:14px;line-height:1.7}
+.product-again-form{display:grid;gap:10px}
+.product-again-label{font-size:12px;font-weight:800;color:#5140ba}
+.product-again-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px}
+.product-again-input:focus{outline:2px solid #5140ba;outline-offset:1px}
+.product-again-button{display:block;width:100%;border:0;cursor:pointer;font-size:15px;padding:13px 16px;text-align:center}
+.product-again-link{color:#5140ba;font-weight:800;text-decoration:underline;text-underline-offset:3px}

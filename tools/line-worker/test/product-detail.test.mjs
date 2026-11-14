@@ -75,6 +75,8 @@ test('/product は noindex の HTML、/api/product は不正キーを 400 にす
   const bad = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=AMAZON:B000'), rakutenEnv, {}, {});
   assert.equal(bad.status, 400);
   assert.equal((await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {})).status, 404);
+  const missing = await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {});
+  assert.match(await missing.text(), /<form class="product-again-form"/u, '鍵が無い・形が違う時も、探し直す画面を出す（行き止まりにしない）');
   assert.equal(await handleProductDetailRoutes(new Request('https://hoshilu.app/other'), rakutenEnv, {}, {}), null);
 });
 
@@ -205,8 +207,14 @@ test('共通・無効 JAN はサイトマップにも index にも入れない�
   assert.equal(xmlResponse.headers.get('x-product-count'), '1', '件数はサイトマップに出した URL 数');
 
   const common = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=JAN:0000000000000'), env, {}, { sign });
-  assert.equal(common.status, 404);
-  assert.doesNotMatch(await common.text(), /class="product-buy"|<script/u);
+  // 2026-11-14 大隆さん「商品が見つかりません、はだめ。表示して」: 行き止まりにせず、探し直す画面（noindex）を出す
+  assert.equal(common.status, 200);
+  assert.equal(common.headers.get('x-robots-tag'), 'noindex');
+  const commonHtml = await common.text();
+  assert.match(commonHtml, /<form class="product-again-form" action="\/" method="get" role="search">/u);
+  assert.match(commonHtml, /name="q"/u);
+  assert.match(commonHtml, /href="\/media\/price-drops"/u);
+  assert.doesNotMatch(commonHtml, /見つかりません|application\/ld\+json|rel="canonical"|<script|\/go\?token=|data-key=/u, '別の商品の価格・リンク・読み込みは出さない');
 
   const noname = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-n:noname'), env, {}, { sign });
   assert.equal(noname.headers.get('x-robots-tag'), 'noindex', '商品名なしは noindex');
@@ -238,7 +246,10 @@ test('public product detail rejects invalid JAN before reads, provider calls, or
     const env = { PRODUCT_DB: { prepare: fail } };
     const deps = { fetcher: fail, sign: fail };
     const page = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=' + key), env, {}, deps);
-    assert.equal(page.status, 404);
+    assert.equal(page.status, 200);
+    const html = await page.text();
+    assert.match(html, /ホシルで、この商品を探します/u);
+    assert.doesNotMatch(html, /見つかりません|<script|\/go\?token=/u);
     const api = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=' + key), env, {}, deps);
     assert.equal(api.status, 400);
     assert.deepEqual(await api.json(), { ok: false, error: 'PRODUCT_KEY_INVALID' });
