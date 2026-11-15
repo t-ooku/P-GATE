@@ -2,7 +2,7 @@
 type: request
 from: cowork
 to: claude-code
-status: OPEN
+status: IN_PROGRESS
 created: 2026-11-15 12:40 JST
 kpi: purchase_clicks
 ---
@@ -36,3 +36,9 @@ kpi: purchase_clicks
 - Google 検索（grounding）・Vision→Gemini の順序・モデルは変えない（大隆さん決定）。
 - 回帰テストに上の 3 例を固定データで入れる（龍角散：別商品が先頭に来ない／アルフォート：味なしの検索語で味つきが先頭に来ない／特茶：今の正解を保つ）。
 - 直した後、`docs/eval/photo-search-v1.md` の写真で前後を比べ、数字を書く。測っていないものを「直った」と書かない。
+
+## Claude 記録
+### 2026-11-15 14:1x JST（受信箱巡回 14:13 便）— 受領
+- **受領**: 2026-11-15 14:13 JST 頃。状態 OPEN → ACKED → IN_PROGRESS。
+- **担当範囲の理解**: 写真検索（/api/knowledge・画像つき）の「読み取り後」の結果の絞り込み・並び・探し直し・聞き返し文の抑止。grounding・Vision→Gemini の順序・モデル・料金/注意書きは変えない。Codex の「レンズ実機QA」記録（龍角散の切り分けを固定データで）は調査のみでコード変更なしと記載 → 重複しないよう、Codex は本番での切り分け記録、こちらは実装と固定テストを担当する形で進める。
+- **着手**: コード調査中（結果は同じ節に追記）。
