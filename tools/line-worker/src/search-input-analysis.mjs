@@ -541,18 +541,38 @@ export async function analyzeSearchInput({
     || (Array.isArray(visualWebEvidence.jan_codes) && visualWebEvidence.jan_codes.length > 0)
     || (Array.isArray(visualWebEvidence.web_entities) && visualWebEvidence.web_entities.length >= 2));
   let groundingSkipped = false;
+  let japaneseTextApplied = false;
+  // 2026-11-15 昼 実機: 検索を引かない版で、前日は当たっていた写真（龍角散ののどすっきりタブレット）を外した。
+  // 大隆さん「精度落とさず」→ 既定は今までどおり毎回検索を引く。引かない版は GEMINI_IDENTIFY_SKIP_GROUNDING_WITH_VISION=true の時だけ。
   const shouldGround = () => {
     if (!groundImages) return false;
-    if (String(env.GEMINI_IDENTIFY_GROUNDING_WITH_VISION || '') === 'true' || !visionHasEvidence()) return true;
+    if (String(env.GEMINI_IDENTIFY_SKIP_GROUNDING_WITH_VISION || '') !== 'true' || !visionHasEvidence()) return true;
     groundingSkipped = true;
     return false;
   };
+  // 速さは「考える深さ」で詰める。gemini-3.6-flash の既定は MEDIUM（公式の表）。写真の読み取りは LOW にする。
+  // 予備のモデルには付けない（対応が分からないため）。400 で断られたら、付けずに 1 回だけやり直し、以後は付けない。
+  const thinkingLevel = String(env.GEMINI_PHOTO_THINKING_LEVEL || 'LOW').toUpperCase();
+  let thinkingRejected = false;
+  let thinkingUsed = false;
+  const thinkingFor = (modelName, contextImage) => (contextImage && modelName === model && !thinkingRejected
+    && ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'].includes(thinkingLevel)) ? thinkingLevel : '';
   const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model, grounded = shouldGround()) => {
     const geminiStartedAt = Date.now();
-    try { return await requestAnalysisOnceInner(contextUrl, contextImage, timeoutMs, modelName, grounded); }
-    finally { geminiMs += Date.now() - geminiStartedAt; }
+    try {
+      const level = thinkingFor(modelName, contextImage);
+      try {
+        const payload = await requestAnalysisOnceInner(contextUrl, contextImage, timeoutMs, modelName, grounded, level);
+        if (level) thinkingUsed = true;
+        return payload;
+      } catch (error) {
+        if (!level || Number(error?.status) !== 400) throw error;
+        thinkingRejected = true;
+        return await requestAnalysisOnceInner(contextUrl, contextImage, timeoutMs, modelName, grounded, '');
+      }
+    } finally { geminiMs += Date.now() - geminiStartedAt; }
   };
-  const requestAnalysisOnceInner = async (contextUrl, contextImage, timeoutMs, modelName, grounded) => {
+  const requestAnalysisOnceInner = async (contextUrl, contextImage, timeoutMs, modelName, grounded, level = '') => {
     const parts = [{ text: analysisPrompt(rememberedQuery, contextUrl, language) }];
     const evidenceBlock = googleVisualWebEvidencePromptBlock(visualWebEvidence);
     if (evidenceBlock) parts.push({ text: evidenceBlock });
@@ -579,7 +599,7 @@ export async function analyzeSearchInput({
             // 2026-11-15 本番実測: 画像＋responseSchema の呼び方は HTTP 400 で落ちていた（G_HTTP_400）。
             // 画像つきは、本番で通っている「検索あり」と同じ形（スキーマなし・本文の JSON を読む）で呼ぶ。
             generationConfig: (contextUrl || grounded || contextImage)
-              ? { temperature: 0.1, maxOutputTokens: contextImage ? 1024 : 384 }
+              ? { temperature: 0.1, maxOutputTokens: contextImage ? 1024 : 384, ...(level ? { thinkingConfig: { thinkingLevel: level } } : {}) }
               : {
                 temperature: 0.1,
                 responseMimeType: 'application/json',
@@ -715,7 +735,7 @@ export async function analyzeSearchInput({
       web_match_tier: visualWebEvidence?.match_tier || visualWebStatus,
       visual_fallback_code: visualFallbackCode,
       diagnostic: buildDiagnostic('OK'),
-    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped },
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied },
       ...rescuedByVision.result
     };
   }
@@ -797,6 +817,7 @@ export async function analyzeSearchInput({
   if (normalizedImage && !rescuedByVision && result.refined_query && !hasJapanese(result.refined_query)) {
     const japanesePackage = japaneseProminentTextAnalysis(visualWebEvidence);
     if (japanesePackage) {
+      japaneseTextApplied = true;
       const brand = result.candidate_brand && !japanesePackage.refined_query.includes(result.candidate_brand) ? result.candidate_brand : '';
       result = { ...result, refined_query: cleanText([brand, japanesePackage.refined_query].filter(Boolean).join(' '), 200) };
     }
@@ -820,7 +841,7 @@ export async function analyzeSearchInput({
     visual_fallback_code: visualFallbackCode,
     // Server-only fixed-vocabulary stage code for identify_latency_log.
     diagnostic: buildDiagnostic('OK'),
-    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped },
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied },
     reference_urls: referenceUrls,
     ...result
   };

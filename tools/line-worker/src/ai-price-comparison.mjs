@@ -427,7 +427,9 @@ export function buildPriceComparison({ real = [], reference = [], aiEstimates = 
   // 0店ならその旨。AI推定は最安の候補として名前を出さない(hedged_claim は常に null)。
   let cheapestClaim = null;
   let confirmedPriceNote = null;
-  const count = realRows.length;
+  // 2026-11-15 Codex 指摘（固定データで再現）: 楽天の行が 2 つあるだけで「2 モール」と数えて最安を断定していた。
+  // 数えるのは「別々のモールの数」。同じモールの行がいくつあっても 1。
+  const count = new Set(realRows.map((row) => row.marketplace)).size;
   if (count >= 2) {
     const name = marketplaceLabel(realRows[0].marketplace, language);
     cheapestClaim = {

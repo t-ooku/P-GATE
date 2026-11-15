@@ -919,7 +919,9 @@ test('画像付きで主モデルが失敗したら別系統の軽量モデル�
         refined_query: '東海漬物 こくうま キムチ', candidate_name: 'こくうま キムチ', match_score: 40
       }) }] } }] });
     });
-    assert.deepEqual(models, ['gemini-test', 'gemini-3.1-flash-lite']);
+    // 2026-11-15: 400 の時だけ、考える深さの指定を外して主モデルでもう 1 回試してから予備へ
+    const expected = models.length === 3 ? ['gemini-test', 'gemini-test', 'gemini-3.1-flash-lite'] : ['gemini-test', 'gemini-3.1-flash-lite'];
+    assert.deepEqual(models, expected);
     assert.equal(result.model, 'gemini-3.1-flash-lite');
     assert.equal(result.refined_query, '東海漬物 こくうま キムチ');
   }
@@ -1074,10 +1076,44 @@ test('写真: Vision に手がかりがある時は Google 検索を引かせず
     return { tools, result };
   };
   const withText = { webDetection: {}, fullTextAnnotation: ocrPage([['特茶', 80], ['ジャスミン', 30]]) };
-  const fast = await run(withText);
-  assert.deepEqual(fast.tools, [false], '手がかりがあれば検索を引かない');
+  // 2026-11-15 昼: 検索を引かない版は精度が落ちた（実機）ため、既定は毎回引く。引かないのは設定した時だけ。
+  const normal = await run(withText);
+  assert.deepEqual(normal.tools, [true], '既定は毎回検索を引く（精度を落とさない）');
+  assert.equal(normal.result.stage_ms.grounding_skipped, false);
+  assert.equal(normal.result.stage_ms.thinking, 'LOW');
+  assert.ok(normal.result.stage_ms.vision >= 0 && normal.result.stage_ms.gemini >= 0);
+  const fast = await run(withText, { GEMINI_IDENTIFY_SKIP_GROUNDING_WITH_VISION: 'true' });
+  assert.deepEqual(fast.tools, [false]);
   assert.equal(fast.result.stage_ms.grounding_skipped, true);
-  assert.ok(fast.result.stage_ms.vision >= 0 && fast.result.stage_ms.gemini >= 0);
-  assert.deepEqual((await run({ webDetection: {} })).tools, [true], '手がかりが無ければ今までどおり検索を引く');
-  assert.deepEqual((await run(withText, { GEMINI_IDENTIFY_GROUNDING_WITH_VISION: 'true' })).tools, [true], '設定で元に戻せる');
+  assert.deepEqual((await run({ webDetection: {} }, { GEMINI_IDENTIFY_SKIP_GROUNDING_WITH_VISION: 'true' })).tools, [true], '手がかりが無ければ引く');
+});
+
+test('写真: 考える深さは LOW で頼み、400 で断られたら付けずにやり直す。予備のモデルには付けない', async () => {
+  const answer = () => Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+    refined_query: 'サントリー 特茶', candidate_name: '', candidate_brand: '', candidate_reason: '', matched_features: [], match_score: 80 }) }] } }] });
+  const levels = [];
+  const ok = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [{ webDetection: {} }] });
+    levels.push(JSON.parse(options.body).generationConfig.thinkingConfig?.thinkingLevel || '');
+    return answer();
+  });
+  assert.deepEqual(levels, ['LOW']);
+  assert.equal(ok.stage_ms.thinking, 'LOW');
+  const seen = [];
+  const rejected = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [{ webDetection: {} }] });
+    const level = JSON.parse(options.body).generationConfig.thinkingConfig?.thinkingLevel || '';
+    seen.push([String(url).includes('/models/gemini-test:') ? 'main' : 'other', level]);
+    return level ? new Response('{}', { status: 400 }) : answer();
+  });
+  assert.deepEqual(seen, [['main', 'LOW'], ['main', '']], '同じモデルで、指定を外して 1 回だけやり直す');
+  assert.equal(rejected.refined_query, 'サントリー 特茶');
+  assert.equal(rejected.stage_ms.thinking, 'REJECTED');
+  const off = [];
+  await analyzeSearchInput({ image: JPEG }, 'JA', { ...VISUAL_ENV, GEMINI_PHOTO_THINKING_LEVEL: 'off' }, async (url, options) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [{ webDetection: {} }] });
+    off.push('thinkingConfig' in JSON.parse(options.body).generationConfig);
+    return answer();
+  });
+  assert.deepEqual(off, [false], '設定で外せる');
 });

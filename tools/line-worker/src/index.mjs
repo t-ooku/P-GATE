@@ -3009,6 +3009,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const analysisStartedAt = Date.now();
     // ai_ms = Gemini にかかった時間、preview_ms = Vision にかかった時間（2026-11-15 から。分からない時は全体／0）
     const logKnowledgeAnalysis = (provider, diagnostic, stageMs = null) => {
+      // どの設定で答えたかを固定の印で足す: _NG=検索を引かなかった／_TLOW など=考える深さ／_TREJECTED=深さの指定を断られた／_JP=袋の日本語に差し替えた
+      const flags = stageMs ? `${stageMs.grounding_skipped ? '_NG' : ''}${stageMs.thinking ? `_T${String(stageMs.thinking).replace(/[^A-Z]/gu, '')}` : ''}${stageMs.japanese_text_applied ? '_JP' : ''}` : '';
+      diagnostic = `${diagnostic}${diagnostic ? flags : ''}`.slice(0, 80);
       const record = recordIdentifyLatency(env, {
         route: 'knowledge', cacheState: 'off', aiMs: stageMs ? Number(stageMs.gemini) || 0 : Date.now() - analysisStartedAt, previewMs: stageMs ? Number(stageMs.vision) || 0 : 0, totalMs: Date.now() - analysisStartedAt,
         provider, diagnostic, inputKind: validatedInput.search_image ? 'image' : 'url'

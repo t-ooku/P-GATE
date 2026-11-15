@@ -273,3 +273,15 @@ test('送料未確認の実オファーは参考の商品価格として出す�
   assert.equal(comparison.reference[0].price, 980);
   assert.equal(buildPriceComparison({ real: [], language: 'JA' }).reference_note, null);
 });
+
+// 2026-11-15 Codex 指摘: 同じモールの行が 2 つあっても「2 モール」ではない
+test('最安を言い切るのは、送料込みで確認できた別々のモールが 2 つ以上ある時だけ', async () => {
+  const { buildPriceComparison } = await import('../src/ai-price-comparison.mjs');
+  const row = (marketplace, total) => ({ marketplace, total_cost: total, source: 'REAL', tracking_url: 'https://hoshilu.app/go?token=x' });
+  const sameMall = buildPriceComparison({ real: [row('RAKUTEN_JP', 900), row('RAKUTEN_JP', 1000)], language: 'JA' });
+  assert.equal(sameMall.cheapest_claim, null);
+  assert.match(sameMall.confirmed_price_note, /比較未成立/u);
+  const twoMalls = buildPriceComparison({ real: [row('RAKUTEN_JP', 900), row('RAKUTEN_JP', 950), row('YAHOO_JP', 1000)], language: 'JA' });
+  assert.equal(twoMalls.cheapest_claim.compared_count, 2);
+  assert.match(twoMalls.cheapest_claim.text, /確認できた2モールの中では、楽天市場が最安/u);
+});
