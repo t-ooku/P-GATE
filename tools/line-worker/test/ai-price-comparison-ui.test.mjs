@@ -74,8 +74,8 @@ test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定
 test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シートが読み込まれる（結果の描画後にだけ開く）', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=3">/);
-  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=4"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=4">/);
+  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=5"><\/script>/);
   assert.match(html, /id="searchCamera"/);
   const lens = await readFile(new URL('../public/photo-lens.mjs', import.meta.url), 'utf8');
   assert.match(lens, /label\.htmlFor = 'searchCamera'/);
