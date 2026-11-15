@@ -65,3 +65,5 @@ AGENTS・起動基準、10/08引継ぎ、10/10実行管理、10/24訂正、11/06
 - 11/15 夕方の追加配備確認：起動時の直接 `/health` は接続タイムアウト。既存監視 #691／#369 の解消は判定していない。配備ルートの公開ヘルス・重要資産／API契約チェックは #783（Actions 43696432553）・#788（Actions 43696595772）とも成功。SLI恒久復旧や実機表示の確認とは別。
 
 - 11/15 19:30 決定の受領時点検：直接の /health はこの経路で取得不可。[#795 配備チェック](https://github.com/t-ooku/P-GATE/actions/runs/43704280483) は成功。既存監視 [19:45 JST](https://github.com/t-ooku/P-GATE/actions/runs/43705560465) は外部契約PASS／検索SLI FAIL（`QUERY_STRUCTURER:CANARY_PRICING_REVIEW_REQUIRED`、[#691](https://github.com/t-ooku/P-GATE/issues/691)）。既知の承認待ちを恒久復旧扱いせず、権限・課金・本番コードは変更しない。
+
+- #796 の承認済み評価ツールは [Actions 43716198836](https://github.com/t-ooku/P-GATE/actions/runs/43716198836) で配備・公開ヘルス成功（`4c1e647d`）。利用者向け挙動は変更なし。別系統の監視 #369／検索SLIの復旧や比較成立率の証拠にはしない。C-3 #799／C-1 #800 は別々のドラフト、#788 の再配備なし。20商品はCowork担当で、比較前後は未計測。
