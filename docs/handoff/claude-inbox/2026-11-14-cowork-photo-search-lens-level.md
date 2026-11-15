@@ -104,3 +104,18 @@ kpi: purchase_clicks
 - **この依頼の残り（未着手）**: (a) 候補写真の見た目照合（`PHOTO_CANDIDATE_VERIFY_ENABLED` 既定 false・4 秒上限）、(b) 段階 2 上位モデル＋月 3,000 円上限（D1 の月次枠テーブルの migration が要る → 適用は Cowork に依頼する形）、(c) 第 1 段 2. の残り（飾りの英文・数字の読み違い）。この巡回では `search-input-analysis.mjs` を触っていません（Cowork #774・#782・#784 と重ねない）。
 - **気づき（D1 実測 14:3x JST）**: `identify_latency_log` に `route='knowledge'` の画像系の行が**直近 24 時間で 15 行**出ていました（09:2x の 0 行から変化）。#774 の記録が動いていることと、12:28〜12:29 の実機が /api/knowledge 側を通っていることの裏付けになります。provider 別・診断別の内訳の読み取りは Codex の担当範囲（#782 の印別の件数・秒数）と重なるため、こちらでは数えていません。
 - **成果（D1 実測 14:3x JST、7 日、QA 除く）**: 購入先クリック（marketplace_click）25 件／17 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。この巡回の変更の効果はまだ数字になっていません（評価セットの「第 1 段のあと」は未計測。実写真の再実機が要る）。「レンズと同じ精度」とは書きません。
+
+### 2026-11-15 20:2x JST（受信箱巡回 20:13 便）
+- **受領**: 20:13 JST 頃。状態 IN_PROGRESS のまま（第 1 段 3. を実装・配備。残りは下記）。
+- **担当範囲の理解**: 第 1 段 3.「候補の商品写真と撮った写真の見比べ」。`search-input-analysis.mjs`・grounding・Vision→Gemini の順序・モデルは触らない（Cowork #774/#782/#784、Codex #788 と重ねない）。新しいファイル `src/photo-candidate-verify.mjs` と、`/api/knowledge` の結果を返す直前の 1 行だけ。
+- **実装（コミット 6c3dab3 → 本番 head 989c56f／Issue #797 ✅）**:
+  - スイッチ `PHOTO_CANDIDATE_VERIFY_ENABLED`（**既定 false。今は動いていません**）。true かつ写真検索（`search_input_analysis.applied && sources.image`）の時だけ動く。
+  - 上位最大 6 件の商品画像（楽天・Yahoo!・Amazon の配信元の https だけ。Web の任意ホストは取りに行かない）と撮った写真を、今のモデル（`GEMINI_PRODUCT_DISCOVERY_MODEL`、思考 LOW）1 回で見比べ、`same`／`similar`／`different` だけを受け取る。商品名・価格は作らせない。
+  - 上位 6 件のまとまりの中で same → 判定なし/similar → different に並べ直す（消さない。7 件目以降・PR 枠は動かさない）。position と安い順（price_order）を付け直す。結果に `unified_results.photo_verify`（applied と same/similar/different の件数、失敗時は status）と各行 `photo_match` を付ける（画面は使っていない。QA 用）。
+  - 上限 4 秒（画像取得＋モデル）。時間切れ・HTTP 失敗・JSON でない応答は今の並びのまま。画像は保存しない。
+  - 「確認カードで YES のあと」と依頼にありますが、今の写真検索は確認カードを通らず /api/knowledge で直接結果を出すため、そこに入れました。
+  - 固定テスト `test/photo-candidate-verify.test.mjs` 9 件（既定 false・ホスト制限・並べ替え・6 件上限・時間切れ・失敗・文字の検索では外へ出ない）。手元 `npm test` **3230 件 pass**。
+- **本番確認**: #797 の ✅（apply-patch: extract・git am・npm test・push・deploy・health すべて success、2026-11-15 11:23 UTC = 20:23 JST、base 4059c46 → head 989c56f）。スイッチが false なので**利用者の挙動は変わっていません**。true での実機の動き・所要時間・費用は**未確認**。
+- **Cowork へ（有効化の手順）**: 評価セットで比べる時は Worker の変数 `PHOTO_CANDIDATE_VERIFY_ENABLED=true` を入れてください。1 回の写真検索で今のモデルの呼び出しが 1 回増えます（画像 最大 7 枚）。応答の `unified_results.photo_verify` で判定の件数・失敗理由が見られます。所要時間が最大 4 秒のびるので、#783 の計測で前後を見てください。
+- **この依頼の残り（未着手）**: (b) 段階 2 上位モデル＋月 3,000 円上限（月次枠テーブルの migration が要る → 適用は Cowork に依頼する形）、(c) 第 1 段 2. の残り（飾りの英文・数字の読み違い。`search-input-analysis.mjs` なので Cowork/Codex の変更と重ならないことを確かめてから）。次の巡回で (b) に着手予定。
+- **成果（D1 実測 20:22 JST、7 日、QA 除く）**: 購入先クリック（marketplace_click）24 件／16 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。今回はスイッチ既定 false のため KPI への効果はまだ無い。「レンズと同じ精度」とは書きません。
