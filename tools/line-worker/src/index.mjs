@@ -3514,8 +3514,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       ctx.waitUntil(aiDiscoveryPromise);
     }
     const sessionHash = await hashUser(input.session_id);
+    const qaSearch = input.traffic_class === 'QA' || options.internalQa === true;
     // 2026-10-02 価格推移: API で確認できた価格を1日1行で記録（検索本文・会員IDは入れない）。失敗しても検索は止めない。
-    ctx.waitUntil(recordPriceObservations(env, result?.candidates, { source: 'search' }).catch(() => {}));
+    // QAは追加も上書きもせず、公開前後の検証で価格履歴を汚さない。
+    if (!qaSearch) ctx.waitUntil(recordPriceObservations(env, result?.candidates, { source: 'search' }).catch(() => {}));
     const decorateStartedAt = Date.now();
     let decorated = await decoratePwaResult(
       result,
@@ -3558,7 +3560,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
       recommendation_id: decorated.query_id, asin: candidate.asin, event_type: 'IMPRESSION'
     }));
-    if (events.length) {
+    // 旧GAS/D1の表示イベントにはQA分類を保存する欄がないため送らない。
+    if (events.length && !qaSearch) {
       ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
       ctx.waitUntil(recordMeasurementEventsToD1(env, 'PWA', events));
     }
