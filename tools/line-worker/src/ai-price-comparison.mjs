@@ -64,14 +64,15 @@ export function partitionOffersByProductIdentity(targetOffer, offers) {
 // を持つ、HOSHILUが既に確認済みの実オファー)。Integrated以外は無視する -
 // Directモールの「実価格」は原理的に存在しない(HOSHILUがAPI連携していない)。
 // 2026-11-14 大隆さん「最安案内の実現指示書」§3・§4: 根拠のない最安を出さない。
-// 比べてよいのは、送料込みの支払額が確かめられ(送料不明を0円にしない)、在庫あり、
-// 商品ページへのリンクがあり、確認から REAL_PRICE_MAX_AGE_MS 以内の実オファーだけ。
-// どれか1つでも欠けたら順位付けに入れない(画面には「比較できた範囲」だけを出す)。
+// 2026-11-15 大隆さん決定「もう送料は無しにしよう。送料は本人で比べてもらおう。出品者側は大体どっちかにしてる」:
+// 比べるのは**商品価格**（送料は含めない・送料を 0 円とも数えない）。送料は購入先で本人が確かめる。
+// 比べてよいのは、商品価格があり、在庫あり、商品ページへのリンクがあり、確認から REAL_PRICE_MAX_AGE_MS 以内の
+// 実オファーだけ。どれか1つでも欠けたら順位付けに入れない(画面には「比較できた範囲」だけを出す)。
 export const REAL_PRICE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const offerItemPrice = (offer) => (Number(offer?.price) > 0 ? Number(offer.price) : Number(offer?.total_cost) > 0 ? Number(offer.total_cost) : 0);
 export function comparableRealOffer(offer, now = Date.now()) {
   if (!isIntegratedMarketplace(offer?.marketplace)) return false;
-  if (!(Number(offer?.total_cost) > 0)) return false;
-  if (!(offer?.shipping_fee_confirmed === true || Number(offer?.shipping_fee_confirmed) === 1)) return false;
+  if (!(offerItemPrice(offer) > 0)) return false;
   if (String(offer?.stock_status || '').toUpperCase() !== 'IN_STOCK') return false;
   if (!/^https:\/\//iu.test(String(offer?.tracking_url || ''))) return false;
   const observed = Date.parse(String(offer?.observed_at || ''));
@@ -84,25 +85,23 @@ export function realPriceRows(realOffers, { now = Date.now() } = {}) {
     .filter((offer) => comparableRealOffer(offer, now))
     .map((offer) => ({
       marketplace: String(offer.marketplace),
-      total_cost: Number(offer.total_cost),
-      shipping_fee: Number(offer.shipping_fee) >= 0 ? Number(offer.shipping_fee) : null,
+      price: offerItemPrice(offer),
       currency: String(offer.currency || 'JPY'),
       ...(Number.isFinite(Date.parse(String(offer.observed_at || ''))) ? { observed_at: new Date(offer.observed_at).toISOString() } : {}),
       source: 'REAL',
       tracking_url: String(offer.tracking_url || '')
     }))
-    .sort((a, b) => a.total_cost - b.total_cost);
+    .sort((a, b) => a.price - b.price);
 }
 
-// 2026-11-15 大隆さん「価格比較だして」（実機: 楽天・Yahoo! の価格が 1 つも出ず、検索リンクだけだった）:
-// 送料込みの支払額までは確かめられていない実オファーも、商品価格として見せる（参考）。
-// 最安の判定には入れない・送料を 0 円として扱わない（指示書 §3・§4 はそのまま）。古い価格・在庫なし・リンクなしは出さない。
+// 2026-11-15 大隆さん「価格比較だして」: 在庫が確かめられていない実オファーも、商品価格として見せる（参考）。
+// 最安の判定には入れない。在庫なし・古い価格・リンクなしは出さない。
 export function referencePriceRows(realOffers, { now = Date.now() } = {}) {
   const seen = new Set();
   return (Array.isArray(realOffers) ? realOffers : [])
     .filter((offer) => isIntegratedMarketplace(offer?.marketplace) && !comparableRealOffer(offer, now))
     .map((offer) => {
-      const price = Number(offer?.price) > 0 ? Number(offer.price) : Number(offer?.total_cost);
+      const price = offerItemPrice(offer);
       const stock = String(offer?.stock_status || '').toUpperCase();
       const observed = Date.parse(String(offer?.observed_at || ''));
       const trackingUrl = String(offer?.tracking_url || '');
@@ -402,7 +401,7 @@ export function buildPriceComparison({ real = [], reference = [], aiEstimates = 
     search_query: searchLinkByMarketplace.get(item.marketplace)?.search_query || '',
     search_sort: searchLinkByMarketplace.get(item.marketplace)?.search_sort || ''
   });
-  const realRows = [...real].map(withSearchLink).sort((a, b) => a.total_cost - b.total_cost);
+  const realRows = [...real].map(withSearchLink).sort((a, b) => (a.price ?? a.total_cost) - (b.price ?? b.total_cost));
   const estimatedMarketplaces = new Set(aiEstimates.map((item) => item.marketplace));
   const aiRows = aiEstimates
     .map((item) => ({
@@ -437,35 +436,35 @@ export function buildPriceComparison({ real = [], reference = [], aiEstimates = 
       marketplace: realRows[0].marketplace,
       compared_count: count,
       text: {
-        JA: `送料込みの価格を確認できた${count}モールの中では、${name}が最安です。`,
-        EN: `Among the ${count} marketplaces with a confirmed total including shipping, ${name} is the cheapest.`,
-        ZH: `在已确认含运费价格的${count}个商城中，${name}最便宜。`,
-        KO: `배송비 포함 가격이 확인된 ${count}개 쇼핑몰 중에서는 ${name}가 가장 저렴합니다.`
+        JA: `商品価格（送料別）で比べると、確認できた${count}モールの中では${name}が最安です。送料は購入先で確認してください。`,
+        EN: `By item price (shipping not included), ${name} is the cheapest of the ${count} marketplaces checked. Check shipping at the store.`,
+        ZH: `按商品价格（不含运费）比较，在已确认的${count}个商城中${name}最便宜。运费请在购买处确认。`,
+        KO: `상품 가격(배송비 별도) 기준으로 확인된 ${count}개 쇼핑몰 중 ${name}가 가장 저렴합니다. 배송비는 구매처에서 확인하세요.`
       }[language] || null
     };
   } else if (count === 1) {
     const name = marketplaceLabel(realRows[0].marketplace, language);
     confirmedPriceNote = {
-      JA: `比較未成立：送料込みの価格を確認できたのは${name}のみです。`,
-      EN: `No comparison yet: ${name} is the only marketplace with a confirmed total including shipping.`,
-      ZH: `尚未形成比较：目前只有${name}确认了含运费价格。`,
-      KO: `비교 불가: 배송비 포함 가격이 확인된 곳은 ${name}뿐입니다.`
+      JA: `比較未成立：商品価格を確認できたのは${name}のみです。`,
+      EN: `No comparison yet: ${name} is the only marketplace with a confirmed item price.`,
+      ZH: `尚未形成比较：目前只有${name}确认了商品价格。`,
+      KO: `비교 불가: 상품 가격이 확인된 곳은 ${name}뿐입니다.`
     }[language] || null;
   } else {
     confirmedPriceNote = {
-      JA: '送料込みの価格を確認できたモールがないため、最安は出していません。',
-      EN: 'No marketplace has a confirmed total including shipping, so no cheapest store is shown.',
-      ZH: '没有商城确认了含运费价格，因此不显示最便宜的商城。',
-      KO: '배송비 포함 가격이 확인된 쇼핑몰이 없어 최저가를 표시하지 않습니다.'
+      JA: '在庫ありの商品価格を確認できたモールがないため、最安は出していません。',
+      EN: 'No marketplace has a confirmed in-stock item price, so no cheapest store is shown.',
+      ZH: '没有商城确认了有货的商品价格，因此不显示最便宜的商城。',
+      KO: '재고가 있는 상품 가격이 확인된 쇼핑몰이 없어 최저가를 표시하지 않습니다.'
     }[language] || null;
   }
   const hedgedClaim = null;
   const referenceRows = (Array.isArray(reference) ? reference : []).map(withSearchLink);
   const referenceNote = referenceRows.length ? ({
-    JA: '「商品価格」は送料を含みません。送料・在庫は購入先で確認してください（最安の判定には入れていません）。',
-    EN: 'Item prices exclude shipping. Check shipping and stock at the store (not used to pick the cheapest).',
-    ZH: '“商品价格”不含运费。运费和库存请在购买处确认（未用于判断最低价）。',
-    KO: '"상품 가격"은 배송비를 포함하지 않습니다. 배송비와 재고는 구매처에서 확인하세요(최저가 판정에는 포함하지 않습니다).'
+    JA: '在庫が確かめられていない価格は、最安の判定に入れていません。在庫と送料は購入先で確認してください。',
+    EN: 'Prices with unconfirmed stock are not used to pick the cheapest. Check stock and shipping at the store.',
+    ZH: '库存未确认的价格未用于判断最低价。库存和运费请在购买处确认。',
+    KO: '재고가 확인되지 않은 가격은 최저가 판정에 넣지 않았습니다. 재고와 배송비는 구매처에서 확인하세요.'
   }[language] || null) : null;
 
   return {

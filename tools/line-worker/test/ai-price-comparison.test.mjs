@@ -23,18 +23,19 @@ test('v4.3項目13: realPriceRowsはIntegratedモールの実オファーのみ�
 });
 
 // 2026-11-14 大隆さん「最安案内の実現指示書」: 送料不明・在庫切れ/不明・古い価格・リンクなしは最安の順位に入れない
-test('最安案内: 送料が確かめられない・在庫が無い/分からない・古い・リンクが無い実オファーは比べない', () => {
+// 2026-11-15 大隆さん決定「送料は無しにしよう。送料は本人で比べてもらおう」: 比べるのは商品価格。送料の確認は条件にしない。
+test('最安案内: 在庫が無い/分からない・古い・リンクが無い実オファーは比べない（送料が未確認でも商品価格で比べる）', () => {
   const now = Date.parse('2026-11-14T12:00:00Z');
   const base = { marketplace: 'RAKUTEN_JP', total_cost: 1500, shipping_fee: 0, shipping_fee_confirmed: true, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=x', observed_at: '2026-11-14T11:00:00Z' };
   assert.equal(comparableRealOffer(base, now), true);
-  assert.equal(comparableRealOffer({ ...base, shipping_fee_confirmed: false }, now), false, '送料不明を0円にしない');
+  assert.equal(comparableRealOffer({ ...base, shipping_fee_confirmed: false }, now), true, '送料は条件にしない（本人が購入先で確認）');
   assert.equal(comparableRealOffer({ ...base, stock_status: 'OUT_OF_STOCK' }, now), false, '在庫切れ');
   assert.equal(comparableRealOffer({ ...base, stock_status: 'UNKNOWN' }, now), false, '在庫不明');
   assert.equal(comparableRealOffer({ ...base, observed_at: '2026-11-12T11:00:00Z' }, now), false, '24時間より古い価格');
   assert.equal(comparableRealOffer({ ...base, tracking_url: '' }, now), false, '購入ページへのリンクが無い');
   assert.equal(comparableRealOffer({ ...base, marketplace: 'LOFT_JP' }, now), false, 'API連携していないモール');
-  const rows = realPriceRows([base, { ...base, marketplace: 'YAHOO_JP', total_cost: 1200, shipping_fee_confirmed: false }], { now });
-  assert.deepEqual(rows.map((row) => row.marketplace), ['RAKUTEN_JP'], '安く見えても送料不明なら勝者にしない');
+  const rows = realPriceRows([base, { ...base, marketplace: 'YAHOO_JP', price: 1200, total_cost: 1700, shipping_fee_confirmed: false }], { now });
+  assert.deepEqual(rows.map((row) => [row.marketplace, row.price]), [['YAHOO_JP', 1200], ['RAKUTEN_JP', 1500]], '商品価格で並べる（送料を足さない）');
   assert.equal(rows[0].observed_at, '2026-11-14T11:00:00.000Z');
 });
 
@@ -91,7 +92,7 @@ test('v4.3項目16: 実価格同士なら「確認できた○モールの中で
   assert.equal(comparison.cheapest_claim.definitive, true);
   assert.equal(comparison.cheapest_claim.marketplace, 'YAHOO_JP');
   assert.equal(comparison.cheapest_claim.compared_count, 2);
-  assert.equal(comparison.cheapest_claim.text, '送料込みの価格を確認できた2モールの中では、Yahoo!ショッピングが最安です。');
+  assert.equal(comparison.cheapest_claim.text, '商品価格（送料別）で比べると、確認できた2モールの中ではYahoo!ショッピングが最安です。送料は購入先で確認してください。');
   // 2026-11-14 指示書 §4: AI推定・古い価格・検索リンクを最安の勝者にしない
   assert.equal(comparison.hedged_claim, null);
 });
@@ -111,7 +112,7 @@ test('実価格が1モールだけなら最安と断定せず、確認できた�
     aiEstimates: [], requestedDirectMarketplaces: ['LOFT_JP'], language: 'JA'
   });
   assert.equal(comparison.cheapest_claim, null);
-  assert.equal(comparison.confirmed_price_note, '比較未成立：送料込みの価格を確認できたのは楽天市場のみです。');
+  assert.equal(comparison.confirmed_price_note, '比較未成立：商品価格を確認できたのは楽天市場のみです。');
   assert.doesNotMatch(comparison.confirmed_price_note, /最安/);
 });
 
@@ -249,39 +250,40 @@ test('ランキング価格帯は許可された候補番号と幅のある正�
   assert.deepEqual(result, [{ candidate_index: 4, range_min: 1000, range_max: 2000, confidence: 'HIGH' }]);
 });
 
-// 2026-11-15 大隆さん「価格比較だして」: 送料込みまでは確かめられていない実価格も「商品価格（送料別）」として見せる。
-test('送料未確認の実オファーは参考の商品価格として出すが、最安の判定には入れない', async () => {
+// 2026-11-15 大隆さん「価格比較だして」＋「送料は無しにしよう」: 在庫ありは商品価格で比べる。在庫が分からない実価格は参考として見せる。
+test('在庫ありの実オファーは商品価格で比べ、在庫不明は参考として出すが最安の判定には入れない', async () => {
   const { referencePriceRows, realPriceRows, buildPriceComparison } = await import('../src/ai-price-comparison.mjs');
   const now = Date.parse('2026-11-15T02:00:00Z');
   const fresh = '2026-11-15T01:00:00Z';
   const offers = [
-    { marketplace: 'RAKUTEN_JP', price: 980, total_cost: 980, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=a', observed_at: fresh },
+    { marketplace: 'RAKUTEN_JP', price: 980, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=a', observed_at: fresh },
     { marketplace: 'YAHOO_JP', price: 1100, shipping_fee: 0, total_cost: 1100, shipping_fee_confirmed: true, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=b', observed_at: fresh },
-    { marketplace: 'RAKUTEN_JP', price: 700, total_cost: 700, shipping_fee_confirmed: false, stock_status: 'OUT_OF_STOCK', tracking_url: 'https://hoshilu.app/go?token=c', observed_at: fresh },
-    { marketplace: 'RAKUTEN_JP', price: 600, total_cost: 600, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=d', observed_at: '2026-11-13T00:00:00Z' },
-    { marketplace: 'RAKUTEN_JP', price: 500, total_cost: 500, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'http://insecure.example/x', observed_at: fresh },
-    { marketplace: 'LOFT_JP', price: 400, total_cost: 400, tracking_url: 'https://hoshilu.app/go?token=e', observed_at: fresh }
+    { marketplace: 'YAHOO_JP', price: 850, stock_status: 'UNKNOWN', tracking_url: 'https://hoshilu.app/go?token=f', observed_at: fresh },
+    { marketplace: 'RAKUTEN_JP', price: 700, stock_status: 'OUT_OF_STOCK', tracking_url: 'https://hoshilu.app/go?token=c', observed_at: fresh },
+    { marketplace: 'RAKUTEN_JP', price: 600, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=d', observed_at: '2026-11-13T00:00:00Z' },
+    { marketplace: 'RAKUTEN_JP', price: 500, stock_status: 'IN_STOCK', tracking_url: 'http://insecure.example/x', observed_at: fresh },
+    { marketplace: 'LOFT_JP', price: 400, tracking_url: 'https://hoshilu.app/go?token=e', observed_at: fresh }
   ];
-  const reference = referencePriceRows(offers, { now });
-  assert.deepEqual(reference.map((row) => [row.marketplace, row.price, row.source]), [['RAKUTEN_JP', 980, 'REFERENCE']], '在庫なし・古い・http・連携外は出さない。確認済みは real 側');
   const real = realPriceRows(offers, { now });
-  assert.equal(real.length, 1);
+  assert.deepEqual(real.map((row) => [row.marketplace, row.price]), [['RAKUTEN_JP', 980], ['YAHOO_JP', 1100]], '送料の有無に関係なく商品価格で並べる');
+  const reference = referencePriceRows(offers, { now });
+  assert.deepEqual(reference.map((row) => [row.marketplace, row.price, row.source]), [['YAHOO_JP', 850, 'REFERENCE']], '在庫不明だけが参考。在庫なし・古い・http・連携外は出さない');
   const comparison = buildPriceComparison({ real, reference, language: 'JA' });
-  assert.equal(comparison.cheapest_claim, null, '安い参考価格があっても最安とは言わない');
-  assert.match(comparison.confirmed_price_note, /比較未成立/u);
-  assert.match(comparison.reference_note, /送料を含みません/u);
-  assert.equal(comparison.reference[0].price, 980);
+  assert.equal(comparison.cheapest_claim.marketplace, 'RAKUTEN_JP', '在庫不明の安い価格は勝者にしない');
+  assert.match(comparison.cheapest_claim.text, /商品価格（送料別）で比べると/u);
+  assert.match(comparison.cheapest_claim.text, /送料は購入先で確認してください。/u);
+  assert.match(comparison.reference_note, /在庫が確かめられていない価格は、最安の判定に入れていません/u);
   assert.equal(buildPriceComparison({ real: [], language: 'JA' }).reference_note, null);
 });
 
 // 2026-11-15 Codex 指摘: 同じモールの行が 2 つあっても「2 モール」ではない
-test('最安を言い切るのは、送料込みで確認できた別々のモールが 2 つ以上ある時だけ', async () => {
+test('最安を言い切るのは、商品価格を確認できた別々のモールが 2 つ以上ある時だけ', async () => {
   const { buildPriceComparison } = await import('../src/ai-price-comparison.mjs');
-  const row = (marketplace, total) => ({ marketplace, total_cost: total, source: 'REAL', tracking_url: 'https://hoshilu.app/go?token=x' });
+  const row = (marketplace, price) => ({ marketplace, price, source: 'REAL', tracking_url: 'https://hoshilu.app/go?token=x' });
   const sameMall = buildPriceComparison({ real: [row('RAKUTEN_JP', 900), row('RAKUTEN_JP', 1000)], language: 'JA' });
   assert.equal(sameMall.cheapest_claim, null);
   assert.match(sameMall.confirmed_price_note, /比較未成立/u);
   const twoMalls = buildPriceComparison({ real: [row('RAKUTEN_JP', 900), row('RAKUTEN_JP', 950), row('YAHOO_JP', 1000)], language: 'JA' });
   assert.equal(twoMalls.cheapest_claim.compared_count, 2);
-  assert.match(twoMalls.cheapest_claim.text, /確認できた2モールの中では、楽天市場が最安/u);
+  assert.match(twoMalls.cheapest_claim.text, /確認できた2モールの中では楽天市場が最安/u);
 });
