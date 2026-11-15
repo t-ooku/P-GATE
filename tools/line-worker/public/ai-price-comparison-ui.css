@@ -28,3 +28,7 @@
 .price-compare-claim-hedged{background:#fff7ed;color:#9a3412}
 .price-compare-disclaimer{font-size:11px;color:#71717a;padding:8px 10px;border-top:1px solid #e9e5f5;line-height:1.5}
 @media(max-width:480px){.price-compare-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.price-compare-marketplace{min-width:0;overflow-wrap:anywhere}.price-compare-badge{justify-self:end}.price-compare-amount{grid-column:1/-1;width:100%;margin-left:0}.price-compare-link{grid-column:1/-1}.price-compare-search-link{grid-column:1/-1;justify-self:start;max-width:100%;white-space:normal}}
+/* 2026-11-15 送料込みまでは確かめられていない実価格（参考）。確認済み（緑）とは色を分ける */
+.price-compare-row-reference{background:#fffbeb;border:1px solid #fcd34d}
+.price-compare-row-reference .price-compare-badge{background:#b45309;color:#fff}
+.price-compare-reference-note{background:#fffbeb;color:#7c4a03;font-weight:700}

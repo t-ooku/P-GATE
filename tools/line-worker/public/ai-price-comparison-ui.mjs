@@ -15,19 +15,19 @@ const DEFAULT_DIRECT_MARKETPLACES = ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUK
 const copy = {
   JA: {
     button: '価格比較', title: '価格比較（AI最安比較）', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
-    realLabel: '送料込み・確認済み', estimateLabel: 'AI推定', unavailableLabel: '価格未取得', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
+    realLabel: '送料込み・確認済み', referenceLabel: '商品価格（送料別）', estimateLabel: 'AI推定', unavailableLabel: '価格未取得', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
   },
   EN: {
     button: 'AI Price Compare', title: 'AI Price Compare', loading: 'Comparing…', error: 'Comparison failed. Please try again.', retry: 'Try again', close: 'Close',
-    realLabel: 'Confirmed total', estimateLabel: 'AI estimate', unavailableLabel: 'Price not retrieved', search: 'View lowest price first', searchDefault: 'Search this phrase', empty: 'No comparison data available.'
+    realLabel: 'Confirmed total', referenceLabel: 'Item price (shipping extra)', estimateLabel: 'AI estimate', unavailableLabel: 'Price not retrieved', search: 'View lowest price first', searchDefault: 'Search this phrase', empty: 'No comparison data available.'
   },
   ZH: {
     button: 'AI比价', title: 'AI比价', loading: '正在比较…', error: '比较失败，请重试。', retry: '重试', close: '关闭',
-    realLabel: '实际价格', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', search: '按价格从低到高查看', searchDefault: '用这个关键词搜索', empty: '没有可比较的信息。'
+    realLabel: '实际价格', referenceLabel: '商品价格（不含运费）', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', search: '按价格从低到高查看', searchDefault: '用这个关键词搜索', empty: '没有可比较的信息。'
   },
   KO: {
     button: 'AI 최저가 비교', title: 'AI 최저가 비교', loading: '비교하고 있습니다…', error: '비교에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기',
-    realLabel: '실제 가격', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', search: '낮은 가격순으로 보기', searchDefault: '이 검색어로 보기', empty: '비교할 정보가 없습니다.'
+    realLabel: '실제 가격', referenceLabel: '상품 가격(배송비 별도)', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', search: '낮은 가격순으로 보기', searchDefault: '이 검색어로 보기', empty: '비교할 정보가 없습니다.'
   }
 };
 
@@ -96,7 +96,7 @@ function appendSearchLink(item, row, t) {
 
 function renderComparison(container, result, t) {
   container.replaceChildren();
-  if (!result.real.length && !result.ai_estimated.length && !result.unavailable.length) {
+  if (!result.real.length && !result.reference?.length && !result.ai_estimated.length && !result.unavailable.length) {
     container.append(textEl('p', 'price-compare-empty', t.empty));
     return;
   }
@@ -113,6 +113,19 @@ function renderComparison(container, result, t) {
     appendSearchLink(item, row, t);
     container.append(item);
   }
+  // 送料込みまでは確かめられていない実価格（参考）。商品ページへ直接進める。最安の判定には入っていない。
+  for (const row of Array.isArray(result.reference) ? result.reference : []) {
+    const item = renderRow(row, t.referenceLabel || '商品価格（送料別）', 'price-compare-row-reference');
+    item.append(textEl('strong', 'price-compare-amount', `¥${Number(row.price).toLocaleString('ja-JP')}`));
+    if (row.tracking_url) {
+      const link = document.createElement('a');
+      link.href = row.tracking_url; link.target = '_blank'; link.rel = outboundRel(row.marketplace);
+      link.className = 'price-compare-link'; link.textContent = marketplaceLabel(row.marketplace);
+      link.dataset.marketplace = String(row.marketplace || '');
+      item.append(link);
+    }
+    container.append(item);
+  }
   for (const row of result.ai_estimated) {
     const item = renderRow(row, t.estimateLabel, 'price-compare-row-estimate');
     appendSearchLink(item, row, t);
@@ -127,6 +140,7 @@ function renderComparison(container, result, t) {
   }
   if (result.cheapest_claim?.text) container.append(textEl('p', 'price-compare-claim price-compare-claim-real', result.cheapest_claim.text));
   if (result.confirmed_price_note) container.append(textEl('p', 'price-compare-claim price-compare-confirmed-note', result.confirmed_price_note));
+  if (result.reference_note) container.append(textEl('p', 'price-compare-claim price-compare-reference-note', result.reference_note));
   if (result.hedged_claim?.text) container.append(textEl('p', 'price-compare-claim price-compare-claim-hedged', result.hedged_claim.text));
   if (result.disclaimer_required) container.append(textEl('p', 'price-compare-disclaimer', result.disclaimer_text));
 }

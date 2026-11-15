@@ -248,3 +248,28 @@ test('ランキング価格帯は許可された候補番号と幅のある正�
   ] }, [1, 4]);
   assert.deepEqual(result, [{ candidate_index: 4, range_min: 1000, range_max: 2000, confidence: 'HIGH' }]);
 });
+
+// 2026-11-15 大隆さん「価格比較だして」: 送料込みまでは確かめられていない実価格も「商品価格（送料別）」として見せる。
+test('送料未確認の実オファーは参考の商品価格として出すが、最安の判定には入れない', async () => {
+  const { referencePriceRows, realPriceRows, buildPriceComparison } = await import('../src/ai-price-comparison.mjs');
+  const now = Date.parse('2026-11-15T02:00:00Z');
+  const fresh = '2026-11-15T01:00:00Z';
+  const offers = [
+    { marketplace: 'RAKUTEN_JP', price: 980, total_cost: 980, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=a', observed_at: fresh },
+    { marketplace: 'YAHOO_JP', price: 1100, shipping_fee: 0, total_cost: 1100, shipping_fee_confirmed: true, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=b', observed_at: fresh },
+    { marketplace: 'RAKUTEN_JP', price: 700, total_cost: 700, shipping_fee_confirmed: false, stock_status: 'OUT_OF_STOCK', tracking_url: 'https://hoshilu.app/go?token=c', observed_at: fresh },
+    { marketplace: 'RAKUTEN_JP', price: 600, total_cost: 600, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'https://hoshilu.app/go?token=d', observed_at: '2026-11-13T00:00:00Z' },
+    { marketplace: 'RAKUTEN_JP', price: 500, total_cost: 500, shipping_fee_confirmed: false, stock_status: 'IN_STOCK', tracking_url: 'http://insecure.example/x', observed_at: fresh },
+    { marketplace: 'LOFT_JP', price: 400, total_cost: 400, tracking_url: 'https://hoshilu.app/go?token=e', observed_at: fresh }
+  ];
+  const reference = referencePriceRows(offers, { now });
+  assert.deepEqual(reference.map((row) => [row.marketplace, row.price, row.source]), [['RAKUTEN_JP', 980, 'REFERENCE']], '在庫なし・古い・http・連携外は出さない。確認済みは real 側');
+  const real = realPriceRows(offers, { now });
+  assert.equal(real.length, 1);
+  const comparison = buildPriceComparison({ real, reference, language: 'JA' });
+  assert.equal(comparison.cheapest_claim, null, '安い参考価格があっても最安とは言わない');
+  assert.match(comparison.confirmed_price_note, /比較未成立/u);
+  assert.match(comparison.reference_note, /送料を含みません/u);
+  assert.equal(comparison.reference[0].price, 980);
+  assert.equal(buildPriceComparison({ real: [], language: 'JA' }).reference_note, null);
+});

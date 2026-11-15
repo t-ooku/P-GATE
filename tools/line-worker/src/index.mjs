@@ -65,7 +65,7 @@ import {
 } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import {
-  buildAiCheapestRanking, buildPriceComparison, realPriceRows,
+  buildAiCheapestRanking, buildPriceComparison, realPriceRows, referencePriceRows,
   priceComparisonConfigured, requestAiCandidatePriceEstimates, requestAiPriceEstimates
 } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
@@ -2623,6 +2623,7 @@ async function handlePriceComparisonApi(request, env) {
     const [aiResult, signedLinks] = await Promise.all([aiPromise, linksPromise]);
     const comparisonMarketplaces = new Set([...input.direct_marketplaces, ...real.map((row) => row.marketplace)]);
     const comparison = buildPriceComparison({
+      reference: referencePriceRows(input.real_offers),
       real,
       aiEstimates: aiResult.estimates,
       requestedDirectMarketplaces: input.direct_marketplaces,

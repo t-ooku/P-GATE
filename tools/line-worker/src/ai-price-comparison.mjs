@@ -94,6 +94,33 @@ export function realPriceRows(realOffers, { now = Date.now() } = {}) {
     .sort((a, b) => a.total_cost - b.total_cost);
 }
 
+// 2026-11-15 大隆さん「価格比較だして」（実機: 楽天・Yahoo! の価格が 1 つも出ず、検索リンクだけだった）:
+// 送料込みの支払額までは確かめられていない実オファーも、商品価格として見せる（参考）。
+// 最安の判定には入れない・送料を 0 円として扱わない（指示書 §3・§4 はそのまま）。古い価格・在庫なし・リンクなしは出さない。
+export function referencePriceRows(realOffers, { now = Date.now() } = {}) {
+  const seen = new Set();
+  return (Array.isArray(realOffers) ? realOffers : [])
+    .filter((offer) => isIntegratedMarketplace(offer?.marketplace) && !comparableRealOffer(offer, now))
+    .map((offer) => {
+      const price = Number(offer?.price) > 0 ? Number(offer.price) : Number(offer?.total_cost);
+      const stock = String(offer?.stock_status || '').toUpperCase();
+      const observed = Date.parse(String(offer?.observed_at || ''));
+      const trackingUrl = String(offer?.tracking_url || '');
+      if (!(price > 0) || !/^https:\/\//iu.test(trackingUrl)) return null;
+      if (stock === 'OUT_OF_STOCK' || stock === 'SOLD_OUT') return null;
+      if (Number.isFinite(observed) && now - observed > REAL_PRICE_MAX_AGE_MS) return null;
+      return {
+        marketplace: String(offer.marketplace), price, currency: String(offer.currency || 'JPY'),
+        ...(Number.isFinite(observed) ? { observed_at: new Date(observed).toISOString() } : {}),
+        source: 'REFERENCE', tracking_url: trackingUrl
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.price - b.price)
+    .filter((row) => { const key = `${row.marketplace}|${row.tracking_url}`; if (seen.has(key)) return false; seen.add(key); return true; })
+    .slice(0, 6);
+}
+
 // v4.3 section 14: AI推定価格は精密な数字ではなく価格帯にする。ここは
 // プロンプト側での指示に加え、レスポンス側でも「範囲(min<max)」という形式を
 // 構造的に要求する(単一の数字を書かせない)ことで、AIが精密な値を返した
@@ -367,7 +394,7 @@ function marketplaceLabel(marketplace, language = 'JA') {
 // real/aiEstimatesを最終的な表示用データへ合成する純粋関数(通信なし)。
 // v4.3 section 13・15・16: 実価格とAI推定を色/ラベルで区別できる形に分け、
 // 「最安」の断定はreal同士でのみ許可し、AI推定を含む場合は必ずヘッジする。
-export function buildPriceComparison({ real = [], aiEstimates = [], requestedDirectMarketplaces = [], searchLinks = [], language = 'JA' }) {
+export function buildPriceComparison({ real = [], reference = [], aiEstimates = [], requestedDirectMarketplaces = [], searchLinks = [], language = 'JA' }) {
   const searchLinkByMarketplace = new Map(searchLinks.map((item) => [item.marketplace, item]));
   const withSearchLink = (item) => ({
     ...item,
@@ -431,9 +458,18 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
     }[language] || null;
   }
   const hedgedClaim = null;
+  const referenceRows = (Array.isArray(reference) ? reference : []).map(withSearchLink);
+  const referenceNote = referenceRows.length ? ({
+    JA: '「商品価格」は送料を含みません。送料・在庫は購入先で確認してください（最安の判定には入れていません）。',
+    EN: 'Item prices exclude shipping. Check shipping and stock at the store (not used to pick the cheapest).',
+    ZH: '“商品价格”不含运费。运费和库存请在购买处确认（未用于判断最低价）。',
+    KO: '"상품 가격"은 배송비를 포함하지 않습니다. 배송비와 재고는 구매처에서 확인하세요(최저가 판정에는 포함하지 않습니다).'
+  }[language] || null) : null;
 
   return {
     real: realRows,
+    reference: referenceRows,
+    reference_note: referenceNote,
     ai_estimated: aiRows,
     unavailable: unavailableRows,
     cheapest_claim: cheapestClaim,
