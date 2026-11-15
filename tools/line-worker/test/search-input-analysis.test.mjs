@@ -127,12 +127,11 @@ test('画像単体は同じ1回のGemini要求で必須JSON schemaと汎用カ�
       match_score: 45
     }) }] } }] });
   });
-  assert.equal(requestBody.generationConfig.responseMimeType, 'application/json');
-  assert.deepEqual(requestBody.generationConfig.responseSchema.required, [
-    'refined_query', 'candidate_name', 'candidate_brand',
-    'candidate_reason', 'matched_features', 'match_score'
-  ]);
-  assert.equal(requestBody.generationConfig.responseSchema.additionalProperties, false);
+  // 2026-11-15 本番実測: 画像＋responseSchema は HTTP 400 で落ちていた。画像つきはスキーマなしで呼び、
+  // 指示文の「Return JSON only」と本文の JSON の読み取りで形を守る。
+  assert.equal(requestBody.generationConfig.responseSchema, undefined);
+  assert.equal(requestBody.generationConfig.responseMimeType, undefined);
+  assert.match(requestBody.systemInstruction.parts[0].text, /Return JSON only/u);
   assert.match(requestBody.systemInstruction.parts[0].text, /refined_query must not be empty/iu);
   assert.match(requestBody.systemInstruction.parts[0].text, /generic Japanese product category/iu);
   assert.equal(result.refined_query, '青い 小型 折りたたみ傘');

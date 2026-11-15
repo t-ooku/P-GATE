@@ -576,7 +576,9 @@ export async function analyzeSearchInput({
             },
             contents: [{ role: 'user', parts }],
             ...(contextUrl ? { tools: [{ urlContext: {} }] } : (grounded ? { tools: [{ googleSearch: {} }] } : {})),
-            generationConfig: (contextUrl || grounded)
+            // 2026-11-15 本番実測: 画像＋responseSchema の呼び方は HTTP 400 で落ちていた（G_HTTP_400）。
+            // 画像つきは、本番で通っている「検索あり」と同じ形（スキーマなし・本文の JSON を読む）で呼ぶ。
+            generationConfig: (contextUrl || grounded || contextImage)
               ? { temperature: 0.1, maxOutputTokens: contextImage ? 1024 : 384 }
               : {
                 temperature: 0.1,
