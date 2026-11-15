@@ -1934,7 +1934,9 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
   });
   // 2026-10-09 大隆さん決定「一番上にPR枠を最大2件」: 月額契約店の商品で、検索語の条件をすべて満たすものだけ。
   const searchPr = await searchPrItems(env, query);
-  return {
+  // 2026-11-15 Cowork 依頼: 写真から読んだ検索語の時だけ、名前の語が当たらない候補を外し、味ちがいを下げる。
+  const photoSearch = result?.search_input_analysis?.applied === true && result?.search_input_analysis?.sources?.image === true;
+  const decorated = {
     ...result,
     candidates,
     amazon_search_url: amazonSearchUrl,
@@ -1952,9 +1954,27 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
       candidates,
       googleItems: googleMallResults?.items || [],
       query,
-      sponsored: searchPr
+      sponsored: searchPr,
+      photo: photoSearch
     })
   };
+  return {
+    ...decorated,
+    ...photoClarificationOverride(result, photoSearch, candidates.length + (decorated.unified_results?.items?.length || 0))
+  };
+}
+
+// 2026-11-15 Cowork 依頼（#776 の後も 3 枚中 2 枚で出た）: 写真検索で商品が 1 件以上出ている時は、
+// 「それは何に使うものですか？」「色・大きさ・素材のうち…」「今は特定できないため…」を出さない。
+// 写真の読み取りで商品名が決まっているので、聞き返しは要らない。商品 0 件の時は従来どおり（行き止まりにしない）。
+// 文字の検索・接続失敗などの別の案内文は変えない（聞き返しの文で始まる時だけ外す）。
+export function photoClarificationOverride(result, photoSearch, shownCount) {
+  if (!photoSearch || !(shownCount > 0) || !result?.clarification) return {};
+  const question = String(result?.clarification?.question || '');
+  const message = String(result?.message || '');
+  const override = { clarification: { ...(result?.clarification || {}), required: false, options: [] } };
+  if (question && message.startsWith(question)) override.message = '';
+  return override;
 }
 
 // Google 検索の結果を 13 モールの /go 経由リンクに包む（計測・送客先の許可リスト検査は既存と同じ）。
