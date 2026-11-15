@@ -13,7 +13,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 // index.html が参照している版。UI を変えたらここを上げる。
 const EXPECTED = Object.freeze({
   'assets-v147/app.js': '209',
-  'photo-lens.mjs': '5',
+  'photo-lens.mjs': '6',
   'assets-v126/ai-search-layout-fix.css': '135',
   'mywatch.css': '12',
   'tab-nav.css': '5',

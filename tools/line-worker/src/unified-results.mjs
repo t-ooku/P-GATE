@@ -27,6 +27,7 @@
 //   22件しか合わなければ22件。最大60件であり、必ず60件ではない。
 import { isUniqueJan } from './jan-validity.mjs';
 import { demandConditions, judgeTitle, normalizeForMatch } from './shop-demand.mjs';
+import { searchHeadNounTest } from './search-head-noun.mjs';
 
 export const UNIFIED_LIMIT = 60;
 export const UNIFIED_PAGE_SIZE = 12;
@@ -199,6 +200,51 @@ export function relevanceThreshold(conditionCount) {
   return Math.max(1, Math.ceil(conditionCount / 2));
 }
 
+// 2026-11-15 Cowork 依頼（写真検索の並び）: 写真の読み取りは正しいのに、出る商品が違った。
+//   ・龍角散ののどすっきりタブレット → 「タブレット」だけ当たった別商品（10 Tabletas de CUAJO 等）が先頭
+//   ・ブルボン アルフォートミニチョコレート → 味ちがい（ショコラサブレ・濃抹茶）が先頭
+// 写真から読んだ検索語には、ブランド・商品名（龍角散・アルフォート…）と、種類を表す一般語
+// （タブレット・チョコレート…）が混ざる。一般語だけ当たった候補は、写真の商品とは別物。
+// そこで写真検索に限り、
+//   1) 「名前の語」（一般語・色・素材・大きさ・味ではない語）が 1 つも当たらない候補は出さない
+//   2) 検索語に無い味・種類の語（濃抹茶・ショコラ・ストロベリー…）が商品名にある候補は、無い候補より下
+// とする。文字の検索（写真なし）の並びは変えない。価格比較の同一商品判定（product-variant-identity）も変えない。
+const PHOTO_GENERIC_HEADS = new Set(searchHeadNounTest.PRODUCT_HEADS.map((word) => normalizeForMatch(word)));
+// 味・期間限定などの「種類ちがい」を表す語。検索語に含まれていない時だけ使う（含まれていれば、その味を探している）。
+// チョコ・ミルク・塩は商品そのものの名前に入ることが多い（ミニチョコレート・ミルクティー）ので入れない。
+export const PHOTO_VARIANT_WORDS = Object.freeze([
+  '濃抹茶', '抹茶', 'ほうじ茶', 'いちご', 'イチゴ', '苺', 'ストロベリー', 'バニラ', 'キャラメル', 'ショコラ', 'サブレ',
+  'ホワイト', 'ビター', 'カカオ', 'レモン', 'ゆず', '柚子', 'ピーチ', '白桃', 'マンゴー', 'メロン', 'ぶどう', 'グレープ',
+  'マスカット', 'オレンジ', 'みかん', 'りんご', 'アップル', 'ミント', 'ココア', 'チーズ', '黒糖', 'きなこ', 'あずき',
+  'カフェオレ', 'ヨーグルト', 'はちみつ', 'ハニー', 'マロン', '和栗', 'さくら', '桜', 'ブルーベリー', 'ラムネ', 'コーラ',
+  'ソーダ', 'ハーブ', 'メントール', '期間限定', '季節限定', '数量限定'
+]);
+const PHOTO_VARIANT_NORMALIZED = PHOTO_VARIANT_WORDS.map((word) => normalizeForMatch(word));
+
+// 写真検索で「名前の語」とみなす条件（ラベル）。一般語・色・素材・大きさ・味・数字は外す。
+export function photoAnchorLabels(conditions = []) {
+  return conditions
+    .filter((condition) => condition && (condition.kind === 'keyword' || condition.kind === 'brand'))
+    .map((condition) => condition.label)
+    .filter((label) => {
+      const normalized = normalizeForMatch(label);
+      if (!normalized || /^[\d.,]+$/u.test(normalized)) return false;
+      if (PHOTO_GENERIC_HEADS.has(normalized)) return false;
+      if (PHOTO_VARIANT_NORMALIZED.some((word) => word === normalized)) return false;
+      return true;
+    });
+}
+
+// 商品名にあって検索語に無い「味・種類」の語の数。
+export function extraVariantWordCount(title, query) {
+  const name = normalizeForMatch(title);
+  const asked = normalizeForMatch(query);
+  const found = PHOTO_VARIANT_NORMALIZED.filter((word) => name.includes(word) && !asked.includes(word));
+  // 「濃抹茶」と「抹茶」を二重に数えない。
+  return found.filter((word) => !found.some((other) => other !== word && other.includes(word))).length;
+}
+
+
 function relevant(judged, conditionCount) {
   const strict = judged.filter((row) => row.score >= relevanceThreshold(conditionCount));
   if (strict.length) return strict;
@@ -246,13 +292,16 @@ export function detailScore(row, conditions, query) {
   return points;
 }
 
-export function rankUnified(rows, conditions, query = '') {
+
+export function rankUnified(rows, conditions, query = '', options = {}) {
+  const photo = options.photo === true;
   const judged = rows.map((row) => {
-    if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0, detail: 0 };
+    if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0, detail: 0, variantMiss: 0 };
     const verdict = judgeTitle(row.product_name, conditions);
     return {
       ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level,
-      score: verdict.matched.length, detail: detailScore(row, conditions, query)
+      score: verdict.matched.length, detail: detailScore(row, conditions, query),
+      variantMiss: photo && extraVariantWordCount(row.product_name, query) > 0 ? 1 : 0
     };
   });
   // 2026-09-22 大隆さん指示「関係ないものは提示しないこと」。
@@ -267,7 +316,10 @@ export function rankUnified(rows, conditions, query = '') {
   //   1語 → 1語一致、2語 → 1語、3語 → 2語、4語 → 2語、5語 → 3語
   // それで 1件も残らないときだけ、1語一致まで緩める（無言で0件にしない）。
   // どちらにしても、1語も当たらないものは出さない。
-  const kept = conditions.length ? relevant(judged, conditions.length) : judged;
+  let kept = conditions.length ? relevant(judged, conditions.length) : judged;
+  // 写真検索: 名前の語が 1 つも当たらない候補は出さない（0 件になっても混ぜない。画面はモールの検索リンクを出す）。
+  const anchors = photo ? photoAnchorLabels(conditions) : [];
+  if (anchors.length) kept = kept.filter((row) => row.matched.some((label) => anchors.includes(label)));
   // 2026-09-24 大隆さん「ホシル提案商品ばかりが先に提示されて、もっと見るタップして、一番最後に
   // google検索提示がでるのはおかしい。ホシルもgoogle提示も平等なルールで順に表示すべき」
   //「順位記載は不要だが1本で平等に並べよう」。
@@ -295,7 +347,7 @@ export function rankUnified(rows, conditions, query = '') {
   const sideRank = new Map();
   const tieGroups = new Map();
   for (const row of kept) {
-    const key = `${row.listing ? 1 : 0}|${row.score}|${row.unmatched.length}|${row.detail}|${sideOf(row)}`;
+    const key = `${row.listing ? 1 : 0}|${row.variantMiss}|${row.score}|${row.unmatched.length}|${row.detail}|${sideOf(row)}`;
     if (!tieGroups.has(key)) tieGroups.set(key, []);
     tieGroups.get(key).push(row);
   }
@@ -304,6 +356,8 @@ export function rankUnified(rows, conditions, query = '') {
     // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。出どころに関係なく同じ規則。
     const listing = (a.listing ? 1 : 0) - (b.listing ? 1 : 0);
     if (listing !== 0) return listing;
+    // 写真検索: 検索語に無い味・種類の語がある候補は、無い候補より下（消さない）。
+    if (a.variantMiss !== b.variantMiss) return a.variantMiss - b.variantMiss;
     if (b.score !== a.score) return b.score - a.score;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
     if (b.detail !== a.detail) return b.detail - a.detail;
@@ -354,7 +408,7 @@ export function priceOrder(items) {
     .map((entry) => entry.position);
 }
 
-export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT, sponsored = [] } = {}) {
+export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT, sponsored = [], photo = false } = {}) {
   const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
   // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して。Googleの直検索なら出るよ」。
   // 「ダイエット サプリ 燃焼系」のような広い言葉では、Google が返すのはモールの
@@ -365,7 +419,7 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     .map((item, index) => fromGoogleItem(item, index, hoshilu.length))
     .filter((row) => row.url && row.product_name);
   const conditions = demandConditions(query);
-  const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions, query);
+  const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions, query, { photo: photo === true });
   const items = ranked.slice(0, Math.max(0, limit)).map((row, index) => ({
     position: index + 1,
     source: row.source,

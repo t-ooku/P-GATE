@@ -1,4 +1,4 @@
-import { startPhotoTiming, startPhotoRequest, finishPhotoTiming } from '/photo-qa-timing.mjs';
+import { startPhotoTiming, startPhotoRequest, recordPhotoTokenWait, finishPhotoTiming } from '/photo-qa-timing.mjs?v=2';
 const qaPreparedPhotoTimings = new WeakMap();
 // Root-absolute imports keep this module valid from both /app.js and the
 // atomic rollout path /assets-v147/app.js. Relative specifiers from the latter
@@ -1975,7 +1975,13 @@ async function runKnowledgeSearch(options={}){
         // visitor to complete the visible security check instead of silently
         // destroying it and waiting a second 15-second window.
         const tokenWaitBudget=Math.min(tokenCallbackTimeoutMs,Math.max(1000,remainingBeforeToken-1000));
-        const token=hasSupplementalInput?await waitForTurnstileToken(tokenWaitBudget):await tokenOrTokenless(tokenWaitBudget);
+        const qaTokenStarted = qaPhoto ? performance.now() : undefined;
+        let token;
+        try {
+          token=hasSupplementalInput?await waitForTurnstileToken(tokenWaitBudget):await tokenOrTokenless(tokenWaitBudget);
+        } finally {
+          if (qaPhoto) recordPhotoTokenWait(qaPhoto, qaTokenStarted, performance.now());
+        }
         if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');
         if(!token&&hasSupplementalInput)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
         const remainingBeforeFetch=searchDeadlineAt-Date.now();

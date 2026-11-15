@@ -1,4 +1,4 @@
-import { rememberPhotoShutter } from './photo-qa-timing.mjs';
+import { rememberPhotoShutter } from './photo-qa-timing.mjs?v=2';
 // 2026-11-15 大隆さん指示（実機の比較を見て）:
 // 1) 写真で探す入口を、検索窓のマイクの隣に置く。
 // 2) 写真で探した時は、撮った写真を上に残したまま、商品を下からのシートで出す。
@@ -47,7 +47,11 @@ function ensureView() {
   const img = document.createElement('img');
   img.alt = '撮影した写真';
   photo.append(img);
-  view.append(photo, bar);
+  // 何という言葉で探したかを見せる（2026-11-15: 外れた時に、読み違いなのか並び順なのかが分かるように）
+  const queryNote = document.createElement('p');
+  queryNote.className = 'photo-lens-query';
+  queryNote.hidden = true;
+  view.append(photo, bar, queryNote);
   const grip = document.createElement('button');
   grip.type = 'button';
   grip.className = 'photo-lens-grip';
@@ -82,6 +86,9 @@ function showResults() {
   ensureView().querySelector('img').src = photoSrc;
   const already = document.body.classList.contains('photo-lens-open');
   document.body.classList.add('photo-lens-open', 'photo-lens-ready');
+  const usedQuery = String(document.querySelector('#query')?.value || '').replace(/\s+/gu, ' ').trim().slice(0, 60);
+  const queryNote = view.querySelector('.photo-lens-query');
+  if (queryNote) { queryNote.textContent = usedQuery ? `「${usedQuery}」で探しました` : ''; queryNote.hidden = !usedQuery; }
   clearTimeout(loadingTimer);
   shown = true;
   if (!already) { document.body.classList.remove('photo-lens-tall'); results.scrollTop = 0; }
@@ -120,6 +127,7 @@ function onFileChosen(event) {
   // 選んだ写真をすぐ上に出す（端末の中で読むだけ。blob: はこのサイトの決まりで画像に使えないので data: で読む）
   const image = ensureView().querySelector('img');
   image.removeAttribute('src');
+  { const note = view?.querySelector('.photo-lens-query'); if (note) note.hidden = true; }
   const reader = new FileReader();
   const turn = ++fileTurn;
   reader.addEventListener('load', () => {
