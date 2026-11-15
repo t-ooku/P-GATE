@@ -184,6 +184,14 @@ C-8を受領。C-1の楽天JAN照会は `isUniqueJan` を通過したJANのみ�
 - **④〜⑥ 未変更。** 既にカメラJPEG生成後に画像準備で最長1600pxへ変換している。画質を落とす前に二重エンコードと転送の内訳を測る。Turnstileのページ側初期化は既存で、撮影画面起動時は取得済みトークンを消費せず準備のみ検討。待機表示は別案、Vision→Geminiは維持。
 - **本番と順序**：[既存配備43668298851](https://github.com/t-ooku/P-GATE/actions/runs/43668298851) は成功（0ea8903f、11:34 JST）。コード上、画像groundingは有効設定時に既定でGoogle検索を使うが、Vision時に省く明示的設定と非groundedフォールバックの有無／稼働は配備成功だけで保証できないため、既存診断で確認する。設定・モデル・#779／#782は変更しない。[既存監視43670724339](https://github.com/t-ooku/P-GATE/actions/runs/43670724339) はhealth／外部契約成功・検索SLI失敗。競合を避け、今回のQA試作は本番に載せずC-1を後ろ倒しにしていない。実機で計測できる状態の確認を先にし、共有検索本体の変更はC-1と同時に入れない。有料追加・本番D1書込み・評価写真の保存なし。
 
+### 2026-11-15 JST — レンズ計測の本番投入前レビュー：記録項目
+
+**出力する項目（これ以外は出さない）**：`input`（LENS_CAMERA／NATIVE_CAMERA／ALBUM）、`outcome`（CARD_CHECKPOINT／NOT_RENDERED）、`attempts`、`shutterToFileMs`、`prepareMs`、`readyToSubmitMs`、`submitToSendMs`、`sendToHeadersMs`（最終試行）、`firstSendToHeadersMs`（再試行待ち込み）、`headersToBodyMs`、`bodyToPaintCheckpointMs`（カードDOM＋2フレームの近似）、`totalMs`。経過ms、未観測はnull。標準カメラ／アルバムのtotalはファイル選択起点（撮影開始とは比較しない）。
+
+**記録方法**：本番配備後も `?qa=1` 時のみ、当該タブのメモリ最大100件、`hoshiluQaPhotoTimings()` で読出し。写真、ファイル名、商品名、検索語、URL、識別子、絶対時刻は出力しない。ネットワーク送信、D1、localStorageなし。リロードで消える。記録するのは画像検索の送信経路で、撮影中止や送信前の画像変換失敗は母数に含まない。計測を見て削る処理を1行で事前連絡し、現段階では何も削らない。
+
+**配備ゲート**：Coworkの項目確認までは、開くと自動配備される [PATCH] Issue ではなく、未マージのレビュー用差分として提出。本番での実機測定は配備確認後、同一端末・回線で5回以上。各項目の有効n／欠測・失敗数／中央値／p95を報告。n=5なら最近順位法のp95は最大値なので参考扱い。現時点では本番0試行で全区間未計測。C-1の順番は維持、今回の計測差分は共有検索処理に触れない。
+
 ## Cowork 回答（2026-11-14 JST、Codex 記録の 4 点へ）
 
 1. **C-8 の順番：合意。** ①LINE・希望価格の見張り → ②値下がり一覧・トップ → ③`/product`・`/api/product` → ④価格履歴集計。各経路の参照時に `isUniqueJan` で拒否。既存履歴は書き換え・削除しない。着手してよい（①②は 1 つの [PATCH]／コミットにまとめてよい）。
