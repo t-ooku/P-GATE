@@ -199,27 +199,54 @@ test('confidenceLabel: 高/中/低へ変換される', () => {
   assert.equal(confidenceLabel(null, 'JA'), null);
 });
 
-test('AI最安ランキングは実価格・商品価格・AI推定価格帯を混同せず参考値で並べる', () => {
-  const candidates = [
-    { product_name: '送料込み商品', offers: [{ price: 3000, total_cost: 3300, shipping_fee_confirmed: true }] },
-    { product_name: '価格不明商品', offers: [] },
-    { product_name: '送料未確認商品', offers: [{ price: 2500, total_cost: 0, shipping_fee_confirmed: false }] }
-  ];
-  const ranked = buildAiCheapestRanking(candidates, [{ candidate_index: 1, range_min: 1800, range_max: 2200, confidence: 'MEDIUM' }]);
-  assert.deepEqual(ranked.map((item) => item.product_name), ['価格不明商品', '送料未確認商品', '送料込み商品']);
-  assert.equal(ranked[0].ai_cheapest_price_source, 'AI_ESTIMATE');
-  assert.equal(ranked[1].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
-  assert.equal(ranked[2].ai_cheapest_price_source, 'CONFIRMED_TOTAL');
-  assert.deepEqual(ranked.map((item) => item.ai_cheapest_rank), [1, 2, 3]);
+const rankingNow = Date.parse('2026-11-15T10:30:00Z');
+const rankingOffer = (marketplace, price, extra = {}) => ({
+  marketplace, price, currency: 'JPY', stock_status: 'IN_STOCK',
+  observed_at: '2026-11-15T10:15:00Z', jan: '4901234567894',
+  attributes: { volume: '4g' },
+  product_url: marketplace === 'RAKUTEN_JP'
+    ? 'https://item.rakuten.co.jp/qa-fixture/r1/'
+    : 'https://store.shopping.yahoo.co.jp/qa-fixture/y1.html',
+  ...extra
+});
+const rOffer = (price, extra) => rankingOffer('RAKUTEN_JP', price, extra);
+const yOffer = (price, extra) => rankingOffer('YAHOO_JP', price, extra);
+
+test('最安ランキングは別モールの確認済み商品価格だけで、送料込み総額やAI推定は順位に使わない', () => {
+  const ranked = buildAiCheapestRanking([
+    { product_name: 'A', offers: [yOffer(2600, { total_cost: 2600 }), rOffer(2400, { total_cost: 3500 })] },
+    { product_name: 'AI価格', offers: [rOffer(10, { source: 'AI_ESTIMATE' }), yOffer(20)] },
+    { product_name: 'B', offers: [rOffer(2500, { total_cost: 2500 }), yOffer(2700)] },
+    { product_name: '送料込総額のみ', offers: [rOffer(0, { total_cost: 1, shipping_fee_confirmed: true }), yOffer(2200)] }
+  ], { now: rankingNow });
+  assert.deepEqual(ranked.map((item) => [item.product_name, item.ai_cheapest_price_source, item.ai_cheapest_price_min, item.ai_cheapest_rank]),
+    [['A', 'OBSERVED_ITEM_PRICE', 2400, 1], ['B', 'OBSERVED_ITEM_PRICE', 2500, 2]]);
+  assert.equal(ranked[0].selected_offer.marketplace, 'RAKUTEN_JP');
 });
 
-test('AI最安ランキングは同額なら確認済み価格をAI推定より優先し同種別の順序を保つ', () => {
-  const ranked = buildAiCheapestRanking([
-    { product_name: '実価格A', offers: [{ price: 2000 }] },
-    { product_name: '推定価格', offers: [] },
-    { product_name: '実価格B', offers: [{ price: 2000 }] }
-  ], [{ candidate_index: 1, range_min: 1500, range_max: 2500, confidence: 'LOW' }]);
-  assert.deepEqual(ranked.map((item) => item.product_name), ['実価格A', '実価格B', '推定価格']);
+test('最安ランキングから時刻不明、未来、24h超、在庫不明、検索リンク、別商品、同一モールを外す', () => {
+  for (const other of [
+    yOffer(1000, { observed_at: undefined }),
+    yOffer(1000, { observed_at: '2026-11-15T10:31:00Z' }),
+    yOffer(1000, { observed_at: '2026-11-14T10:29:59Z' }),
+    yOffer(1000, { stock_status: 'UNKNOWN' }),
+    yOffer(1000, { product_url: 'https://shopping.yahoo.co.jp/search?p=qa' }),
+    yOffer(1000, { jan: '4901234567801' }),
+    yOffer(1000, { attributes: { volume: '10g' } }),
+    yOffer(1000, { source: 'REFERENCE' }), rOffer(1000)
+  ]) assert.deepEqual(buildAiCheapestRanking([{ offers: [rOffer(2000), other] }], { now: rankingNow }), []);
+  const boundary = [{ offers: [rOffer(2000), yOffer(2000, { observed_at: '2026-11-14T10:30:00Z' })] }];
+  assert.equal(buildAiCheapestRanking(boundary, { now: rankingNow }).length, 1);
+});
+
+test('最安ランキングの購入ボタンは比較に使った署名リンクだけを返し、生の根拠は公開しない', () => {
+  const live = [rOffer(2200, { tracking_url: 'https://hoshilu.app/go?token=r' }), yOffer(1900, { tracking_url: 'https://hoshilu.app/go?token=y' })];
+  const candidate = { offers: live.map(({ marketplace, price, tracking_url }) => ({ marketplace, price, tracking_url })) };
+  const [ranked] = buildAiCheapestRanking([candidate], { now: rankingNow, evidenceFor: () => live });
+  assert.equal(ranked.tracking_url, live[1].tracking_url);
+  assert.equal(ranked.selected_offer.marketplace, 'YAHOO_JP');
+  assert.doesNotMatch(JSON.stringify(ranked), /4901234567894|qa-fixture/u);
+  assert.deepEqual(buildAiCheapestRanking([{ offers: [candidate.offers[0]] }], { now: rankingNow, evidenceFor: () => live }), []);
 });
 
 test('ランキング価格AIは価格不明商品のみ最大8件を1回で推定する', async () => {

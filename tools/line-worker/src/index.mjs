@@ -67,7 +67,7 @@ import {
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import {
   buildAiCheapestRanking, buildPriceComparison, realPriceRows, referencePriceRows,
-  priceComparisonConfigured, requestAiCandidatePriceEstimates, requestAiPriceEstimates
+  priceComparisonConfigured, requestAiPriceEstimates
 } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadiness, settleQualifiedClickCharge } from './seller-billing.mjs';
@@ -1867,6 +1867,7 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     const selected = productOffers.length ? { url: productOffers[0].product_url, offer: productOffers[0] } : { url: '', offer: null };
     const destination = selected.url;
     copy.offers = [];
+    const rankingOffers = originHint.rankingEvidence ? [] : null;
     for (const [offerIndex, offer] of productOffers.entries()) {
       const publicOffer = sanitizePublicOffer(offer);
       const offerToken = await createTrackToken({
@@ -1880,7 +1881,9 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
       }, env.LINK_SIGNING_SECRET);
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
+      rankingOffers?.push({ ...offer, tracking_url: publicOffer.tracking_url });
     }
+    if (rankingOffers) originHint.rankingEvidence.set(copy, rankingOffers);
     if (!copy.offers.length) {
       const productLead = legacyAmazonProductLead(candidate);
       if (productLead) {
@@ -2209,16 +2212,14 @@ async function handleHoshiluRankingApi(request, env) {
       ...candidate,
       popularity_signals: popularitySignalsForObservedCandidate(candidate, index, observed.length, priceRange)
     }))).slice(0, 30);
-    // 実価格が無い候補だけを最大8件、1回のAI呼び出しで価格帯推定する。
-    // 実価格と推定価格は同じ値として扱わず、sourceを公開レスポンスまで保持する。
-    const aiPriceResult = await requestAiCandidatePriceEstimates(ranked, env, fetch, 'JA');
-    const priceRanked = buildAiCheapestRanking(ranked, aiPriceResult.estimates).slice(0, 30);
-    const priceByKey = new Map(priceRanked.map((candidate) => [rankingCandidateKey(candidate), candidate]));
-    const enriched = ranked.map((candidate) => priceByKey.get(rankingCandidateKey(candidate)) || candidate);
-    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: enriched }, request, env, await hashUser(input.session_id), rankingQuery, 'JA');
-    const aiCheapestCandidates = decorated.candidates
-      .filter((candidate) => Number(candidate.ai_cheapest_rank) > 0)
-      .sort((a, b) => a.ai_cheapest_rank - b.ai_cheapest_rank);
+    const rankingEvidence = new Map();
+    const decorated = await decoratePwaResult(
+      { query_id: crypto.randomUUID(), candidates: ranked }, request, env,
+      await hashUser(input.session_id), rankingQuery, 'JA', { rankingEvidence }
+    );
+    const aiCheapestCandidates = buildAiCheapestRanking(decorated.candidates, {
+      evidenceFor: (candidate) => rankingEvidence.get(candidate)
+    }).slice(0, 30);
     return Response.json({ ok: true, result: {
       mode: 'hoshilu_organic', category: resolution.category,
       ranking_type: 'HOSHILU総合人気ランキング',
@@ -2227,10 +2228,10 @@ async function handleHoshiluRankingApi(request, env) {
       candidates: decorated.candidates,
       ai_cheapest: {
         ranking_type: 'HOSHILU最安値ランキング',
-        methodology: '選択した小ジャンルの商品本体だけに絞り、確認できた実価格を優先。価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
-        disclaimer: 'AI推定価格を含む参考ランキングです。実際の販売価格・送料・在庫は各モールで確認してください。',
+        methodology: '在庫あり・確認から24時間以内・商品ページへのリンクがある商品価格を比較します。別々の2モール以上で確認できた商品だけを掲載します。',
+        disclaimer: '送料は購入先で確認してください。',
         candidates: aiCheapestCandidates,
-        estimated_count: aiCheapestCandidates.filter((candidate) => candidate.ai_cheapest_price_source === 'AI_ESTIMATE').length,
+        estimated_count: 0,
         unpriced_count: Math.max(0, ranked.length - aiCheapestCandidates.length)
       },
       sponsors: []
