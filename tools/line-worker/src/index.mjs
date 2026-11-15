@@ -81,6 +81,7 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
 import { handleUsualAlternativesRoute } from './usual-alternatives.mjs';
 import { unifyResults } from './unified-results.mjs';
+import { photoMarketplaceQuery, searchPhotoMarketplaces, unusedPhotoKeywords } from './photo-marketplace-query.mjs';
 import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
@@ -1701,7 +1702,8 @@ export function marketplaceSearchDestinations(query, env = {}, options = {}) {
   // モール横断ボタンは「同じ条件を各店で確認する」導線。検索語の意味まで
   // 店ごとに書き換えると比較できないため、HOSHILUが一度だけ整理した共通語を
   // URLパラメータ名・文字コードだけ各店仕様に合わせて渡す。
-  const amazonKeywords = buildAmazonSearchKeywords(query);
+  const amazonKeywords = options.preservePhotoKeywords === true
+    ? redactSearchPersonalData(query) : buildAmazonSearchKeywords(query);
   if (!amazonKeywords) return [];
   // ASINはAmazon内では有効な商品識別子だが、他モールでは検索ノイズになる。
   // 共通条件は維持しつつ、Amazon以外へ渡す入口で一度だけ除去する。
@@ -1741,7 +1743,8 @@ export function marketplaceSearchDestinations(query, env = {}, options = {}) {
 
 async function signedMarketplaceSearchLinks(query, context) {
   const destinations = marketplaceSearchDestinations(query, context.env, {
-    sort: context.sort, sourceOrigin: context.sourceOrigin, korean: context.korean
+    sort: context.sort, sourceOrigin: context.sourceOrigin, korean: context.korean,
+    preservePhotoKeywords: context.preservePhotoKeywords
   }).filter((item) => isAllowedDestination(item.destination));
   return Promise.all(destinations.map(async (item) => {
     const token = await createTrackToken({
@@ -1916,10 +1919,12 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     }
     candidates.push(copy);
   }
-  const marketplaceSearchLinks = await signedMarketplaceSearchLinks(query, {
+  const photoKeywords = originHint.photoKeywords || '';
+  const marketplaceSearchLinks = await signedMarketplaceSearchLinks(photoKeywords || query, {
     env, origin, sessionHash, seed, category: demandCategory,
     trafficClass: result.traffic_class || 'UNATTRIBUTED',
-    sourceOrigin: originHint.origin || '', korean: originHint.korean === true
+    sourceOrigin: originHint.origin || '', korean: originHint.korean === true,
+    preservePhotoKeywords: Boolean(photoKeywords)
   });
   const amazonSearchUrl = marketplaceSearchLinks
     .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
@@ -1940,8 +1945,8 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     ...result,
     candidates,
     amazon_search_url: amazonSearchUrl,
-    amazon_search_keywords: buildAmazonSearchKeywords(query),
-    search_keywords: buildAmazonSearchKeywords(query),
+    amazon_search_keywords: photoKeywords || buildAmazonSearchKeywords(query),
+    search_keywords: photoKeywords || buildAmazonSearchKeywords(query),
     marketplace_search_links: marketplaceSearchLinks,
     refinement_chips: refinementChipsForQuery(query, language),
     ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {}),
@@ -2849,26 +2854,56 @@ export function yahooKeywordsFor(query) {
 }
 // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。Amazon は検索リンクとして扱う。
 // only を渡すと、その名前のレーンだけを作る（続き用）。
-export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, skippedLanes, only = null }) {
+export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, skippedLanes, only = null, photoQuery = null }) {
   const marketplaceSearches = [];
   const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
   const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
   const wanted = (key) => !only || only.has(key);
+  const useRakuten = rakutenApiConfigured(env) && wanted('rakuten_catalog_connected');
+  const useYahoo = yahooShoppingApiConfigured(env) && wanted('yahoo_catalog_connected');
+  const rakutenKeywords = () => buildRakutenSearchKeywordCandidates(query, query);
+  const yahooKeywords = () => buildMarketplaceApiKeywordCandidates(query, yahooKeywordsFor(query), yahooKeywordsFor(query), query);
+  const photoRuns = photoQuery ? searchPhotoMarketplaces([
+    ...(useRakuten ? [{
+      key: 'rakuten', retryCostMs: 1000, maxVariants: 3,
+      search: (keywords, remainingMs) => searchRakutenMarketplace(env, keywords, fetch, requestId, {
+        requestTimeoutMs: remainingMs, signal: AbortSignal.timeout(remainingMs)
+      }),
+      legacy: ({ available, slots, tried }) => searchRakutenMarketplaceWithFallback(
+        env, unusedPhotoKeywords(rakutenKeywords(), tried, slots), fetch, query, requestId, query,
+        { requestTimeoutMs: available, signal: AbortSignal.timeout(available) }
+      )
+    }] : []),
+    ...(useYahoo ? [{
+      key: 'yahoo', retryCostMs: yahooFollowUpCostMs, maxVariants: 2,
+      search: (keywords, remainingMs) => searchYahooShopping(env, keywords, fetch, {
+        queueTimeoutMs: yahooQueueTimeoutMs(), signal: AbortSignal.timeout(remainingMs)
+      }),
+      legacy: ({ available, slots, tried }) => {
+        const signal = AbortSignal.timeout(available);
+        return searchMarketplaceApiWithFallback(
+          (keywords) => searchYahooShopping(env, keywords, fetch, { queueTimeoutMs: yahooQueueTimeoutMs(), signal }),
+          unusedPhotoKeywords(yahooKeywords(), tried, slots), query, query,
+          { maxVariants: slots, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
+        );
+      }
+    }] : [])
+  ], photoQuery, { deadlineAt: stageDeadlineAt }) : {};
   let yahooCatalogRun = null;
-  if (rakutenApiConfigured(env) && wanted('rakuten_catalog_connected')) marketplaceSearches.push({
+  if (useRakuten) marketplaceSearches.push({
     key: 'rakuten_catalog_connected',
-    run: searchRakutenMarketplaceWithFallback(
-      env, buildRakutenSearchKeywordCandidates(query, query), fetch, query, requestId, query
+    run: photoRuns.rakuten ?? searchRakutenMarketplaceWithFallback(
+      env, rakutenKeywords(), fetch, query, requestId, query
     )
   });
-  if (yahooShoppingApiConfigured(env) && wanted('yahoo_catalog_connected')) {
+  if (useYahoo) {
     // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。候補は 2 通りまで、
     // 待ち行列の上限も段階の締め切りまでに合わせる。2026-10-03: 2 候補目は締め切りに収まる時だけ。
-    yahooCatalogRun = searchMarketplaceApiWithFallback(
+    yahooCatalogRun = photoRuns.yahoo ?? searchMarketplaceApiWithFallback(
       (keywords) => searchYahooShopping(env, keywords, fetch, {
         queueTimeoutMs: yahooQueueTimeoutMs()
       }),
-      buildMarketplaceApiKeywordCandidates(query, yahooKeywordsFor(query), yahooKeywordsFor(query), query),
+      yahooKeywords(),
       query,
       query,
       { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
@@ -2882,7 +2917,7 @@ export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, 
   // 検索語は本体と同じ展開後クエリ。店舗ごとの絞り込み段階は持たない（1店舗あたり必ず1回）。
   // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
   if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
-    const officialStoreKeywords = yahooKeywordsFor(query) || query;
+    const officialStoreKeywords = photoQuery?.primary || yahooKeywordsFor(query) || query;
     for (const store of OFFICIAL_STORE_SEARCHES) {
       if (!wanted(store.key)) continue;
       if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
@@ -3124,9 +3159,15 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
     const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
     const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(analysisCandidate?.name), env);
+    // Keep recognized names for catalog lookup and the existing mall search
+    // links. Independent text constraints and URL searches keep their path.
+    const photoQuery = validatedInput.search_image && !validatedInput.social_url
+      && !input.ai_candidate_fallback && !isIndependentSearchText(searchOrigin.query)
+      ? photoMarketplaceQuery(redactSearchPersonalData(analyzedQuery), analysisCandidate?.brand, analysisCandidate?.name)
+      : null;
     let yahooCatalogRun = null;
     if (shouldSearchMarketplaces) {
-      const lanes = startMarketplaceLanes({ env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes });
+      const lanes = startMarketplaceLanes({ env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes, photoQuery });
       marketplaceSearches.push(...lanes.marketplaceSearches);
       yahooCatalogRun = lanes.yahooCatalogRun;
     }
@@ -3481,7 +3522,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       sessionHash,
       input.query,
       input.language,
-      { origin: searchOrigin.origin, korean: searchOrigin.korean },
+      { origin: searchOrigin.origin, korean: searchOrigin.korean, photoKeywords: photoQuery?.primary },
       googleMallPromise
     );
     // A verified-product recommendation request needs a fresh Turnstile token
