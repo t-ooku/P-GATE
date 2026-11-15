@@ -341,6 +341,21 @@ function isValueCommerceRakutenDestination(destination) {
   }
 }
 
+export function isValueCommerceAllowedHost(destination, hostsSetting = '') {
+  const allowed = String(hostsSetting || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+  if (!allowed.length) return false;
+  try {
+    const url = new URL(String(destination || ''));
+    if (url.protocol !== 'https:') return false;
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
+    // 提携済み一覧（VALUE_COMMERCE_PARTNERED_HOSTS）に無いドメインは、設定に書かれていても包まない。
+    const partnered = VALUE_COMMERCE_PARTNERED_HOSTS.some((p) => host === p || host.endsWith(`.${p}`));
+    return partnered && allowed.some((a) => host === a || host.endsWith(`.${a}`));
+  } catch {
+    return false;
+  }
+}
+
 export function decorateValueCommerceDestination(destination, sid = '', pid = '') {
   const source = String(destination || '');
   const siteId = String(sid || '').trim();
@@ -1118,7 +1133,10 @@ async function handleRedirect(request, env, ctx) {
     // referral経由の着地先が確認できるまでVC_GO_REFERRAL_ENABLEDで
     // 無効化中。送客の正しさは収益より常に優先する。
     const amazonDecorated = decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG);
+    // 2026-11-16 大隆さん「Yahoo!以外も治して」: モール単位で戻せるよう、VC_GO_REFERRAL_HOSTS
+    // （カンマ区切りのドメイン）に入っている提携モールだけを包む。誤着地が出たらそのドメインだけ外す。
     const valueCommerceEnabled = String(env.VC_GO_REFERRAL_ENABLED) === 'true'
+      || isValueCommerceAllowedHost(amazonDecorated, env.VC_GO_REFERRAL_HOSTS)
       || (
         String(env.VC_RAKUTEN_GO_REFERRAL_ENABLED) === 'true'
         && String(payload.m || '').toUpperCase() === 'RAKUTEN_JP'

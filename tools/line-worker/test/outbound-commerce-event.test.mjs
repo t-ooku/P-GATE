@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
 import { buildOutboundCommerceEvent, recordOutboundCommerceEvent } from '../src/outbound-commerce-event.mjs';
-import worker, { createTrackToken, decorateAmazonAssociateDestination, decorateValueCommerceDestination } from '../src/index.mjs';
+import worker, { createTrackToken, decorateAmazonAssociateDestination, decorateValueCommerceDestination, isValueCommerceAllowedHost } from '../src/index.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -422,6 +422,41 @@ test('楽天専用フラグでも楽天APIの既存アフィリエイトURLは�
       PRODUCT_DB: db
     }, { waitUntil: () => {} });
     assert.equal(response.headers.get('location'), affiliateUrl);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// 2026-11-16 大隆さん「Yahoo!以外も治して」: モール単位の VC referral（VC_GO_REFERRAL_HOSTS）
+test('VC_GO_REFERRAL_HOSTS に入っている提携モールだけを referral で包み、外したモールは直リンクのまま', async () => {
+  const { db } = sqliteD1();
+  const secret = 'h'.repeat(32);
+  const makeToken = (marketplace, destination, itemId) => createTrackToken({
+    u: 'session-hash-vc-hosts', r: 'query-intent-vc-hosts', a: itemId, d: destination,
+    exp: Math.floor(Date.now() / 1000) + 3600, j: `seed:${itemId}:${marketplace}`, c: 'PWA', m: marketplace
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const env = {
+      LINK_SIGNING_SECRET: secret, AMAZON_ASSOCIATE_TAG: 'hoshilu00-22', VC_SID: '3779199', VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'false', VC_GO_REFERRAL_HOSTS: 'shopping.yahoo.co.jp, hands.net, evil.example',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec', GAS_BRIDGE_SECRET: 'g'.repeat(32), PRODUCT_DB: db
+    };
+    const go = async (m, d, id) => (await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(await makeToken(m, d, id))}`), env, { waitUntil: () => {} })).headers.get('location');
+    const yahoo = 'https://store.shopping.yahoo.co.jp/kscojp/1121834584.html';
+    const yahooLocation = new URL(await go('YAHOO_JP', yahoo, 'Y1'));
+    assert.equal(yahooLocation.origin, 'https://ck.jp.ap.valuecommerce.com');
+    assert.equal(yahooLocation.searchParams.get('vc_url'), yahoo);
+    assert.equal(new URL(await go('HANDS_JP', 'https://hands.net/goods/1/', 'H1')).origin, 'https://ck.jp.ap.valuecommerce.com');
+    // 設定から外したモール（Qoo10）は包まない
+    assert.equal(await go('QOO10_JP', 'https://www.qoo10.jp/g/1', 'Q1'), 'https://www.qoo10.jp/g/1');
+    // 提携一覧に無いドメイン・偽装ドメイン・http・空設定は包まない
+    assert.equal(isValueCommerceAllowedHost('https://evil.example/x', env.VC_GO_REFERRAL_HOSTS), false);
+    assert.equal(isValueCommerceAllowedHost('https://shopping.yahoo.co.jp.evil.example/x', env.VC_GO_REFERRAL_HOSTS), false);
+    assert.equal(isValueCommerceAllowedHost('http://store.shopping.yahoo.co.jp/a', env.VC_GO_REFERRAL_HOSTS), false);
+    assert.equal(isValueCommerceAllowedHost(yahoo, ''), false);
+    assert.equal(isValueCommerceAllowedHost(yahoo, env.VC_GO_REFERRAL_HOSTS), true);
   } finally {
     globalThis.fetch = originalFetch;
   }
