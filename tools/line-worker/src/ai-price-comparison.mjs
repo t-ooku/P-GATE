@@ -13,7 +13,7 @@
 
 import { isIntegratedMarketplace } from './marketplace-search-mode.mjs';
 import { matchProductIdentity } from './product-identity-matching.mjs';
-import { compareVariants, VARIANT_SAME } from './product-variant-identity.mjs';
+import { compareVariants, variantAttributes, VARIANT_SAME } from './product-variant-identity.mjs';
 import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 
@@ -374,13 +374,28 @@ function isRankingItemPrice(offer, now) {
   return Number.isFinite(age) && age >= 0 && age <= REAL_PRICE_MAX_AGE_MS;
 }
 
+function rankingBottleCounts(title) {
+  return [...new Set([...String(title ?? '').normalize('NFKC')
+    .matchAll(/(?<![0-9A-Za-z.])([1-9]\d*)\s*本(?!体|目|店|舗)/gu)].map((m) => m[1]))];
+}
+
 function sameRankingProduct(left, right) {
   for (const key of ['jan', 'gtin', 'manufacturer_part_number']) {
     const a = String(left[key] || '').trim().normalize('NFKC').toUpperCase();
     const b = String(right[key] || '').trim().normalize('NFKC').toUpperCase();
     if (a && b && a !== b) return false;
   }
-  return matchProductIdentity(left, right).matched && compareVariants(left, right) === VARIANT_SAME;
+  const leftTitle = left.title ?? left.name ?? left.normalized_title;
+  const rightTitle = right.title ?? right.name ?? right.normalized_title;
+  const a = variantAttributes(leftTitle, left.attributes);
+  const b = variantAttributes(rightTitle, right.attributes);
+  // The general matcher ignores one-sided capacity and bare bottle counts, but
+  // neither is enough to verify that two item prices cover the same package.
+  const leftBottles = rankingBottleCounts(leftTitle);
+  const rightBottles = rankingBottleCounts(rightTitle);
+  return leftBottles.length <= 1 && rightBottles.length <= 1
+    && leftBottles[0] === rightBottles[0] && a.capacity === b.capacity
+    && matchProductIdentity(left, right).matched && compareVariants(a, b) === VARIANT_SAME;
 }
 
 export function buildAiCheapestRanking(candidates = [], {

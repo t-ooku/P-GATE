@@ -249,6 +249,15 @@ test('最安ランキングの購入ボタンは比較に使った署名リン�
   assert.deepEqual(buildAiCheapestRanking([{ offers: [candidate.offers[0]] }], { now: rankingNow, evidenceFor: () => live }), []);
 });
 
+test('最安ランキングでは同じJANでも裸の本数違いと片方だけの容量を比較しない', () => {
+  const base = rOffer(2000, { title: 'QAコスメ 1本' });
+  const rank = (offer) => buildAiCheapestRanking([{ offers: [base, offer] }], { now: rankingNow });
+  assert.equal(rank(yOffer(1000, { title: 'QAコスメ 1本' })).length, 1);
+  assert.deepEqual(rank(yOffer(1000, { title: 'QAコスメ 2本' })), []);
+  assert.deepEqual(rank(yOffer(1000, { title: 'QAコスメ' })), []);
+  assert.deepEqual(rank(yOffer(1000, { title: 'QAコスメ 1本', attributes: {} })), []);
+});
+
 test('ランキング価格AIは価格不明商品のみ最大8件を1回で推定する', async () => {
   let calls = 0; let prompt = '';
   const result = await requestAiCandidatePriceEstimates([
