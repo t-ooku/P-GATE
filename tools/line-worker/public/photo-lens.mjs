@@ -51,7 +51,11 @@ function ensureView() {
   grip.className = 'photo-lens-grip';
   grip.setAttribute('aria-label', '結果を広げる・戻す');
   grip.addEventListener('click', () => document.body.classList.toggle('photo-lens-tall'));
-  document.body.append(view, grip);
+  const loading = document.createElement('div');
+  loading.className = 'photo-lens-loading';
+  loading.setAttribute('role', 'status');
+  loading.innerHTML = '<span class="photo-lens-loading-bar" aria-hidden="true"></span><p>商品を探しています…</p>';
+  document.body.append(view, grip, loading);
   return view;
 }
 
@@ -61,10 +65,12 @@ let photoSrc = '';
 let armed = false;      // 写真つきの検索の結果を待っている
 let userClosed = false; // 利用者が × で閉じた（同じ写真では勝手に開き直さない）
 let shown = false;      // この写真の結果を 1 度は出した
+let localUrl = '';      // 選んだファイルそのものの表示用（端末内だけ）
+let freshLocal = false;
 function rememberPhoto() {
   if (!hasPhoto()) return;
   const src = previewImage.getAttribute('src');
-  if (src !== photoSrc) { userClosed = false; shown = false; }
+  if (src !== photoSrc) { userClosed = false; shown = false; if (!freshLocal) localUrl = ''; freshLocal = false; }
   photoSrc = src;
   armed = true;
 }
@@ -73,19 +79,68 @@ function rememberPhoto() {
 function showResults() {
   rememberPhoto();
   if (!armed || userClosed || !photoSrc || !results || results.classList.contains('hidden')) return;
-  ensureView().querySelector('img').src = photoSrc;
+  ensureView().querySelector('img').src = localUrl || photoSrc;
   const already = document.body.classList.contains('photo-lens-open');
   document.body.classList.add('photo-lens-open', 'photo-lens-ready');
+  clearTimeout(loadingTimer);
   shown = true;
   if (!already) { document.body.classList.remove('photo-lens-tall'); results.scrollTop = 0; }
 }
 
-export function closeLens() {
+// 開いた枠だけを片づける（検索語・写真・結果はそのまま）。うまく探せなかった時に、ふつうの画面の案内を見せるため。
+function hideLens() {
   const wasOpen = document.body.classList.contains('photo-lens-open');
   document.body.classList.remove('photo-lens-open', 'photo-lens-ready', 'photo-lens-tall');
+  clearTimeout(loadingTimer);
+  pendingFile = false;
   if (wasOpen) userClosed = true;
-  // 閉じたら、ふつうの画面の結果の位置へ（行き止まりにしない）
-  if (wasOpen && results && !results.classList.contains('hidden')) results.scrollIntoView({ block: 'start' });
+  return wasOpen;
+}
+
+// × で閉じたら、検索語も写真も結果も片づけて、最初の画面に戻す（2026-11-15 大隆さん指示）。
+export function closeLens() {
+  if (!hideLens()) return;
+  armed = false; photoSrc = ''; localUrl = '';
+  document.querySelector('#removeScreenshot')?.click();
+  const query = document.querySelector('#query');
+  if (query && query.value) { query.value = ''; query.dispatchEvent(new Event('input', { bubbles: true })); }
+  document.querySelector('#clearQuery')?.classList.add('hidden');
+  results?.classList.add('hidden');
+  window.scrollTo(0, 0);
+}
+
+// 2026-11-15 大隆さん指示: 撮った（選んだ）ら、そのまま探し始める。写真を上に出し、下に「探しています」を出す。
+let pendingFile = false;
+let loadingTimer = 0;
+function onFileChosen(event) {
+  const file = event.target?.files?.[0];
+  if (!file) return;
+  if (localUrl) URL.revokeObjectURL(localUrl);
+  localUrl = URL.createObjectURL(file); freshLocal = true;
+  pendingFile = true; userClosed = false; shown = false; armed = true;
+  ensureView().querySelector('img').src = localUrl;
+  document.body.classList.remove('photo-lens-ready', 'photo-lens-tall');
+  document.body.classList.add('photo-lens-open');
+  clearTimeout(loadingTimer);
+  // 60 秒たっても結果が出ない時は、枠を片づけてふつうの画面を見せる（行き止まりにしない）
+  loadingTimer = setTimeout(() => { if (!document.body.classList.contains('photo-lens-ready')) hideLens(); }, 60000);
+}
+// 写真の準備ができたら検索を始める。準備に失敗した時は枠を片づけて、画面の案内を見せる。
+function onPreviewChanged() {
+  rememberPhoto();
+  if (!pendingFile || preview?.getAttribute('aria-busy') === 'true') return;
+  pendingFile = false;
+  if (!hasPhoto()) { hideLens(); return; }
+  const form = document.querySelector('#knowledgeForm');
+  if (!form) { hideLens(); return; }
+  // 準備の後始末（app.js の finally）が終わってから送る
+  setTimeout(() => { if (typeof form.requestSubmit === 'function') form.requestSubmit(); else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); }, 0);
+}
+// 探している途中で案内（確認のお願い・失敗）が出た時は、枠を片づけて見せる
+function onStatusChanged() {
+  const status = document.querySelector('#status');
+  if (!status?.classList.contains('error')) return;
+  if (document.body.classList.contains('photo-lens-open') && !document.body.classList.contains('photo-lens-ready')) hideLens();
 }
 
 // 写真なしの新しい検索が始まったら、前の写真は使わない。
@@ -96,8 +151,10 @@ function onSearchStarted() {
 }
 
 addCameraButton();
-if (previewImage) new MutationObserver(rememberPhoto).observe(previewImage, { attributes: true, attributeFilter: ['src'] });
-if (preview) new MutationObserver(rememberPhoto).observe(preview, { attributes: true, attributeFilter: ['class'] });
+if (previewImage) new MutationObserver(onPreviewChanged).observe(previewImage, { attributes: true, attributeFilter: ['src'] });
+if (preview) new MutationObserver(onPreviewChanged).observe(preview, { attributes: true, attributeFilter: ['class', 'aria-busy'] });
+for (const id of ['#searchCamera', '#searchScreenshot']) document.querySelector(id)?.addEventListener('change', onFileChosen);
+{ const status = document.querySelector('#status'); if (status) new MutationObserver(onStatusChanged).observe(status, { attributes: true, attributeFilter: ['class'] }); }
 document.querySelector('#removeScreenshot')?.addEventListener('click', () => { if (!document.body.classList.contains('photo-lens-open')) { armed = false; photoSrc = ''; } });
 document.addEventListener('hoshilu:search-execution-started', onSearchStarted);
 document.addEventListener('hoshilu:search-knowledge-started', onSearchStarted);
