@@ -136,7 +136,7 @@ test('画面: 文字だけの検索は短く待ってトークン無しで送る
   const fn = app.slice(app.indexOf('function tokenOrTokenless('), app.indexOf('\n}\n', app.indexOf('function tokenOrTokenless(')));
   assert.doesNotMatch(fn, /waitForTurnstileToken|recoverTurnstileWidget/u);
   assert.match(fn, /if\(abandoned\|\|!token\|\|token===lastIssuedTurnstileToken\)return '';/u);
-  assert.match(app, /const token=hasSupplementalInput\?await waitForTurnstileToken\(tokenWaitBudget\):await tokenOrTokenless\(tokenWaitBudget\);/u);
+  assert.match(app, /\btoken=hasSupplementalInput\?await waitForTurnstileToken\(tokenWaitBudget\):await tokenOrTokenless\(tokenWaitBudget\);/u);
   assert.match(app, /if\(!token&&hasSupplementalInput\)throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\);/u);
   assert.match(app, /!\/\^TURNSTILE_TOKENLESS_\/u\.test\(value\)/u, 'TOKENLESS は再試行しない');
   assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'\|\|\/\^TURNSTILE_TOKENLESS_\/u\.test\(failureTelemetry\.error_code\)/u);

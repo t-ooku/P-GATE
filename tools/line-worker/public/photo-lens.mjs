@@ -1,3 +1,4 @@
+import { rememberPhotoShutter } from './photo-qa-timing.mjs?v=2';
 // 2026-11-15 大隆さん指示（実機の比較を見て）:
 // 1) 写真で探す入口を、検索窓のマイクの隣に置く。
 // 2) 写真で探した時は、撮った写真を上に残したまま、商品を下からのシートで出す。
@@ -229,6 +230,7 @@ function takePhoto() {
   const input = document.querySelector('#searchCamera');
   if (!video || !input || !video.videoWidth) return;
   try {
+    const shutterAt = performance.now();
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
@@ -238,6 +240,8 @@ function takePhoto() {
         const transfer = new DataTransfer();
         transfer.items.add(new File([blob], 'hoshilu-photo.jpg', { type: 'image/jpeg' }));
         input.files = transfer.files;
+        const assignedFile = input.files?.[0];
+        if (assignedFile) rememberPhotoShutter(assignedFile, shutterAt);
         input.dispatchEvent(new Event('change', { bubbles: true }));
       } catch { showCameraFallback(); }
     }, 'image/jpeg', 0.9);

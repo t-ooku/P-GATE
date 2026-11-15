@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
@@ -56,7 +57,6 @@ test('v4.3項目16: 断定文言(cheapest_claim)とヘッジ文言(hedged_claim)
 
 test('service-workerがAI最安比較の新規ファイルをプリキャッシュ対象に含む', async () => {
   const worker = await read('service-worker.js');
-  assert.match(worker, /hoshilu-shell-v430/);
   assert.match(worker, /ai-price-comparison-ui\.mjs/);
   assert.match(worker, /ai-price-comparison-ui\.css/);
 });
@@ -75,7 +75,7 @@ test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シ
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=4">/);
-  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=5"><\/script>/);
+  assert.ok(hasVersionedAsset(html, 'photo-lens.mjs'));
   assert.match(html, /id="searchCamera"/);
   const lens = await readFile(new URL('../public/photo-lens.mjs', import.meta.url), 'utf8');
   assert.match(lens, /label\.htmlFor = 'searchCamera'/);

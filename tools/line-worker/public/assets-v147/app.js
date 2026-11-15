@@ -1,3 +1,5 @@
+import { startPhotoTiming, startPhotoRequest, recordPhotoTokenWait, finishPhotoTiming } from '/photo-qa-timing.mjs?v=2';
+const qaPreparedPhotoTimings = new WeakMap();
 // Root-absolute imports keep this module valid from both /app.js and the
 // atomic rollout path /assets-v147/app.js. Relative specifiers from the latter
 // would incorrectly resolve to /assets-v147/*.mjs and stop the whole UI.
@@ -1817,6 +1819,7 @@ elements.socialUrl?.addEventListener('input',()=>{if(elements.status.classList.c
 for(const input of [elements.camera,elements.screenshot])input?.addEventListener('click',()=>{input.value='';});
 async function handleSearchImageSelection(input,source){
   const file=input?.files?.[0];if(!file)return;
+  const qaPhoto = startPhotoTiming(file, source);
   const generation=++searchImageGeneration;const startLabels=selectedSearchInputCopy();
   const previous={payload:preparedSearchImage,source:preparedSearchImageSource,name:elements.screenshotPreviewName?.textContent||''};
   searchImagePreparing=true;searchImagePreparingSource=source;elements.screenshotPreview?.classList.remove('hidden');elements.screenshotPreview?.setAttribute('aria-busy','true');if(!previous.payload&&elements.screenshotPreviewName)elements.screenshotPreviewName.textContent=source==='CAMERA'?startLabels.cameraPhoto:file.name;if(elements.screenshotPreviewStatus)elements.screenshotPreviewStatus.textContent=startLabels.preparing;elements.status.className='status';elements.status.textContent='';
@@ -1824,6 +1827,7 @@ async function handleSearchImageSelection(input,source){
     const prepared=await prepareSearchImage(file);if(generation!==searchImageGeneration)return;
     const labels=selectedSearchInputCopy();
     preparedSearchImage=prepared.payload;preparedSearchImageSource=source;if(source==='CAMERA'&&elements.screenshot)elements.screenshot.value='';if(source==='SCREENSHOT'&&elements.camera)elements.camera.value='';elements.screenshotPreviewImage.src=prepared.preview;elements.screenshotPreviewName.textContent=source==='CAMERA'?labels.cameraPhoto:prepared.name;elements.screenshotPreviewStatus.textContent=labels.imageReady;if(elements.cameraActionLabel)elements.cameraActionLabel.textContent=source==='CAMERA'?labels.cameraRetake:labels.cameraAction;
+    if (qaPhoto) { qaPhoto.prepared = performance.now(); qaPreparedPhotoTimings.set(prepared.payload, qaPhoto); }
   }catch(error){
     if(generation!==searchImageGeneration)return;const labels=selectedSearchInputCopy();preparedSearchImage=previous.payload;preparedSearchImageSource=previous.source;input.value='';if(previous.payload){elements.screenshotPreviewName.textContent=previous.source==='CAMERA'?labels.cameraPhoto:previous.name;elements.screenshotPreviewStatus.textContent=labels.imageReady;}else{elements.screenshotPreviewImage.removeAttribute('src');elements.screenshotPreview.classList.add('hidden');}if(elements.cameraActionLabel)elements.cameraActionLabel.textContent=previous.source==='CAMERA'?labels.cameraRetake:labels.cameraAction;elements.status.className='status error';elements.status.textContent=String(error?.message||labels.imageType);
   }finally{if(generation===searchImageGeneration){searchImagePreparing=false;searchImagePreparingSource='';elements.screenshotPreview?.removeAttribute('aria-busy');}}
@@ -1943,6 +1947,7 @@ async function runKnowledgeSearch(options={}){
   searchRoot=currentRoot;
   elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;elements.cards.setAttribute('aria-busy','true');
   const sequence=++relatedRecommendationSequence;
+  const qaPhoto = startPhotoRequest(submittedImage ? qaPreparedPhotoTimings.get(submittedImage) : null);
   const aiCandidatePayload=aiCandidateRequestPayload(options.aiCandidateFallback);
   const requestedMaxAttempts=Math.max(1,Math.min(2,Number(options.maxAttempts)||2));
   // 画像付きも2回まで。2回目は縮小画像で送り直す(解析側の失敗が入力量に
@@ -1970,7 +1975,13 @@ async function runKnowledgeSearch(options={}){
         // visitor to complete the visible security check instead of silently
         // destroying it and waiting a second 15-second window.
         const tokenWaitBudget=Math.min(tokenCallbackTimeoutMs,Math.max(1000,remainingBeforeToken-1000));
-        const token=hasSupplementalInput?await waitForTurnstileToken(tokenWaitBudget):await tokenOrTokenless(tokenWaitBudget);
+        const qaTokenStarted = qaPhoto ? performance.now() : undefined;
+        let token;
+        try {
+          token=hasSupplementalInput?await waitForTurnstileToken(tokenWaitBudget):await tokenOrTokenless(tokenWaitBudget);
+        } finally {
+          if (qaPhoto) recordPhotoTokenWait(qaPhoto, qaTokenStarted, performance.now());
+        }
         if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');
         if(!token&&hasSupplementalInput)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
         const remainingBeforeFetch=searchDeadlineAt-Date.now();
@@ -1978,12 +1989,15 @@ async function runKnowledgeSearch(options={}){
         if(attempt>0&&submittedImage){submittedImage=await shrinkPreparedSearchImage(submittedImage);if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');}
         const requestTimeoutMs=hasSupplementalInput?SUPPLEMENTAL_KNOWLEDGE_HTTP_TIMEOUT_MS:KNOWLEDGE_HTTP_TIMEOUT_MS;
         const timed=timedAbortController(Math.min(requestTimeoutMs,remainingBeforeFetch));activeKnowledgeFetch=timed.controller;
+        if (qaPhoto) { qaPhoto.lastSend = performance.now(); qaPhoto.firstSend ??= qaPhoto.lastSend; qaPhoto.headers = undefined; qaPhoto.body = undefined; qaPhoto.attempts++; }
         try{response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},signal:timed.controller.signal,body:JSON.stringify({query:submittedQuery,processing_notice_shown:true,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(submittedSocialUrl?{social_url:submittedSocialUrl}:{}),...(submittedImage?{image:submittedImage}:{}),...(aiCandidatePayload?{ai_candidate_fallback:aiCandidatePayload}:{}),...(options.identifyOriginalQuery?{identify_original_query:String(options.identifyOriginalQuery).slice(0,200)}:{}),...(window.HoshiluGrowthAttribution||{})})});}
         finally{timed.clear();if(activeKnowledgeFetch===timed.controller)activeKnowledgeFetch=null;}
         if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');
+        if (qaPhoto) qaPhoto.headers = performance.now();
         lastRequestId=String(response.headers.get('x-request-id')||'');
         let parseFailed=false;
         payload=await response.json().catch(()=>{parseFailed=true;return{};});
+        if (qaPhoto) qaPhoto.body = performance.now();
         if(parseFailed&&attempt+1<maxAttempts)continue;
         if(response.ok&&payload.ok)break;
         const code=String(payload.error||`SEARCH_HTTP_${response.status}`);
@@ -2013,9 +2027,15 @@ async function runKnowledgeSearch(options={}){
     if(hasSupplementalInput){clearPreparedSearchImage();if(elements.socialUrl)elements.socialUrl.value='';elements.socialUrlField?.classList.add('hidden');elements.socialUrlToggle?.setAttribute('aria-expanded','false');if(elements.socialUrlActionLabel)elements.socialUrlActionLabel.textContent=selectedSearchInputCopy().socialAction;}
     rememberMemberSearch(elements.query.value);renderResults(result,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(false);revealSearchResults();
     document.dispatchEvent(new CustomEvent('hoshilu:search-completed',{detail:{executionId}}));elements.status.textContent='';
+    if (qaPhoto) requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (isCurrentRun() && !document.hidden && elements.cards.querySelector('.unified-card, .product-card')) {
+        qaPhoto.painted = performance.now(); finishPhotoTiming(qaPhoto, 'CARD_CHECKPOINT', qaPhoto.painted);
+      } else finishPhotoTiming(qaPhoto, 'NOT_RENDERED');
+    }));
     scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence);
     return{ok:true,result,requestId:lastRequestId};
   }catch(error){
+    finishPhotoTiming(qaPhoto, 'NOT_RENDERED');
     const rawError=String(error?.message||error).slice(0,80);lastRequestId=String(error?.requestId||lastRequestId||'');
     if(!isCurrentRun()||rawError==='SEARCH_SUPERSEDED'){
       document.dispatchEvent(new CustomEvent('hoshilu:search-cancelled',{detail:{executionId}}));
