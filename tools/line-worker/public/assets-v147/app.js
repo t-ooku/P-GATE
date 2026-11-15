@@ -1659,12 +1659,17 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
   // 上に重ねると矛盾して見える(2026-09-02 実機フィードバック)。絞り込みの
   // 質問自体はclarificationCardが担うため、確認済み商品がある時だけ
   // この種のメッセージを出さない。
-  const resultMessageText=String(result.message||'');
-  const contradictsShownProducts=confirmed.length>0&&(/ほしっとく|特定でき|MYWISH|信息不足|특정하기/u.test(resultMessageText)||/[?？]\s*$/u.test(resultMessageText));
-  // 2026-09-20 大隆さん指示: 商品が出ている時の「近い種類・特徴を選んでください。」は出さない（余白を詰める）。
-  elements.message.textContent=(contradictsShownProducts||(confirmed.length>0&&/種類・特徴を選んで/u.test(resultMessageText)))?'':resultMessageText;
   const fallbackProducts=fallbackRecommendationCandidates(candidateRows,RESULT_ROW_LIMIT);
   const recommended=(Array.isArray(result.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);
+  // 2026-11-15 写真検索の実機（たけのこの里・きき湯・ファミマル）: 価格未確認の
+  // Web 結果や関連商品だけが出ている時も「それは何に使うものですか？ 今は特定
+  // できないため…」が出て行き止まりに見えた。確認済みに限らず、商品を 1 件でも
+  // 表示する時はこの種の文言を出さない。
+  const resultMessageText=String(result.message||'');
+  const showsAnyProduct=confirmed.length>0||fallbackProducts.length>0||recommended.length>0;
+  const contradictsShownProducts=showsAnyProduct&&(/ほしっとく|特定でき|MYWISH|信息不足|특정하기|Save it to MYWISH|not enough information/iu.test(resultMessageText)||/[?？]\s*$/u.test(resultMessageText)||/何に使うもの|What would you use it for|它主要用来做什么|어디에 사용하는/u.test(resultMessageText));
+  // 2026-09-20 大隆さん指示: 商品が出ている時の「近い種類・特徴を選んでください。」は出さない（余白を詰める）。
+  elements.message.textContent=(contradictsShownProducts||(showsAnyProduct&&/種類・特徴を選んで/u.test(resultMessageText)))?'':resultMessageText;
   // 「見つけた」共有は、確認済みまたはモールAPI由来の商品を1件以上表示
   // できた検索だけに限定する。検索リンクだけの即時/縮退表示を成功扱いしない。
   shareDiscoveryReady=confirmed.length>0;
