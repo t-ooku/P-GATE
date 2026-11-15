@@ -60,12 +60,14 @@ test('投稿URLの入力欄を閉じると値も消え、旧HTMLでも新appが�
   }
 });
 
-test('V1カメラ検索はライブ映像権限を開けず、端末の撮影UIだけを使う', () => {
+// 2026-11-15 大隆さん決定: ホシルの撮影画面（photo-lens.mjs）を作る。カメラは自サイトだけに開ける（camera=(self)）。
+// 検索の本体（app.js）は今までどおりライブ映像を扱わず、撮った 1 枚だけを受け取る。マイク・位置は閉じたまま。
+test('カメラは自サイトの撮影画面だけに開け、検索の本体はライブ映像を扱わない', () => {
   const app = read('app.js');
   const headers = read('_headers');
   const css = read('ai-search-layout-fix.css');
   assert.doesNotMatch(app, /getUserMedia|MediaStream/u);
-  assert.match(headers, /Permissions-Policy: camera=\(\), microphone=\(\), geolocation=\(\)/u);
+  assert.match(headers, /Permissions-Policy: camera=\(self\), microphone=\(\), geolocation=\(\)/u);
   assert.match(css, /\.screenshot-preview img:not\(\[src\]\)\{visibility:hidden\}/u);
 });
 

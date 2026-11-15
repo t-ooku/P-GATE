@@ -30,7 +30,7 @@ test('SEOハブはGETとHEADで同じsecurity headersを返す', async () => {
     assert.match(response.headers.get('content-security-policy') || '', /default-src 'self'/);
     assert.equal(response.headers.get('x-frame-options'), 'DENY');
     assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
-    assert.equal(response.headers.get('permissions-policy'), 'camera=(), microphone=(), geolocation=()');
+    assert.equal(response.headers.get('permissions-policy'), 'camera=(self), microphone=(), geolocation=()');
     assert.equal(response.headers.get('strict-transport-security'), 'max-age=31536000');
     if (method === 'HEAD') assert.equal(await response.text(), '');
   }

@@ -31,6 +31,23 @@ body.photo-lens-open:not(.photo-lens-ready) .photo-lens-loading{display:block;po
 @keyframes photo-lens-run{to{left:100%}}
 @media (prefers-reduced-motion:reduce){.photo-lens-loading-bar::after{animation:none;left:0;width:100%}}
 
+/* ホシルの撮影画面: 中央にシャッター、その右にアルバム */
+.photo-cam{display:none}
+body.photo-cam-open{overflow:hidden}
+body.photo-cam-open .photo-cam{display:block;position:fixed;inset:0;z-index:910;background:#0d0c18;color:#fff}
+.photo-cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0d0c18}
+.photo-cam-bar{position:absolute;top:0;left:0;right:0;height:calc(52px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 8px 0 16px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-weight:850;font-size:15px;letter-spacing:.02em;background:linear-gradient(rgba(0,0,0,.45),transparent)}
+.photo-cam-hint{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.55);font-size:13px;font-weight:700;white-space:nowrap}
+.photo-cam-controls{position:absolute;left:0;right:0;bottom:calc(44px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;padding:0 24px}
+.photo-cam-album{justify-self:start;margin-left:28px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.photo-cam-album svg{width:24px;height:24px}
+.photo-cam-shutter{width:76px;height:76px;border-radius:50%;border:4px solid rgba(255,255,255,.55);background:#fff;color:#5140ba;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);padding:0}
+.photo-cam-shutter svg{width:30px;height:30px}
+.photo-cam-shutter:active{transform:scale(.94)}
+.photo-cam-fallback{position:absolute;left:24px;right:24px;top:34%;margin:0;text-align:center;font-size:15px;font-weight:700;line-height:1.8}
+.photo-cam-native{display:block;margin:16px auto 0;width:max-content;padding:12px 22px;border-radius:999px;background:#fff;color:#5140ba;font-weight:850;cursor:pointer}
+.photo-cam-failed .photo-cam-shutter,.photo-cam-failed .photo-cam-hint,.photo-cam-failed .photo-cam-video{visibility:hidden}
+
 /* 2026-11-15 実機: 長い英語の検索語で「ホシっといて」の枠が画面の右へはみ出した */
 .continuous-search-card,.continuous-search-card > *,.continuous-search-copy,.continuous-search-actions{min-width:0;max-width:100%;box-sizing:border-box}
 .continuous-search-query{width:auto;justify-self:start;max-width:100%}

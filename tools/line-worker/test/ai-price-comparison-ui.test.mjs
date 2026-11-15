@@ -74,8 +74,8 @@ test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定
 test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シートが読み込まれる（結果の描画後にだけ開く）', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=2">/);
-  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=3"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/photo-lens\.css\?v=3">/);
+  assert.match(html, /<script type="module" src="\/photo-lens\.mjs\?v=4"><\/script>/);
   assert.match(html, /id="searchCamera"/);
   const lens = await readFile(new URL('../public/photo-lens.mjs', import.meta.url), 'utf8');
   assert.match(lens, /label\.htmlFor = 'searchCamera'/);
@@ -86,6 +86,10 @@ test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シ
   // 2026-11-15 大隆さん指示: 撮ったらそのまま探し始める。× で検索語・写真も片づける
   assert.match(lens, /addEventListener\('change', onFileChosen\)/);
   assert.match(lens, /form\.requestSubmit\(\)/);
+  // ホシルの撮影画面: シャッターとアルバム。映像は端末内だけ。使えない時は標準のカメラへ
+  assert.match(lens, /getUserMedia\(\{ audio: false/);
+  assert.match(lens, /class="photo-cam-album" for="searchScreenshot"/);
+  assert.match(lens, /class="photo-cam-native" for="searchCamera"/);
   assert.match(lens, /#removeScreenshot'\)\?\.click\(\)/);
   assert.doesNotMatch(lens, /fetch\(|google/iu, '写真を外へ送らない・他社の名前を使わない');
   const css = await readFile(new URL('../public/photo-lens.css', import.meta.url), 'utf8');

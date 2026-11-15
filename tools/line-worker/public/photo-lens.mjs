@@ -19,6 +19,7 @@ function addCameraButton() {
   label.setAttribute('aria-label', '写真で探す');
   label.title = '写真で探す';
   label.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h2"/><path d="M15 4h2a3 3 0 0 1 3 3v2"/><path d="M20 15v2a3 3 0 0 1-3 3h-2"/><path d="M9 20H7a3 3 0 0 1-3-3v-2"/><path d="M12 8.2l1.1 2.5 2.7.3-2 1.8.6 2.7-2.4-1.4-2.4 1.4.6-2.7-2-1.8 2.7-.3z" fill="currentColor" stroke="none"/></svg>';
+  label.addEventListener('click', onCameraEntry);
   field.append(label);
 }
 
@@ -65,12 +66,10 @@ let photoSrc = '';
 let armed = false;      // 写真つきの検索の結果を待っている
 let userClosed = false; // 利用者が × で閉じた（同じ写真では勝手に開き直さない）
 let shown = false;      // この写真の結果を 1 度は出した
-let localUrl = '';      // 選んだファイルそのものの表示用（端末内だけ）
-let freshLocal = false;
 function rememberPhoto() {
   if (!hasPhoto()) return;
   const src = previewImage.getAttribute('src');
-  if (src !== photoSrc) { userClosed = false; shown = false; if (!freshLocal) localUrl = ''; freshLocal = false; }
+  if (src !== photoSrc) { userClosed = false; shown = false; }
   photoSrc = src;
   armed = true;
 }
@@ -79,7 +78,7 @@ function rememberPhoto() {
 function showResults() {
   rememberPhoto();
   if (!armed || userClosed || !photoSrc || !results || results.classList.contains('hidden')) return;
-  ensureView().querySelector('img').src = localUrl || photoSrc;
+  ensureView().querySelector('img').src = photoSrc;
   const already = document.body.classList.contains('photo-lens-open');
   document.body.classList.add('photo-lens-open', 'photo-lens-ready');
   clearTimeout(loadingTimer);
@@ -100,7 +99,7 @@ function hideLens() {
 // × で閉じたら、検索語も写真も結果も片づけて、最初の画面に戻す（2026-11-15 大隆さん指示）。
 export function closeLens() {
   if (!hideLens()) return;
-  armed = false; photoSrc = ''; localUrl = '';
+  armed = false; photoSrc = '';
   document.querySelector('#removeScreenshot')?.click();
   const query = document.querySelector('#query');
   if (query && query.value) { query.value = ''; query.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -111,14 +110,23 @@ export function closeLens() {
 
 // 2026-11-15 大隆さん指示: 撮った（選んだ）ら、そのまま探し始める。写真を上に出し、下に「探しています」を出す。
 let pendingFile = false;
+let fileTurn = 0;
 let loadingTimer = 0;
 function onFileChosen(event) {
   const file = event.target?.files?.[0];
   if (!file) return;
-  if (localUrl) URL.revokeObjectURL(localUrl);
-  localUrl = URL.createObjectURL(file); freshLocal = true;
-  pendingFile = true; userClosed = false; shown = false; armed = true;
-  ensureView().querySelector('img').src = localUrl;
+  closeCamera();
+  // 選んだ写真をすぐ上に出す（端末の中で読むだけ。blob: はこのサイトの決まりで画像に使えないので data: で読む）
+  const image = ensureView().querySelector('img');
+  image.removeAttribute('src');
+  const reader = new FileReader();
+  const turn = ++fileTurn;
+  reader.addEventListener('load', () => {
+    if (turn !== fileTurn || !document.body.classList.contains('photo-lens-open') || document.body.classList.contains('photo-lens-ready')) return;
+    image.src = String(reader.result || '');
+  });
+  reader.readAsDataURL(file);
+  pendingFile = true; userClosed = false; shown = false; armed = true; photoSrc = '';
   document.body.classList.remove('photo-lens-ready', 'photo-lens-tall');
   document.body.classList.add('photo-lens-open');
   clearTimeout(loadingTimer);
@@ -150,6 +158,85 @@ function onSearchStarted() {
   if (!hasPhoto() && shown && !document.body.classList.contains('photo-lens-open')) { armed = false; photoSrc = ''; }
 }
 
+// ── ホシルの撮影画面（2026-11-15 大隆さん指示: 撮影画面の中に、シャッターと、その右にアルバムのボタンを置く）──
+// カメラの映像は端末の中だけで使い、撮った 1 枚を今までの「写真で探す」の入力に渡す。使えない端末では標準のカメラに任せる。
+let cam = null;
+let camStream = null;
+function ensureCamera() {
+  if (cam) return cam;
+  cam = document.createElement('div');
+  cam.className = 'photo-cam';
+  cam.setAttribute('role', 'dialog');
+  cam.setAttribute('aria-label', '写真で探す');
+  cam.innerHTML = '<video class="photo-cam-video" playsinline autoplay muted></video>'
+    + '<div class="photo-cam-bar"><span>ホシル 写真で探す</span><button type="button" class="photo-lens-close photo-cam-close" aria-label="閉じる">×</button></div>'
+    + '<p class="photo-cam-hint">シャッターを押して検索</p>'
+    + '<p class="photo-cam-fallback" hidden>カメラを使えませんでした。下のボタンから選べます。<label class="photo-cam-native" for="searchCamera">カメラを開く</label></p>'
+    + '<div class="photo-cam-controls"><span class="photo-cam-spacer" aria-hidden="true"></span><button type="button" class="photo-cam-shutter" aria-label="撮って探す"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5l1.9 4.3 4.6.5-3.4 3.1 1 4.6-4.1-2.4-4.1 2.4 1-4.6-3.4-3.1 4.6-.5z" fill="currentColor"/></svg></button><label class="photo-cam-album" for="searchScreenshot" aria-label="アルバムから選ぶ" title="アルバムから選ぶ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg></label></div>';
+  cam.querySelector('.photo-cam-close').addEventListener('click', closeCamera);
+  cam.querySelector('.photo-cam-shutter').addEventListener('click', takePhoto);
+  document.body.append(cam);
+  return cam;
+}
+function stopStream() {
+  for (const track of camStream?.getTracks?.() || []) track.stop();
+  camStream = null;
+  const video = cam?.querySelector('video');
+  if (video) video.srcObject = null;
+}
+function closeCamera() {
+  stopStream();
+  document.body.classList.remove('photo-cam-open');
+}
+function showCameraFallback() {
+  stopStream();
+  const view = ensureCamera();
+  view.classList.add('photo-cam-failed');
+  view.querySelector('.photo-cam-fallback').hidden = false;
+}
+async function openCamera() {
+  const view = ensureCamera();
+  view.classList.remove('photo-cam-failed');
+  view.querySelector('.photo-cam-fallback').hidden = true;
+  document.body.classList.add('photo-cam-open');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    if (!document.body.classList.contains('photo-cam-open')) { for (const track of stream.getTracks()) track.stop(); return; }
+    camStream = stream;
+    const video = view.querySelector('video');
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+  } catch {
+    showCameraFallback();
+  }
+}
+function onCameraEntry(event) {
+  // 使えない端末（古いブラウザなど）は、今までどおり標準のカメラ（label の動き）に任せる
+  if (!navigator.mediaDevices?.getUserMedia || typeof DataTransfer !== 'function') return;
+  event.preventDefault();
+  openCamera();
+}
+function takePhoto() {
+  const video = cam?.querySelector('video');
+  const input = document.querySelector('#searchCamera');
+  if (!video || !input || !video.videoWidth) return;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) { showCameraFallback(); return; }
+      try {
+        const transfer = new DataTransfer();
+        transfer.items.add(new File([blob], 'hoshilu-photo.jpg', { type: 'image/jpeg' }));
+        input.files = transfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch { showCameraFallback(); }
+    }, 'image/jpeg', 0.9);
+  } catch { showCameraFallback(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && document.body.classList.contains('photo-cam-open')) closeCamera(); });
+
 addCameraButton();
 if (previewImage) new MutationObserver(onPreviewChanged).observe(previewImage, { attributes: true, attributeFilter: ['src'] });
 if (preview) new MutationObserver(onPreviewChanged).observe(preview, { attributes: true, attributeFilter: ['class', 'aria-busy'] });
@@ -160,4 +247,4 @@ document.addEventListener('hoshilu:search-execution-started', onSearchStarted);
 document.addEventListener('hoshilu:search-knowledge-started', onSearchStarted);
 document.addEventListener('hoshilu:results-rendered', showResults);
 document.addEventListener('hoshilu:search-completed', showResults);
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeLens(); });
+document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (document.body.classList.contains('photo-cam-open')) closeCamera(); else closeLens(); });

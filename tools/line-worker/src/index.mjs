@@ -173,7 +173,7 @@ const CANONICAL_HOST = 'hoshilu.app';
 const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, ...MEDIA_PATHS, ...MEDIA_GENRE_PATHS, ...MEDIA_SCENE_PATHS, '/for-sellers', '/for-creators', '/creator-terms']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
   'content-security-policy': "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'",
-  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'permissions-policy': 'camera=(self), microphone=(), geolocation=()',
   'referrer-policy': 'strict-origin-when-cross-origin',
   'strict-transport-security': 'max-age=31536000',
   'x-content-type-options': 'nosniff',
