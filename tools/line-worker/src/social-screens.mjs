@@ -141,7 +141,7 @@ export const DROPS_DAILY = Object.freeze({
 // 2026-11-13: 11/11 は防寒の値下がりが 2 商品しか撮れず（GROUP_TOO_FEW 2<3）普通版。大隆さん「日曜にも広げる」→ 11/15（日）にもう 1 回。
 export const WARM_POST = Object.freeze({ date: '2026-11-15', content_id: 'screens-warm', min_slides: 4 });
 
-export async function seedDailyDropsPost(env, now = new Date()) {
+export async function seedDailyDropsPost(env, now = new Date(), { factLines = [] } = {}) {
   if (!env?.PRODUCT_DB || env.SOCIAL_REAL_SCREENS_ENABLED === 'false' || env.SOCIAL_DROPS_DAILY_ENABLED === 'false') return { enabled: false, inserted: 0 };
   const dateKey = jstDateKey(now);
   // 週 1 回の割引ではない日（木曜）は値下がり投稿を足さない（その日の投稿はホシルバズ）
@@ -169,7 +169,7 @@ export async function seedDailyDropsPost(env, now = new Date()) {
   if (already) return { enabled: true, inserted: 0, reason: 'drops_already_today', post_id: already.post_id };
   const post = normalizeSocialPost({
     post_id: postId, platform: 'INSTAGRAM', campaign_id: DROPS_DAILY.campaign_id, content_id: setId === 'warm' ? WARM_POST.content_id : DROPS_DAILY.content_id,
-    caption: screenCaption(setId, now), link: screenLink('INSTAGRAM', setId, dateKey), media_url: '',
+    caption: screenCaption(setId, now, { factLines }), link: screenLink('INSTAGRAM', setId, dateKey), media_url: '',
     media_urls: screenMediaUrls(dateKey, setId, count), scheduled_at: scheduledAt.toISOString(), status: 'APPROVED', content_format: 'IMAGE'
   });
   const at = now.toISOString();
@@ -196,8 +196,26 @@ export function jstDateKey(now = new Date()) {
 
 // 2026-10-20 大隆さん「販促は季節やトレンドを読むこと大切よ」: 値下がり投稿の本文に、その時期の一言（2 行目）とタグを足す。
 // 一言は season-calendar.mjs の季節の話だけ（数字・セールの日付・約束は書かない）。期間外は従来の本文のまま。
-export function screenCaption(setId, now = new Date()) {
-  const base = SCREEN_POSTS[setId]?.caption || '';
+// 2026-11-15 大隆さん（新方針「買う前に、まずホシル。」、Threads の値下がり投稿を見て「良い内容」→ 案 2）:
+// 値下がり投稿（drops・warm）の本文に、その日の記録でいちばん下がった商品の 2 行（Threads と同じ書き方・確認日つき）と
+// 「買う前に、まずホシル。」を足す。投稿の曜日（土・日・水）は変えない。記録が足りない日（factLines が空）は今までの本文のまま。
+const BUY_FIRST_LINE = '買う前に、まずホシル。';
+export function withDropFacts(caption, factLines = []) {
+  const facts = (Array.isArray(factLines) ? factLines : []).map((line) => String(line || '').trim()).filter(Boolean).slice(0, 2);
+  const lines = String(caption || '').split('\n');
+  if (facts.length) {
+    const firstBlank = lines.indexOf('');
+    const at = firstBlank >= 0 ? firstBlank : lines.length;
+    lines.splice(at, 0, '', ...facts);
+  }
+  const searchLine = lines.findIndex((line) => line.startsWith('欲しい物は、ホシルで検索'));
+  if (searchLine >= 0 && !lines.includes(BUY_FIRST_LINE)) lines.splice(searchLine, 0, BUY_FIRST_LINE);
+  return lines.join('\n');
+}
+
+export function screenCaption(setId, now = new Date(), { factLines = [] } = {}) {
+  const dropsLike = setId === 'drops' || setId === 'warm';
+  const base = dropsLike ? withDropFacts(SCREEN_POSTS[setId]?.caption || '', factLines) : (SCREEN_POSTS[setId]?.caption || '');
   const season = setId === 'drops' || setId === 'buzz' ? seasonFor(now) : null;
   if (!season) return base;
   // ホシルバズ（週 1 回の割引ではない投稿）は、値下がり・セールの言葉を使わない一言とタグ

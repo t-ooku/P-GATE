@@ -1279,7 +1279,10 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じに」: 毎日 21:00 JST の「値下がり中」投稿（Instagram）を 1 本足す
   let dropsDaily;
   try {
-    dropsDaily = await seedDailyDropsPost(env, now);
+    // 2026-11-15: 本文に「いちばん下がった商品」の 2 行を入れる（Threads と同じ数字・確認日。取れなければ今までの本文）
+    let factLines = [];
+    try { factLines = threadsMediaCaption(threadsMediaFacts(await loadPriceDrops(env, { now }))).split('\n').slice(0, 2).filter(Boolean); } catch { factLines = []; }
+    dropsDaily = await seedDailyDropsPost(env, now, { factLines });
   } catch (error) {
     dropsDaily = { enabled: true, inserted: 0, error: String(error?.message || error).slice(0, 120) };
   }

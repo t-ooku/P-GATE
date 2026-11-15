@@ -342,7 +342,7 @@ test('毎日 21:00 JST の「値下がり中」投稿: その日 17:30 の撮影
   assert.equal(database.prepare("SELECT scheduled_at FROM social_post_queue WHERE post_id='hoshilu-price-drops-instagram-2026-10-28'").get().scheduled_at, '2026-10-28T12:00:00.000Z');
   assert.deepEqual(screenSetsForRow({ content_id: 'carousel-user-cross-mall-search', link: '' }, '2026-10-28'), [], '水曜 20:00 の使い方カルーセルは差し替えない');
   const source = readFileSync(new URL('../src/social-autopilot.mjs', import.meta.url), 'utf8');
-  assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now\)/u);
+  assert.match(source, /dropsDaily = await seedDailyDropsPost\(env, now(?:, \{ factLines \})?\)/u);
 });
 
 test('自動の撮影はバリューコマースの表示の計測に入れない（10/19: 撮影の日だけ表示が数百回・クリック 0）', async () => {

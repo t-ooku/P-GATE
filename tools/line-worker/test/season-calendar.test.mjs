@@ -55,10 +55,11 @@ test('Instagram の値下がり投稿: 2 行目に季節の一言、最後のタ
   assert.ok((lines.at(-1).match(/#/gu) || []).length <= 30, 'Instagram のタグは 30 個まで');
   assert.ok(caption.length < 2200);
   assert.equal(screenCaption('notes', now), SCREEN_POSTS.notes.caption);
-  assert.equal(screenCaption('drops', new Date('2027-02-01T03:00:00Z')), SCREEN_POSTS.drops.caption);
+  // 2026-11-15: 値下がり投稿には「買う前に、まずホシル。」が 1 行入る（それ以外は従来の本文）
+  assert.equal(screenCaption('drops', new Date('2027-02-01T03:00:00Z')).replace('買う前に、まずホシル。\n', ''), SCREEN_POSTS.drops.caption);
   const source = readFileSync(new URL('../src/social-screens.mjs', import.meta.url), 'utf8');
   // 2026-11-02 毎日の値下がり投稿は、11/8 だけ防寒版（warm）になるので setId で呼ぶ（drops の日は screenCaption('drops')）
-  assert.match(source, /const setId = dateKey === WARM_POST\.date && [^\n]*\? 'warm' : 'drops';[\s\S]*?caption: screenCaption\(setId, now\), link: screenLink\('INSTAGRAM', setId, dateKey\)/u, '毎日の値下がり投稿');
+  assert.match(source, /const setId = dateKey === WARM_POST\.date && [^\n]*\? 'warm' : 'drops';[\s\S]*?caption: screenCaption\(setId, now, \{ factLines \}\), link: screenLink\('INSTAGRAM', setId, dateKey\)/u, '毎日の値下がり投稿');
   assert.match(source, /caption: screenCaption\(setId, now\)/u, '実画像への差し替え');
 });
 
@@ -99,4 +100,22 @@ test('週 1 回（木曜）は割引ではない投稿: ホシルバズに差し
   const caption = screenCaption('buzz', new Date('2026-10-22T03:00:00Z'));
   assert.equal(caption.split('\n')[1], SEASON_CALENDAR[0].trend_hook);
   assert.ok(caption.split('\n').at(-1).endsWith(SEASON_CALENDAR[0].trend_tags));
+});
+
+// 2026-11-15 大隆さん（案 2）: 値下がり投稿の本文に、いちばん下がった商品の 2 行と「買う前に、まずホシル。」
+test('Instagram の値下がり投稿：記録の 2 行（確認日つき）と「買う前に、まずホシル。」を足す。取れない日は 2 行なし', async () => {
+  const { withDropFacts } = await import('../src/social-screens.mjs');
+  const facts = ['ここ2週間、ホシルの価格記録で値下がりした商品は30件以上。', '下げ幅がいちばん大きかったのは「簡易トイレ」で、¥3,280→¥1,580（-52%、11/15確認）。'];
+  for (const setId of ['drops', 'warm']) {
+    const caption = screenCaption(setId, new Date('2027-02-01T03:00:00Z'), { factLines: facts });
+    const lines = caption.split('\n');
+    assert.equal(lines[0], SCREEN_POSTS[setId].caption.split('\n')[0], '1 行目（一覧で見える行）は変えない');
+    assert.ok(lines.includes(facts[0]) && lines.includes(facts[1]));
+    assert.ok(lines.indexOf(facts[0]) < 6, '記録の 2 行は上の方に');
+    assert.equal(lines.filter((line) => line === '買う前に、まずホシル。').length, 1);
+    assert.ok(caption.length < 2200);
+  }
+  const plain = withDropFacts(SCREEN_POSTS.drops.caption, []);
+  assert.doesNotMatch(plain, /¥/u, '数字が取れない日は金額を書かない');
+  assert.equal(screenCaption('notes', new Date('2027-02-01T03:00:00Z'), { factLines: facts }), SCREEN_POSTS.notes.caption, 'ほかのセットは変えない');
 });
