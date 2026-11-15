@@ -13,6 +13,8 @@
 
 import { isIntegratedMarketplace } from './marketplace-search-mode.mjs';
 import { matchProductIdentity } from './product-identity-matching.mjs';
+import { compareVariants, variantAttributes, VARIANT_SAME } from './product-variant-identity.mjs';
+import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 
 // 2026-08-08 追記: 「AI推定価格です。実際の販売価格・在庫はショップで確認
@@ -359,23 +361,72 @@ function observedCandidatePrice(candidate = {}) {
   return rows.sort((a, b) => a.value - b.value)[0] || null;
 }
 
-export function buildAiCheapestRanking(candidates = [], estimates = []) {
-  const estimateByIndex = new Map(estimates.map((estimate) => [estimate.candidate_index, estimate]));
-  return (Array.isArray(candidates) ? candidates : []).map((candidate, index) => {
-    const observed = observedCandidatePrice(candidate);
-    const estimate = estimateByIndex.get(index);
-    if (observed) return { ...candidate, ai_cheapest_price_source: observed.source, ai_cheapest_price_min: observed.value, ai_cheapest_price_max: observed.value, ai_cheapest_sort_value: observed.value };
-    if (estimate) return { ...candidate, ai_cheapest_price_source: 'AI_ESTIMATE', ai_cheapest_price_min: estimate.range_min, ai_cheapest_price_max: estimate.range_max, ai_cheapest_price_confidence: estimate.confidence, ai_cheapest_sort_value: (estimate.range_min + estimate.range_max) / 2 };
-    return null;
-  }).filter(Boolean)
-    .sort((a, b) => {
-      const priceDifference = a.ai_cheapest_sort_value - b.ai_cheapest_sort_value;
-      if (priceDifference) return priceDifference;
-      // 同額なら確認済み価格をAI推定より先にする。同じ種別同士は安定ソートに任せる。
-      const aPriority = a.ai_cheapest_price_source === 'AI_ESTIMATE' ? 1 : 0;
-      const bPriority = b.ai_cheapest_price_source === 'AI_ESTIMATE' ? 1 : 0;
-      return aPriority - bPriority;
-    })
+function isRankingItemPrice(offer, now) {
+  const price = Number(offer?.price);
+  const source = String(offer?.source || '').toUpperCase();
+  if (!Number.isFinite(price) || price <= 0 || /ESTIMAT|REFERENCE/u.test(source)
+    || String(offer?.currency || '').toUpperCase() !== 'JPY'
+    || offer?.stock_status !== 'IN_STOCK' || !isIntegratedMarketplace(offer?.marketplace)
+    || !isMarketplaceProductUrl(offer.marketplace, offer.product_url)) return false;
+  const observed = offer.observed_at ?? offer.fetched_at;
+  if (typeof observed !== 'string' || !/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/u.test(observed)) return false;
+  const age = now - Date.parse(observed);
+  return Number.isFinite(age) && age >= 0 && age <= REAL_PRICE_MAX_AGE_MS;
+}
+
+function rankingBottleCounts(title) {
+  return [...new Set([...String(title ?? '').normalize('NFKC')
+    .matchAll(/(?<![0-9A-Za-z.])([1-9]\d*)\s*本(?!体|目|店|舗)/gu)].map((m) => m[1]))];
+}
+
+function sameRankingProduct(left, right) {
+  for (const key of ['jan', 'gtin', 'manufacturer_part_number']) {
+    const a = String(left[key] || '').trim().normalize('NFKC').toUpperCase();
+    const b = String(right[key] || '').trim().normalize('NFKC').toUpperCase();
+    if (a && b && a !== b) return false;
+  }
+  const leftTitle = left.title ?? left.name ?? left.normalized_title;
+  const rightTitle = right.title ?? right.name ?? right.normalized_title;
+  const a = variantAttributes(leftTitle, left.attributes);
+  const b = variantAttributes(rightTitle, right.attributes);
+  // The general matcher ignores one-sided capacity and bare bottle counts, but
+  // neither is enough to verify that two item prices cover the same package.
+  const leftBottles = rankingBottleCounts(leftTitle);
+  const rightBottles = rankingBottleCounts(rightTitle);
+  return leftBottles.length <= 1 && rightBottles.length <= 1
+    && leftBottles[0] === rightBottles[0] && a.capacity === b.capacity
+    && matchProductIdentity(left, right).matched && compareVariants(a, b) === VARIANT_SAME;
+}
+
+export function buildAiCheapestRanking(candidates = [], {
+  now = Date.now(), evidenceFor = (candidate) => candidate.offers
+} = {}) {
+  return (Array.isArray(candidates) ? candidates : []).flatMap((candidate) => {
+    const evidence = evidenceFor(candidate);
+    const rows = (Array.isArray(evidence) ? evidence : [])
+      .filter((offer) => isRankingItemPrice(offer, now))
+      .sort((a, b) => Number(a.price) - Number(b.price));
+    // Two independently eligible malls are not enough if their products
+    // differ. Find the lowest item price with an exact comparable peer.
+    const best = rows.find((offer, i) => rows.slice(i + 1).some(
+      (peer) => peer.marketplace !== offer.marketplace && sameRankingProduct(offer, peer)
+    ));
+    if (!best) return [];
+    const peer = rows.find((offer) => offer.marketplace !== best.marketplace && sameRankingProduct(best, offer));
+    const publicOffers = [best, peer].map((offer) => candidate.offers?.find(
+      (row) => row === offer || (offer.tracking_url && row.tracking_url === offer.tracking_url)
+    ));
+    // With decorated evidence, both links must still be present in the card,
+    // and the primary CTA must lead to the offer whose price won.
+    if (publicOffers.some((offer) => !offer)) return [];
+    const price = Number(best.price);
+    return [{
+      ...candidate, offers: publicOffers, selected_offer: publicOffers[0],
+      tracking_url: publicOffers[0].tracking_url || publicOffers[0].product_url,
+      ai_cheapest_price_source: 'OBSERVED_ITEM_PRICE', ai_cheapest_price_min: price,
+      ai_cheapest_price_max: price, ai_cheapest_sort_value: price
+    }];
+  }).sort((a, b) => a.ai_cheapest_sort_value - b.ai_cheapest_sort_value)
     .map((candidate, index) => ({ ...candidate, ai_cheapest_rank: index + 1 }));
 }
 

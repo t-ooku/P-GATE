@@ -32,11 +32,13 @@ test('ランキング初回は商品を取得せず小ジャンルを1件ずつY
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最安値ランキングを返す', async () => {
+test('総合人気ランキングは残し、別モール2つの確認済み商品価格がなければ最安を返さない', async () => {
   const originalFetch = globalThis.fetch;
+  let estimateCalls = 0;
   globalThis.fetch = async (url) => {
     const target = String(url);
     if (target.includes('siteverify')) return Response.json({ success: true });
+    if (/generativelanguage|api\.openai\.com/u.test(target)) estimateCalls++;
     if (target.includes('openapi.rakuten.co.jp/ichibaranking')) return Response.json({ Items: [
       { rank: 1, itemName: 'テスト ハンディファン', itemUrl: 'https://item.rakuten.co.jp/shop/item/', itemPrice: 2980, reviewAverage: 4.6, reviewCount: 300 }
     ] });
@@ -51,17 +53,19 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
   });
   try {
     const response = await worker.fetch(request, {
-      TURNSTILE_SECRET_KEY: 'turnstile-secret', RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'access', YAHOO_SHOPPING_CLIENT_ID: 'client', LINK_SIGNING_SECRET: 'l'.repeat(32)
+      TURNSTILE_SECRET_KEY: 'turnstile-secret', RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'access', YAHOO_SHOPPING_CLIENT_ID: 'client', LINK_SIGNING_SECRET: 'l'.repeat(32), GEMINI_API_KEY: 'mock'.repeat(10)
     }, { waitUntil() {} });
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
     assert.equal(payload.result.ranking_type, 'HOSHILU総合人気ランキング');
     assert.equal(payload.result.ai_cheapest.ranking_type, 'HOSHILU最安値ランキング');
-    assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
-    assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_min, 2980);
-    assert.equal(payload.result.ai_cheapest.candidates.some((candidate) => candidate.product_name.includes('USB充電器')), false);
-    assert.match(payload.result.ai_cheapest.methodology, /小ジャンルの商品本体だけ/);
-    assert.match(payload.result.ai_cheapest.disclaimer, /AI推定価格/);
+    assert.ok(payload.result.candidates.some((candidate) => candidate.product_name === 'テスト ハンディファン'));
+    assert.equal(payload.result.candidates.some((candidate) => candidate.product_name.includes('USB充電器')), false);
+    assert.deepEqual(payload.result.ai_cheapest.candidates, []);
+    assert.equal(payload.result.ai_cheapest.estimated_count, 0);
+    assert.match(payload.result.ai_cheapest.methodology, /2モール/);
+    assert.match(payload.result.ai_cheapest.disclaimer, /送料は購入先で確認/);
+    assert.equal(estimateCalls, 0);
   } finally { globalThis.fetch = originalFetch; }
 });
 

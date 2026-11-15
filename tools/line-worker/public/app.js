@@ -1341,11 +1341,8 @@ function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popula
   let detailsAnchor=review;
   if(rankingKind==='cheapest'){
     const price=document.createElement('div');price.className='ranking-price-summary';
-    const min=Math.max(0,Number(candidate.ai_cheapest_price_min)||0);const max=Math.max(min,Number(candidate.ai_cheapest_price_max)||min);
-    if(candidate.ai_cheapest_price_source==='AI_ESTIMATE'){
-      price.classList.add('ai-estimated');price.textContent=`AI推定価格 約¥${min.toLocaleString()}〜¥${max.toLocaleString()}（参考）`;
-    }else if(candidate.ai_cheapest_price_source==='CONFIRMED_TOTAL')price.textContent=`確認済み送料込み価格 ¥${min.toLocaleString()}`;
-    else price.textContent=`確認済み商品価格 ¥${min.toLocaleString()}（送料は別途確認）`;
+    const itemPrice=Number(candidate.ai_cheapest_price_min);
+    price.textContent=`商品価格（送料別） ¥${itemPrice.toLocaleString()}`;
     review.after(price);detailsAnchor=price;
   }
   const details=document.createElement('details');details.className='ranking-product-details';
@@ -2293,7 +2290,9 @@ function renderHoshiluRanking(result,rankingKind){
   elements.rankingStatus.textContent=`${result.category.label}｜${ranking.ranking_type}`;
   const nodes=[textElement('h3',`ranking-result-title${isCheapest?' ranking-ai-cheapest-title':''}`,ranking.ranking_type),textElement('p','ranking-ai-cheapest-methodology',ranking.methodology)];
   const categorySearchQuery=String(result.category?.label||'').split(/[>›»→]/u).map((value)=>value.trim()).filter(Boolean).at(-1)||String(result.category?.label||'').trim();
-  if(ranking.candidates?.length)nodes.push(...ranking.candidates.map((candidate,index)=>rankingCard(candidate,index,ranking.ranking_type,categorySearchQuery,isCheapest?'cheapest':'popularity')));
+  const candidates=(ranking.candidates||[]).filter((candidate)=>!isCheapest||
+    (candidate.ai_cheapest_price_source==='OBSERVED_ITEM_PRICE'&&Number.isFinite(candidate.ai_cheapest_price_min)&&candidate.ai_cheapest_price_min>0));
+  if(candidates.length)nodes.push(...candidates.map((candidate,index)=>rankingCard(candidate,index,ranking.ranking_type,categorySearchQuery,isCheapest?'cheapest':'popularity')));
   else nodes.push(textElement('p','ranking-ai-cheapest-disclaimer','この小ジャンルでは、現在価格を比較できる商品がありません。'));
   if(isCheapest&&ranking.disclaimer)nodes.push(textElement('p','ranking-ai-cheapest-disclaimer',ranking.disclaimer));
   elements.rankingResults.replaceChildren(...nodes);

@@ -27,8 +27,9 @@ test('ランキングで探すは小分類をYES確認後に人気・最安値�
   assert.doesNotMatch(app, /result\.marketplace\.label/);
   assert.match(css, /ranking-mode-button\[data-mode="popularity"\]/);
   assert.match(css, /ranking-mode-button\[data-mode="cheapest"\]/);
-  assert.match(app, /AI推定価格 約¥/);
-  assert.match(app, /確認済み送料込み価格/);
+  const priceSection = app.match(/if\(rankingKind==='cheapest'\)\{[\s\S]*?review\.after\(price\);/)?.[0] || '';
+  assert.match(priceSection, /商品価格（送料別）/);
+  assert.doesNotMatch(priceSection, /AI推定価格 約¥|確認済み送料込み価格/);
 });
 
 test('曖昧検索向けの従来2モードはランキング導線と分離して維持する', async () => {

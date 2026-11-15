@@ -5,6 +5,16 @@ import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
+test('最安ランキングは現在の実商品価格だけを表示し、旧推定・送料込み欄を出さない', async () => {
+  const app = await read('assets-v147/app.js');
+  const rankRendering = app.slice(app.indexOf('function renderHoshiluRanking('), app.indexOf('function renderRankingModeChoices('));
+  assert.match(rankRendering, /candidate\.ai_cheapest_price_source==='OBSERVED_ITEM_PRICE'/);
+  assert.match(rankRendering, /candidate\.ai_cheapest_price_min>0/);
+  const priceCard = app.slice(app.indexOf("if(rankingKind==='cheapest')"), app.indexOf("const details=document.createElement('details');", app.indexOf("if(rankingKind==='cheapest')")));
+  assert.match(priceCard, /商品価格（送料別）/);
+  assert.doesNotMatch(priceCard, /AI_ESTIMATE|CONFIRMED_TOTAL|送料込み価格/);
+});
+
 // v4.3 指示書 Priority 3: フロントエンド側の配線を確認する。
 
 test('v4.3項目12: index.htmlはAI最安比較のスクリプト・スタイルを読み込む', async () => {
