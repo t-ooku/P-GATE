@@ -1,4 +1,5 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
+import { verifyPhotoSearchResult } from './photo-candidate-verify.mjs';
 import { recordPriceObservations } from './price-observations.mjs';
 import { handleProductDetailRoutes } from './product-detail.mjs';
 import { handleLineWatchMessage, handleLineWatchStart, recordLineWatchReturned, runLinePriceWatchCycle } from './line-price-watch.mjs';
@@ -3525,6 +3526,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       { origin: searchOrigin.origin, korean: searchOrigin.korean, photoKeywords: photoQuery?.primary },
       googleMallPromise
     );
+    // 2026-11-14 Cowork 依頼 第 1 段 3.: 写真検索の上位（最大 6 件）の商品画像と撮った写真を見比べ、
+    // 同じ商品を上に、別の商品を下げる（消さない・4 秒まで）。PHOTO_CANDIDATE_VERIFY_ENABLED=true の時だけ。
+    decorated = await verifyPhotoSearchResult(decorated, { image: input.search_image, env });
     // A verified-product recommendation request needs a fresh Turnstile token
     // and marketplace call. Put the safe rule-based category shelf in the main
     // response so mobile users see a horizontal recommendation immediately;
