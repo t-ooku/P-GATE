@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { photoMarketplaceQuery, searchPhotoMarketplaces } from '../src/photo-marketplace-query.mjs';
+import { photoMarketplaceQuery, searchPhotoMarketplaces, unusedPhotoKeywords } from '../src/photo-marketplace-query.mjs';
 
 const product = '龍角散ののどすっきりタブレット';
 const split = '龍角散 のどすっきりタブレット';
@@ -72,4 +72,41 @@ test('only a combined zero allows a retry round, without forcing a late Yahoo ca
     ]);
     assert.equal(results[1].status, mode === 'failed' ? 'rejected' : 'fulfilled');
   }
+});
+
+test('spaced photo name misses: fall back to the existing candidates once, excluding duplicates and respecting original limits', async () => {
+  const primary = 'サントリー 特茶 ジャスミン PREMIUM';
+  const shorter = '特茶 ジャスミン';
+  const photo = photoMarketplaceQuery(primary, 'サントリー', primary);
+  const calls = [];
+  const run = searchPhotoMarketplaces([{
+    key: 'catalog', retryCostMs: 1000, maxVariants: 2,
+    search: async (word) => { calls.push(['photo', word]); return []; },
+    legacy: async ({ tried, slots }) => {
+      const next = unusedPhotoKeywords([primary, shorter, shorter, 'ジャスミン茶'], tried, slots);
+      calls.push(['legacy', next]);
+      return [shorter];
+    }
+  }], photo, { deadlineAt: 3500, now: () => 0 });
+  assert.deepEqual(await run.catalog, [shorter]);
+  assert.deepEqual(calls, [['photo', primary], ['legacy', [shorter]]]);
+});
+
+test('legacy never runs on a provider error, hit from another lane, split filling the slots, or an expired budget', async () => {
+  const zero = async () => [];
+  const blockedLegacy = { key: 'blocked', retryCostMs: 1000, search: zero, legacy: () => assert.fail('legacy not allowed') };
+  for (const mode of ['error', 'hit']) {
+    const runs = searchPhotoMarketplaces([blockedLegacy, {
+      key: 'peer', retryCostMs: 1000, search: async () => {
+        if (mode === 'error') throw new Error('timeout');
+        return [product];
+      }
+    }], plan(), { deadlineAt: 3500, now: () => 0 });
+    const results = await Promise.allSettled(Object.values(runs));
+    assert.deepEqual(results[0], { status: 'fulfilled', value: [] });
+  }
+  assert.deepEqual(await searchPhotoMarketplaces([blockedLegacy], plan(), { deadlineAt: 3500, now: () => 0 }).blocked, []);
+  assert.deepEqual(await searchPhotoMarketplaces([blockedLegacy], { primary: split, retry: '' }, {
+    deadlineAt: 3500, now: () => 3000
+  }).blocked, []);
 });

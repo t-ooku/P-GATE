@@ -81,7 +81,7 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
 import { handleUsualAlternativesRoute } from './usual-alternatives.mjs';
 import { unifyResults } from './unified-results.mjs';
-import { photoMarketplaceQuery, searchPhotoMarketplaces } from './photo-marketplace-query.mjs';
+import { photoMarketplaceQuery, searchPhotoMarketplaces, unusedPhotoKeywords } from './photo-marketplace-query.mjs';
 import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
@@ -2861,25 +2861,39 @@ export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, 
   const wanted = (key) => !only || only.has(key);
   const useRakuten = rakutenApiConfigured(env) && wanted('rakuten_catalog_connected');
   const useYahoo = yahooShoppingApiConfigured(env) && wanted('yahoo_catalog_connected');
+  const rakutenKeywords = () => buildRakutenSearchKeywordCandidates(query, query);
+  const yahooKeywords = () => buildMarketplaceApiKeywordCandidates(query, yahooKeywordsFor(query), yahooKeywordsFor(query), query);
   const photoRuns = photoQuery ? searchPhotoMarketplaces([
     ...(useRakuten ? [{
-      key: 'rakuten', retryCostMs: 1000,
+      key: 'rakuten', retryCostMs: 1000, maxVariants: 3,
       search: (keywords, remainingMs) => searchRakutenMarketplace(env, keywords, fetch, requestId, {
         requestTimeoutMs: remainingMs, signal: AbortSignal.timeout(remainingMs)
-      })
+      }),
+      legacy: ({ available, slots, tried }) => searchRakutenMarketplaceWithFallback(
+        env, unusedPhotoKeywords(rakutenKeywords(), tried, slots), fetch, query, requestId, query,
+        { requestTimeoutMs: available, signal: AbortSignal.timeout(available) }
+      )
     }] : []),
     ...(useYahoo ? [{
-      key: 'yahoo', retryCostMs: yahooFollowUpCostMs,
+      key: 'yahoo', retryCostMs: yahooFollowUpCostMs, maxVariants: 2,
       search: (keywords, remainingMs) => searchYahooShopping(env, keywords, fetch, {
         queueTimeoutMs: yahooQueueTimeoutMs(), signal: AbortSignal.timeout(remainingMs)
-      })
+      }),
+      legacy: ({ available, slots, tried }) => {
+        const signal = AbortSignal.timeout(available);
+        return searchMarketplaceApiWithFallback(
+          (keywords) => searchYahooShopping(env, keywords, fetch, { queueTimeoutMs: yahooQueueTimeoutMs(), signal }),
+          unusedPhotoKeywords(yahooKeywords(), tried, slots), query, query,
+          { maxVariants: slots, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
+        );
+      }
     }] : [])
   ], photoQuery, { deadlineAt: stageDeadlineAt }) : {};
   let yahooCatalogRun = null;
   if (useRakuten) marketplaceSearches.push({
     key: 'rakuten_catalog_connected',
     run: photoRuns.rakuten ?? searchRakutenMarketplaceWithFallback(
-      env, buildRakutenSearchKeywordCandidates(query, query), fetch, query, requestId, query
+      env, rakutenKeywords(), fetch, query, requestId, query
     )
   });
   if (useYahoo) {
@@ -2889,7 +2903,7 @@ export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, 
       (keywords) => searchYahooShopping(env, keywords, fetch, {
         queueTimeoutMs: yahooQueueTimeoutMs()
       }),
-      buildMarketplaceApiKeywordCandidates(query, yahooKeywordsFor(query), yahooKeywordsFor(query), query),
+      yahooKeywords(),
       query,
       query,
       { maxVariants: 2, deadlineAt: stageDeadlineAt, nextVariantCostMs: yahooFollowUpCostMs }
