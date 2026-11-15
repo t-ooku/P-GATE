@@ -1218,3 +1218,21 @@ test('Threads は 10/17 から 9:30・12:30 を止め、20:30 は買い物ノー
   assert.equal(today.content_id, 'media-drops-today');
   assert.doesNotMatch(tomorrow.caption, /¥3,980/u, '翌日分は当日の数字を使わない');
 });
+
+// 2026-11-15 大隆さん新方針「買う前に、まずホシル。」: 20:30 の Threads 枠を新しい訴求へ。
+test('Threads 20:30 は 11/15 から「買う前に、まずホシル。」の 5 本を日替わり。保証・節約額・全モールは書かない', async () => {
+  const { buildThreadsAmazonBoostPosts } = await import('../src/social-autopilot.mjs');
+  const facts = { count: 30, capped: true, name: 'テスト商品', max_price: 2000, latest_price: 1000, drop_rate: 50, checked: '11/15' };
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-11-15T08:30:00.000Z'), 6, { mediaFacts: facts });
+  const evening = posts.filter((post) => /-pm$/u.test(post.post_id));
+  assert.equal(evening.length, 6);
+  assert.ok(evening.every((post) => post.campaign_id === 'hoshilu-buy-first-v1'));
+  assert.ok(evening.every((post) => /^https:\/\/hoshilu\.app\/\?utm_source=threads&utm_medium=social&utm_campaign=hoshilu-buy-first-v1&utm_content=buy-first-[a-e]_202611\d\d$/u.test(post.link)));
+  assert.equal(new Set(evening.slice(0, 5).map((post) => post.content_id)).size, 5, '5 日で 5 本が 1 回ずつ');
+  assert.ok(evening.every((post) => !/¥|値下がり/u.test(post.caption)), '当日の値下がり数字は 11/15 以降の 20:30 には入れない');
+  for (const post of evening) assert.doesNotMatch(post.caption, /最安|必ず|保証|全モール|すべてのモール|全店|\d+円お得|節約/u);
+  const before = buildThreadsAmazonBoostPosts(new Date('2026-11-13T15:00:00.000Z'), 1);
+  assert.equal(before.find((post) => /-pm$/u.test(post.post_id)).campaign_id, 'hoshilu-threads-media-v1', '11/14 までは今まで通り');
+  const sellerNight = posts.filter((post) => /-night$/u.test(post.post_id));
+  assert.ok(sellerNight.every((post) => post.campaign_id === 'hoshilu-threads-seller-v1'), '夜のセラー枠は変えない');
+});

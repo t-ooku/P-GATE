@@ -674,6 +674,19 @@ const THREADS_MEDIA_GENERIC = Object.freeze([
   { id: 'media-check-before-buy', path: '/media', caption: '買う前に、最近の値段を見ておく。\nホシルの買い物ノートは、記録した日の価格だけで推移を描いています（値段の予想はしません）。' }
 ]);
 
+// 2026-11-15 大隆さん新方針「買う前に、まずホシル。」（docs/handoff/2026-11-15-cowork-daily-shopping-price-first-growth.md）:
+// この日から 20:30 の枠は、型番・品番が決まっている人向けの訴求を主役にする（買い物ノートの投稿はこの枠から外す）。
+// 書かないこと：最安の保証、節約額、全モール対応、まだ無い機能。リンク先はトップ（検索窓）。
+const THREADS_BUY_FIRST_FROM = '2026-11-15';
+const THREADS_BUY_FIRST_CAMPAIGN_ID = 'hoshilu-buy-first-v1';
+const THREADS_BUY_FIRST_POSTS = Object.freeze([
+  { id: 'buy-first-a', path: '/', caption: '買う前に、まずホシル。\n\n型番や品番が分かっている物は、そのまま入れるだけ。楽天市場・Yahoo!ショッピングなどの販売先と価格を並べて、気になる店の商品ページへそのまま進めます。\n\n送料・在庫は購入先で確認してください。' },
+  { id: 'buy-first-b', path: '/', caption: '同じ商品なら、できるだけ安く。\n\n商品名や型番でホシルを検索すると、楽天市場・Yahoo!ショッピングなどの販売先と価格が並びます。送料込みの価格を確かめられない時は、そう表示します。' },
+  { id: 'buy-first-c', path: '/', caption: '型番・品番で検索。購入先を比較。\n\n洗剤の詰め替え、プリンターのインク、電動歯ブラシの替えブラシ。毎回同じ物を買うなら、品番をホシルに貼るだけで、販売先ごとの価格が一覧で出ます。\n\n表示は確認した時点の価格です。' },
+  { id: 'buy-first-d', path: '/', caption: 'いつもの日用品、どこで買うのが安い?\n\n商品名や品番をホシルに入れると、販売先ごとの価格がまとめて出ます。気になった店は、そのまま商品ページへ。\n\n買う前に、まずホシル。' },
+  { id: 'buy-first-e', path: '/', caption: '家電の型番、メモしてありますか。\n\n型番をそのまま入れると、ホシルが販売先と価格を並べます。色や容量が違う物も並ぶことがあるので、買う前に商品ページで型番を確かめてください。' }
+]);
+
 // 楽天の商品名には【楽天1位】や送料無料などの売り文句が入るので、投稿には商品そのものの名前だけを使う。
 export function threadsMediaProductName(name) {
   const cleaned = String(name || '')
@@ -710,8 +723,8 @@ export function threadsMediaCaption(facts) {
     + '今の価格は商品ページで確認してください。';
 }
 
-function threadsMediaLink(path, contentId, key) {
-  const params = new URLSearchParams({ utm_source: 'threads', utm_medium: 'social', utm_campaign: THREADS_MEDIA_CAMPAIGN_ID, utm_content: `${contentId}_${key.replace(/-/gu, '')}` });
+function threadsMediaLink(path, contentId, key, campaignId = THREADS_MEDIA_CAMPAIGN_ID) {
+  const params = new URLSearchParams({ utm_source: 'threads', utm_medium: 'social', utm_campaign: campaignId, utm_content: `${contentId}_${key.replace(/-/gu, '')}` });
   return `https://hoshilu.app${path}?${params}`;
 }
 
@@ -891,18 +904,23 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14, { medi
       if (halved && slot.seller && positiveModulo(dayIndex, 2) === 1) return;
       if (halved && slot.suffix === '-pm') {
         // 2026-10-17: 20:30 は買い物ノート（/media）の価格記録を使う。数字は当日 17:00 以降に、その時点の記録で入れる。
-        const facts = key === todayKey ? mediaFacts : null;
-        const generic = THREADS_MEDIA_GENERIC[positiveModulo(dayIndex, THREADS_MEDIA_GENERIC.length)];
+        // 2026-11-15: この日からは「買う前に、まずホシル。」の訴求（5 本を日替わり）。
+        const buyFirst = key >= THREADS_BUY_FIRST_FROM;
+        const facts = !buyFirst && key === todayKey ? mediaFacts : null;
+        const generic = buyFirst
+          ? THREADS_BUY_FIRST_POSTS[positiveModulo(dayIndex, THREADS_BUY_FIRST_POSTS.length)]
+          : THREADS_MEDIA_GENERIC[positiveModulo(dayIndex, THREADS_MEDIA_GENERIC.length)];
         const content = facts
           ? { id: 'media-drops-today', path: '/media/price-drops', caption: threadsMediaCaption(facts) }
           : generic;
+        const campaignId = buyFirst ? THREADS_BUY_FIRST_CAMPAIGN_ID : THREADS_MEDIA_CAMPAIGN_ID;
         posts.push(normalizeSocialPost({
           post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,
           content_id: content.id,
           platform: 'THREADS',
-          campaign_id: THREADS_MEDIA_CAMPAIGN_ID,
+          campaign_id: campaignId,
           caption: content.caption,
-          link: threadsMediaLink(content.path, content.id, key),
+          link: threadsMediaLink(content.path, content.id, key, campaignId),
           affiliate: false,
           scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
           status: 'APPROVED'
