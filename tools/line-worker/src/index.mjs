@@ -816,7 +816,10 @@ export async function fetchTrustedGasBackend(urlValue, init, fetchImpl = fetch) 
 
 async function callGas(env, action, body) {
   // 2026-10-03 検索時間短縮: KNOWLEDGE は D1・AI 変換と並列で、1.2 秒で返らなければ D1 の結果だけで進む。
-  const timeoutMs = action === 'KNOWLEDGE' ? 1200 : action === 'EVENT' ? 3000 : 5000;
+  // 2026-11-15: D1 実測（7 日・320 回）で 1.2 秒以内に返った回は 0。毎回 1.2 秒まるごと待っていたので 0.4 秒に縮める
+  // （結果は今と同じ＝D1 だけで進む）。戻す時は GAS_KNOWLEDGE_TIMEOUT_MS=1200。
+  const knowledgeTimeoutMs = Math.max(100, Math.min(5000, Number(env.GAS_KNOWLEDGE_TIMEOUT_MS) || 400));
+  const timeoutMs = action === 'KNOWLEDGE' ? knowledgeTimeoutMs : action === 'EVENT' ? 3000 : 5000;
   const response = await fetchTrustedGasBackend(env.GAS_BACKEND_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -3003,9 +3006,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     let searchInputAnalysis = null;
     // 2026-11-15: 写真・投稿URLの解析がどの経路で答えたか／どこで落ちたかを固定語彙で残す（写真・検索語は入れない）
     const analysisStartedAt = Date.now();
-    const logKnowledgeAnalysis = (provider, diagnostic) => {
+    // ai_ms = Gemini にかかった時間、preview_ms = Vision にかかった時間（2026-11-15 から。分からない時は全体／0）
+    const logKnowledgeAnalysis = (provider, diagnostic, stageMs = null) => {
       const record = recordIdentifyLatency(env, {
-        route: 'knowledge', cacheState: 'off', aiMs: Date.now() - analysisStartedAt, previewMs: 0, totalMs: Date.now() - analysisStartedAt,
+        route: 'knowledge', cacheState: 'off', aiMs: stageMs ? Number(stageMs.gemini) || 0 : Date.now() - analysisStartedAt, previewMs: stageMs ? Number(stageMs.vision) || 0 : 0, totalMs: Date.now() - analysisStartedAt,
         provider, diagnostic, inputKind: validatedInput.search_image ? 'image' : 'url'
       });
       if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
@@ -3017,7 +3021,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
           social_url: validatedInput.social_url,
           image: validatedInput.search_image
         }, validatedInput.language, env, fetch);
-        logKnowledgeAnalysis(searchInputAnalysis?.provider || '', searchInputAnalysis?.diagnostic || '');
+        logKnowledgeAnalysis(searchInputAnalysis?.provider || '', searchInputAnalysis?.diagnostic || '', searchInputAnalysis?.stage_ms || null);
         if (searchInputAnalysis.visual_fallback_code) {
           queueSearchProviderDegradation(env, ctx, requestId, {
             component: 'visual_web_detection', provider: 'google_cloud_vision',

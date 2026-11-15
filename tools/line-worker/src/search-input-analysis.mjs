@@ -488,6 +488,10 @@ export async function analyzeSearchInput({
   let visualWebStatus = normalizedImage && googleVisualWebDetectionConfigured(env)
     ? 'ATTEMPTED' : 'NOT_CONFIGURED';
   let visionSettled = visualWebStatus !== 'ATTEMPTED';
+  // 2026-11-15 大隆さん「検索に 10 秒かかってる。Google は 3 秒」: どこに時間がかかったかを残す（0.1 秒単位）
+  const visionStartedAt = Date.now();
+  let visionMs = 0;
+  let geminiMs = 0;
   const visionPromise = visualWebStatus === 'ATTEMPTED'
     ? detectGoogleVisualWebEvidence(normalizedImage, env, fetchImpl).then((evidence) => {
       visualWebEvidence = evidence;
@@ -505,7 +509,7 @@ export async function analyzeSearchInput({
       visualFallbackCode = code === 'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED'
         || code === 'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
         ? code : 'GOOGLE_VISUAL_WEB_DETECTION_FAILED';
-    }).finally(() => { visionSettled = true; })
+    }).finally(() => { visionSettled = true; visionMs = Date.now() - visionStartedAt; })
     : Promise.resolve();
   // Visionを少しだけ先行させる。間に合えば証拠ブロック付きでGeminiへ、
   // 間に合わなければ画像だけで始める(Visionは裏で完走し、救済に使う)。
@@ -529,7 +533,26 @@ export async function analyzeSearchInput({
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
   const fallbackModel = String(env.GEMINI_PRODUCT_DISCOVERY_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL);
   let usedFallbackModel = false;
-  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model, grounded = groundImages) => {
+  // 2026-11-15 速さ: Vision が手がかり（袋の文字・Web の一致・JAN）を出せた写真は、Gemini に Google 検索を引かせない
+  // （Web の手がかりは Vision が持っている。検索を引くと数秒のびる）。手がかりが無い写真は今までどおり検索を引く。
+  // 元に戻す時は GEMINI_IDENTIFY_GROUNDING_WITH_VISION=true。
+  const visionHasEvidence = () => Boolean(visualWebEvidence) && (
+    (Array.isArray(visualWebEvidence.prominent_text) && visualWebEvidence.prominent_text.length > 0)
+    || (Array.isArray(visualWebEvidence.jan_codes) && visualWebEvidence.jan_codes.length > 0)
+    || (Array.isArray(visualWebEvidence.web_entities) && visualWebEvidence.web_entities.length >= 2));
+  let groundingSkipped = false;
+  const shouldGround = () => {
+    if (!groundImages) return false;
+    if (String(env.GEMINI_IDENTIFY_GROUNDING_WITH_VISION || '') === 'true' || !visionHasEvidence()) return true;
+    groundingSkipped = true;
+    return false;
+  };
+  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model, grounded = shouldGround()) => {
+    const geminiStartedAt = Date.now();
+    try { return await requestAnalysisOnceInner(contextUrl, contextImage, timeoutMs, modelName, grounded); }
+    finally { geminiMs += Date.now() - geminiStartedAt; }
+  };
+  const requestAnalysisOnceInner = async (contextUrl, contextImage, timeoutMs, modelName, grounded) => {
     const parts = [{ text: analysisPrompt(rememberedQuery, contextUrl, language) }];
     const evidenceBlock = googleVisualWebEvidencePromptBlock(visualWebEvidence);
     if (evidenceBlock) parts.push({ text: evidenceBlock });
@@ -690,6 +713,7 @@ export async function analyzeSearchInput({
       web_match_tier: visualWebEvidence?.match_tier || visualWebStatus,
       visual_fallback_code: visualFallbackCode,
       diagnostic: buildDiagnostic('OK'),
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped },
       ...rescuedByVision.result
     };
   }
@@ -794,6 +818,7 @@ export async function analyzeSearchInput({
     visual_fallback_code: visualFallbackCode,
     // Server-only fixed-vocabulary stage code for identify_latency_log.
     diagnostic: buildDiagnostic('OK'),
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped },
     reference_urls: referenceUrls,
     ...result
   };

@@ -1059,3 +1059,26 @@ test('写真: Gemini が英語の一般語で答えても、袋の日本語（�
   const tea = await run([['おいしい', 50], ['無糖', 55], ['アイスティー', 30], ['午後の紅茶', 18]], '午後の紅茶 おいしい無糖 アイスティー', 'キリン');
   assert.equal(tea.refined_query, '午後の紅茶 おいしい無糖 アイスティー', '日本語で答えた時は Gemini の答えのまま');
 });
+
+// 2026-11-15 大隆さん「検索に 10 秒かかってる。Google は 3 秒」
+test('写真: Vision に手がかりがある時は Google 検索を引かせず、無い時だけ引く。かかった時間を返す', async () => {
+  const env = { ...VISUAL_ENV, GEMINI_IDENTIFY_GROUNDING: 'true' };
+  const answer = () => Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+    refined_query: 'サントリー 特茶 ジャスミン', candidate_name: '', candidate_brand: 'サントリー', candidate_reason: '', matched_features: [], match_score: 80 }) }] } }] });
+  const run = async (visionBody, extraEnv = {}) => {
+    const tools = [];
+    const result = await analyzeSearchInput({ image: JPEG }, 'JA', { ...env, ...extraEnv }, async (url, options) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) return Response.json({ responses: [visionBody] });
+      tools.push(Boolean(JSON.parse(options.body).tools));
+      return answer();
+    });
+    return { tools, result };
+  };
+  const withText = { webDetection: {}, fullTextAnnotation: ocrPage([['特茶', 80], ['ジャスミン', 30]]) };
+  const fast = await run(withText);
+  assert.deepEqual(fast.tools, [false], '手がかりがあれば検索を引かない');
+  assert.equal(fast.result.stage_ms.grounding_skipped, true);
+  assert.ok(fast.result.stage_ms.vision >= 0 && fast.result.stage_ms.gemini >= 0);
+  assert.deepEqual((await run({ webDetection: {} })).tools, [true], '手がかりが無ければ今までどおり検索を引く');
+  assert.deepEqual((await run(withText, { GEMINI_IDENTIFY_GROUNDING_WITH_VISION: 'true' })).tools, [true], '設定で元に戻せる');
+});

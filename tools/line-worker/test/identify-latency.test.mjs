@@ -73,12 +73,15 @@ test('Workerと画面に配線されている（先にカード、あとから�
   assert.match(ui, /if\(!previews\.length&&result\.previews_key\)\{/u);
 });
 
-test('写真からの特定は毎回 Google 検索を引く（見つかることを優先）', () => {
+// 2026-11-15 大隆さん「検索に 10 秒。Google は 3 秒」: Vision が手がかりを出せた写真は検索を引かない（速さ）。
+// 手がかりが無い写真は今までどおり毎回引く（見つかることを優先）。
+test('写真からの特定は、手がかりが無い時は毎回 Google 検索を引く（ある時は引かずに速く答える）', () => {
   const analysis = readFileSync(new URL('../src/search-input-analysis.mjs', import.meta.url), 'utf8');
   assert.match(analysis, /grounded \? \{ tools: \[\{ googleSearch: \{\} \}\] \} : \{\}/u);
   // 写真があるときは既定で grounding 付き（低確信のときだけ、ではない）。
   assert.match(analysis, /const groundImages = String\(env\.GEMINI_IDENTIFY_GROUNDING \|\| ''\) === 'true'\s*&& Boolean\(normalizedImage\) && !socialUrl;/u);
-  assert.match(analysis, /grounded = groundImages/u);
+  assert.match(analysis, /grounded = shouldGround\(\)/u);
+  assert.match(analysis, /if \(!groundImages\) return false;\s*if \(String\(env\.GEMINI_IDENTIFY_GROUNDING_WITH_VISION \|\| ''\) === 'true' \|\| !visionHasEvidence\(\)\) return true;/u);
   // 候補が出せなかったときの読み直しは grounding 無しにして、別の形で読む。
   assert.match(analysis, /requestAnalysisOnce\('', normalizedImage, IMAGE_ANALYSIS_RETRY_TIMEOUT_MS, fallbackModel, false\)/u);
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));

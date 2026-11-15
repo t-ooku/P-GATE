@@ -132,9 +132,11 @@ test('モール検索は AI 変換の完了を待たずに始まり、AI が語�
   assert.match(source, /const stageDeadlineAt = stageStartedAt \+ stageBudgetMs/u);
 });
 
-test('AI 変換と GAS の待ち時間は 1.2 秒に詰める', () => {
+// 2026-11-15: GAS は D1 実測（7 日・320 回）で 1.2 秒以内に 1 回も返っていない → 待ちを 0.4 秒に（設定で戻せる）
+test('AI 変換の待ち時間は 1.2 秒、返らない GAS の待ちは 0.4 秒に詰める', () => {
   const intent = readFileSync(new URL('../src/ai-chat-intent.mjs', import.meta.url), 'utf8');
   assert.match(intent, /timeoutMs: 1200,\n\s*totalBudgetMs: 1200,/u);
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(source, /action === 'KNOWLEDGE' \? 1200/u);
+  assert.match(source, /Number\(env\.GAS_KNOWLEDGE_TIMEOUT_MS\) \|\| 400/u);
+  assert.match(source, /action === 'KNOWLEDGE' \? knowledgeTimeoutMs/u);
 });
