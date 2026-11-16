@@ -1148,11 +1148,16 @@ async function handleRedirect(request, env, ctx) {
         && String(payload.m || '').toUpperCase() === 'RAKUTEN_JP'
         && isValueCommerceRakutenDestination(amazonDecorated)
       );
+    // 楽天（検索・商品の直リンクだけ）は楽天市場販促プログラム専用の pid（VC_RAKUTEN_PID）で包む。無ければ包まない。
+    const rakutenPid = /^\d{1,12}$/.test(String(env.VC_RAKUTEN_PID || '')) ? String(env.VC_RAKUTEN_PID) : '';
+    const rakutenDirect = String(payload.m || '').toUpperCase() === 'RAKUTEN_JP' && isValueCommerceRakutenDestination(amazonDecorated);
     const destination = perMallPid
       ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, perMallPid)
-      : valueCommerceEnabled
-        ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, env.VC_PID)
-        : amazonDecorated;
+      : rakutenDirect && rakutenPid
+        ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, rakutenPid)
+        : valueCommerceEnabled
+          ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, env.VC_PID)
+          : amazonDecorated;
     return Response.redirect(destination, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });

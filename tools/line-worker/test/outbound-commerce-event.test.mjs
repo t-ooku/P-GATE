@@ -463,3 +463,33 @@ test('VC_GO_REFERRAL_PIDS のモールだけ、そのモールの pid で referr
     globalThis.fetch = originalFetch;
   }
 });
+
+// 2026-11-16: 楽天の直リンクは楽天市場販促プログラム専用 pid（VC_RAKUTEN_PID）で包む。hb.afl は包まない
+test('VC_RAKUTEN_PID があれば楽天の検索・商品の直リンクだけを楽天専用 pid で包む', async () => {
+  const { db } = sqliteD1();
+  const secret = 'k'.repeat(32);
+  const makeToken = (marketplace, destination, itemId) => createTrackToken({
+    u: 'session-hash-vc-rakuten-pid', r: 'query-intent-vc-rakuten-pid', a: itemId, d: destination,
+    exp: Math.floor(Date.now() / 1000) + 3600, j: `seed:${itemId}:${marketplace}`, c: 'PWA', m: marketplace
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const env = {
+      LINK_SIGNING_SECRET: secret, AMAZON_ASSOCIATE_TAG: 'hoshilu00-22', VC_SID: '3779199', VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'false', VC_RAKUTEN_GO_REFERRAL_ENABLED: 'false', VC_RAKUTEN_PID: '892749652',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec', GAS_BRIDGE_SECRET: 'g'.repeat(32), PRODUCT_DB: db
+    };
+    const go = async (m, d, id) => (await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(await makeToken(m, d, id))}`), env, { waitUntil: () => {} })).headers.get('location');
+    const search = 'https://search.rakuten.co.jp/search/mall/anua/';
+    const location = new URL(await go('RAKUTEN_JP', search, 'R1'));
+    assert.equal(location.origin, 'https://ck.jp.ap.valuecommerce.com');
+    assert.equal(location.searchParams.get('pid'), '892749652');
+    assert.equal(location.searchParams.get('vc_url'), search);
+    const afl = 'https://hb.afl.rakuten.co.jp/hgc/example/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fexample%2Fitem-1%2F';
+    assert.equal(await go('RAKUTEN_JP', afl, 'R2'), afl, '楽天アフィリエイトの URL は包まない');
+    assert.equal(await go('QOO10_JP', 'https://www.qoo10.jp/g/1', 'Q1'), 'https://www.qoo10.jp/g/1', '楽天の pid を他モールに使わない');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
