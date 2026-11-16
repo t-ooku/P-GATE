@@ -39,6 +39,7 @@ import {
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
+import { bridgeRakutenJan } from './rakuten-jan-bridge.mjs';
 import {
   fetchYahooHighRatingRanking, searchYahooShopping, withYahooRequestGate, yahooShoppingApiConfigured
 } from './yahoo-shopping-api.mjs';
@@ -2887,7 +2888,10 @@ export function yahooKeywordsFor(query) {
 }
 // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。Amazon は検索リンクとして扱う。
 // only を渡すと、その名前のレーンだけを作る（続き用）。
-export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, skippedLanes, only = null, photoQuery = null }) {
+export function startMarketplaceLanes({
+  env, requestId, query, stageDeadlineAt, skippedLanes, only = null, photoQuery = null,
+  rakutenCatalogFetch = fetch, captureJanEvidence = false
+}) {
   const marketplaceSearches = [];
   const yahooFollowUpCostMs = YAHOO_REQUEST_INTERVAL_MS + 1500;
   const yahooQueueTimeoutMs = () => Math.max(500, stageDeadlineAt - Date.now());
@@ -2926,7 +2930,7 @@ export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, 
   if (useRakuten) marketplaceSearches.push({
     key: 'rakuten_catalog_connected',
     run: photoRuns.rakuten ?? searchRakutenMarketplaceWithFallback(
-      env, rakutenKeywords(), fetch, query, requestId, query
+      env, rakutenKeywords(), rakutenCatalogFetch, query, requestId, query
     )
   });
   if (useYahoo) {
@@ -2934,7 +2938,7 @@ export function startMarketplaceLanes({ env, requestId, query, stageDeadlineAt, 
     // 待ち行列の上限も段階の締め切りまでに合わせる。2026-10-03: 2 候補目は締め切りに収まる時だけ。
     yahooCatalogRun = photoRuns.yahoo ?? searchMarketplaceApiWithFallback(
       (keywords) => searchYahooShopping(env, keywords, fetch, {
-        queueTimeoutMs: yahooQueueTimeoutMs()
+        queueTimeoutMs: yahooQueueTimeoutMs(), captureJanEvidence
       }),
       yahooKeywords(),
       query,
@@ -3198,9 +3202,22 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       && !input.ai_candidate_fallback && !isIndependentSearchText(searchOrigin.query)
       ? photoMarketplaceQuery(redactSearchPersonalData(analyzedQuery), analysisCandidate?.brand, analysisCandidate?.name)
       : null;
+    // C-1 is opt-in after the before cohort is captured and C-3 is released.
+    // Text search only: #788 photo paths keep their existing calls and budgets.
+    const captureJanEvidence = String(env.C1_RAKUTEN_JAN_ENABLED || '') === 'true'
+      && !validatedInput.search_image && !validatedInput.social_url
+      && rakutenApiConfigured(env) && yahooShoppingApiConfigured(env);
+    let rakutenCatalogRequests = 0;
+    const rakutenCatalogFetch = captureJanEvidence ? (...args) => {
+      rakutenCatalogRequests += 1;
+      return fetch(...args);
+    } : fetch;
     let yahooCatalogRun = null;
     if (shouldSearchMarketplaces) {
-      const lanes = startMarketplaceLanes({ env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes, photoQuery });
+      const lanes = startMarketplaceLanes({
+        env, requestId, query: expandedQuery.query, stageDeadlineAt, skippedLanes,
+        photoQuery, rakutenCatalogFetch, captureJanEvidence
+      });
       marketplaceSearches.push(...lanes.marketplaceSearches);
       yahooCatalogRun = lanes.yahooCatalogRun;
     }
@@ -3242,7 +3259,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_refined',
         run: searchRakutenMarketplaceWithFallback(
-          env, buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query), fetch,
+          env, buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query), rakutenCatalogFetch,
           input.query, requestId, expandedQuery.query
         )
       });
@@ -3255,7 +3272,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
             const base = await baseRun.then((value) => value, () => []);
             if (filterSearchCandidatesWithFallback(refinedQuery, expandedQuery.query, Array.isArray(base) ? base : []).length) return [];
             if (Date.now() + yahooFollowUpCostMs > stageDeadlineAt) { skippedLanes.push('yahoo_catalog_refined'); return []; }
-            return searchYahooShopping(env, yahooKeywordsFor(refinedQuery) || refinedQuery, fetch, { queueTimeoutMs: yahooQueueTimeoutMs() });
+            return searchYahooShopping(env, yahooKeywordsFor(refinedQuery) || refinedQuery, fetch, {
+              queueTimeoutMs: yahooQueueTimeoutMs(), captureJanEvidence
+            });
           })()
         });
       }
@@ -3450,10 +3469,33 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       // arrivals bug the interleaving fix above addresses, just one layer
       // higher up. Fixed by treating the base pool as one more source to
       // interleave rather than a privileged first pool.
-      const interleavedCandidates = interleaveCandidatesBySource([
+      let interleavedCandidates = interleaveCandidatesBySource([
         result.candidates || [],
         ...perSourceCandidates.map((item) => item.candidates)
       ]);
+      if (captureJanEvidence) {
+        const catalogs = marketplaceSearches.map(({ key }, i) => ({ key, outcome: outcomes[i] }))
+          .filter(({ key }) => /^(rakuten|yahoo)_catalog_(connected|refined)$/u.test(key));
+        // Do not place additional requests when any primary catalog is still
+        // in flight or failed; their call budget and return state are not safe.
+        if (catalogs.some(({ key }) => key === 'rakuten_catalog_connected')
+          && catalogs.some(({ key }) => key === 'yahoo_catalog_connected')
+          && catalogs.every(({ key, outcome }) => outcome.status === 'fulfilled' && !lateLanes.includes(key))) {
+          const start = Date.now();
+          const bridge = await bridgeRakutenJan({
+            candidates: interleavedCandidates,
+            yahooCandidates: perSourceCandidates
+              .filter(({ key }) => /^(yahoo)_catalog_(connected|refined)$/u.test(key))
+              .flatMap(({ candidates }) => candidates),
+            usedCatalogRequests: rakutenCatalogRequests, deadlineAt: stageDeadlineAt,
+            lookup: (jan, limits) => searchRakutenMarketplace(env, jan, rakutenCatalogFetch, requestId, {
+              ...limits, exactJan: jan
+            })
+          });
+          interleavedCandidates = bridge.candidates;
+          console.info('C1_RAKUTEN_JAN_RESULT', { status: bridge.status, elapsed_ms: Date.now() - start, added: bridge.added });
+        }
+      }
       const beforeRankingCount = interleavedCandidates.length;
       const rankedAll = rankMerchantCandidates([], interleavedCandidates, input.query);
       const finalSlice = rankedAll.slice(0, CLIENT_CANDIDATE_LIMIT);

@@ -1,6 +1,7 @@
 import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
 import { isUniqueJan } from './jan-validity.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
+import { hasC1ListingOptions } from './rakuten-jan-bridge.mjs';
 import {
   buildYahooProviderUrl, YAHOO_PROXY_RESULT_HEADER, YAHOO_REQUEST_INTERVAL_MS
 } from './yahoo-request-coordinator.mjs';
@@ -193,7 +194,7 @@ function deliveryDays(value) {
   return Number.isInteger(days) && days >= 0 && days <= 365 ? days : 0;
 }
 
-export function normalizeYahooShoppingItems(payload = {}) {
+export function normalizeYahooShoppingItems(payload = {}, { janEvidenceObservedAt } = {}) {
   const hits = Array.isArray(payload.hits) ? payload.hits : [];
   return hits.slice(0, 30).map((item, index) => {
     const productUrl = String(item?.url || '').trim();
@@ -227,7 +228,11 @@ export function normalizeYahooShoppingItems(payload = {}) {
         currency: 'JPY',
         stock_status: 'IN_STOCK',
         delivery_days: deliveryDays(item?.delivery?.day),
-        source: 'yahoo_shopping_api'
+        source: 'yahoo_shopping_api',
+        ...(janEvidenceObservedAt && jan && item?.inStock === true && item?.condition !== 'used'
+          && !hasC1ListingOptions(name, item?.headline, item?.description) ? {
+          jan, title: name, observed_at: janEvidenceObservedAt
+        } : {})
       }] : [],
       evidence: { matched_terms: [], information_score: 0 }
     };
@@ -339,7 +344,9 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
     throw error;
   }
   try {
-    return normalizeYahooShoppingItems(await response.json());
+    return normalizeYahooShoppingItems(await response.json(), {
+      janEvidenceObservedAt: options.captureJanEvidence === true ? new Date().toISOString() : undefined
+    });
   } catch {
     throw new SyntaxError('YAHOO_PROVIDER_INVALID_JSON');
   }
