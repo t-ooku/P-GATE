@@ -9,6 +9,7 @@ import {
   googleVisualWebDetectionConfigured,
   googleVisualWebEvidencePromptBlock
 } from './google-visual-web-detection.mjs';
+import { photoPremiumModel, reservePhotoPremiumBudget, settlePhotoPremiumBudget } from './gemini-photo-budget.mjs';
 
 const ANALYSIS_TIMEOUT_MS = 7000;
 // 実機のカメラ写真(1600px JPEG)はGeminiの応答が7秒を超えることがあり、
@@ -533,6 +534,13 @@ export async function analyzeSearchInput({
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
   const fallbackModel = String(env.GEMINI_PRODUCT_DISCOVERY_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL);
   let usedFallbackModel = false;
+  // 2026-11-14 大隆さん承認（第 2 段）: 写真・スクショは上位モデル（GEMINI_PHOTO_IDENTIFY_MODEL、既定は空＝使わない）を先に試す。
+  // 月 3,000 円の枠が取れた時だけ。枠が無い・数えられない・失敗・時間切れ・候補なしの時は、今のモデル → 予備 → Vision の救済。
+  const premiumModel = photoPremiumModel(env);
+  let premiumAttempted = false;
+  let premiumAnswered = false;
+  let premiumTimedOut = false;
+  let premiumCode = '';
   // 2026-11-15 速さ: Vision が手がかり（袋の文字・Web の一致・JAN）を出せた写真は、Gemini に Google 検索を引かせない
   // （Web の手がかりは Vision が持っている。検索を引くと数秒のびる）。手がかりが無い写真は今までどおり検索を引く。
   // 元に戻す時は GEMINI_IDENTIFY_GROUNDING_WITH_VISION=true。
@@ -555,7 +563,7 @@ export async function analyzeSearchInput({
   const thinkingLevel = String(env.GEMINI_PHOTO_THINKING_LEVEL || 'LOW').toUpperCase();
   let thinkingRejected = false;
   let thinkingUsed = false;
-  const thinkingFor = (modelName, contextImage) => (contextImage && modelName === model && !thinkingRejected
+  const thinkingFor = (modelName, contextImage) => (contextImage && (modelName === model || (premiumModel && modelName === premiumModel)) && !thinkingRejected
     && ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'].includes(thinkingLevel)) ? thinkingLevel : '';
   const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model, grounded = shouldGround()) => {
     const geminiStartedAt = Date.now();
@@ -641,7 +649,8 @@ export async function analyzeSearchInput({
     const gemini = base === 'SEARCH_INPUT_ANALYSIS_FAILED' || (base === 'OK' && geminiFailureDetail)
       ? `G_${geminiFailureDetail || 'UNKNOWN'}_` : 'G_OK_';
     const reply = geminiReplyKind ? `_R${geminiReplyKind}` : '';
-    return `${base}__${gemini}${vision}_E${Math.min(99, entities)}_T${Math.min(99, textLines)}_J${jan}_B${Math.min(9, guesses)}${reply}`
+    const premium = premiumModel && premiumCode ? `_P${premiumCode}` : '';
+    return `${base}__${gemini}${vision}_E${Math.min(99, entities)}_T${Math.min(99, textLines)}_J${jan}_B${Math.min(9, guesses)}${reply}${premium}`
       .replace(/[^A-Z0-9_]/gu, '').slice(0, 80);
   };
   const attachDiagnostic = (error) => {
@@ -654,9 +663,36 @@ export async function analyzeSearchInput({
   // は既に「URLを外して画像だけで再解析する」構造的フォールバックを持つ
   // ため再試行せず、遅延を重ねない。既に7秒を使い切ったタイムアウトも
   // 再試行しても総所要時間が倍になるだけなので対象外。
+  const tryPremium = async (contextImage) => {
+    if (!premiumModel || premiumModel === model || !contextImage || premiumAttempted) return null;
+    premiumAttempted = true;
+    const grounded = shouldGround();
+    const reservation = await reservePhotoPremiumBudget(env, { grounded });
+    if (!reservation.allowed) { premiumCode = reservation.reason || 'GUARD'; return null; }
+    let payload;
+    try {
+      payload = await requestAnalysisOnce('', contextImage, IMAGE_ANALYSIS_TIMEOUT_MS, premiumModel, grounded);
+    } catch (error) {
+      // 見込み額の枠はそのまま残す（課金されたかが分からないため、多めに数える側）。
+      premiumTimedOut = Boolean(error?.timedOut);
+      premiumCode = premiumTimedOut ? 'TIMEOUT' : 'FAIL';
+      geminiFailureDetail = '';
+      return null;
+    }
+    await settlePhotoPremiumBudget(env, reservation, payload?.usageMetadata, { grounded });
+    const premiumResult = normalizeSearchInputAnalysis(parseJsonText(geminiText(payload)) || {});
+    if (!premiumResult.refined_query) { premiumCode = 'EMPTY'; return null; }
+    premiumCode = 'USED';
+    premiumAnswered = true;
+    return payload;
+  };
   const requestAnalysis = async (contextUrl, contextImage) => {
     if (contextUrl) return requestAnalysisOnce(contextUrl, contextImage);
-    const firstTimeout = contextImage ? IMAGE_ANALYSIS_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
+    const premiumPayload = await tryPremium(contextImage);
+    if (premiumPayload) return premiumPayload;
+    // 上位モデルが時間切れの時は、今のモデルを短い上限で呼ぶ（待ち時間を重ねすぎない）。
+    const firstTimeout = contextImage
+      ? (premiumTimedOut ? IMAGE_ANALYSIS_RETRY_TIMEOUT_MS : IMAGE_ANALYSIS_TIMEOUT_MS) : ANALYSIS_TIMEOUT_MS;
     try {
       return await requestAnalysisOnce(contextUrl, contextImage, firstTimeout);
     } catch (error) {
@@ -797,6 +833,8 @@ export async function analyzeSearchInput({
   if (groundImages && result.candidate_name && provider === 'GEMINI_MULTIMODAL_SEARCH_INPUT') {
     provider = 'GEMINI_SEARCH_GROUNDED';
   }
+  // 上位モデルで答えたかを記録で分ける（identify_latency_log の provider）。
+  if (premiumAnswered && result.refined_query) provider = `${provider}_PREMIUM`;
   if (!result.refined_query) {
     // Geminiは応答したが候補を出せなかった。厳格Web一致 → OCR文字 →
     // best-guessの順で、throw時と同じ救済を試す。
@@ -831,7 +869,7 @@ export async function analyzeSearchInput({
   return {
     configured: true,
     provider,
-    model: usedFallbackModel ? fallbackModel : model,
+    model: usedFallbackModel ? fallbackModel : (premiumAnswered ? premiumModel : model),
     visual_pipeline: normalizedImage
       ? (visualWebStatus === 'NOT_CONFIGURED' ? 'GEMINI_VISUAL_V1' : 'WEB_VISUAL_V1')
       : '',
