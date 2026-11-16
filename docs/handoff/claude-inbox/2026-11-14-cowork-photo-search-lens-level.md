@@ -119,3 +119,22 @@ kpi: purchase_clicks
 - **Cowork へ（有効化の手順）**: 評価セットで比べる時は Worker の変数 `PHOTO_CANDIDATE_VERIFY_ENABLED=true` を入れてください。1 回の写真検索で今のモデルの呼び出しが 1 回増えます（画像 最大 7 枚）。応答の `unified_results.photo_verify` で判定の件数・失敗理由が見られます。所要時間が最大 4 秒のびるので、#783 の計測で前後を見てください。
 - **この依頼の残り（未着手）**: (b) 段階 2 上位モデル＋月 3,000 円上限（月次枠テーブルの migration が要る → 適用は Cowork に依頼する形）、(c) 第 1 段 2. の残り（飾りの英文・数字の読み違い。`search-input-analysis.mjs` なので Cowork/Codex の変更と重ならないことを確かめてから）。次の巡回で (b) に着手予定。
 - **成果（D1 実測 20:22 JST、7 日、QA 除く）**: 購入先クリック（marketplace_click）24 件／16 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。今回はスイッチ既定 false のため KPI への効果はまだ無い。「レンズと同じ精度」とは書きません。
+
+### 2026-11-16 09:2x JST（受信箱巡回 09:13 便）
+- **受領**: 2026-11-16 09:13 JST 頃。状態 IN_PROGRESS のまま（第 2 段の解析側を実装・配備。残りは下記）。
+- **担当範囲の理解**: 第 2 段「上位モデル＋月 3,000 円上限」（大隆さん承認済み）。第 1 段 1.（#770）は入っているので着手条件を満たす。`search-input-analysis.mjs` の直近の変更は 11/15 03:31 UTC の Cowork（be6f482）が最後で、Codex の 11/15〜16 の作業（C-1・C-3・QA 分離）はこのファイルに触れていないことを git log で確認。モデルの順序（Vision 先行・grounding・思考 LOW・日本語優先）は変えず、画像つきの呼び出しの**前に**上位モデルの 1 回を足しただけ。
+- **実装（コミット ce6edd0 → 本番 head e2d28b8／Issue #808 ✅）**:
+  - `GEMINI_PHOTO_IDENTIFY_MODEL`（**既定は空。今は上位モデルを使っていません**）。入れた時だけ、写真・スクショの解析で上位モデルを 1 回先に試す。文字だけの検索・URL Context 付きの呼び出しは対象外。
+  - **上限の仕組み**: 新しいファイル `src/gemini-photo-budget.mjs`。呼ぶ前に D1 `gemini_photo_usage_monthly` で見込み額（入力 8,000＋出力 4,096 トークン ≒ 18.2 円、Google 検索を引く時は $0.05 上乗せ ≒ +8 円）を「先に枠を取る」方式で確保（Vision の月次枠と同じ ON CONFLICT … WHERE の 1 文）。応答の `usageMetadata`（prompt＋toolUsePrompt／candidates＋thoughts）× 単価で実額に精算。トークン数が読めない・失敗・時間切れの時は見込み額のまま残す（多めに数える側）。
+  - 単価・為替は環境変数 `GEMINI_PHOTO_PRICE_INPUT_USD_PER_M`（既定 4）・`GEMINI_PHOTO_PRICE_OUTPUT_USD_PER_M`（既定 20）・`GEMINI_PHOTO_USD_JPY`（既定 160）・`GEMINI_PHOTO_GROUNDING_USD_PER_CALL`（既定 0.05）。既定は 12/1 以降の単価。
+  - `GEMINI_PHOTO_MONTHLY_BUDGET_JPY`（既定 3000）。**3000 を超える値は 3000 に切る**（表の CHECK でも 3000 以下）。上限に達した月・D1 失敗・表が無い時は上位モデルを呼ばない。月は Google の請求月（America/Los_Angeles）。
+  - 上位モデルが失敗・時間切れ・候補なしの時は 今のモデル → 予備 → Vision の救済（時間切れの後は今のモデルを 9 秒上限で呼び、待ち時間を重ねすぎない）。
+  - **記録**: 上位モデルで答えた時は provider の末尾に `_PREMIUM`（例 `GEMINI_SEARCH_GROUNDED_PREMIUM`）。diagnostic の末尾に `_PUSED`／`_PLIMIT`／`_PGUARD`／`_PTIMEOUT`／`_PFAIL`／`_PEMPTY`（モデル名が空の時は付かない）。
+  - 固定テスト `test/gemini-photo-budget.test.mjs` 9 件（既定で使わない・3000 円で切る・単価の計算・枠が尽きると取れない・D1 失敗で取れない・精算・上位→今→予備の順・文字の検索では D1 にも触れない・migration は CREATE TABLE のみ）。手元 `npm test` **3250 件 pass**。
+- **本番確認**: #808 の ✅（apply-patch: extract・git am・npm test・push・deploy・health すべて success、2026-11-16 00:22 UTC = 09:22 JST、base 2c60a81 → head e2d28b8）。モデル名が空なので**利用者の挙動は変わっていません**。上位モデルでの実機の答え・所要時間・実際の費用は**未確認**（有効化前）。今の API キーで `gemini-4-argon` が使えるかも**未確認**（この環境から Gemini を呼んで課金を起こさないため確かめていない）。
+- **Cowork へ依頼（承認が要る操作）**:
+  1. migration `tools/line-worker/migrations/0098_gemini_photo_budget.sql`（CREATE TABLE のみ、既存行は変えない）を `apply-d1-migrations.yml` で適用してください。expected_pending は `0098_gemini_photo_budget.sql` の 1 件（09:2x JST 時点、D1 の最終適用は 0097）。**未適用の間は、モデル名を入れても上位モデルは使われません**（`_PGUARD`）。
+  2. 評価セットで比べる時に Worker の変数 `GEMINI_PHOTO_IDENTIFY_MODEL=gemini-4-argon` を入れてください。HTTP 403/404 が続く（`_PFAIL` だけが並ぶ）なら、キーの契約・請求先の問題の可能性があるので、変数を空に戻してください（その対応は承認が要るので Claude はしません）。
+  3. 月の利用額の読み取り: `SELECT usage_month, spent_micro_jpy/1000000.0 AS spent_jpy, request_count FROM gemini_photo_usage_monthly`。
+- **この依頼の残り（未着手）**: (b') 第 1 段 3. の見比べ（`photo-candidate-verify.mjs`）にも上位モデルを使う件 — 4 秒の上限があり、上位モデルの所要時間が分かってから入れる方が安全なので、有効化と所要時間の実測のあとに同じ枠（`gemini_photo_usage_monthly`）を共有して入れる。(c) 第 1 段 2. の残り（飾りの英文・数字の読み違い）。
+- **成果（D1 実測 09:2x JST、7 日、QA/INTERNAL 除く）**: 購入先クリック（marketplace_click）23 件／15 セッション、Seller 問い合わせ 0 件（累計 4）、有料契約 未計測（取得経路未接続）。今回は既定で無効のため KPI への効果はまだ無い。「レンズと同じ精度」とは書きません。
