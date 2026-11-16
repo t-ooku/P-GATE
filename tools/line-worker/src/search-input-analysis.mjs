@@ -432,6 +432,113 @@ export function japaneseProminentTextAnalysis(evidence = {}) {
   return normalizeSearchInputAnalysis({ refined_query: refinedQuery, matched_features: lines, match_score: 0 });
 }
 
+// 2026-11-15 実機（評価セット 10）: 「5種の」を「今種の」と読み違えて外した。
+// 検索語の 1 文字（数字でも漢数字でもない文字）が、OCR では数字で、前後の文字が同じ時だけ OCR の数字に戻す。
+// 逆向き（検索語が数字・OCR が漢字）は画像を見たモデルの読みを優先して変えない。
+const OCR_COUNTER = '(?:種|個|本|枚|袋|包|粒|入|食|日|色|層|倍|年|回|g|ml|mL|kg|L)';
+const KANJI_NUMERALS = /^[〇一二三四五六七八九十百]$/u;
+function ocrEvidenceLines(evidence = {}) {
+  const prominent = Array.isArray(evidence?.prominent_text) ? evidence.prominent_text : [];
+  const detected = String(evidence?.detected_text || '').split('\n');
+  // 読み取り専用の比較に使うだけ（検索語に入るのはロゴの短い行だけで、それは最後に cleanText を通す）。
+  return [...prominent, ...detected].map((line) => cleanUserText(line, 80)).filter(Boolean);
+}
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+export function repairDigitMisreadQuery(query, evidence = {}) {
+  let repaired = String(query || '');
+  if (!repaired || !evidence || typeof evidence !== 'object') return repaired;
+  for (const line of ocrEvidenceLines(evidence)) {
+    const pattern = new RegExp(`(?<![0-9])([0-9])(${OCR_COUNTER}[^\\s]{0,2})`, 'gu');
+    for (const match of line.matchAll(pattern)) {
+      const digit = match[1];
+      const suffix = match[2];
+      const before = line.slice(Math.max(0, match.index - 2), match.index).replace(/\s+/gu, '');
+      // 前の文字が無い時は、助数詞のあとに 2 文字以上の一致を求める（偶然の一致を避ける）。
+      if (!before && suffix.length < 3) continue;
+      const target = new RegExp(`${escapeRegExp(before)}([^\\s0-9])${escapeRegExp(suffix)}`, 'u');
+      const found = repaired.match(target);
+      if (!found || KANJI_NUMERALS.test(found[1])) continue;
+      if (!/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(found[1])) continue;
+      repaired = repaired.replace(target, `${before}${digit}${suffix}`);
+    }
+  }
+  return repaired;
+}
+
+// 2026-11-15 実機（評価セット 1）: マグカップの飾りの英文（Tea offers me a moment…）の断片「Tea amoment」で探して外した。
+// 日本語の無い検索語が、OCR の英文（機能語を含む行）の断片だけでできている、または検索語そのものが英文の時は、
+// 「読めた小さいロゴ＋日本語のカテゴリ」に置き換える。カテゴリが分からない時は変えない（行き止まりにしない）。
+const ENGLISH_FUNCTION_WORDS = new Set(['a', 'an', 'the', 'to', 'and', 'of', 'me', 'my', 'you', 'your', 'is', 'are', 'for', 'with', 'in', 'on', 'it', 'be', 'we', 'our', 'i', 'am', 'at', 'all', 'this', 'that']);
+const DECORATED_ITEM_CATEGORIES = [
+  [/\b(?:mugs?|coffee cups?|coffee mugs?)\b/iu, 'マグカップ'],
+  [/\btea ?cups?\b/iu, 'ティーカップ'],
+  [/\btumblers?\b/iu, 'タンブラー'],
+  [/\btote(?: bags?)?\b/iu, 'トートバッグ'],
+  [/\b(?:t-?shirts?|tee shirts?)\b/iu, 'Tシャツ'],
+  [/\b(?:sweatshirts?|hoodies?)\b/iu, 'スウェット'],
+  [/\b(?:cushions?|pillows?)\b/iu, 'クッション'],
+  [/\bposters?\b/iu, 'ポスター'],
+  [/\bstickers?\b/iu, 'ステッカー'],
+  [/\bnotebooks?\b/iu, 'ノート'],
+  [/\bpouch(?:es)?\b/iu, 'ポーチ'],
+  [/\bplates?\b/iu, 'プレート'],
+  [/\b(?:glass(?:es)?|drinking glass)\b/iu, 'グラス'],
+  [/\b(?:water )?bottles?\b/iu, 'ボトル'],
+  [/\bcups?\b/iu, 'カップ']
+];
+const latinWords = (text) => String(text || '').toLocaleLowerCase().match(/[a-z]+/gu) || [];
+const isSentenceLike = (text, minWords) => {
+  const words = latinWords(text);
+  return words.length >= minWords && words.some((word) => ENGLISH_FUNCTION_WORDS.has(word));
+};
+export function decorativeSentenceQuery(result = {}, evidence = {}) {
+  const query = String(result?.refined_query || '');
+  if (!query || hasJapanese(query) || /[0-9]/u.test(query)) return '';
+  const lines = ocrEvidenceLines(evidence).filter((line) => !hasJapanese(line));
+  const sentenceLines = lines.filter((line) => latinWords(line).some((word) => ENGLISH_FUNCTION_WORDS.has(word)));
+  const sentenceCorpus = sentenceLines.map((line) => latinWords(line).join('')).join('');
+  const sentenceWordCount = sentenceLines.reduce((sum, line) => sum + latinWords(line).length, 0);
+  const tokens = latinWords(query);
+  const fragmentOfSentence = sentenceWordCount >= 5 && tokens.length > 0
+    && tokens.every((token) => sentenceCorpus.includes(token));
+  if (!fragmentOfSentence && !isSentenceLike(query, 4)) return '';
+  const clues = [
+    ...(Array.isArray(evidence?.best_guess_labels) ? evidence.best_guess_labels : []),
+    ...(Array.isArray(evidence?.web_entities) ? evidence.web_entities : []),
+    ...(Array.isArray(result?.matched_features) ? result.matched_features : []),
+    result?.candidate_name || ''
+  ].map((value) => cleanText(value, 100)).filter(Boolean);
+  let category = '';
+  for (const clue of clues) {
+    const hit = DECORATED_ITEM_CATEGORIES.find(([pattern]) => pattern.test(clue));
+    if (hit) { category = hit[1]; break; }
+  }
+  if (!category) return '';
+  const inSentence = (text) => {
+    const key = latinWords(text).join('');
+    return Boolean(key) && sentenceCorpus.includes(key);
+  };
+  const brand = cleanText(result?.candidate_brand, 40);
+  const logo = (brand && !hasJapanese(brand) && !inSentence(brand) && !isSentenceLike(brand, 1)) ? brand
+    : lines.find((line) => {
+      const words = latinWords(line);
+      return words.length >= 1 && words.length <= 3 && line.length <= 24 && !/[0-9]/u.test(line)
+        && !words.some((word) => ENGLISH_FUNCTION_WORDS.has(word)) && !inSentence(line)
+        && !DECORATED_ITEM_CATEGORIES.some(([pattern]) => pattern.test(line));
+    }) || '';
+  return cleanText([logo, category].filter(Boolean).join(' '), 200);
+}
+
+// 検索語の最後の見直し（Gemini の答え・Vision の救済の両方）。変えた時は印を返す（記録用の固定語彙）。
+export function guardImageQuery(result = {}, evidence = {}) {
+  if (!result?.refined_query || !evidence || typeof evidence !== 'object') return { result, guard: '' };
+  const sentence = decorativeSentenceQuery(result, evidence);
+  if (sentence) return { result: { ...result, refined_query: sentence }, guard: 'SENTENCE' };
+  const repaired = repairDigitMisreadQuery(result.refined_query, evidence);
+  if (repaired !== result.refined_query) return { result: { ...result, refined_query: repaired }, guard: 'DIGIT' };
+  return { result, guard: '' };
+}
+
 export function ocrTextSearchAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
   // detected_textは出現頻度順。日本語(かな・漢字)を含む行を優先し、
@@ -762,7 +869,12 @@ export async function analyzeSearchInput({
       }
     }
   }
+  // 飾りの英文・数字の読み違いの見直し（2026-11-16）。SENTENCE／DIGIT を記録に残す。
+  let queryGuard = '';
   if (rescuedByVision) {
+    const guarded = guardImageQuery(rescuedByVision.result, visualWebEvidence);
+    queryGuard = guarded.guard;
+    rescuedByVision = { ...rescuedByVision, result: guarded.result };
     return {
       configured: true,
       provider: rescuedByVision.provider,
@@ -771,7 +883,7 @@ export async function analyzeSearchInput({
       web_match_tier: visualWebEvidence?.match_tier || visualWebStatus,
       visual_fallback_code: visualFallbackCode,
       diagnostic: buildDiagnostic('OK'),
-    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied },
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied, query_guard: queryGuard },
       ...rescuedByVision.result
     };
   }
@@ -860,6 +972,11 @@ export async function analyzeSearchInput({
       result = { ...result, refined_query: cleanText([brand, japanesePackage.refined_query].filter(Boolean).join(' '), 200) };
     }
   }
+  if (normalizedImage && !rescuedByVision) {
+    const guarded = guardImageQuery(result, visualWebEvidence);
+    queryGuard = guarded.guard;
+    result = guarded.result;
+  }
   // grounding を使ったときは、根拠にしたページを一緒に返す（連携先に無かったときの逃げ道）。
   const referenceUrls = groundImages && !rescuedByVision ? groundedReferenceUrls(responsePayload) : [];
   const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';
@@ -879,7 +996,7 @@ export async function analyzeSearchInput({
     visual_fallback_code: visualFallbackCode,
     // Server-only fixed-vocabulary stage code for identify_latency_log.
     diagnostic: buildDiagnostic('OK'),
-    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied },
+    stage_ms: { vision: visionMs, gemini: geminiMs, grounding_skipped: groundingSkipped, thinking: thinkingUsed ? thinkingLevel : (thinkingRejected ? 'REJECTED' : ''), japanese_text_applied: japaneseTextApplied, query_guard: queryGuard },
     reference_urls: referenceUrls,
     ...result
   };
