@@ -416,6 +416,14 @@ test('韓国コスメ棚はYahoo!公式ランキングだけを根拠に上位�
   const ids = result.shelves.map((shelf) => shelf.shelf_id);
   assert.ok(ids.indexOf('korean_beauty') !== -1);
   assert.ok(ids.indexOf('korean_beauty') < ids.indexOf(BUZZ_SHELF_CATEGORY_IDS[0]));
+  // 2026-11-16 大隆さん指示「韓国美容、韓国コスメが上にきて」: 商品のある韓国コスメ棚は一番上（トレンド先取りの先頭）。
+  assert.equal(ids[0], 'korean_beauty');
+  assert.equal(result.shelves[0].shelf_group, 'trend');
+  assert.ok(result.shelves[0].items.length >= 2);
+  // 棚の中は公式順位のまま 1 位から（並べ替えない）。
+  assert.deepEqual(result.shelves[0].items.map((item) => item.rank), result.shelves[0].items.map((_, index) => index + 1));
+  assert.ok(result.shelves[0].items.every((item, index, list) => index === 0 || list[index - 1].source_rank <= item.source_rank));
+  assert.equal(ids.filter((id) => id === 'korean_beauty').length, 1);
   assert.equal(await buildKoreanShelf(env, fetcher), null);
 });
 

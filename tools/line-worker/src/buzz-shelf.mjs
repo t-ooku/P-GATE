@@ -668,13 +668,16 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     return true;
   };
   const shelves = [
+    // 2026-11-16 大隆さん指示「ホシルバズの順位は、韓国美容、韓国コスメが上にきて」: 韓国コスメ棚を一番上（トレンド先取りの先頭）に置く。
+    // 棚の中の商品順は Yahoo!ショッピング公式の順位のまま（並べ替えない）。
+    ...(koreanShelf ? [{ ...koreanShelf, shelf_group: 'trend' }] : []),
     // 2026-10-07 大隆さん指示: 上位はトレンド先取り（若者向けアパレル・靴・コスメ・洗顔・スマホ）、その下に従来のバズ。
     ...trendShelves.map(publicShelf),
     ...(risingShelf ? [risingShelf] : []),
     // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず上位に1つ置く。
     // API一時障害でも韓国関連の入口自体は消さない。商品・順位は作らず、
-    // 公式データ確認中の空棚と安全な横断検索リンクだけを表示する。
-    ...(koreanShelf ? [koreanShelf] : [koreanShelfAvailabilityPlaceholder()]),
+    // 公式データ確認中の空棚と安全な横断検索リンクだけを表示する（空の棚は先頭に出さず、従来の位置に置く）。
+    ...(koreanShelf ? [] : [koreanShelfAvailabilityPlaceholder()]),
     ...genreShelves.map(publicShelf),
     ...homeGenreShelves.map(publicShelf)
   ].filter(distinctShelf).concat(budgetShelves).map(withBuzzRanks);
