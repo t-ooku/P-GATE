@@ -6,6 +6,7 @@ import { filterCategoryMismatches } from './knowledge-search.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
 import { headNounGateQueryFor } from './query-expansion.mjs';
 import { hasHeadNounMatch } from './search-head-noun.mjs';
+import { hasC1ListingOptions, hasUnambiguousListedJan, isC1Jan } from './rakuten-jan-bridge.mjs';
 
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 // The migrated Rakuten endpoint regularly needs more than 2.5 seconds before
@@ -78,6 +79,8 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   if (options.signal?.aborted) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   const itemCode = String(options.itemCode || '').trim();
+  const janMode = options.exactJan !== undefined;
+  if (janMode && (!isC1Jan(options.exactJan) || query !== options.exactJan || itemCode || options.shopCode)) return [];
   if (itemCode && !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}$/.test(itemCode)) return [];
   if (!query && !itemCode) return [];
   const url = new URL(API_URL);
@@ -128,6 +131,25 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   // keywords文字列そのものはログへ出さず、文字数だけを残す。
   console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '1_api_request', keywords_length: String(query || '').length, affiliate_id_present: Boolean(affiliateId) });
   const payload = await request(url);
+  if (janMode) {
+    // Require one explicitly printed valid JAN, not success of a fuzzy keyword
+    // search. Accept explicitly available goods only. Never retry in C-1 mode.
+    const fields = payload?.items || payload?.Items || [];
+    if (!Array.isArray(fields)) return [];
+    const items = fields.filter((value) => {
+      const item = unwrapItem(value);
+      return (item.availability === 1 || item.availability === '1')
+        && !hasC1ListingOptions(item.itemName, item.itemCaption)
+        && hasUnambiguousListedJan(options.exactJan, item.itemName, item.itemCaption);
+    });
+    const observed_at = new Date().toISOString();
+    return normalizeRakutenItems({ items }).map((item) => ({
+      ...item,
+      offers: item.offers.map((offer) => ({
+        ...offer, jan: options.exactJan, title: item.product_name, observed_at
+      }))
+    }));
+  }
   const rawItemCount = (payload?.items || payload?.Items || []).length;
   const normalized = normalizeRakutenItems(payload);
   console.info('RAKUTEN_PIPELINE_TRACE', {
