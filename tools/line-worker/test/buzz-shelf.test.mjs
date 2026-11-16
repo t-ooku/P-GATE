@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS, BUZZ_HOME_GENRE_IDS, BUZZ_HOME_GENRE_ITEM_LIMIT, BUZZ_GENRE_EMOJI,
-  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots,
+  KOREAN_SKINCARE_SHELF, buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots,
   BUZZ_RESULT_CACHE_TTL_MS, BUZZ_TREND_GENRES, buildTrendShelves, cachedBuzzShelfResult, warmBuzzShelves
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
@@ -425,6 +425,46 @@ test('韓国コスメ棚はYahoo!公式ランキングだけを根拠に上位�
   assert.ok(result.shelves[0].items.every((item, index, list) => index === 0 || list[index - 1].source_rank <= item.source_rank));
   assert.equal(ids.filter((id) => id === 'korean_beauty').length, 1);
   assert.equal(await buildKoreanShelf(env, fetcher), null);
+});
+
+// 2026-11-16 大隆さん指示「韓国スキンケアを一番上」。
+test('韓国スキンケア棚はYahoo!公式ランキングのスキンケアだけで一番上に入り、その次が韓国コスメ棚', async () => {
+  const now = Date.parse('2026-08-25T00:00:00+09:00');
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const yahooItem = (rank, name, slug) => ({ rank, item_information: { name, url: `https://store.shopping.yahoo.co.jp/${slug}/item${rank}.html`, regular_price: 1500 + rank * 100 },
+    review: { rate: 4.5, count: 100 - rank, url: `https://shopping.yahoo.co.jp/review/${slug}${rank}` }, image: { medium: `https://item-shopping.c.yimg.jp/${slug}${rank}.jpg` } });
+  const fetcher = async (input, init = {}) => {
+    const raw = `${decodeURIComponent(String(input))} ${typeof init.body === 'string' ? decodeURIComponent(init.body) : ''}`;
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking') || /HIGH_RATING_TREND/u.test(raw)) {
+      const data = /韓国スキンケア/u.test(raw)
+        ? [yahooItem(1, 'アヌア ドクダミ77 トナー 韓国コスメ', 'sk'), yahooItem(2, 'ロムアンド ティント 韓国コスメ', 'sk'), yahooItem(3, 'COSRX スネイル 美容液', 'sk'), yahooItem(4, 'VT シカ クリーム 韓国', 'sk')]
+        : [yahooItem(1, '韓国コスメ ティント A', 'cos'), yahooItem(2, '韓国コスメ アイシャドウ B', 'cos')];
+      return new Response(JSON.stringify({ high_rating_trend_ranking: { ranking_data: data } }), { status: 200 });
+    }
+    if (url.pathname.includes('/IchibaItem/Ranking/')) {
+      const genreId = url.searchParams.get('genreId') || '';
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => ({
+        ...rankingItem(i + 1, `${genreNoun(genreId)} ${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/shop${genreId}/item${i + 1}/`
+      })) }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const skincare = await buildKoreanShelf(envWithYahoo, fetcher, KOREAN_SKINCARE_SHELF);
+  assert.ok(skincare);
+  assert.equal(skincare.shelf_id, 'korean_skincare');
+  assert.equal(skincare.label, '韓国スキンケア');
+  assert.equal(skincare.search_keyword, '韓国スキンケア');
+  assert.match(skincare.ranking_type, /「韓国スキンケア」/u);
+  // メイク（ティント）は入れない。残りは公式順位のまま。
+  assert.deepEqual(skincare.items.map((item) => item.name), ['アヌア ドクダミ77 トナー 韓国コスメ', 'COSRX スネイル 美容液', 'VT シカ クリーム 韓国']);
+  const result = await buzzShelfResult(envWithYahoo, fetcher, now);
+  const ids = result.shelves.map((shelf) => shelf.shelf_id);
+  assert.deepEqual(ids.slice(0, 2), ['korean_skincare', 'korean_beauty']);
+  assert.equal(result.shelves[0].shelf_group, 'trend');
+  assert.deepEqual(result.shelves[0].items.map((item) => item.rank), [1, 2, 3]);
+  assert.deepEqual(result.shelves[0].items.map((item) => item.source_rank), [1, 3, 4]);
 });
 
 test('韓国コスメ棚はトレンドAPI障害時に口コミ件数順ラベルへ縮退する', async () => {

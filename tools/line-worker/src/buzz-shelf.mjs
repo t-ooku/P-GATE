@@ -111,6 +111,11 @@ const RISING_WINDOW_MAX_MS = 96 * 60 * 60 * 1000;   // 96時間
 const SNAPSHOT_INTERVAL_MS = 6 * 60 * 60 * 1000;    // 6時間ごと
 const SNAPSHOT_RETENTION_MS = 14 * 24 * 60 * 60 * 1000; // 14日
 
+// 「韓国コスメ」明記または代表的なK-beautyブランドを商品名で確認できる物。
+const KOREAN_BEAUTY_NAME = /韓国(?:コスメ|化粧品|スキンケア)?|k\s*[-‐‑]?\s*beauty|rom&nd|ロムアンド|clio|クリオ|tirtir|ティルティル|vt(?:\s+cosmetics)?|cosrx|コスアールエックス|anua|アヌア|mediheal|メディヒール|laneige|ラネージュ|etude|エチュード|missha|ミシャ|innisfree|イニスフリー|hince|ヒンス|dasique|デイジーク|jung\s*saem\s*mool|ジョンセンムル|numbuzin|ナンバーズイン/iu;
+// 2026-11-16 韓国スキンケア棚: 上に加えてスキンケアの品目名がある物だけ（リップ・アイシャドウ等のメイクは除く）。
+const KOREAN_SKINCARE_NAME = /スキンケア|化粧水|トナー|美容液|セラム|アンプル|エッセンス|乳液|クリーム|ジェル|パック|マスク|パッド|ミスト|洗顔|クレンジング|日焼け止め|サンクリーム|日焼け|cica|シカ|toner|serum|ampoule|essence|cream|mask|pad|cleans|sun\s*screen|skin\s*care/iu;
+
 // 2026-08-19 大隆さん報告: レディーススニーカー棚にイヤホンが並んだ。
 // ジャンルID(206906)自体は正しいことを外部確認済みのため、楽天リアルタイム
 // ランキングAPIがジャンル階層によって期待通りに絞らないケースへの防御を置く。
@@ -127,9 +132,9 @@ const BUZZ_CATEGORY_SANITY = Object.freeze({
   smartphone: /スマホ|スマートフォン|iPhone|アイフォン|Android|Galaxy|Pixel|AQUOS|Xperia|ケース|フィルム|ガラス|充電|ケーブル|タブレット|iPad|モバイル|ストラップ/iu,
   // Yahoo!高評価トレンドAPIは検索語と無関係な総合ランキングを返すことがある。
   // 「韓国コスメ」明記または代表的なK-beautyブランドを商品名で確認できる物だけ通す。
-  korean_beauty: /韓国(?:コスメ|化粧品|スキンケア)?|k\s*[-‐‑]?\s*beauty|rom&nd|ロムアンド|clio|クリオ|tirtir|ティルティル|vt(?:\s+cosmetics)?|cosrx|コスアールエックス|anua|アヌア|mediheal|メディヒール|laneige|ラネージュ|etude|エチュード|missha|ミシャ|innisfree|イニスフリー|hince|ヒンス|dasique|デイジーク|jung\s*saem\s*mool|ジョンセンムル|numbuzin|ナンバーズイン/iu
+  korean_beauty: KOREAN_BEAUTY_NAME,
+  korean_skincare: { test: (name) => KOREAN_BEAUTY_NAME.test(name) && KOREAN_SKINCARE_NAME.test(name) }
 });
-
 export function shelfItemsMatchCategory(categoryId, items = []) {
   const pattern = BUZZ_CATEGORY_SANITY[categoryId];
   if (!pattern || !items.length) return true;
@@ -431,22 +436,25 @@ export async function buildRisingShelf(env, genreShelves, now = Date.now()) {
 // 順位根拠はYahoo!ショッピング公式の高評価トレンドランキングAPI(検索語「韓国コスメ」)。
 // 一時障害時は同公式の商品検索(口コミ件数順)へ縮退し、ラベルも言い換える。
 // どちらも取得できない時だけ棚を出さない(架空データ禁止)。
-const KOREAN_SHELF = Object.freeze({ shelf_id: 'korean_beauty', label: '韓国コスメ', query: '韓国コスメ' });
+const KOREAN_SHELF = Object.freeze({ shelf_id: 'korean_beauty', label: '韓国コスメ', query: '韓国コスメ', emoji: '❤️' });
+// 2026-11-16 大隆さん指示「韓国スキンケアを一番上」: 同じ Yahoo!ショッピング公式ランキング（検索語「韓国スキンケア」）の棚を足し、先頭に置く。
+// 商品名で韓国コスメ（ブランド・「韓国」明記）かつスキンケアと確かめられる物だけ通す。順位は公式のまま。
+export const KOREAN_SKINCARE_SHELF = Object.freeze({ shelf_id: 'korean_skincare', label: '韓国スキンケア', query: '韓国スキンケア', emoji: '🧖‍♀️' });
 
-function categorySafeKoreanCandidates(candidates = []) {
+function categorySafeKoreanCandidates(candidates = [], config = KOREAN_SHELF) {
   const normalized = candidates
     .map((candidate, index) => ({ candidate, item: sanitizeShelfItem(candidate, index) }))
     .filter(({ item }) => item.name && item.product_url);
-  if (!normalized.length || !shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, normalized.map(({ item }) => item))) return [];
+  if (!normalized.length || !shelfItemsMatchCategory(config.shelf_id, normalized.map(({ item }) => item))) return [];
   return normalized
-    .filter(({ item }) => shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, [item]))
+    .filter(({ item }) => shelfItemsMatchCategory(config.shelf_id, [item]))
     .map(({ candidate }) => candidate);
 }
 
-function individuallyVerifiedKoreanCandidates(candidates = []) {
+function individuallyVerifiedKoreanCandidates(candidates = [], config = KOREAN_SHELF) {
   return candidates.filter((candidate, index) => {
     const item = sanitizeShelfItem(candidate, index);
-    return item.name && item.product_url && shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, [item]);
+    return item.name && item.product_url && shelfItemsMatchCategory(config.shelf_id, [item]);
   });
 }
 
@@ -507,48 +515,48 @@ export async function recordRakutenFashionPrices(env, fetcher = fetch, now = Dat
   return { recorded, called };
 }
 
-export async function buildKoreanShelf(env, fetcher = fetch) {
+export async function buildKoreanShelf(env, fetcher = fetch, config = KOREAN_SHELF) {
   if (!yahooShoppingApiConfigured(env)) return null;
   let rankingType = 'HIGH_RATING_TREND';
   let headline = '高評価トレンド。';
-  let rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
-  let candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
+  let rankingLabel = `Yahoo!ショッピング 高評価トレンドランキング(「${config.query}」)`;
+  let candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${config.shelf_id}`, rankingType);
   let shouldWriteCache = false;
   let fetchedHighRating = false;
   if (!candidates) {
     try {
-      candidates = await fetchYahooHighRatingRanking(env, KOREAN_SHELF.query, fetcher);
+      candidates = await fetchYahooHighRatingRanking(env, config.query, fetcher);
       shouldWriteCache = true;
       fetchedHighRating = true;
     } catch {
       candidates = null;
     }
   }
-  const verifiedHighRatingCandidates = individuallyVerifiedKoreanCandidates(candidates || []);
+  const verifiedHighRatingCandidates = individuallyVerifiedKoreanCandidates(candidates || [], config);
   // 検索語を無視した総合ランキング(今回の「米」など)は採用しない。
   // 過半が韓国コスメと確認できない場合は、検索語が効く商品検索へ縮退する。
-  candidates = categorySafeKoreanCandidates(candidates || []);
+  candidates = categorySafeKoreanCandidates(candidates || [], config);
   if (!candidates.length) {
     rankingType = 'REVIEW_COUNT';
     headline = '口コミが多い。';
-    rankingLabel = 'Yahoo!ショッピング 口コミ件数順(「韓国コスメ」)';
-    candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
+    rankingLabel = `Yahoo!ショッピング 口コミ件数順(「${config.query}」)`;
+    candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${config.shelf_id}`, rankingType);
     shouldWriteCache = false;
     if (!candidates) {
       try {
-        candidates = await searchYahooShopping(env, KOREAN_SHELF.query, fetcher, { sort: '-review_count' });
+        candidates = await searchYahooShopping(env, config.query, fetcher, { sort: '-review_count' });
         shouldWriteCache = true;
       } catch {
         candidates = [];
       }
     }
-    candidates = categorySafeKoreanCandidates(candidates || []);
+    candidates = categorySafeKoreanCandidates(candidates || [], config);
     // 検索APIもカテゴリ不一致なら、元の公式高評価ランキングに含まれていた
     // 個別確認済み韓国コスメだけを、元順位を変えずに表示する。米などは含めない。
     if (!candidates.length && verifiedHighRatingCandidates.length) {
       rankingType = 'HIGH_RATING_TREND';
       headline = '高評価トレンド。';
-      rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
+      rankingLabel = `Yahoo!ショッピング 高評価トレンドランキング(「${config.query}」)`;
       candidates = verifiedHighRatingCandidates;
       shouldWriteCache = fetchedHighRating;
     }
@@ -556,7 +564,7 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   if (!candidates.length) return null;
   if (shouldWriteCache) {
     // 2026-10-05: 既定 5 分だと訪問のたびに Yahoo! の直列キュー（2.1 秒間隔）を待っていた。他の棚と同じ 20 分にして、15 分ごとの予熱で切らさない。
-    await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
+    await writeRankingCache(env, 'YAHOO_JP', `buzz_${config.shelf_id}`, rankingType, candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
     // 2026-10-17 大隆さん「値下がり中のリアル画像で販促。特に韓国系も」: 韓国コスメ棚の商品も価格を毎日記録する（値下がりの元データ）。
     await recordPriceObservations(env, candidates, { source: 'yahoo_korean_beauty' }).catch(() => {});
   }
@@ -568,16 +576,16 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
     .map((item) => ({ ...item, marketplace: 'YAHOO_JP' }));
   if (!items.length) return null;
   return {
-    shelf_id: KOREAN_SHELF.shelf_id,
-    label: KOREAN_SHELF.label,
-    emoji: '❤️',
+    shelf_id: config.shelf_id,
+    label: config.label,
+    emoji: config.emoji,
     headline,
     ranking_type: rankingLabel,
     ranking_mode: 'native_api',
     marketplace: 'YAHOO_JP',
     marketplace_label: 'Yahoo!ショッピング',
     source: 'YAHOO_OFFICIAL_RANKING_API',
-    search_keyword: KOREAN_SHELF.query,
+    search_keyword: config.query,
     items
   };
 }
@@ -643,9 +651,13 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   const themeState = buzzThemeStateFor(now);
   const theme = themeState.theme;
   const genreShelves = await buildGenreShelves(env, fetcher, now);
-  const [risingShelf, koreanShelf, homeGenreShelves] = await Promise.all([
+  const [risingShelf, [koreanSkincareShelf, koreanShelf], homeGenreShelves] = await Promise.all([
     buildRisingShelf(env, genreShelves, now),
-    buildKoreanShelf(env, fetcher),
+    // Yahoo! は直列キューなので、韓国スキンケア → 韓国コスメの順に 1 つずつ取る。1 棚の失敗で他を止めない。
+    (async () => [
+      await buildKoreanShelf(env, fetcher, KOREAN_SKINCARE_SHELF).catch(() => null),
+      await buildKoreanShelf(env, fetcher)
+    ])(),
     buildHomeGenreShelves(env, fetcher)
   ]);
   // トレンド先取り棚は主婦層ジャンル棚の後に取る（同じ楽天 API を 1 秒間隔で使うため、並列にしない）。
@@ -668,8 +680,10 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     return true;
   };
   const shelves = [
-    // 2026-11-16 大隆さん指示「ホシルバズの順位は、韓国美容、韓国コスメが上にきて」: 韓国コスメ棚を一番上（トレンド先取りの先頭）に置く。
-    // 棚の中の商品順は Yahoo!ショッピング公式の順位のまま（並べ替えない）。
+    // 2026-11-16 大隆さん指示「韓国スキンケアを一番上」: 韓国スキンケア棚 → 韓国コスメ棚の順で一番上（トレンド先取りの先頭）に置く。
+    // 棚の中の商品順は Yahoo!ショッピング公式の順位のまま（並べ替えない）。商品が取れない時は棚を出さない（作らない）。
+    ...(koreanSkincareShelf ? [{ ...koreanSkincareShelf, shelf_group: 'trend' }] : []),
+    // 2026-11-16 大隆さん指示「韓国美容、韓国コスメが上にきて」: 韓国コスメ棚もトレンド先取りの先頭側。
     ...(koreanShelf ? [{ ...koreanShelf, shelf_group: 'trend' }] : []),
     // 2026-10-07 大隆さん指示: 上位はトレンド先取り（若者向けアパレル・靴・コスメ・洗顔・スマホ）、その下に従来のバズ。
     ...trendShelves.map(publicShelf),
