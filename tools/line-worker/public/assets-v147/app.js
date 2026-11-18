@@ -1726,7 +1726,7 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
 }
 
 let relatedRecommendationSequence=0;
-async function loadRelatedRecommendations(query,sequence){
+async function loadRelatedRecommendations(query,sequence,sourceQuery=query){
   try{
       // This is an optional enhancement over the already-rendered category
       // shelf. Never wait/reset/recover Turnstile in the background because
@@ -1736,7 +1736,7 @@ async function loadRelatedRecommendations(query,sequence){
       const request=timedAbortController(12000);
       let response;let payload;
       try{response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},signal:request.controller.signal,body:JSON.stringify({
-        query,processing_notice_shown:true,session_id:sessionId,language:elements.language.value,turnstile_token:token
+        query,source_query:sourceQuery,processing_notice_shown:true,session_id:sessionId,language:elements.language.value,turnstile_token:token
       })});payload=await response.json().catch(()=>({}));}finally{request.clear();}
       if(sequence!==relatedRecommendationSequence)return;
       if(!response.ok||!payload.ok)throw new Error(String(payload.error||`RELATED_RECOMMENDATIONS_HTTP_${response.status}`));
@@ -1758,10 +1758,11 @@ async function loadRelatedRecommendations(query,sequence){
       console.warn('RELATED_RECOMMENDATIONS_FAILED',String(error?.message||error).slice(0,80));
     }
 }
-function scheduleRelatedRecommendations(query,sequence){
+function scheduleRelatedRecommendations(query,sequence,sourceQuery=query){
   const safeQuery=String(query||'').trim();
+  const safeSourceQuery=String(sourceQuery||safeQuery).trim();
   if(!safeQuery)return;
-  setTimeout(()=>{loadRelatedRecommendations(safeQuery,sequence).catch(()=>{});},0);
+  setTimeout(()=>{loadRelatedRecommendations(safeQuery,sequence,safeSourceQuery).catch(()=>{});},0);
 }
 function onTurnstileToken(token){turnstileUnsupported=false;lastTurnstileClientError='';turnstileToken=String(token||'');const waiter=turnstileTokenWaiter;if(turnstileToken&&waiter){turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.resolve(turnstileToken);}if(turnstileToken)runPendingInboundSearch();}
 function onTurnstileUnsupported(){turnstileUnsupported=true;clearTurnstileToken();console.warn('TURNSTILE_CLIENT_UNSUPPORTED');const waiter=turnstileTokenWaiter;if(!waiter)return;turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.reject(new Error('TURNSTILE_UNSUPPORTED'));}
@@ -2029,7 +2030,7 @@ async function runKnowledgeSearch(options={}){
         qaPhoto.painted = performance.now(); finishPhotoTiming(qaPhoto, 'CARD_CHECKPOINT', qaPhoto.painted);
       } else finishPhotoTiming(qaPhoto, 'NOT_RENDERED');
     }));
-    scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence);
+    scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence,submittedQuery);
     return{ok:true,result,requestId:lastRequestId};
   }catch(error){
     finishPhotoTiming(qaPhoto, 'NOT_RENDERED');
@@ -2063,7 +2064,7 @@ async function runKnowledgeSearch(options={}){
     // Main-search/API failures must not suppress the independently resilient
     // related-product carousel. It obtains a fresh Turnstile token and shows
     // only products verified by marketplace APIs.
-    scheduleRelatedRecommendations(submittedQuery,sequence);
+    scheduleRelatedRecommendations(submittedQuery,sequence,submittedQuery);
     document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id,trigger}}));
     elements.status.className='status';elements.status.textContent='';
     return{ok:false,degraded:true,error:failureTelemetry.error_code,result:fallback,requestId:failureTelemetry.request_id};
