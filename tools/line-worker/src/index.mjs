@@ -35,6 +35,7 @@ import {
   buildMarketplaceSearchKeywords
 } from '../public/marketplace-search-keywords-v2.mjs';
 import {
+  filterRakutenCandidatesForJanSource,
   rakutenApiConfigured,
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
@@ -3542,6 +3543,14 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     const combinedSearchCandidates = applyTeacherDatasetExclusions(originalQuery, rankMerchantCandidates(
       [], interleaveCandidatesBySource([refinedCandidates, originalLaneCandidates]), expandedQuery.query
     ));
+    // AI refinement may remove an exact JAN before marketplace candidates are
+    // merged. Reapply the literal source-query identity gate here so fuzzy
+    // Rakuten results, cached candidates and official-store lanes cannot leak
+    // adjacent capacities, sets or selectable variants into the final list.
+    // When C-1 is enabled, only its evidence-bearing exactJan offer survives.
+    const janGuardedSearchCandidates = filterRakutenCandidatesForJanSource(
+      originalQuery, combinedSearchCandidates, captureJanEvidence
+    );
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,
@@ -3554,7 +3563,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       // 2026-09-19: ゲート判定には headNounGateQuery(展開規則のprimaryを末尾にも
       // 足したクエリ)を使う(query-expansion.mjs 参照)。expandedQuery.query 自体は
       // モール検索語生成等の既存用途があるため変えない。
-      candidates: applyHeadNounGate(headNounGateQuery(expandedQuery), combinedSearchCandidates).slice(0, CLIENT_CANDIDATE_LIMIT)
+      candidates: applyHeadNounGate(headNounGateQuery(expandedQuery), janGuardedSearchCandidates).slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };
