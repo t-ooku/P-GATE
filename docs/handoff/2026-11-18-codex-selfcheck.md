@@ -130,3 +130,15 @@
 水曜のため週次SEO対象外、月初Amazon180日期限監査対象外。今回行ったのはGitHubの読取と文書保存のみ。D1は既存SELECT成果物再利用、書込/移行なし。実利用検索文・写真・PII・Secretなし（固定QAの商品タイトル／公開投稿三要素のみ仕様上の例外）。SNS公開・営業送信・新記事・価格/規約変更・追加スケジュールなし。
 
 **大隆さんがやること：ない。**
+
+
+## 09:02〜09:17 JST 日次改善の実行追記
+
+- **原因再現**：C-1 OFF後も、有効JANを含む入力がAI検索語変換でJANを失い、楽天の曖昧キーワード検索へ入り直していた。初回ガード[8db5bbd](https://github.com/t-ooku/P-GATE/commit/8db5bbd91f1cc0752a8ee7b77bf354cee9ddac58)は単体APIでは有効だったが、本番MEDIPEEL固定検索で楽天6件（3.0、100ml、選べる単品/セット等）を含む9件が残り、**本番不十分**と判定した。
+- **実装**：元入力の有効JANを最終候補合流まで保持し、楽天候補はC-1 exactJan証拠（同一JANをofferに保持）以外を最終結果から除外する局所ガードを追加。C-1は `false` のままなので現状は楽天曖昧候補を全除外する。Yahoo!・Amazon Web等の非楽天候補、料金・注意書き、D1、検索予算、他モール順位は変更していない。
+- **テスト／配備**：[run44204444189](https://github.com/t-ooku/P-GATE/actions/runs/44204444189)は初回ガードのtest/deploy成功。本番再現で不足を検出後、修正版の初回[run44205489813](https://github.com/t-ooku/P-GATE/actions/runs/44205489813)はUnicode正規表現のエスケープ誤りでtest停止・deployなし。修正コミット[9e2e910](https://github.com/t-ooku/P-GATE/commit/9e2e9106fd9e40ba1fb8ba3363dd951f346bdbcf)の[run44205914634](https://github.com/t-ooku/P-GATE/actions/runs/44205914634)はtest job134471663914、deploy job134472358662ともsuccess。
+- **本番GET／操作確認（`?qa=1`、購入先リンク非クリック）**：
+  - `MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336`：修正前9件（楽天6＋Web3）→修正後2件（Amazon Web2）、楽天0。
+  - `OBgE ナチュラルカバーファンデーション PRO 02 ベージュ 14g 8800345551517`：修正後3件（Yahoo!1＋Amazon Web2）、楽天0。旧14g→13g等の楽天混在は主結果で再現せず。
+- **判定**：実装・配備・主結果ガードは本番確認済み。購入先クリック増加／売上効果は未判定で、前日KPIへ遡及しない。MEDIPEELの別枠「HOSHILU AI選定レコメンド」には無関係候補が残るため未完了として切り分ける。同じ消費者導線の新実験は開始せず、次回は主指標の実利用と別枠の再現範囲を確認する。
+- Claude受信箱はOPEN追加なし。保存を受領・実装扱いせず、同一修正の並行依頼なし。Seller実送信、SNS公開、Search Console robots変更、新規課金・権限・契約・スケジュール追加なし。
