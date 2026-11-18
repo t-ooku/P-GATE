@@ -36,6 +36,7 @@ import {
 } from '../public/marketplace-search-keywords-v2.mjs';
 import {
   filterRakutenCandidatesForJanSource,
+  hasUniqueJanKeyword,
   rakutenApiConfigured,
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
@@ -3694,7 +3695,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
 
 export function validateRelatedRecommendationsRequest(payload = {}) {
   const input = validateKnowledgeRequest({ ...payload, search_attempt: 1 });
-  return { query: input.query, language: input.language, session_id: input.session_id,
+  const sourceInput = payload.source_query == null
+    ? input
+    : validateKnowledgeRequest({ ...payload, query: payload.source_query, search_attempt: 1 });
+  return { query: input.query, source_query: sourceInput.query, language: input.language, session_id: input.session_id,
     turnstile_token: input.turnstile_token, processing_notice_shown: true };
 }
 
@@ -3783,6 +3787,14 @@ async function handleRelatedRecommendationsApi(request, env) {
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'),
       deadlineController.signal);
     const requestId = crypto.randomUUID();
+    // Query refinement may deliberately remove identifiers for marketplace recall.
+    // Preserve the shopper's original query as the identity-search guard so a
+    // valid JAN never opens the broad cross-category recommendation lane.
+    if (hasUniqueJanKeyword(input.source_query)) {
+      return Response.json({ ok: true, result: { recommendations: [], categories: [] } }, {
+        headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
+      });
+    }
     const sessionHash = await hashUser(input.session_id);
     // 3→6。2026-08-18のユーザー指示「『その商品と一緒に使うもの』と横展開
     // どちらも提示して良いよ」「レコメンド30商品の中に織り交ぜて」に対応。
