@@ -76,7 +76,7 @@ export function normalizeRakutenItems(payload = {}) {
 
 export function uniqueJanKeyword(value) {
   const values = [...new Set([...String(value || '').normalize('NFKC')
-    .matchAll(/(?<!\\p{Nd})([0-9]{13})(?!\\p{Nd})/gu)]
+    .matchAll(/(?<!\p{Nd})([0-9]{13})(?!\p{Nd})/gu)]
     .map((match) => match[1])
     .filter((jan) => isC1Jan(jan)))];
   return values.length === 1 ? values[0] : '';
