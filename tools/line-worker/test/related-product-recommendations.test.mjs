@@ -135,7 +135,15 @@ test('期限切れのAI関連カテゴリ要求は次providerへ進まず外部�
 });
 
 test('関連商品APIも本検索と同じ処理告知・session・Turnstile境界を使う',()=>{
-  assert.equal(validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'}).query,'スマホカバー');
+  const legacy=validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'});
+  assert.equal(legacy.query,'スマホカバー');
+  assert.equal(legacy.source_query,'スマホカバー');
+  const refined=validateRelatedRecommendationsRequest({
+    query:'MEDI-PEEL ネッククリーム プレミアム 2.0',
+    source_query:'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336',
+    processing_notice_shown:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'
+  });
+  assert.equal(refined.source_query,'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336');
   assert.throws(()=>validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:false,session_id:'anonymous_session_123456',turnstile_token:'token'}),/PROCESSING_NOTICE_REQUIRED/);
 });
 
@@ -157,6 +165,10 @@ test('本検索は非同期商品取得前にも署名済み関連カテゴリ�
   assert.match(relatedHandler,/Promise\.race\(\[\s*readPublicApiJson\(request, 10000\), inputDeadline/);
   assert.match(relatedHandler,/code === 'RELATED_RECOMMENDATION_DEADLINE'[\s\S]{0,80}\? 408/);
   assert.match(source,/verifyTurnstile\([\s\S]{0,180}deadlineController\.signal/);
+  assert.match(source,/hasUniqueJanKeyword\(input\.source_query\)/);
+  const appSource=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+  assert.match(appSource,/source_query:sourceQuery/);
+  assert.match(appSource,/scheduleRelatedRecommendations\(effectiveQuery\|\|submittedQuery,sequence,submittedQuery\)/);
   assert.match(source,/available <= 3200/);
   assert.match(source,/const hmacKeyPromises = new Map\(\)/);
   assert.match(source,/return Promise\.all\(destinations\.map\(async \(item\)/);
