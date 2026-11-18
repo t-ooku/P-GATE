@@ -7,6 +7,19 @@ import {
 } from '../src/related-product-recommendations.mjs';
 import { validateRelatedRecommendationsRequest } from '../src/index.mjs';
 
+test('有効JANを含む検索では関連商品を生成しない', async () => {
+  const query = 'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336';
+  assert.deepEqual(relatedProductRecommendationQueries(query), []);
+  assert.deepEqual(await resolveRelatedProductRecommendationQueries(query, 'JA', {}, async () => {
+    throw new Error('provider must not run for JAN identity searches');
+  }), []);
+});
+
+test('JAN風の無効な13桁だけでは関連商品ガードを発動しない', () => {
+  assert.deepEqual(relatedProductRecommendationQueries('スマホカバー 1234567890123').map(item => item.query),
+    ['スマホ充電器','スマホストラップ','スマホ保護フィルム']);
+});
+
 test('スマホカバーから充電器・ストラップ等の別カテゴリへ横展開する',()=>{
   assert.deepEqual(relatedProductRecommendationQueries('iPhone用のスマホカバー').map(item=>item.query),['スマホ充電器','スマホストラップ','スマホ保護フィルム']);
 });
