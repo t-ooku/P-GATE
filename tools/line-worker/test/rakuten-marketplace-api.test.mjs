@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  hasUniqueJanKeyword,
   normalizeRakutenItems,
   RAKUTEN_REQUEST_TIMEOUT_MS,
   rakutenApiConfigured,
@@ -120,6 +121,34 @@ test('楽天市場APIへは登録済みサイトのRefererとOriginを付与す�
   });
   assert.equal(requested.headers.referer, 'https://hoshilu.app/');
   assert.equal(requested.headers.origin, 'https://hoshilu.app');
+});
+
+test('有効JAN入りの通常検索は曖昧な楽天レーンへ送らずexactJanだけを許可する', async () => {
+  const jan = '4901234567894';
+  assert.equal(hasUniqueJanKeyword(`対象商品 ${jan}`), true);
+  assert.equal(hasUniqueJanKeyword('対象商品 0000000000000'), false);
+  let calls = 0;
+  const broad = await searchRakutenMarketplace(env, `対象商品 50ml ${jan}`, async () => {
+    calls += 1;
+    return Response.json({ items: [] });
+  });
+  assert.deepEqual(broad, []);
+  assert.equal(calls, 0);
+
+  const exact = await searchRakutenMarketplace(env, jan, async () => {
+    calls += 1;
+    return Response.json({ items: [{
+      itemName: '対象商品 50ml',
+      itemCaption: `JAN:${jan}`,
+      itemCode: 'shop:exact',
+      itemPrice: 1300,
+      itemUrl: 'https://item.rakuten.co.jp/shop/exact/',
+      availability: 1
+    }] });
+  }, 'QA', { exactJan: jan });
+  assert.equal(calls, 1);
+  assert.equal(exact.length, 1);
+  assert.equal(exact[0].offers[0].jan, jan);
 });
 
 test('期限切れの楽天検索は外部通信を開始しない', async () => {
