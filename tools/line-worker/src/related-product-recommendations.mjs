@@ -1,6 +1,7 @@
 import { expandSearchQuery } from './query-expansion.mjs';
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 import { relatedProductExpansionQueries } from './related-product-expansion.mjs';
+import { hasUniqueJanKeyword } from './rakuten-marketplace-api.mjs';
 import {
   containsUnsafeAiOutputContent, sanitizeAiOutputText
 } from './ai-output-safety.mjs';
@@ -138,6 +139,10 @@ async function requestAiRelatedQueries(query, language, env, fetchImpl, options 
 }
 
 export function relatedProductRecommendationQueries(rawQuery) {
+  // An exact JAN identifies a single item. Related-category expansion after an
+  // identity search can turn brand tokens into unrelated products, so keep the
+  // verified main result and the existing retry path instead of guessing.
+  if (hasUniqueJanKeyword(rawQuery)) return [];
   const query=expandSearchQuery(rawQuery).query;
   const rule=RULES.find(item=>item.match.test(query));
   if (!rule) return [];
@@ -163,6 +168,9 @@ export function relatedProductRecommendationQueries(rawQuery) {
 export async function resolveRelatedProductRecommendationQueries(
   rawQuery, language = 'JA', env = {}, fetchImpl = fetch, options = {}
 ) {
+  // Enforce the JAN identity boundary again at the async API entry so future
+  // callers cannot bypass the synchronous recommendation guard above.
+  if (hasUniqueJanKeyword(rawQuery)) return [];
   const merged = [];
   const seen = new Set();
   for (const item of [...relatedProductExpansionQueries(rawQuery, language), ...relatedProductRecommendationQueries(rawQuery)]) {
