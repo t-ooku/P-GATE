@@ -74,12 +74,23 @@ export function normalizeRakutenItems(payload = {}) {
   }).filter((item) => item.product_name && item.offers.length);
 }
 
+export function hasUniqueJanKeyword(value) {
+  return [...String(value || '').normalize('NFKC')
+    .matchAll(/(?<!\p{Nd})([0-9]{13})(?!\p{Nd})/gu)]
+    .some((match) => isC1Jan(match[1]));
+}
+
 export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '', options = {}) {
   if (!rakutenApiConfigured(env)) return [];
   if (options.signal?.aborted) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   const itemCode = String(options.itemCode || '').trim();
   const janMode = options.exactJan !== undefined;
+  // A valid JAN is an exact identifier. Never send it through the broad keyword
+  // lane, where Rakuten can return adjacent capacities, sets or selectable
+  // variants. The opt-in C-1 exactJan lane is the only path allowed to add a
+  // Rakuten offer for a JAN query.
+  if (!janMode && hasUniqueJanKeyword(query)) return [];
   if (janMode && (!isC1Jan(options.exactJan) || query !== options.exactJan || itemCode || options.shopCode)) return [];
   if (itemCode && !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}$/.test(itemCode)) return [];
   if (!query && !itemCode) return [];
