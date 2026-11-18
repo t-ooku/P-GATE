@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  filterRakutenCandidatesForJanSource,
   hasUniqueJanKeyword,
+  uniqueJanKeyword,
   normalizeRakutenItems,
   RAKUTEN_REQUEST_TIMEOUT_MS,
   rakutenApiConfigured,
@@ -149,6 +151,32 @@ test('有効JAN入りの通常検索は曖昧な楽天レーンへ送らずexact
   assert.equal(calls, 1);
   assert.equal(exact.length, 1);
   assert.equal(exact[0].offers[0].jan, jan);
+});
+
+test('元入力JANはAI短縮後も曖昧な楽天候補を最終結果から除外する', () => {
+  const jan = '4901234567894';
+  const broad = {
+    record_key: 'RAKUTEN:shop:broad',
+    offers: [{ marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/broad/' }]
+  };
+  const exact = {
+    record_key: 'RAKUTEN:shop:exact',
+    offers: [{ marketplace: 'RAKUTEN_JP', jan, product_url: 'https://item.rakuten.co.jp/shop/exact/' }]
+  };
+  const yahoo = {
+    record_key: 'YAHOO:shop:item',
+    offers: [{ marketplace: 'YAHOO_JP', product_url: 'https://store.shopping.yahoo.co.jp/shop/item.html' }]
+  };
+  assert.equal(uniqueJanKeyword(`商品名 ${jan}`), jan);
+  assert.equal(uniqueJanKeyword(`${jan} 4901601413342`), '');
+  assert.deepEqual(
+    filterRakutenCandidatesForJanSource(`商品名 ${jan}`, [broad, exact, yahoo], false),
+    [yahoo]
+  );
+  assert.deepEqual(
+    filterRakutenCandidatesForJanSource(`商品名 ${jan}`, [broad, exact, yahoo], true),
+    [exact, yahoo]
+  );
 });
 
 test('期限切れの楽天検索は外部通信を開始しない', async () => {
