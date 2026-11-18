@@ -74,10 +74,29 @@ export function normalizeRakutenItems(payload = {}) {
   }).filter((item) => item.product_name && item.offers.length);
 }
 
+export function uniqueJanKeyword(value) {
+  const values = [...new Set([...String(value || '').normalize('NFKC')
+    .matchAll(/(?<!\\p{Nd})([0-9]{13})(?!\\p{Nd})/gu)]
+    .map((match) => match[1])
+    .filter((jan) => isC1Jan(jan)))];
+  return values.length === 1 ? values[0] : '';
+}
+
 export function hasUniqueJanKeyword(value) {
-  return [...String(value || '').normalize('NFKC')
-    .matchAll(/(?<!\p{Nd})([0-9]{13})(?!\p{Nd})/gu)]
-    .some((match) => isC1Jan(match[1]));
+  return Boolean(uniqueJanKeyword(value));
+}
+
+export function filterRakutenCandidatesForJanSource(sourceQuery, candidates, allowExactJan = false) {
+  const jan = uniqueJanKeyword(sourceQuery);
+  if (!jan || !Array.isArray(candidates)) return Array.isArray(candidates) ? candidates : [];
+  return candidates.filter((candidate) => {
+    const offers = Array.isArray(candidate?.offers) ? candidate.offers : [];
+    const isRakuten = String(candidate?.record_key || '').startsWith('RAKUTEN:')
+      || offers.some((offer) => offer?.marketplace === 'RAKUTEN_JP');
+    if (!isRakuten) return true;
+    return allowExactJan && offers.some((offer) =>
+      offer?.marketplace === 'RAKUTEN_JP' && String(offer?.jan || '') === jan);
+  });
 }
 
 export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '', options = {}) {
