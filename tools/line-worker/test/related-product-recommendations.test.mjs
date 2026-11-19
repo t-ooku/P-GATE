@@ -174,7 +174,8 @@ test('関連商品APIも本検索と同じ処理告知・session・Turnstile境�
 test('本検索は非同期商品取得前にも署名済み関連カテゴリ棚を返す',()=>{
   const source=readFileSync(new URL('../src/index.mjs',import.meta.url),'utf8');
   assert.match(source,/related_category_recommendations: await decoratedRelatedCategoryGroups/);
-  assert.match(source,/relatedProductRecommendationQueries\(originalQuery\)/);
+  assert.match(source,/suppressRelatedRecommendationsForIdentityQuery\(decorated, submittedQuery\)/);
+  assert.match(source,/relatedProductRecommendationQueries\(submittedQuery\)/);
   assert.match(source,/partialCategories = await decoratedRelatedCategoryGroups\(groups/);
   assert.match(source,/marketplace_search_links: await signedMarketplaceSearchLinks/);
   assert.match(source,/includeYahoo: index === 0/);

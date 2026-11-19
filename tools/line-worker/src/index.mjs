@@ -3618,12 +3618,12 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // JAN identifies one product. Some upstream search responses may already
     // carry a related-products shelf generated from the AI-refined phrase, so
     // enforce the identity boundary again on the final response object.
-    decorated = suppressRelatedRecommendationsForIdentityQuery(decorated, originalQuery);
+    decorated = suppressRelatedRecommendationsForIdentityQuery(decorated, submittedQuery);
     // A verified-product recommendation request needs a fresh Turnstile token
     // and marketplace call. Put the safe rule-based category shelf in the main
     // response so mobile users see a horizontal recommendation immediately;
     // the async endpoint replaces it with real marketplace products when ready.
-    const immediateRelatedGroups = relatedProductRecommendationQueries(originalQuery);
+    const immediateRelatedGroups = relatedProductRecommendationQueries(submittedQuery);
     if (immediateRelatedGroups.length) {
       try {
         decorated = { ...decorated, related_category_recommendations: await decoratedRelatedCategoryGroups(
