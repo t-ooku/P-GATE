@@ -5,7 +5,10 @@ import {
   normalizeAiRelatedQueries, relatedProductRecommendationQueries,
   resolveRelatedProductRecommendationQueries
 } from '../src/related-product-recommendations.mjs';
-import { validateRelatedRecommendationsRequest } from '../src/index.mjs';
+import {
+  suppressRelatedRecommendationsForIdentityQuery,
+  validateRelatedRecommendationsRequest
+} from '../src/index.mjs';
 
 test('有効JANを含む検索では関連商品を生成しない', async () => {
   const query = 'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336';
@@ -18,6 +21,27 @@ test('有効JANを含む検索では関連商品を生成しない', async () =>
 test('JAN風の無効な13桁だけでは関連商品ガードを発動しない', () => {
   assert.deepEqual(relatedProductRecommendationQueries('スマホカバー 1234567890123').map(item => item.query),
     ['スマホ充電器','スマホストラップ','スマホ保護フィルム']);
+});
+
+test('有効JANの主検索応答では上流が付けた関連商品棚も除去する', () => {
+  const result = suppressRelatedRecommendationsForIdentityQuery({
+    candidates: [{ title: 'MEDIPEEL ネックスティック' }],
+    related_recommendations: [{ title: 'Garlic Peeling Machine' }],
+    related_category_recommendations: [{ query: 'ネッククリーム' }]
+  }, 'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336');
+  assert.equal(result.candidates.length, 1);
+  assert.deepEqual(result.related_recommendations, []);
+  assert.deepEqual(result.related_category_recommendations, []);
+});
+
+test('無効JAN風の検索では主検索応答の関連商品棚を保持する', () => {
+  const source = {
+    related_recommendations: [{ title: '関連商品' }],
+    related_category_recommendations: [{ query: '関連カテゴリ' }]
+  };
+  assert.equal(suppressRelatedRecommendationsForIdentityQuery(
+    source, 'MEDIPEEL ネックスティック 8809941825337'
+  ), source);
 });
 
 test('スマホカバーから充電器・ストラップ等の別カテゴリへ横展開する',()=>{
@@ -150,7 +174,7 @@ test('関連商品APIも本検索と同じ処理告知・session・Turnstile境�
 test('本検索は非同期商品取得前にも署名済み関連カテゴリ棚を返す',()=>{
   const source=readFileSync(new URL('../src/index.mjs',import.meta.url),'utf8');
   assert.match(source,/related_category_recommendations: await decoratedRelatedCategoryGroups/);
-  assert.match(source,/relatedProductRecommendationQueries\(input\.query\)/);
+  assert.match(source,/relatedProductRecommendationQueries\(originalQuery\)/);
   assert.match(source,/partialCategories = await decoratedRelatedCategoryGroups\(groups/);
   assert.match(source,/marketplace_search_links: await signedMarketplaceSearchLinks/);
   assert.match(source,/includeYahoo: index === 0/);

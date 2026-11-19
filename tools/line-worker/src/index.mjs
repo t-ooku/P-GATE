@@ -3615,11 +3615,15 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // 2026-11-14 Cowork 依頼 第 1 段 3.: 写真検索の上位（最大 6 件）の商品画像と撮った写真を見比べ、
     // 同じ商品を上に、別の商品を下げる（消さない・4 秒まで）。PHOTO_CANDIDATE_VERIFY_ENABLED=true の時だけ。
     decorated = await verifyPhotoSearchResult(decorated, { image: input.search_image, env });
+    // JAN identifies one product. Some upstream search responses may already
+    // carry a related-products shelf generated from the AI-refined phrase, so
+    // enforce the identity boundary again on the final response object.
+    decorated = suppressRelatedRecommendationsForIdentityQuery(decorated, originalQuery);
     // A verified-product recommendation request needs a fresh Turnstile token
     // and marketplace call. Put the safe rule-based category shelf in the main
     // response so mobile users see a horizontal recommendation immediately;
     // the async endpoint replaces it with real marketplace products when ready.
-    const immediateRelatedGroups = relatedProductRecommendationQueries(input.query);
+    const immediateRelatedGroups = relatedProductRecommendationQueries(originalQuery);
     if (immediateRelatedGroups.length) {
       try {
         decorated = { ...decorated, related_category_recommendations: await decoratedRelatedCategoryGroups(
@@ -3691,6 +3695,15 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
   }
+}
+
+export function suppressRelatedRecommendationsForIdentityQuery(result, query) {
+  if (!hasUniqueJanKeyword(query)) return result;
+  return {
+    ...(result || {}),
+    related_recommendations: [],
+    related_category_recommendations: []
+  };
 }
 
 export function validateRelatedRecommendationsRequest(payload = {}) {
