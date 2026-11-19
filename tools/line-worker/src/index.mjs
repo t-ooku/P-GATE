@@ -3701,6 +3701,11 @@ export function suppressRelatedRecommendationsForIdentityQuery(result, query) {
   if (!hasUniqueJanKeyword(query)) return result;
   return {
     ...(result || {}),
+    // Marketplace candidates are recall-oriented and do not carry dependable
+    // cross-provider JAN evidence. For an exact identity query, keep only the
+    // already-built verified/unified web results and omit these broad cards.
+    candidates: [],
+    ai_discovery: null,
     related_recommendations: [],
     related_category_recommendations: []
   };

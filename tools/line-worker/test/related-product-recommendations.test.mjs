@@ -26,10 +26,14 @@ test('JAN風の無効な13桁だけでは関連商品ガードを発動しない
 test('有効JANの主検索応答では上流が付けた関連商品棚も除去する', () => {
   const result = suppressRelatedRecommendationsForIdentityQuery({
     candidates: [{ title: 'MEDIPEEL ネックスティック' }],
+    unified_results: { items: [{ title: 'MEDIPEEL ネックスティック', source: 'GOOGLE_MALL' }] },
+    ai_discovery: { candidates: [{ title: 'Peel machine' }] },
     related_recommendations: [{ title: 'Garlic Peeling Machine' }],
     related_category_recommendations: [{ query: 'ネッククリーム' }]
   }, 'MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336');
-  assert.equal(result.candidates.length, 1);
+  assert.deepEqual(result.candidates, []);
+  assert.equal(result.unified_results.items.length, 1);
+  assert.equal(result.ai_discovery, null);
   assert.deepEqual(result.related_recommendations, []);
   assert.deepEqual(result.related_category_recommendations, []);
 });
