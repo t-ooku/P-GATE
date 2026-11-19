@@ -185,3 +185,12 @@ docs/handoff/claude-inbox/2026-11-06-seller-form-recovery.md。Sellerフォー�
 - **営業の安全上限不整合**：[11/18担当記録](2026-11-18-seller-outreach-daily-gmail.md)に新規58送信/不達1/返信0、次回新規60店。既存本人指示・task再読は日次新規最大30。新しい拡大承認の根拠が未確認なので成果増と評価せず、[実際の是正依頼](claude-inbox/2026-11-19-seller-daily-send-cap.md)を新規1件OPENで保存。受領・実行・修復は未確認。本人の追加承認を発見した場合は上書きせず返す。設定/送信の直接操作・本人への中継依頼なし。これは営業運用の局所是正であり、点検はCodex保持。
 - health/重要7連携/将来在庫3/3 PASS、検索SLIは料金レビュー安全停止。#369頻度未復旧。11/18固定QA本命25件はカテゴリ一致（石/色/新品中古等の全属性は未確認）、11/19枠は未収録。ENTRYは既存PC44pxガードレールと11/14評価まで、因果効果未判定。低標本HOLDによる再現不具合の全面停止なし。Sellerフォームは受領/モック確認DONE・未実装/未配備。既存22inboxはDONE19/BLOCKED3、新依頼含めOPEN1を追加。
 - IG11/18 21:02:55.950/18654511411046753/https://www.instagram.com/p/Df4diOaD21z/ の公開記録確認。Threads FAILED28最終11/15不変・復旧未確認、再認証要求なし。X停止/#616旧素材保留。D1書込・SNS/営業送信・新記事・料金規約・スケジュール追加なし。大隆さんがやること：ない。
+
+
+## 2026-11-19 日次改善：JAN一致時の無関係AI推薦を本番修復
+
+- 再現語: `MEDIPEEL ネックスティック NEW プレミアム 2.0 8809941825336`。修正前の本番では、主結果2〜3件とは別に「HOSHILU AI選定レコメンド」12件が表示され、Garlic Peeling machine、Emma Peel DVD、Timber Tuff Log Peeler等の無関係商品が混入した。
+- 原因は、AI整形後の検索語で元入力JANが失われる経路と、関連推薦ガードだけでは未検証の主候補 `candidates` をフロントが推薦行へフォールバック表示する経路の二重残存。元入力JANがある最終応答では、すでに検証済みの `unified_results` を保持しつつ、未検証 `candidates`・`ai_discovery`・関連推薦2配列を空にする局所ガードを追加した。C-1はfalseのまま。
+- 最終コミット [da8bd81](https://github.com/t-ooku/P-GATE/commit/da8bd81cdfd8f93b4294cf25af04ad1173be88e1)。[CI/deploy 44426850994](https://github.com/t-ooku/P-GATE/actions/runs/44426850994) はtest job 135233793901、deploy job 135234512762ともsuccess。配備完了は2026-11-19 09:12:55 JST。
+- 本番QA（`qa=1&utm_source=codex_pdca&utm_medium=qa`、購入先リンク非クリック）で同JANを再検索し、検証済みAmazon Web結果2件が残り、無関係AI推薦行および上記3商品の非表示を確認。実装・CI・配備・本番修復は完了。
+- 購入先クリックへの成果効果は未判定。前日11/18は修正前を含むため効果比較に使用せず、同じ主結果導線へ追加の転換変更は入れない。翌日・7日KPIで検索完了、送客併有、購入先クリックを追跡する。
