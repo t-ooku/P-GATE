@@ -169,7 +169,11 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
     const items = fields.filter((value) => {
       const item = unwrapItem(value);
       return (item.availability === 1 || item.availability === '1')
-        && !hasC1ListingOptions(item.itemName, item.itemCaption)
+        // Rakuten can place the selectable-variant warning in catchcopy while
+        // itemName/itemCaption still look like one exact SKU. Treat all three
+        // returned listing fields as one safety boundary before C-1 evidence
+        // is allowed into a comparison group.
+        && !hasC1ListingOptions(item.itemName, item.itemCaption, item.catchcopy)
         && hasUnambiguousListedJan(options.exactJan, item.itemName, item.itemCaption);
     });
     const observed_at = new Date().toISOString();

@@ -119,7 +119,8 @@ test('C-1 provider adapters: exact Rakuten evidence and explicit Yahoo stock, wi
     return Response.json({ items });
   }, 'QA', { exactJan: value });
   const hits = await run([raw, { ...raw, itemCaption: '別' }, { ...raw, availability: undefined },
-    { ...raw, itemCaption: 'JAN: ' + jan + ' タイプをお選びください' }]);
+    { ...raw, itemCaption: 'JAN: ' + jan + ' タイプをお選びください' },
+    { ...raw, catchcopy: '全3色からお選びください' }]);
   assert.equal(hits.length, 1);
   const [hit] = hits;
   assert.equal(hit.offers[0].jan, jan);
