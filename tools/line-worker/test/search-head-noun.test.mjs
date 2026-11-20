@@ -405,3 +405,15 @@ test('ワンピース本体の検索でペチコート・インナー専用品�
   assert.deepEqual(applyHeadNounGate('インナーワンピース', [innerOnly]), [innerOnly]);
   assert.deepEqual(applyHeadNounGate('透け防止 ペチコート', [petticoat]), [petticoat]);
 });
+
+test('衣服のワンピース検索ではONE PIECE作品グッズを除外し、明示した作品検索は維持する', () => {
+  const dressQuery = 'SHEINで見たワンピース';
+  const puzzle = { product_name: 'エンスカイ ジグソーパズル ワンピース ワノ国最終決戦1 300ピース' };
+  const dress = { product_name: 'SHEIN レディース 花柄 ロングワンピース 半袖' };
+  assert.deepEqual(applyHeadNounGate(dressQuery, [puzzle]), []);
+  assert.deepEqual(applyHeadNounGate(dressQuery, [puzzle, dress]), [dress]);
+  assert.deepEqual(applyHeadNounGate('ワンピース ジグソーパズル', [puzzle]), [puzzle]);
+  assert.deepEqual(applyHeadNounGate('ONE PIECE ワノ国 フィギュア', [
+    { product_name: 'ONE PIECE ワノ国 ルフィ フィギュア' }
+  ]).length, 1);
+});

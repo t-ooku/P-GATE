@@ -154,3 +154,11 @@ test('10/24: モールが名前ペンを返さない時、名入れ/通常の油
   assert.deepEqual(applyHeadNounGate('名入れ ボールペン', [acro]), [acro]);
   assert.deepEqual(applyHeadNounGate('お名前ペン ボールペン', [acro]), [acro]);
 });
+
+test('お名前ペン検索で建築用蛍光マーカーを本命にせず、布用・名前書きのマーカーは残す', () => {
+  const industrial = product('マーカー 全天候マーカー 蛍光ピンク 太字 角芯 建築 現場 筆記', 'industrial');
+  const fabric = product('布用 お名前マーカー にじみにくい 太字 細字 黒', 'fabric');
+  assert.deepEqual(applyHeadNounGate(QUERY, [industrial]), []);
+  assert.deepEqual(applyHeadNounGate(QUERY, [industrial, fabric]), [fabric]);
+  assert.deepEqual(applyHeadNounGate('建築用 蛍光マーカー', [industrial]), [industrial]);
+});

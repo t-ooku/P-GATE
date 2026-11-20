@@ -315,7 +315,11 @@ function isExplicitAccessoryMismatch(query, title) {
   // お名前ペン/布用ペンを探す検索では、名前ペン・布用と書いていないボールペン(名入れ販促品・
   // 通常の油性ボールペン)を本体候補にしない。ボールペンや名入れを探す検索は従来どおり。
   if (NAME_PEN_QUERY.test(query) && !/ボールペン|名入れ/u.test(query)) {
-    return /ボールペン/u.test(title) && !NAME_PEN_TITLE.test(title);
+    // A provider can return a generic industrial/fluorescent marker because
+    // the weak head noun is only "pen".  Keep a marker only when its title
+    // also contains evidence that it is intended for names or fabric.
+    return (/(?:ボールペン)|(?:(?:全天候|建築|現場|工業|蛍光).{0,12}(?:ペン|マーカー))|(?:(?:ペン|マーカー).{0,12}(?:全天候|建築|現場|工業|蛍光))/u.test(title))
+      && !NAME_PEN_TITLE.test(title);
   }
   // 2026-10-29 固定QA shein_one_piece(受信箱 2026-10-29-dress-innerwear-exclusion):
   // ワンピース本体を探す検索で、本命が「ペチコート キャミソールワンピース／インナーワンピース」だった。
@@ -324,7 +328,11 @@ function isExplicitAccessoryMismatch(query, title) {
   // 元順序フォールバックで本命に戻さない。キャミワンピ・スリップワンピ等の本体、「インナー付き」
   // 「ペチコート付き」の本体、インナー/ペチコートを明示した検索は従来どおり。
   if (DRESS_QUERY.test(query) && !DRESS_QUERY_INNER.test(query)) {
-    return DRESS_TITLE_INNER.test(title) && !DRESS_TITLE_BUNDLED.test(title);
+    if (DRESS_TITLE_INNER.test(title) && !DRESS_TITLE_BUNDLED.test(title)) return true;
+    // Japanese "ワンピース" is also the title of the manga/anime ONE PIECE.
+    // Reject explicit franchise goods for a dress search, but preserve them
+    // when the user explicitly asks for the work or for that kind of goods.
+    if (!DRESS_QUERY_MEDIA.test(query) && DRESS_TITLE_MEDIA.test(title)) return true;
   }
   // 2026-10-28 固定QA oil_free_air_fryer / energy_saving_kotatsu(受信箱 2026-10-28-appliance-accessory-exclusion):
   // 家電本体(ノンフライヤー/こたつ)を探す検索で、本命が「ノンフライヤーライナー/シリコンシート」
@@ -412,6 +420,8 @@ const KOTATSU_TITLE_PET_ONLY = /ペット\s*(?:用|専用|向け)|ペット\s*(?
 
 const DRESS_QUERY = /ワンピ|(?<!ア)ドレス|\bdress(?:es)?\b/u;
 const DRESS_QUERY_INNER = /ペチ|インナー|下着|ランジェリー|アンダー|透け防止|肌着|petticoat|\bslip\b|underdress|inner/u;
+const DRESS_QUERY_MEDIA = /ジグソー|パズル|漫画|マンガ|アニメ|コミック|映画|dvd|blu-?ray|フィギュア|カード|ポスター|キーホルダー|グッズ|ワノ国|麦わら|ルフィ|海賊王|one\s*piece/u;
+const DRESS_TITLE_MEDIA = /ジグソー|パズル|漫画|マンガ|アニメ|コミック|映画|dvd|blu-?ray|フィギュア|カード|ポスター|キーホルダー|ワノ国|麦わら|ルフィ|海賊王|one\s*piece/u;
 // 主用途がワンピースの下に着るインナー(ペチコート・インナーワンピ等)である商品名
 const DRESS_TITLE_INNER = /ペチコート|ペチワンピ|ペチドレス|インナー\s*(?:ワンピ|キャミソール\s*ワンピ|キャミワンピ|ドレス|専用)|アンダー\s*(?:ワンピ|ドレス)|下着|ランジェリー|肌着|petticoat|underdress|underskirt|full\s+slip/u;
 // インナー/ペチコートが付属・同梱された本体、またはインナー不要を謳う本体

@@ -128,6 +128,21 @@ test('判定: 期待一致・除外なし・必須5モールのリンクが揃�
   } }, 900);
   assert.equal(otama.pass, false);
   assert.match(otama.code, /^C1_E1_R1_H0_/u);
+  const puzzle = evaluateSearchQaResult(ladle, { ok: true, result: {
+    candidates: [{ product_name: 'エンスカイ ジグソーパズル ワンピース ワノ国最終決戦1 300ピース' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(puzzle.pass, false);
+  assert.match(puzzle.code, /^C1_E1_R1_H0_/u);
+  const namePen = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'dark_ink_name_pen');
+  const industrialMarker = evaluateSearchQaResult(namePen, { ok: true, result: {
+    candidates: [{ product_name: 'マーカー 全天候マーカー 蛍光ピンク 太字 角芯 建築 現場 筆記' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(industrialMarker.pass, false);
+  // Without qa_trace this unit fixture has no expanded head-noun query, so H
+  // can be the evaluator's safe default; R1 is the canary's decisive guard.
+  assert.match(industrialMarker.code, /^C1_E0_R1_H[02]_/u);
   const failed = evaluateSearchQaResult(tote, { ok: false, error: 'SEARCH_FAILED' }, 50);
   assert.equal(failed.pass, false);
   assert.equal(failed.code, 'C0_E0_R0_H0_L0_T50');

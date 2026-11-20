@@ -34,7 +34,7 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'standing_leather_tote', query: '自立する本革トートバッグ', expect: /トート/u, reject: /財布|リュック|合皮|フェイクレザー|カバー|持ち手|ハンドル/u },
   { id: 'smoky_quartz_ring', query: 'スモーキークォーツ リング', expect: /リング|指輪|ring/iu, reject: /ネックレス|ピアス|ブレスレット|イヤリング/u },
   { id: 'ig_white_bag', query: 'Instagramで見た白いバッグ', expect: /バッグ|bag/iu, reject: /財布|枚入|枚セット|紙袋|ポリ袋/u },
-  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|ハンガー|お玉|おたま|用\b/u },
+  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|ハンガー|お玉|おたま|ジグソー|パズル|漫画|マンガ|アニメ|コミック|フィギュア|ワノ国|麦わら|ルフィ|海賊王|one\s*piece|用\b/iu },
   { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: /リモコン|Fire TV|Alexa|交換用/u },
   // 2026-09-04 大隆さん実機報告: 「底開口 水筒」で sokomo「そこまで洗えるボトル」(楽天に在庫あり)が出ない。
   // 本番経路で毎日確かめる(期待: 上位3件に底が外せる水筒、本命がブラシ等の付属品でない)。
@@ -82,7 +82,7 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-10-04 展開規則 uv-shade-stroller-canopy の代表クエリ(機能語「紫外線が気になる」→ 売り手の語「UVカット サンシェード」)。
   { id: 'uv_shade_stroller_canopy', query: 'ベビーカーの紫外線が気になる', expect: /サンシェード|UVカット|日除け/iu, reject: /抱っこ紐|レインカバー|チャイルドシート|替えカバーのみ|交換用/u },
   // 2026-10-06 展開規則 dark-ink-name-pen の代表クエリ(機能語「すぐ薄くなって読めない」→ 売り手の語「濃く書ける」)。
-  { id: 'dark_ink_name_pen', query: 'お名前ペンで書いた文字がすぐ薄くなって読めない', expect: /お名前ペン|名前ペン|布用ペン/iu, reject: /名前シール|ネームシール|お名前スタンプ|アイロンシート|交換用/u }
+  { id: 'dark_ink_name_pen', query: 'お名前ペンで書いた文字がすぐ薄くなって読めない', expect: /お名前ペン|名前ペン|布用ペン/iu, reject: /名前シール|ネームシール|お名前スタンプ|アイロンシート|建築|現場|全天候|蛍光ペン|蛍光.*マーカー|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
