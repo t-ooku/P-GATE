@@ -213,7 +213,12 @@ function providerUsageTotals(payload, initialStart, monthStart) {
 async function syncProviderUsage(env, policy, now, fetchImpl) {
   const monthStart = monthStartDate(now);
   const initialStart = clean(policy.initial_started_at, 10) || '2026-08-13';
-  const startDate = initialStart < monthStart ? initialStart : monthStart;
+  // 2026-11-20: Runway の使用量 API は約 90 日より前を含む期間を受け付けない。8/13 起点のままだと 11/11 から
+  // 毎回失敗し（usage_sync_failed）、リール生成が止まっていた。開始日は「89 日前」より古くしない。
+  // 89 日より前の使用量は月の上限判定に不要（当月分は monthStart から取る）。初期テスト枠はローカルの確定額でも守る。
+  const oldestAllowed = new Date(now.getTime() - 89 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const wantedStart = initialStart < monthStart ? initialStart : monthStart;
+  const startDate = wantedStart < oldestAllowed ? oldestAllowed : wantedStart;
   const [organization, usage] = await Promise.all([
     getRunwayOrganization(env, fetchImpl),
     getRunwayOrganizationUsage(env, { startDate, beforeDate: tomorrowDate(now) }, fetchImpl)

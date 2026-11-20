@@ -593,3 +593,28 @@ test('Runway使用量応答の形が不明な場合は生成をfail-closedする
   assert.equal(creates, 0);
   assert.equal(database.prepare('SELECT status FROM runway_generation_jobs').get().status, 'APPROVED');
 });
+
+// 2026-11-20: 使用量 API の開始日は 89 日前より古くしない（8/13 起点のままだと 11/11 から usage_sync_failed）
+test('使用量の取得は開始日を 89 日前までに抑え、11 月でも usage_sync_failed にならない', async () => {
+  const database = new DatabaseSync(':memory:');
+  database.exec(queueMigration);
+  database.exec(runwayMigration);
+  const env = testEnvironment(database, []);
+  const bodies = [];
+  const providerFetch = async (url, options = {}) => {
+    if (url.endsWith('/v1/organization')) return Response.json({ creditBalance: 2024, tier: {}, usage: {} });
+    if (url.endsWith('/v1/organization/usage')) {
+      const body = JSON.parse(options.body || '{}');
+      bodies.push(body);
+      const days = (Date.parse(body.beforeDate) - Date.parse(body.startDate)) / 86400000;
+      if (days > 90) return Response.json({ error: 'range too large' }, { status: 400 });
+      return Response.json({ models: [], results: [] });
+    }
+    return Response.json({}, { status: 404 });
+  };
+  const result = await runRunwayGenerationCycle(env, new Date('2026-11-20T09:00:00.000Z'), providerFetch);
+  assert.notEqual(result.action, 'usage_sync_failed');
+  assert.equal(bodies.length, 1);
+  assert.equal(bodies[0].startDate, '2026-08-23');
+  assert.equal(bodies[0].beforeDate, '2026-11-21');
+});
