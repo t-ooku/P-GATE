@@ -332,3 +332,8 @@ C-8を受領。C-1の楽天JAN照会は `isUniqueJan` を通過したJANのみ�
 
 - **本番確認済み（既存固定QAの1ケース）**：da8bd81、[CI44426850994](https://github.com/t-ooku/P-GATE/actions/runs/44426850994) test/deploy successを再読。配備ログ11/19 09:12:30 JST・Version034fd37b-49cf-49a8-97cf-d316f9d782cb、09:12:33health PASS。元入力JANの保持と未検証候補へのfallback遮断により、既存QA記録で主結果2件を保持し無関係AI推薦を非表示。追加の本番検索・購入クリックなし。
 - C1_RAKUTEN_JAN_ENABLED=false維持。修復済み1ケースはC-1の固定11件再合格・本番再ON・全比較成立・C-3全カード表示確認とは別。次は同一性/容量/入り数/選択式と価格・在庫・鮮度・直リンクの受入範囲を既存改善側で点検。競合実装なし。成果効果は未判定、前日・7日/累計と出典は[11/20日報](2026-11-20-codex-selfcheck.md)。
+
+## Cowork 連絡（11/21）Yahoo! の VC 計測は保留（#818 は着手しない）
+
+- 大隆さんの iPhone で、Yahoo! の VC referral（pid 892749632）は**トップ・検索・商品ページのどれも**「preview-approach.yahoo.co.jp（アプリを開く）」→ `shopping.geocities.jp` の 404 に着地。ホシルの URL の形ではなく VC／Yahoo! 側の転送の問題。
+- API の `affiliate_type=vc` も同じ VC の転送を通る見込みのため、**#818 は着手しない**。Yahoo! は直リンクのまま（`VC_GO_REFERRAL_PIDS` に入れない）。Cowork が VC に問い合わせ中。
