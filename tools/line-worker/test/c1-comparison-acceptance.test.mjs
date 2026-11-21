@@ -4,6 +4,7 @@ import { buildPriceComparison, realPriceRows } from '../src/ai-price-comparison.
 import {
   COSMETICS_COHORT_ID, evaluateCosmeticsCoverage, scoreVerifiedC1Offers
 } from '../src/cheapest-coverage-evaluation.mjs';
+import { verifiedSameJanComparisonOffers } from '../src/rakuten-jan-bridge.mjs';
 
 const measured_at = '2026-11-15T10:30:00Z';
 const now = Date.parse(measured_at);
@@ -35,6 +36,19 @@ test('C-1 verified Rakuten and Yahoo! SKU compares by item price without shippin
   assert.equal(buildPriceComparison({ real }).cheapest_claim.marketplace, 'RAKUTEN_JP');
   assert.equal(scoreVerifiedC1Offers(target, [rakuten, yahoo], now).rows[0].marketplace, 'RAKUTEN_JP',
     'shipping-inclusive total must not change the winner');
+});
+
+test('auto-open payload is allowed only for the exact verified two-mall JAN group', () => {
+  const rakutenListing = { ...rakuten, title: 'Fixture 47 shade 04 4g' };
+  const yahooListing = { ...yahoo, title: 'Fixture 47 shade 04 4g' };
+  const candidate = { record_key: `JAN:${target.jan}`, offers: [rakutenListing, yahooListing] };
+  assert.deepEqual(verifiedSameJanComparisonOffers(candidate, now).map((offer) => offer.marketplace), [
+    'RAKUTEN_JP', 'YAHOO_JP'
+  ]);
+  assert.deepEqual(verifiedSameJanComparisonOffers({ ...candidate, offers: [rakutenListing] }, now), []);
+  assert.deepEqual(verifiedSameJanComparisonOffers({ ...candidate, record_key: 'OTHER' }, now), []);
+  assert.deepEqual(verifiedSameJanComparisonOffers({ ...candidate, offers: [rakutenListing, { ...yahooListing, attributes: { ...target.attributes, pack_count: 2 } }] }, now), []);
+  assert.deepEqual(verifiedSameJanComparisonOffers({ ...candidate, offers: [rakutenListing, { ...yahooListing, observed_at: '2026-11-14T10:29:59Z' }] }, now), []);
 });
 
 test('C-1 never relaxes JAN, model, color, capacity, or pack size', () => {

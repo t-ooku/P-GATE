@@ -80,6 +80,19 @@ test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定
   assert.match(css, /\.price-compare-search-link\{grid-column:1\/-1[^}]*white-space:normal/);
 });
 
+test('検証済み2モールだけを追加APIなしで初期展開し、自動と手動を区別する', async () => {
+  const script = await read('ai-price-comparison-ui.mjs');
+  const analytics = await read('growth-analytics.mjs');
+  assert.match(script, /auto\?\.mode === 'AUTO_VERIFIED_REAL'/);
+  assert.match(script, /renderComparison\(body, \{[\s\S]*real: auto\.real/);
+  const autoBranch = script.slice(script.indexOf("auto?.mode === 'AUTO_VERIFIED_REAL'"));
+  assert.doesNotMatch(autoBranch.slice(0, autoBranch.indexOf('return;')), /fetchComparison\(/);
+  assert.match(script, /hoshilu:price-comparison-auto-opened/);
+  assert.match(script, /hoshilu:price-comparison-manual-opened/);
+  assert.match(analytics, /price-comparison-auto-opened'[\s\S]{0,100}content: 'auto'/);
+  assert.match(analytics, /price-comparison-manual-opened'[\s\S]{0,100}content: 'manual'/);
+});
+
 // 2026-11-15 大隆さん指示: 写真で探す入口を検索窓のマイクの隣に。写真で探した結果は、写真を上に残して下からのシートで出す
 test('写真で探す: 検索窓のカメラ入口と、写真を残す結果シートが読み込まれる（結果の描画後にだけ開く）', async () => {
   const { readFile } = await import('node:fs/promises');

@@ -427,11 +427,15 @@ document.addEventListener('hoshilu:wish-saved', event => {
   // cannot forge that business KPI.
   send('continuous_search_saved');
 });
+document.addEventListener('hoshilu:price-comparison-auto-opened', () => send('price_comparison_opened', { content: 'auto' }));
+document.addEventListener('hoshilu:price-comparison-manual-opened', () => send('price_comparison_opened', { content: 'manual' }));
 
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');
   if (!target) return;
-  if (target.classList.contains('price-compare-button') || target.classList.contains('ai-price-compare-button')) send('price_comparison_opened');
+  if (target.classList.contains('price-compare-button') || target.classList.contains('ai-price-compare-button')) {
+    send('price_comparison_opened', { content: target.dataset.comparisonMode === 'auto' ? 'auto' : 'manual' });
+  }
   if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')
     || target.classList.contains('share-gmail-button') || target.classList.contains('social-target')
     || target.dataset.channel === 'line') send('share_started');

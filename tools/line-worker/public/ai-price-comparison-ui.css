@@ -1,5 +1,8 @@
 .ai-price-compare-button{margin-top:10px;padding:10px 14px;border:2px solid #5b3df5;border-radius:11px;background:#fff;color:#5140ba;font-size:12px;font-weight:800;cursor:pointer;width:100%}
 .ai-price-compare-button:hover,.ai-price-compare-button:focus-visible{background:#f4f0ff;outline:3px solid #23b8ff;outline-offset:2px}
+.price-compare-inline{display:grid;gap:8px;margin-top:10px;padding:12px;border:2px solid #86efac;border-radius:14px;background:#f8fff9}
+.price-compare-inline-title{color:#166534;font-size:13px}
+.price-compare-inline-toggle{padding:9px 12px;border:1px solid #16a34a;border-radius:10px;background:#fff;color:#166534;font-size:12px;font-weight:800;cursor:pointer}
 .price-compare-dialog{width:min(94vw,460px);max-width:94vw;max-height:86dvh;overflow:hidden;overscroll-behavior:contain;padding:0;border:0;border-radius:20px;background:transparent}
 .price-compare-dialog::backdrop{background:#17172ba8;backdrop-filter:blur(5px)}
 .price-compare-dialog-card{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;width:100%;max-width:100%;padding:20px;max-height:86dvh;overflow:hidden;border:1px solid #e9e5f5;border-radius:20px;background:#fff}

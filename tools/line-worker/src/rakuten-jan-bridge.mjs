@@ -59,6 +59,26 @@ function checkedOffer(offer, mall, at) {
     && isMarketplaceProductUrl(mall, offer.product_url);
 }
 
+// The browser must never infer that two listings are the same product from
+// public titles alone.  Reuse the exact C-1 proof while the unsanitized JAN,
+// model and variant evidence is still available on the Worker.  The returned
+// offers are safe to expose only through the normal signed /go links.
+export function verifiedSameJanComparisonOffers(candidate, at = Date.now()) {
+  const offers = Array.isArray(candidate?.offers) ? candidate.offers : [];
+  const anchor = offers.find((offer) => checkedOffer(offer, String(offer?.marketplace || ''), at)
+    && candidate?.record_key === `JAN:${offer.jan}`);
+  if (!anchor) return [];
+  const cheapestByMall = new Map();
+  for (const offer of offers) {
+    const mall = String(offer?.marketplace || '');
+    if (!checkedOffer(offer, mall, at) || !sameC1Sku(anchor, offer)) continue;
+    const current = cheapestByMall.get(mall);
+    if (!current || offer.price < current.price) cheapestByMall.set(mall, offer);
+  }
+  if (cheapestByMall.size < 2) return [];
+  return [...cheapestByMall.values()].sort((a, b) => a.price - b.price);
+}
+
 function rakutenListingId(url) {
   if (!isMarketplaceProductUrl('RAKUTEN_JP', url)) return '';
   const u = new URL(rakutenAffiliateProductTarget(url) || url);

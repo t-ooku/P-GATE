@@ -19,7 +19,7 @@ const EXPECTED = Object.freeze({
   'tab-nav.css': '5',
   'tab-nav.mjs': '16',
   'site-i18n.js': '9',
-  'growth-analytics.mjs': '23',
+  'growth-analytics.mjs': '24',
   'ai-search-ui.mjs': '16',
   'search-suggest.mjs': '3',
   'buzz-home.mjs': '16',

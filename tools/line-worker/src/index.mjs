@@ -41,7 +41,7 @@ import {
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
-import { bridgeRakutenJan } from './rakuten-jan-bridge.mjs';
+import { bridgeRakutenJan, verifiedSameJanComparisonOffers } from './rakuten-jan-bridge.mjs';
 import {
   fetchYahooHighRatingRanking, searchYahooShopping, withYahooRequestGate, yahooShoppingApiConfigured
 } from './yahoo-shopping-api.mjs';
@@ -1893,8 +1893,13 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     .find((category) => category && category !== 'color') || 'unclassified';
   // 送客料のジャンル（/for-sellers の価格表と同じ11区分）。トークンに入れて /go で単価を決める。
   const referralCategory = referralCategoryFor(demandCategory, query);
+  let autoComparisonAssigned = false;
   for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
+    const verifiedAutoOffers = autoComparisonAssigned
+      ? [] : verifiedSameJanComparisonOffers(candidate);
+    const verifiedAutoKeys = new Set(verifiedAutoOffers.map((offer) =>
+      `${offer.marketplace}\n${offer.product_url}`));
     const productOffers = productMarketplaceOffers(
       applySellerPriority(candidate, candidate.offers, priorityContext)
     );
@@ -1916,6 +1921,12 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
       rankingOffers?.push({ ...offer, tracking_url: publicOffer.tracking_url });
+    }
+    const autoRows = productOffers.flatMap((offer, index) => verifiedAutoKeys.has(`${offer.marketplace}\n${offer.product_url}`)
+      ? [{ ...copy.offers[index], tracking_url: copy.offers[index]?.tracking_url || '' }] : []);
+    if (new Set(autoRows.map((offer) => offer.marketplace)).size >= 2) {
+      copy.auto_price_comparison = { mode: 'AUTO_VERIFIED_REAL', real: autoRows.sort((a, b) => a.price - b.price) };
+      autoComparisonAssigned = true;
     }
     if (rankingOffers) originHint.rankingEvidence.set(copy, rankingOffers);
     if (!copy.offers.length) {

@@ -11,10 +11,13 @@
 // 落ちる。Amazonは適格販売3件の期限(2027-02-09)を抱えていて、最安比較は
 // 購入意図が最も高い場面なので、ここから外れないことを優先する。
 const DEFAULT_DIRECT_MARKETPLACES = ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'QOO10_JP', 'ZOZOTOWN_JP'];
+const autoOpenedComparisonKeys = new Set();
+document.addEventListener('hoshilu:search-execution-started', () => autoOpenedComparisonKeys.clear());
 
 const copy = {
   JA: {
     button: '価格比較', title: '価格比較（AI最安比較）', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
+    autoTitle: '同じ商品の価格比較', autoNote: '確認から24時間以内・在庫ありの商品価格です。送料は購入先で確認してください。', collapse: '比較を閉じる', expand: '比較を開く',
     realLabel: '商品価格（送料別）', referenceLabel: '在庫は購入先で確認', estimateLabel: 'AI推定', unavailableLabel: '価格未取得', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
   },
   EN: {
@@ -192,6 +195,7 @@ function attach(card, candidate) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'ai-price-compare-button';
+  button.dataset.comparisonMode = 'manual';
   button.textContent = (copy[currentLanguage()] || copy.JA).button;
   button.addEventListener('click', (event) => {
     // This button can be mounted inside the card's purchase link.
@@ -199,6 +203,40 @@ function attach(card, candidate) {
     // Keep bubbling: delegated growth analytics records the comparison open.
     openComparisonDialog(candidate);
   });
+  const auto = candidate?.auto_price_comparison;
+  if (auto?.mode === 'AUTO_VERIFIED_REAL' && Array.isArray(auto.real) && auto.real.length >= 2) {
+    const language = currentLanguage();
+    const t = copy[language] || copy.JA;
+    const panel = document.createElement('section');
+    panel.className = 'price-compare-inline';
+    panel.append(textEl('strong', 'price-compare-inline-title', t.autoTitle || t.title));
+    const body = document.createElement('div');
+    body.className = 'price-compare-body';
+    renderComparison(body, {
+      real: auto.real, reference: [], ai_estimated: [], unavailable: [],
+      confirmed_price_note: t.autoNote || copy.JA.autoNote
+    }, t);
+    const toggle = document.createElement('button');
+    toggle.type = 'button'; toggle.className = 'price-compare-inline-toggle';
+    toggle.textContent = t.collapse || copy.JA.collapse;
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      body.hidden = expanded;
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      toggle.textContent = expanded ? (t.expand || copy.JA.expand) : (t.collapse || copy.JA.collapse);
+      if (!expanded) document.dispatchEvent(new CustomEvent('hoshilu:price-comparison-manual-opened'));
+    });
+    panel.append(body, toggle);
+    card.append(panel);
+    const autoKey = auto.real.map((row) => row.tracking_url || row.marketplace).sort().join('|');
+    if (!autoOpenedComparisonKeys.has(autoKey)) {
+      autoOpenedComparisonKeys.add(autoKey);
+      document.dispatchEvent(new CustomEvent('hoshilu:price-comparison-auto-opened'));
+    }
+    return;
+  }
   card.append(button);
 }
 
