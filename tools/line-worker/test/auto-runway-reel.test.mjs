@@ -72,11 +72,11 @@ test('字幕(.ass)は ブランド帯・AI表記・固定セリフ、カットB�
   const a = buildAssCutA(themes.themes.want_at_price, 8);
   assert.match(a, /Brand,,0,0,0,,HOSHILU {2}\| {2}hoshilu\.app/u);
   assert.match(a, /Disclosure,,0,0,0,,AI生成・AI加工映像/u);
-  assert.match(a, /0:00:00\.00,0:00:02\.90,Subtitle,,0,0,0,,これ、もう少し安かったら.N買うのに。/u);
+  assert.match(a, /0:00:00\.00,0:00:02\.90,Subtitle,,0,0,0,,(?:\{[^}]*\})?これ、もう少し安かったら.N買うのに。/u);
   assert.match(a, /PlayResX: 720\nPlayResY: 1280/u);
   const b = buildAssCutB(themes, 6);
   assert.match(b, /実際の画面（AI生成ではありません）/u);
-  assert.match(b, /Cta,,0,0,0,,「この価格になったら教えて」を登録。.Nあとは待つだけ。.N欲しい商品に、希望価格を入れてみて。/u);
+  assert.match(b, /Cta,,0,0,0,,(?:\{[^}]*\})?「この価格になったら教えて」を登録。.Nあとは待つだけ。.N欲しい商品に、希望価格を入れてみて。/u);
   assert.match(b, /Url,,0,0,0,,hoshilu\.app/u);
 });
 
@@ -335,4 +335,21 @@ test('リールの画面: HOSHILU の料金と記録の価格はぼかさず、�
   assert.equal(lib.voiceoverSecondScreen(themes.themes.seller_demand_visible, '/product?key=a'), '');
   assert.equal(lib.voiceoverScreenSplit(shop, plan), 3.8, '最初の字幕（お店の入口を…）まで出品者向けページ');
   assert.ok(plan.screen - lib.voiceoverScreenSplit(shop, plan) >= 1.5);
+});
+
+// 2026-11-21 大隆さん「明るい BGM や文字表示。若くて明るい感じ」
+test('リール: 字幕と CTA は弾んで出る・明るい色の帯・BGM はその場で作って声の下で小さく流す', async () => {
+  const lib = await import('../scripts/auto-runway-reel-lib.mjs');
+  const a = lib.buildAssCutA(themes.themes.want_at_price, 8);
+  assert.match(a, /Subtitle,,0,0,0,,\{.fad\(120,150\).fscx80.fscy80.t\(0,140,.fscx108.fscy108\).t\(140,240,.fscx100.fscy100\)\}これ/u, '字幕がぽんっと出る');
+  assert.match(a, /Style: Subtitle,[^\n]*,&H00FFFFFF,&H00FFFFFF,&H009A4BFF,/u, '字幕の帯はピンク（帯の色は OutlineColour）');
+  assert.doesNotMatch(a, /Style: (Subtitle|Cta|Brand|Url),[^\n]*,&H00FFFFFF,&H00FFFFFF,&H00000000,/u, '黒い帯は使わない');
+  assert.match(lib.BGM_PY, /chords = \[/u);
+  assert.doesNotMatch(lib.BGM_PY, /https?:|\.mp3|\.wav'/u, '外部の曲を読み込まない');
+  const mix = lib.bgmMixFilter('avoice', 4, 'a');
+  assert.match(mix, /\[4:a\][^;]*volume=0\.22\[bgraw\]/u);
+  assert.match(mix, /sidechaincompress/u, '声がある所は BGM を下げる');
+  assert.match(mix, /amix=inputs=2:duration=first:normalize=0\[a\]$/u);
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.equal((script.match(/= makeBgm\(dir, /gu) || []).length, 2, '両方の構成で BGM を入れる');
 });

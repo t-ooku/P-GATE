@@ -23,7 +23,7 @@ import {
   REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
   evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, pendingReviewJobsForSlot, slotFromApprovedJobId,
-  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan
+  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan, BGM_PY, bgmMixFilter
 } from './auto-runway-reel-lib.mjs';
 import { recordReelScreen } from './auto-reel-screen.mjs';
 
@@ -201,6 +201,14 @@ async function recordScreen(dir, plan) {
   }
 }
 
+// 2026-11-21: 明るい BGM（その場で作る。著作権のある曲は使わない）
+function makeBgm(dir, seconds) {
+  const file = path.join(dir, 'bgm.wav');
+  const result = spawnSync('python3', ['-c', BGM_PY, file, String(Math.max(1, Number(seconds) || 1) + 0.5)], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`BGM_FAILED: ${String(result.stderr || '').slice(0, 300)}`);
+  return file;
+}
+
 // 画面（声つき）→ 女優（最後の字幕）→ 最後の絵で CTA。生成の声はそのまま（口と声は女優の部分で合う）。
 function composeVoiceover(raw, screen, dir, plan) {
   const assS = path.join(dir, 'vo-screen.ass');
@@ -219,11 +227,14 @@ function composeVoiceover(raw, screen, dir, plan) {
     `[0:a]atrim=start=${plan.split}:end=${plan.duration},asetpts=PTS-STARTPTS,${fmt},afade=t=out:st=${Math.max(0, plan.actress - 0.3).toFixed(2)}:d=0.3[a2]`,
     `[3:a]atrim=duration=${plan.hold},asetpts=PTS-STARTPTS,${fmt}[a3]`,
     '[vs][ve]concat=n=2:v=1:a=0[v]',
-    '[a0][a1][a2][a3]concat=n=4:v=0:a=1[a]'
+    '[a0][a1][a2][a3]concat=n=4:v=0:a=1[avoice]',
+    bgmMixFilter('avoice', 4, 'a')
   ].join(';');
+  const bgm = makeBgm(dir, plan.total);
   run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-i', screen.file,
     '-f', 'lavfi', '-t', String(plan.intro), '-i', 'anullsrc=r=44100:cl=stereo',
     '-f', 'lavfi', '-t', String(plan.hold), '-i', 'anullsrc=r=44100:cl=stereo',
+    '-i', bgm,
     '-filter_complex', filter, '-map', '[v]', '-map', '[a]',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-profile:v', 'high', '-level:v', '4.0', '-pix_fmt', 'yuv420p', '-r', '24',
     '-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', out]);
@@ -246,9 +257,12 @@ function compose(raw, ui, dir, durationA) {
     `[1:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,zoompan=z='min(zoom+0.0006,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${framesB}:s=720x1280:fps=24,trim=duration=${CUT_B_SECONDS},setpts=PTS-STARTPTS,format=yuv420p,ass='${esc(assB)}'[vb]`,
     `[0:a]atrim=duration=${durationA},asetpts=PTS-STARTPTS,aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,afade=t=out:st=${Math.max(0, durationA - 0.4)}:d=0.4[aa]`,
     `[2:a]atrim=duration=${CUT_B_SECONDS},asetpts=PTS-STARTPTS[ab]`,
-    '[va][aa][vb][ab]concat=n=2:v=1:a=1[v][a]'
+    '[va][aa][vb][ab]concat=n=2:v=1:a=1[v][avoice]',
+    bgmMixFilter('avoice', 3, 'a')
   ].join(';');
+  const bgm = makeBgm(dir, durationA + CUT_B_SECONDS);
   run('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-i', ui, '-f', 'lavfi', '-t', String(CUT_B_SECONDS), '-i', 'anullsrc=r=44100:cl=stereo',
+    '-i', bgm,
     '-filter_complex', filter, '-map', '[v]', '-map', '[a]',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-profile:v', 'high', '-level:v', '4.0', '-pix_fmt', 'yuv420p', '-r', '24',
     '-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', out]);

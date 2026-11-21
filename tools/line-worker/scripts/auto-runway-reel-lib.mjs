@@ -195,6 +195,14 @@ function assTime(seconds) {
 }
 
 const ASS_NL = String.fromCharCode(92) + 'N'; // ass の改行。パッチ搬送でバックスラッシュ2連を避ける
+// 2026-11-21 大隆さん「明るい BGM や文字表示。若くて明るい感じ」: 字幕・CTA はぽんっと弾んで出る（拡大 80%→108%→100%・フェード）。
+// 色は明るいピンクの帯に白文字（字幕）、黄色の帯に濃い文字（CTA）、紫のブランド帯、コーラルの URL。
+// BorderStyle 3（帯）の帯の色は OutlineColour で決まる（BackColour ではない）。
+const ASS_BS = String.fromCharCode(92);
+export function assPop(text) {
+  const b = ASS_BS;
+  return `{${b}fad(120,150)${b}fscx80${b}fscy80${b}t(0,140,${b}fscx108${b}fscy108)${b}t(140,240,${b}fscx100${b}fscy100)}${text}`;
+}
 const ASS_HEADER = `[Script Info]
 ScriptType: v4.00+
 PlayResX: 720
@@ -204,11 +212,11 @@ WrapStyle: 2
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Brand,Noto Sans CJK JP,31,&H00FFFFFF,&H00FFFFFF,&H00000000,&H604C1D95,-1,0,0,0,100,100,0,0,3,17,0,8,28,28,42,1
+Style: Brand,Noto Sans CJK JP,31,&H00FFFFFF,&H00FFFFFF,&H00F23F7B,&H604C1D95,-1,0,0,0,100,100,0,0,3,17,0,8,28,28,42,1
 Style: Disclosure,Noto Sans CJK JP,19,&H00FFFFFF,&H00FFFFFF,&H00000000,&H70351A5F,0,0,0,0,100,100,0,0,3,11,0,8,28,28,101,1
-Style: Subtitle,Noto Sans CJK JP,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&H780F0920,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,174,1
-Style: Cta,Noto Sans CJK JP,36,&H00FFFFFF,&H00FFFFFF,&H00000000,&H88B5367F,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,230,1
-Style: Url,Noto Sans CJK JP,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H90FF5773,-1,0,0,0,100,100,0,0,3,14,0,2,42,42,118,1
+Style: Subtitle,Noto Sans CJK JP,48,&H00FFFFFF,&H00FFFFFF,&H009A4BFF,&H109A4BFF,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,174,1
+Style: Cta,Noto Sans CJK JP,38,&H00402A00,&H00402A00,&H0000D8FF,&H0000D8FF,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,230,1
+Style: Url,Noto Sans CJK JP,40,&H00FFFFFF,&H00FFFFFF,&H007357FF,&H90FF5773,-1,0,0,0,100,100,0,0,3,14,0,2,42,42,118,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -221,7 +229,7 @@ export function buildAssCutA(theme, duration) {
     `Dialogue: 0,${assTime(0)},${assTime(duration)},Disclosure,,0,0,0,,AI生成・AI加工映像`
   ];
   for (const sub of theme.subtitles || []) {
-    lines.push(`Dialogue: 0,${assTime(sub.start)},${assTime(Math.min(sub.end, duration))},Subtitle,,0,0,0,,${assText(sub.text)}`);
+    lines.push(`Dialogue: 0,${assTime(sub.start)},${assTime(Math.min(sub.end, duration))},Subtitle,,0,0,0,,${assPop(assText(sub.text))}`);
   }
   return `${ASS_HEADER}${lines.join('\n')}\n`;
 }
@@ -231,7 +239,7 @@ export function buildAssCutB(themes, duration) {
   const lines = [
     `Dialogue: 0,${assTime(0)},${assTime(duration)},Brand,,0,0,0,,HOSHILU  |  hoshilu.app`,
     `Dialogue: 0,${assTime(0)},${assTime(duration)},Disclosure,,0,0,0,,実際の画面（AI生成ではありません）`,
-    `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Cta,,0,0,0,,${assText(themes.ui_caption)}${ASS_NL}${themes.cta}`,
+    `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Cta,,0,0,0,,${assPop(`${assText(themes.ui_caption)}${ASS_NL}${themes.cta}`)}`,
     `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Url,,0,0,0,,hoshilu.app`
   ];
   return `${ASS_HEADER}${lines.join('\n')}\n`;
@@ -259,7 +267,7 @@ export function buildAssVoiceoverScreen(theme, plan) {
   ];
   for (const sub of theme.subtitles || []) {
     if (sub.start >= plan.split) continue;
-    lines.push(`Dialogue: 0,${assTime(plan.intro + sub.start)},${assTime(plan.intro + Math.min(sub.end, plan.split))},Subtitle,,0,0,0,,${assText(sub.text)}`);
+    lines.push(`Dialogue: 0,${assTime(plan.intro + sub.start)},${assTime(plan.intro + Math.min(sub.end, plan.split))},Subtitle,,0,0,0,,${assPop(assText(sub.text))}`);
   }
   return `${ASS_HEADER}${lines.join('\n')}\n`;
 }
@@ -273,10 +281,10 @@ export function buildAssVoiceoverActress(theme, themes, plan) {
   ];
   for (const sub of theme.subtitles || []) {
     if (sub.start < plan.split) continue;
-    lines.push(`Dialogue: 0,${assTime(sub.start - plan.split)},${assTime(Math.min(sub.end, plan.duration) - plan.split)},Subtitle,,0,0,0,,${assText(sub.text)}`);
+    lines.push(`Dialogue: 0,${assTime(sub.start - plan.split)},${assTime(Math.min(sub.end, plan.duration) - plan.split)},Subtitle,,0,0,0,,${assPop(assText(sub.text))}`);
   }
   // セラー向けの型は theme.ui_caption（「ショップ・セラーの方は…」）。ユーザー向けは共通の案内
-  lines.push(`Dialogue: 0,${assTime(plan.actress)},${assTime(end)},Cta,,0,0,0,,${assText(theme.ui_caption || themes.ui_caption)}`);
+  lines.push(`Dialogue: 0,${assTime(plan.actress)},${assTime(end)},Cta,,0,0,0,,${assPop(assText(theme.ui_caption || themes.ui_caption))}`);
   lines.push(`Dialogue: 0,${assTime(plan.actress)},${assTime(end)},Url,,0,0,0,,hoshilu.app`);
   return `${ASS_HEADER}${lines.join('\n')}\n`;
 }
@@ -419,4 +427,45 @@ export function buildRejectSql({ jobId, postId, reason, now }) {
 export function buildReplaceDailyReelSql({ postIds, replacedBy, now }) {
   const ts = now.toISOString();
   return postIds.map((postId) => `UPDATE social_post_queue SET status='CANCELLED',last_error=${sqlText(`replaced_by:${replacedBy}`)},updated_at=${sqlText(ts)} WHERE post_id=${sqlText(postId)} AND platform='INSTAGRAM' AND campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND external_post_id='' AND platform_job_id='';`).join('\n');
+}
+
+// 2026-11-21 大隆さん「明るい BGM」: 著作権のある曲は使わず、その場で作る明るいループ（120 BPM、C→G→Am→F の和音を弾く音＋
+// ベース＋裏拍の小さなハイハット）。44.1kHz ステレオ WAV。声の下で小さく流し、声がある所では自動で下げる（合成側）。
+export const BGM_PY = `
+import sys, wave
+import numpy as np
+out, seconds = sys.argv[1], float(sys.argv[2])
+sr = 44100
+n = int(sr * seconds)
+t = np.arange(n) / sr
+beat = 0.5
+chords = [(261.63, 329.63, 392.00), (196.00, 246.94, 293.66), (220.00, 261.63, 329.63), (174.61, 220.00, 261.63)]
+idx = (np.floor(t / (beat * 4)).astype(int)) % 4
+y = np.zeros(n)
+step = beat / 2
+env = np.exp(-7.0 * np.mod(t, step))
+for k in range(3):
+    f = np.array([chords[i][k] for i in idx])
+    y += 0.16 * env * (np.sin(2 * np.pi * f * t) + 0.3 * np.sin(4 * np.pi * f * t))
+root = np.array([chords[i][0] / 2 for i in idx])
+y += 0.22 * np.exp(-6.0 * np.mod(t, beat)) * np.sin(2 * np.pi * root * t)
+rng = np.random.default_rng(7)
+hat = rng.uniform(-1, 1, n) * np.exp(-60.0 * np.mod(t + beat / 2, beat))
+y += 0.05 * hat
+fade = np.minimum(1.0, np.minimum(t / 0.4, (seconds - t) / 0.8))
+y = y * np.clip(fade, 0, 1)
+y = y / max(1e-6, np.max(np.abs(y))) * 0.8
+pcm = (np.stack([y, y], axis=1) * 32767).astype('<i2')
+with wave.open(out, 'wb') as w:
+    w.setnchannels(2); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
+`;
+
+// 声（[voice]）の下に BGM（入力番号 bgmIndex）を重ねる filter。声がある所は sidechaincompress で BGM を下げる。
+export function bgmMixFilter(voiceLabel, bgmIndex, outLabel, { level = 0.22 } = {}) {
+  return [
+    `[${voiceLabel}]asplit=2[vmix][vkey]`,
+    `[${bgmIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=${level}[bgraw]`,
+    '[bgraw][vkey]sidechaincompress=threshold=0.02:ratio=6:attack=15:release=350[bgduck]',
+    `[vmix][bgduck]amix=inputs=2:duration=first:normalize=0[${outLabel}]`
+  ].join(';');
 }
