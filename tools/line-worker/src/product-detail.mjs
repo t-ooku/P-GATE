@@ -12,6 +12,7 @@ import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-market
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 import { recordPriceObservations, priceHistorySummary } from './price-observations.mjs';
 import { isInvalidJanProductKey, isUniqueJan } from './jan-validity.mjs';
+import { latestObservation } from './line-price-watch.mjs';
 
 const MALL_LABEL = { RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
 const KEY_PATTERN = /^(?:RAKUTEN:[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}|YAHOO:[A-Za-z0-9][A-Za-z0-9_.:-]{0,120}|JAN:\d{8}(?:\d{5})?)$/u;
@@ -82,7 +83,11 @@ function presentOffer(candidate, offer, trackingUrl) {
 }
 
 export async function buildProductDetail(env, key, { fetcher = fetch, now = new Date(), sign = null, origin = 'https://hoshilu.app', record = recordPriceObservations } = {}) {
-  const current = await fetchCurrentProduct(env, key, fetcher);
+  // 2026-11-22 大隆さん「ok」: グラフ直下の LINE 見張りボタンは、HOSHILU の記録が直近にある商品だけ（この表示で記録する前に確かめる）。
+  const [current, watchable] = await Promise.all([
+    fetchCurrentProduct(env, key, fetcher),
+    hasFreshObservation(env, key, now)
+  ]);
   const candidate = current.candidates[0] || null;
   if (candidate) await record(env, current.candidates, { source: 'product_detail', now }).catch(() => {});
   const offers = [];
@@ -102,13 +107,23 @@ export async function buildProductDetail(env, key, { fetcher = fetch, now = new 
       marketplace_label: MALL_LABEL[current.provider] || current.provider
     } : null,
     current: { status: current.status, fetched_at: now.toISOString(), offers },
-    history: history || { record_key: key, measurable: false, reason: 'HISTORY_UNAVAILABLE' }
+    history: history || { record_key: key, measurable: false, reason: 'HISTORY_UNAVAILABLE' },
+    line_watch: watchable && Boolean(history?.measurable)
   };
 }
 
+// LINE の値下がり見張り（/line/watch）が受け付ける商品か。記録が無い・古い（3 日より前）商品は false（AI の推定価格で見張らない）。
+export async function hasFreshObservation(env, key, now = new Date()) {
+  if (!env?.PRODUCT_DB || !key) return false;
+  try { return Boolean(await latestObservation(env.PRODUCT_DB, key, now)); } catch { return false; }
+}
+
+export const LINE_WATCH_LABEL = 'この値段より下がったらLINEで知らせる';
+export const productLineWatchHref = (key) => `/line/watch?key=${encodeURIComponent(key)}&from=product`;
+
 const PAGE_HEAD_START = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">`;
-const PAGE_HEAD_END = `<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/product-detail.css?v=4"><link rel="icon" href="/icons/icon.svg">`;
-const PAGE_SCRIPTS = `<script type="module" src="/growth-analytics.mjs?v=22"></script><script type="module" src="/product-detail.mjs?v=5"></script>`;
+const PAGE_HEAD_END = `<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/product-detail.css?v=5"><link rel="icon" href="/icons/icon.svg">`;
+const PAGE_SCRIPTS = `<script type="module" src="/growth-analytics.mjs?v=22"></script><script type="module" src="/product-detail.mjs?v=6"></script>`;
 const PAGE_FOOTER = `<footer><span>© HOSHILU</span><span class="associate-disclosure">楽天アフィリエイト、およびバリューコマース（Yahoo!ショッピング等）のリンクから収入を得る場合があります。価格・送料・在庫は取得時点の確認値で、購入前に販売先でご確認ください。</span></footer>`;
 const PAGE_HEADER = `<header class="topbar"><a class="brand" href="/"><img src="/icons/icon.svg" width="40" height="40" alt=""><span>HOSHILU</span></a></header>`;
 export const SEO_MIN_DAYS = 14;
@@ -213,17 +228,17 @@ function jsonLd(snapshot, canonical) {
 }
 
 // 本文（サーバー側）。public/product-detail.mjs と同じ順序・同じクラス名。開いたあとに最新の価格へ差し替わる。
-export function renderProductSeoBody(snapshot, buyUrl = '') {
+export function renderProductSeoBody(snapshot, buyUrl = '', { lineWatch = false } = {}) {
   const h = snapshot.history;
   const lines = comparisonLines(h, snapshot.latest_price).map((line) => `<li>${esc(line)}</li>`).join('');
   const buy = buyUrl ? `<p class="product-buy-row"><a class="product-buy" href="${esc(buyUrl)}" rel="nofollow sponsored noopener noreferrer">${esc(snapshot.marketplace_label)}で買う</a></p>` : '';
   return `<section class="product-head"><div class="product-head-text"><h1 class="product-name">${esc(snapshot.name)}</h1><p class="product-mall">${esc(snapshot.marketplace_label)} で確認した商品</p></div></section>
 <section class="product-now"><h2>今いくら？</h2><p class="product-now-price">${esc(yen(snapshot.latest_price))}</p><p class="product-now-note">${snapshot.shipping_included ? '送料込み' : '送料未確認・商品価格のみ'} ／ ${esc(snapshot.marketplace_label)} ／ ${esc(slashDate(snapshot.latest_date))} の記録（開くと最新の価格を確認します）</p>${buy}</section>
-<section class="product-history"><h2>過去の価格と比べる</h2><ul class="product-history-list">${lines}</ul><p class="product-history-since">HOSHILUでの価格記録開始：${esc(slashDate(h.recording_since))}（記録は1日1回。無い日は空白のままにしています）</p>${priceChartSvg(h.series)}</section>
+<section class="product-history"><h2>過去の価格と比べる</h2><ul class="product-history-list">${lines}</ul><p class="product-history-since">HOSHILUでの価格記録開始：${esc(slashDate(h.recording_since))}（記録は1日1回。無い日は空白のままにしています）</p>${priceChartSvg(h.series)}${lineWatch ? `<p class="product-line-watch-row"><a class="product-line-watch" href="${esc(productLineWatchHref(snapshot.key))}" rel="nofollow">${LINE_WATCH_LABEL}</a></p>` : ''}</section>
 <section class="product-offers"><h2>買う場所を選ぶ</h2>${buy || '<p>販売先のリンクは、開いたあとに最新の価格と一緒に表示します。</p>'}</section>`;
 }
 
-export function renderProductPage(key, snapshot = null, { origin = 'https://hoshilu.app', buyUrl = '' } = {}) {
+export function renderProductPage(key, snapshot = null, { origin = 'https://hoshilu.app', buyUrl = '', lineWatch = false } = {}) {
   const canonical = productCanonical(key, origin);
   const indexable = Boolean(snapshot);
   const head = indexable
@@ -231,7 +246,7 @@ export function renderProductPage(key, snapshot = null, { origin = 'https://hosh
     : '<meta name="robots" content="noindex">';
   const title = indexable ? seoTitle(snapshot) : '今いくら？｜ホシル';
   const main = indexable
-    ? `<main class="product-detail" id="productDetail" data-key="${esc(key)}">${renderProductSeoBody(snapshot, buyUrl)}<p class="product-detail-loading" id="productStatus" role="status" hidden></p></main>`
+    ? `<main class="product-detail" id="productDetail" data-key="${esc(key)}">${renderProductSeoBody(snapshot, buyUrl, { lineWatch })}<p class="product-detail-loading" id="productStatus" role="status" hidden></p></main>`
     : `<main class="product-detail" id="productDetail" data-key="${esc(key)}">
   <p class="product-detail-loading" id="productStatus" role="status">価格を確認しています…</p>
 </main>`;
@@ -291,7 +306,8 @@ export async function handleProductDetailRoutes(request, env, ctx, deps = {}) {
     if (snapshot?.product_url && deps.sign) {
       try { buyUrl = await deps.sign({ d: snapshot.product_url, m: snapshot.marketplace, j: `${key}:${snapshot.marketplace}:seo` }); } catch { buyUrl = ''; }
     }
-    return renderProductPage(key, snapshot, { origin: url.origin, buyUrl });
+    const lineWatch = snapshot ? await hasFreshObservation(env, key, deps.now || new Date()) : false;
+    return renderProductPage(key, snapshot, { origin: url.origin, buyUrl, lineWatch });
   }
   if (url.pathname === '/api/product') {
     const key = normalizeProductKey(url.searchParams.get('key'));

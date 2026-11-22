@@ -2,7 +2,7 @@ import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/s
 import { verifyPhotoSearchResult } from './photo-candidate-verify.mjs';
 import { recordPriceObservations } from './price-observations.mjs';
 import { handleProductDetailRoutes } from './product-detail.mjs';
-import { handleLineWatchMessage, handleLineWatchStart, recordLineWatchReturned, runLinePriceWatchCycle } from './line-price-watch.mjs';
+import { handleLineWatchMessage, handleLineWatchOpen, handleLineWatchStart, recordLineWatchReturned, runLinePriceWatchCycle } from './line-price-watch.mjs';
 import { searchPrItems } from './search-pr.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
@@ -4246,6 +4246,8 @@ export default {
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
     // 2026-11-08 値下がりカードの「もっと下がったらLINEで知らせる」→ LINE を「見張る：番号」入力済みで開く
     if (request.method === 'GET' && url.pathname === '/line/watch') return handleLineWatchStart(request, env, { isCrawler: isCrawlerUserAgent });
+    // 2026-11-22: LINE の手前の小さなページから LINE へ進んだ回数（line_watch_line_opened）を数えて LINE を開く
+    if (request.method === 'GET' && url.pathname === '/line/watch/open') return handleLineWatchOpen(request, env, { isCrawler: isCrawlerUserAgent });
     if (request.method === 'GET' && url.pathname === '/product' && url.searchParams.get('from') === 'line_watch'
       && !isCrawlerUserAgent(request.headers.get('user-agent'))) ctx.waitUntil(recordLineWatchReturned(env).catch(() => false));
     // 2026-10-14 大隆さん指示「オウンドメディア作って」: ホシルの買い物ノート（/media・/media/price-drops）。

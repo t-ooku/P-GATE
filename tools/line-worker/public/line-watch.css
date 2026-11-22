@@ -1,0 +1,11 @@
+/* 2026-11-22 LINE の手前の小さなページ（/line/watch） */
+:root{--ink:#17142b;--muted:#6b6880;--violet:#6c55e0;--line:#e7e3f5;--paper:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:#f7f5ff;color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+.line-watch-step{width:min(100% - 32px,480px);margin:40px auto;padding:22px 18px;border:1px solid var(--line);border-radius:18px;background:var(--paper);display:grid;gap:12px}
+.line-watch-brand{margin:0;color:var(--violet);font-weight:900;font-size:13px;letter-spacing:.08em}
+.line-watch-title{margin:0;font-size:18px;line-height:1.55}
+.line-watch-product{margin:0;font-size:13px;color:var(--muted);line-height:1.6}
+.line-watch-note{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
+.line-watch-open{display:block;padding:14px;border-radius:12px;background:#06c755;color:#fff;text-align:center;text-decoration:none;font-weight:900;font-size:15px}
+.line-watch-back{display:block;text-align:center;color:var(--muted);font-size:12px}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  cleanProductName, WATCH_CODE_PATTERN, dropNoticeText, handleLineWatchMessage, handleLineWatchStart, monthlyPushCap,
+  cleanProductName, WATCH_CODE_PATTERN, dropNoticeText, handleLineWatchMessage, handleLineWatchOpen, handleLineWatchStart, monthlyPushCap,
   runLinePriceWatchCycle, watchCode, watchMessageText
 } from '../src/line-price-watch.mjs';
 
@@ -30,7 +30,7 @@ function setup() {
   database.exec(readFileSync(new URL('../migrations/0093_price_observations.sql', import.meta.url), 'utf8'));
   database.exec(readFileSync(new URL('../migrations/0096_line_price_watches.sql', import.meta.url), 'utf8'));
   database.exec(`CREATE TABLE growth_events (event_id TEXT PRIMARY KEY, event_type TEXT, locale TEXT, source TEXT, medium TEXT, campaign TEXT,
-    content TEXT, marketplace TEXT, occurred_at TEXT, traffic_class TEXT)`);
+    content TEXT, marketplace TEXT, occurred_at TEXT, traffic_class TEXT, session_id TEXT NOT NULL DEFAULT '')`);
   const observe = (key, date, price, name = 'ボアフリース ジャケット レディース') => database.prepare(`INSERT INTO price_observations
       (observation_key, record_key, marketplace, external_product_id, product_name, price, source, observed_date, observed_at)
       VALUES (?,?,'RAKUTEN_JP','x',?,?,'search',?,?)`).run(`${key}:${date}`, key, name, price, date, `${date}T03:00:00Z`);
@@ -48,16 +48,33 @@ test('入口: 記録のある商品だけ、LINE を「見張る：番号」入�
     return new Response(JSON.stringify({ basicId: '@hoshilu' }), { status: 200 });
   };
   const response = await handleLineWatchStart(new Request(`https://hoshilu.app/line/watch?key=${encodeURIComponent(KEY)}`), env, { fetchImpl, now: NOW });
-  assert.equal(response.status, 302);
-  const location = response.headers.get('location');
+  // 2026-11-22: すぐ LINE に飛ばさず、ホシルの小さなページで「送信」を押すことを伝える（1 秒後に JS で LINE へ）
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('x-robots-tag'), /noindex/u);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const page = await response.text();
+  assert.match(page, /LINE が開いたら『送信』を押すと見張りが始まります（友だち追加がまだなら追加も）/u);
+  assert.match(page, /<a class="line-watch-open" id="lineWatchOpen" href="\/line\/watch\/open\?key=RAKUTEN%3Ashop%3Aitem-1" rel="nofollow">LINE を開く<\/a>/u);
+  assert.match(page, /<script type="module" src="\/line-watch\.mjs\?v=1"><\/script>/u);
+  assert.doesNotMatch(page, /買い時|底値/u);
   const code = await watchCode(KEY);
   assert.match(code, /^[0-9a-f]{10}$/u);
+  const opened = await handleLineWatchOpen(new Request(`https://hoshilu.app/line/watch/open?key=${encodeURIComponent(KEY)}`), env, { fetchImpl, now: NOW });
+  assert.equal(opened.status, 302);
+  const location = opened.headers.get('location');
   assert.equal(location, `https://line.me/R/oaMessage/${encodeURIComponent('@hoshilu')}/?${encodeURIComponent(watchMessageText(code, 'ボアフリース ジャケット レディース'))}`);
   assert.equal(database.prepare('SELECT record_key FROM line_watch_codes WHERE code=?').get(code).record_key, KEY);
   assert.equal(database.prepare("SELECT COUNT(*) n FROM growth_events WHERE event_type='line_watch_clicked'").get().n, 1);
+  assert.equal(database.prepare("SELECT COUNT(*) n FROM growth_events WHERE event_type='line_watch_line_opened'").get().n, 1);
   await handleLineWatchStart(new Request(`https://hoshilu.app/line/watch?key=${encodeURIComponent(KEY)}`, { headers: { 'user-agent': 'Googlebot' } }), env,
     { fetchImpl, now: NOW, isCrawler: (ua) => /bot/iu.test(String(ua)) });
   assert.equal(database.prepare("SELECT COUNT(*) n FROM growth_events WHERE event_type='line_watch_clicked'").get().n, 1, 'クローラは数えない');
+  await handleLineWatchOpen(new Request(`https://hoshilu.app/line/watch/open?key=${encodeURIComponent(KEY)}`, { headers: { 'user-agent': 'Googlebot' } }), env,
+    { fetchImpl, now: NOW, isCrawler: (ua) => /bot/iu.test(String(ua)) });
+  assert.equal(database.prepare("SELECT COUNT(*) n FROM growth_events WHERE event_type='line_watch_line_opened'").get().n, 1, 'クローラは数えない');
+  // 番号を作っていない商品は LINE を開かない（/line/watch/open では番号を作らない）
+  const noCode = await handleLineWatchOpen(new Request('https://hoshilu.app/line/watch/open?key=RAKUTEN%3Ano%3Acode'), env, { fetchImpl, now: NOW });
+  assert.match(noCode.headers.get('location'), /\/product\?key=RAKUTEN%3Ano%3Acode&from=line_watch&line=no_record$/u);
   // 記録が無い商品は商品ページへ戻す
   const none = await handleLineWatchStart(new Request('https://hoshilu.app/line/watch?key=RAKUTEN%3Ano%3Arecord'), env, { fetchImpl, now: NOW });
   assert.match(none.headers.get('location'), /\/product\?key=RAKUTEN%3Ano%3Arecord&from=line_watch&line=no_record$/u);
@@ -131,12 +148,13 @@ test('通知の文面: 記録の事実だけ。止め方を書く', () => {
 
 test('値下がりカードにボタン、撮影（SNS の画像）には出さない、クローラには辿らせない', async () => {
   const media = readFileSync(new URL('../src/owned-media.mjs', import.meta.url), 'utf8');
-  assert.match(media, /<a class="media-drop-line" href="\/line\/watch\?key=\$\{encodeURIComponent\(row\.record_key\)\}" rel="nofollow">もっと下がったらLINEで知らせる<\/a>/u);
+  assert.match(media, /<a class="media-drop-line" href="\/line\/watch\?key=\$\{encodeURIComponent\(row\.record_key\)\}&amp;from=drops" rel="nofollow">もっと下がったらLINEで知らせる<\/a>/u);
   const shots = readFileSync(new URL('../scripts/build-social-screens.mjs', import.meta.url), 'utf8');
   assert.match(shots, /\.media-drop-line\{display:none!important\}/u);
   assert.match(readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8'), /^Disallow: \/line\/$/mu);
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(index, /url\.pathname === '\/line\/watch'\) return handleLineWatchStart/u);
+  assert.match(index, /url\.pathname === '\/line\/watch\/open'\) return handleLineWatchOpen/u);
   assert.match(index, /runLinePriceWatchCycle\(env, scheduledAt\)/u);
   assert.match(index, /\.map\(\(event\) => processLineEventWithWatch\(event, origin, env, ctx\)\)/u);
 });
@@ -149,4 +167,26 @@ test('LINE に出す商品名は、店のセール・クーポンの宣伝を外
   assert.equal(cleanProductName('【公式】'), '【公式】', '外して空なら元のまま');
   assert.doesNotMatch(watchMessageText('abcdef0123', '★20%OFFクーポン！【公式】リップ ティント'), /クーポン|OFF|【/u);
   assert.match(dropNoticeText({ productName: '【SALE】★最大50%OFF！ダウンコート', fromPrice: 9000, toPrice: 8000, observedDate: '2026-11-09', recordKey: 'k' }), /^「ダウンコート」が/u);
+});
+
+// 2026-11-22 大隆さん「ok」: 入口（product／drops）とセッションを分けて数える。知らない入口・形の違う session は入れない。
+test('計測: from を content に、session_id は形が合う時だけ入れる。LINE へ進んだ回数も同じ入口で数える', async () => {
+  const { database, observe, env } = setup();
+  observe(KEY, '2026-11-07', 4980);
+  const fetchImpl = async () => new Response(JSON.stringify({ basicId: '@hoshilu' }), { status: 200 });
+  const sid = '0123456789abcdef0123456789abcdef';
+  const page = await (await handleLineWatchStart(new Request(`https://hoshilu.app/line/watch?key=${encodeURIComponent(KEY)}&from=product&s=${sid}`), env, { fetchImpl, now: NOW })).text();
+  assert.match(page, new RegExp(`href="/line/watch/open\\?key=RAKUTEN%3Ashop%3Aitem-1&amp;from=product&amp;s=${sid}"`, 'u'));
+  await handleLineWatchOpen(new Request(`https://hoshilu.app/line/watch/open?key=${encodeURIComponent(KEY)}&from=product&s=${sid}`), env, { fetchImpl, now: NOW });
+  await handleLineWatchStart(new Request(`https://hoshilu.app/line/watch?key=${encodeURIComponent(KEY)}&from=drops`), env, { fetchImpl, now: NOW });
+  await handleLineWatchStart(new Request(`https://hoshilu.app/line/watch?key=${encodeURIComponent(KEY)}&from=<x>&s=not-a-session`), env, { fetchImpl, now: NOW });
+  const rows = database.prepare("SELECT event_type, content, session_id FROM growth_events ORDER BY rowid").all().map((r) => ({ ...r }));
+  assert.deepEqual(rows, [
+    { event_type: 'line_watch_clicked', content: 'product', session_id: sid },
+    { event_type: 'line_watch_line_opened', content: 'product', session_id: sid },
+    { event_type: 'line_watch_clicked', content: 'drops', session_id: '' },
+    { event_type: 'line_watch_clicked', content: '', session_id: '' }
+  ]);
+  const script = readFileSync(new URL('../public/line-watch.mjs', import.meta.url), 'utf8');
+  assert.match(script, /setTimeout\(\(\) => \{ location\.replace\(open\.href\); \}, 1000\)/u);
 });

@@ -439,7 +439,7 @@ export function dropLowNote(row) {
 
 function lineWatchButton(row) {
   if (!row?.record_key) return '';
-  return `<a class="media-drop-line" href="/line/watch?key=${encodeURIComponent(row.record_key)}" rel="nofollow">もっと下がったらLINEで知らせる</a>`;
+  return `<a class="media-drop-line" href="/line/watch?key=${encodeURIComponent(row.record_key)}&amp;from=drops" rel="nofollow">もっと下がったらLINEで知らせる</a>`;
 }
 
 function dropCard(row, index) {

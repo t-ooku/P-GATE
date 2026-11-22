@@ -7,7 +7,13 @@ import { isInvalidJanProductKey } from './jan-validity.mjs';
 // - 通知の文面は「ホシルの記録で下がった」という事実だけ。「買い時」「底値」は書かない。
 // - LINE の push は月の無料通数を超えないように、月の上限（LINE_WATCH_MONTHLY_PUSH_CAP、既定 150）で止める（有料プランにしない）。
 // - D1 に入れるのは LINE の userId（push に要る）と商品の公開情報だけ。検索文・会員 ID は入れない。
-// - growth_events には件数だけ（line_watch_clicked / line_watch_started / line_watch_notified / line_watch_returned）。
+// - growth_events には件数だけ（line_watch_clicked / line_watch_line_opened / line_watch_started / line_watch_notified / line_watch_returned）。
+// 2026-11-22 大隆さん「ok」（Cowork 指示 docs/handoff/claude-inbox/2026-11-22-cowork-line-watch-on-product-page.md）:
+// 11/8〜11/21 に line_watch_clicked 93 件・開始 1 件。session_id を入れていなかったので「1 セッション」に見えていたが、別々のクリック。
+// - 入口を content に入れる（from=product：商品ページのグラフ下／drops：値下がりカード）。商品ページから来たときは session_id も入れる。
+// - /line/watch はすぐ LINE に飛ばさず、ホシルの小さなページで「LINE が開いたら『送信』を押すと見張りが始まります」と見せる。
+//   このページの表示＝line_watch_clicked、1 秒後の自動移動かボタンで LINE へ進んだ＝line_watch_line_opened（/line/watch/open）。
+//   自動移動は JS だけなので、JS を動かさない機械は line_watch_line_opened に数えられない（人と機械を分ける）。
 
 export const WATCH_TEXT_PREFIX = '見張る：';
 export const STOP_WORDS = Object.freeze(['やめる', '見張りをやめる', 'ストップ', '停止']);
@@ -64,13 +70,32 @@ export async function latestObservation(db, recordKey, now = new Date()) {
   return row && Number(row.price) > 0 ? { ...row, price: Number(row.price) } : null;
 }
 
-async function recordWatchEvent(env, eventType, now = new Date()) {
+export const WATCH_ENTRIES = Object.freeze(['product', 'drops']);
+export const watchEntry = (value) => (WATCH_ENTRIES.includes(String(value || '')) ? String(value) : '');
+// growth-events.mjs の anonymousId と同じ形だけ受け取る（それ以外は空＝匿名の 1 クリック 1 行）。
+export function watchSessionId(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return /^[a-f0-9-]{20,64}$/u.test(normalized) ? normalized : '';
+}
+
+async function recordWatchEvent(env, eventType, now = new Date(), { content = '', sessionId = '' } = {}) {
   if (!env?.PRODUCT_DB) return false;
+  const id = crypto.randomUUID();
+  const entry = watchEntry(content);
+  try {
+    await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,session_id)
+        VALUES(?1,?2,'JA','line','line_watch','',?3,'',?4,'UNATTRIBUTED',?5)`)
+      .bind(id, eventType, entry, now.toISOString(), watchSessionId(sessionId)).run();
+    return true;
+  } catch (error) {
+    if (!/(?:no column named|has no column named|no such column).*session_id/iu.test(String(error?.message || ''))) return false;
+  }
   try {
     await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
         (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-        VALUES(?1,?2,'JA','line','line_watch','','','',?3,'UNATTRIBUTED')`)
-      .bind(crypto.randomUUID(), eventType, now.toISOString()).run();
+        VALUES(?1,?2,'JA','line','line_watch','',?3,'',?4,'UNATTRIBUTED')`)
+      .bind(id, eventType, entry, now.toISOString()).run();
     return true;
   } catch { return false; }
 }
@@ -91,22 +116,84 @@ export async function lineBotBasicId(env, fetchImpl = fetch) {
   } catch { return ''; }
 }
 
-// GET /line/watch?key=<record_key>: 見張りの番号を作って、LINE を「見張る：番号」入力済みで開く。
+const esc = (value) => String(value ?? '').replace(/[&<>"']/gu, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const PAGE_HEADERS = Object.freeze({
+  'content-type': 'text/html; charset=utf-8',
+  'cache-control': 'no-store',
+  'x-robots-tag': 'noindex, nofollow',
+  'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'",
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY'
+});
+
+function watchParams(url) {
+  return {
+    recordKey: text(url.searchParams.get('key'), 160),
+    from: watchEntry(url.searchParams.get('from')),
+    sessionId: watchSessionId(url.searchParams.get('s'))
+  };
+}
+
+function backTo(url, recordKey, reason) {
+  return Response.redirect(`${url.origin}${recordKey ? `/product?key=${encodeURIComponent(recordKey)}&from=line_watch&line=${reason}` : '/media/price-drops'}`, 302);
+}
+
+export function lineWatchOpenPath({ recordKey, from = '', sessionId = '' }) {
+  const params = new URLSearchParams({ key: recordKey });
+  if (watchEntry(from)) params.set('from', watchEntry(from));
+  if (watchSessionId(sessionId)) params.set('s', watchSessionId(sessionId));
+  return `/line/watch/open?${params.toString()}`;
+}
+
+// LINE の手前の小さなページ。1 秒後に /line/watch/open へ自動で進む（public/line-watch.mjs。JS が動く時だけ）。ボタンでも進める。
+export function renderLineWatchPage({ recordKey, productName = '', from = '', sessionId = '' }) {
+  const open = lineWatchOpenPath({ recordKey, from, sessionId });
+  const name = text(cleanProductName(productName), 60);
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="/line-watch.css?v=1"><link rel="icon" href="/icons/icon.svg"><title>LINEで見張りを始める｜ホシル</title></head><body>
+<main class="line-watch-step">
+<p class="line-watch-brand">HOSHILU</p>
+<h1 class="line-watch-title">LINE が開いたら『送信』を押すと見張りが始まります（友だち追加がまだなら追加も）</h1>
+${name ? `<p class="line-watch-product">${esc(name)}</p>` : ''}
+<p class="line-watch-note">ホシルの記録で、この値段より下がったら LINE でお知らせします。1 秒後に LINE を開きます。</p>
+<a class="line-watch-open" id="lineWatchOpen" href="${esc(open)}" rel="nofollow">LINE を開く</a>
+<a class="line-watch-back" href="/product?key=${esc(encodeURIComponent(recordKey))}" rel="nofollow">商品ページに戻る</a>
+</main>
+<script type="module" src="/line-watch.mjs?v=1"></script>
+</body></html>`;
+}
+
+// GET /line/watch?key=<record_key>&from=product|drops[&s=<session>]: 見張りの番号を作り、LINE の手前の小さなページを出す。
+// このページの表示を line_watch_clicked として数える（クローラは数えない）。
 export async function handleLineWatchStart(request, env, { fetchImpl = fetch, now = new Date(), isCrawler = () => false } = {}) {
   const url = new URL(request.url);
-  const recordKey = text(url.searchParams.get('key'), 160);
-  const back = (reason) => Response.redirect(`${url.origin}${recordKey ? `/product?key=${encodeURIComponent(recordKey)}&from=line_watch&line=${reason}` : '/media/price-drops'}`, 302);
-  if (!recordKey || !env?.PRODUCT_DB) return back('unavailable');
+  const { recordKey, from, sessionId } = watchParams(url);
+  if (!recordKey || !env?.PRODUCT_DB) return backTo(url, recordKey, 'unavailable');
   const latest = await latestObservation(env.PRODUCT_DB, recordKey, now).catch(() => null);
-  if (!latest) return back('no_record');
+  if (!latest) return backTo(url, recordKey, 'no_record');
   const basicId = await lineBotBasicId(env, fetchImpl);
-  if (!basicId) return back('unavailable');
+  if (!basicId) return backTo(url, recordKey, 'unavailable');
   const code = await watchCode(recordKey);
   await env.PRODUCT_DB.prepare(`INSERT INTO line_watch_codes (code, record_key, product_name, created_at) VALUES (?1,?2,?3,?4)
       ON CONFLICT(code) DO UPDATE SET product_name=excluded.product_name`)
     .bind(code, recordKey, text(latest.product_name, 120), now.toISOString()).run();
-  if (!isCrawler(request.headers.get('user-agent'))) await recordWatchEvent(env, 'line_watch_clicked', now);
-  return Response.redirect(`https://line.me/R/oaMessage/${encodeURIComponent(basicId)}/?${encodeURIComponent(watchMessageText(code, latest.product_name))}`, 302);
+  if (!isCrawler(request.headers.get('user-agent'))) await recordWatchEvent(env, 'line_watch_clicked', now, { content: from, sessionId });
+  return new Response(renderLineWatchPage({ recordKey, productName: latest.product_name, from, sessionId }), { headers: PAGE_HEADERS });
+}
+
+// GET /line/watch/open?key=...: 小さなページから LINE へ進んだ回数（line_watch_line_opened）を数えて、
+// LINE を「見張る：番号」入力済みで開く。番号は /line/watch で作ったものだけ（ここでは作らない）。
+export async function handleLineWatchOpen(request, env, { fetchImpl = fetch, now = new Date(), isCrawler = () => false } = {}) {
+  const url = new URL(request.url);
+  const { recordKey, from, sessionId } = watchParams(url);
+  if (!recordKey || !env?.PRODUCT_DB) return backTo(url, recordKey, 'unavailable');
+  const code = await watchCode(recordKey);
+  const row = await env.PRODUCT_DB.prepare('SELECT record_key, product_name FROM line_watch_codes WHERE code=?1').bind(code).first().catch(() => null);
+  if (!row || row.record_key !== recordKey) return backTo(url, recordKey, 'no_record');
+  const basicId = await lineBotBasicId(env, fetchImpl);
+  if (!basicId) return backTo(url, recordKey, 'unavailable');
+  if (!isCrawler(request.headers.get('user-agent'))) await recordWatchEvent(env, 'line_watch_line_opened', now, { content: from, sessionId });
+  return Response.redirect(`https://line.me/R/oaMessage/${encodeURIComponent(basicId)}/?${encodeURIComponent(watchMessageText(code, row.product_name))}`, 302);
 }
 
 // LINE のメッセージが「見張る：番号」「やめる」なら、ここで返信まで済ませて true を返す（検索には回さない）。

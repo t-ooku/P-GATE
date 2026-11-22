@@ -71,7 +71,7 @@ test('/product は noindex の HTML、/api/product は不正キーを 400 にす
   assert.equal(page.headers.get('x-robots-tag'), 'noindex');
   const html = await page.text();
   assert.match(html, /data-key="RAKUTEN:shop-a:item-1"/u);
-  assert.match(html, /product-detail\.mjs\?v=5/u);
+  assert.match(html, /product-detail\.mjs\?v=6/u);
   const bad = await handleProductDetailRoutes(new Request('https://hoshilu.app/api/product?key=AMAZON:B000'), rakutenEnv, {}, {});
   assert.equal(bad.status, 400);
   assert.equal((await handleProductDetailRoutes(new Request('https://hoshilu.app/product'), rakutenEnv, {}, {})).status, 404);
@@ -148,7 +148,22 @@ test('記録 14 日以上の商品ページは index・本文つき（D1 だけ�
   assert.match(html, /"@type":"Product"[\s\S]*"price":"2480","priceCurrency":"JPY"/u);
   assert.doesNotMatch(html, /今が底値|買い時|必ず/u);
   for (const marker of ['product-head', 'product-now', 'product-history', 'product-offers']) assert.ok(html.includes(`class="${marker}"`), marker);
-  assert.match(html, /product-detail\.mjs\?v=5/u, '開いたあとは最新の価格に差し替える');
+  assert.match(html, /product-detail\.mjs\?v=6/u, '開いたあとは最新の価格に差し替える');
+  // 2026-11-22 大隆さん「ok」: 記録が直近にある商品は、グラフのすぐ下に LINE の値下がり見張り（入口 from=product）
+  assert.match(html, /<svg class="product-chart"[\s\S]*?<\/svg><p class="product-line-watch-row"><a class="product-line-watch" href="\/line\/watch\?key=RAKUTEN%3Ashop-a%3Aitem-1&amp;from=product" rel="nofollow">この値段より下がったらLINEで知らせる<\/a><\/p><\/section>/u);
+  // 記録が古い（最後の記録が 3 日より前）商品には出さない
+  for (let i = 30; i >= 10; i -= 1) {
+    const date = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    insert.run(`k3:${date}`, 'RAKUTEN:shop-c:old', 'RAKUTEN_JP', 'shop-c:old', '古い記録の商品', 'https://item.rakuten.co.jp/shop-c/old/', 1500, 0, 1500, 'IN_STOCK', 'search', date, `${date}T03:00:00.000Z`);
+  }
+  const stale = await (await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-c:old'), env, {}, { sign, now })).text();
+  assert.match(stale, /<meta name="robots" content="index,follow">/u);
+  assert.doesNotMatch(stale, /product-line-watch|\/line\/watch/u, '古い記録の商品には見張りボタンを出さない');
+  // API（開いたあとの画面）も同じ判定: 記録が直近にある商品だけ line_watch=true
+  const noApi = { fetcher: async () => Response.json({ Items: [] }), record: async () => ({}), now };
+  assert.equal((await buildProductDetail(env, 'RAKUTEN:shop-a:item-1', noApi)).line_watch, true);
+  assert.equal((await buildProductDetail(env, 'RAKUTEN:shop-c:old', noApi)).line_watch, false);
+  assert.equal((await buildProductDetail(env, 'RAKUTEN:shop-z:none', noApi)).line_watch, false);
   // 記録 4 日の商品は noindex のまま
   const young = await handleProductDetailRoutes(new Request('https://hoshilu.app/product?key=RAKUTEN:shop-b:new'), env, {}, { sign, now });
   assert.equal(young.headers.get('x-robots-tag'), 'noindex');
@@ -254,4 +269,13 @@ test('public product detail rejects invalid JAN before reads, provider calls, or
     assert.equal(api.status, 400);
     assert.deepEqual(await api.json(), { ok: false, error: 'PRODUCT_KEY_INVALID' });
   }
+});
+
+test('開いたあとの商品ページ: line_watch の時だけグラフの下に見張りボタン（from=product とセッション付き）', () => {
+  const client = read('public/product-detail.mjs');
+  assert.match(client, /if \(data\.line_watch\) \{/u);
+  assert.match(client, /el\('a', 'product-line-watch', 'この値段より下がったらLINEで知らせる'\)/u);
+  assert.match(client, /new URLSearchParams\(\{ key, from: 'product' \}\)/u);
+  assert.ok(client.indexOf('const svg = chart(history.series)') < client.indexOf('if (data.line_watch)'), 'グラフの後に置く');
+  assert.ok(client.indexOf('if (data.line_watch)') < client.indexOf('// 5・6 購入先と購入ボタン'), '購入先より前（価格グラフのすぐ下）');
 });

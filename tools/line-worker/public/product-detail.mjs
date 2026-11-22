@@ -168,6 +168,19 @@ function render(data) {
     if (history.series.filter((p) => Number(p.price) > 0).length === 1) {
       past.append(el('p', 'product-chart-note', '記録1日目です。明日以降の記録と線でつながります。'));
     }
+    // 2026-11-22 大隆さん「ok」: グラフのすぐ下に LINE の値下がり見張り。記録が直近にある商品だけ（サーバーが line_watch で判定）。
+    // 入口（from=product）とセッションを付けて、値下がりカード経由と分けて数える。
+    if (data.line_watch) {
+      const row = el('p', 'product-line-watch-row');
+      const a = el('a', 'product-line-watch', 'この値段より下がったらLINEで知らせる');
+      const params = new URLSearchParams({ key, from: 'product' });
+      const sid = window.HoshiluGrowthIdentity?.sessionId?.() || '';
+      if (sid) params.set('s', sid);
+      a.href = `/line/watch?${params.toString()}`;
+      a.rel = 'nofollow';
+      row.append(a);
+      past.append(row);
+    }
   } else {
     past.append(el('p', 'product-history-none', 'この商品の価格記録は、今日から始まります。明日以降に過去との比較が出ます。'));
   }

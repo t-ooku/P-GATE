@@ -36,3 +36,8 @@
 .product-again-input:focus{outline:2px solid #5140ba;outline-offset:1px}
 .product-again-button{display:block;width:100%;border:0;cursor:pointer;font-size:15px;padding:13px 16px;text-align:center}
 .product-again-link{color:#5140ba;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+
+/* 2026-11-22 大隆さん「ok」: 価格グラフのすぐ下の LINE 値下がり見張り（記録が直近にある商品だけ） */
+.product-line-watch-row{margin:12px 0 0}
+.product-line-watch{display:block;padding:12px;border-radius:12px;background:#06c755;color:#fff;text-decoration:none;font-weight:850;font-size:13px;text-align:center}
+.product-line-watch:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
