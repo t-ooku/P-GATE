@@ -273,3 +273,8 @@ docs/handoff/claude-inbox/2026-11-06-seller-form-recovery.md。Sellerフォー�
 - **テスト/本番証拠**：[Actions 45084431686](https://github.com/t-ooku/P-GATE/actions/runs/45084431686)はtest job 137399691193で3,281/3,281、補助7/7・6/6成功、deploy job 137400137691もsuccess。2026-11-23 08:41:40 JSTにVersion f3803218-128b-4230-bdc6-91d0f77ec33eを本番配備、08:41:43 production monitor PASS（重要7連携）、08:41:48 public health HEALTHY。新成果物14778521525でprice_comparison_opened_by_mode_7dがAVAILABLE、行なしを確認。
 - **効果判定/次**：11/22配備後から現取得時点まで、一般トラフィックでauto/manual/legacy比較イベントは観測されていない。これは「厳格条件を満たす同一商品・別モール2件が無い」と「クライアント描画またはイベント送信失敗」を区別できないため、適格候補なしとは断定しない。実装・CI・配備・集計接続は成功だが、購入先クリック・Seller問い合わせ・有料契約への効果は未判定。同じ導線へ新しい変更を重ねず、次の自然検索でauto/manual行とクリックを既存成果物から追跡する。強制検索・強制クリック・新規D1イベントは行わない。
 - **前日からの変更/注意**：11/22購入先クリックは3回/3セッションから5回/5セッションへ増えたが、流入差・低件数があるため価格比較施策の因果効果とはしない。Threads FAILED29/最終11/21 20:32:55 JSTは不変。一部11/19通常枠PUBLISHED証拠はあるがID/URL三要素がなく全体復旧は未確認。再ログイン/Secret更新要求・強制再送なし。Instagramは11/22 21:02:55 JST、ID17914852626604526、https://www.instagram.com/p/DgCwtCgm9Ig/ の公開三要素を確認。営業11/22は担当記録37送信/返信0/当日不達0（09:26時点）。本実行は09:00前のため新規送信0件で、既存Cowork枠と重複させない。inbox24件はDONE21/BLOCKED3、Claude即時起動接続なし・巡回は将来保証なし。新規依頼を作らず、料金/規約、SNS公開、課金/権限、契約、追加スケジュールを変更していない。
+
+
+### 2026-11-23 Search Console D+14観測
+
+- 08:50 JSTに既存read-only接続で検索クエリ本文なしに取得。最新確定7日11/14〜11/20は5クリック/255表示、CTR1.96%、表示加重平均順位7.94。前7日11/7〜11/13は9/141、6.38%、7.30。表示は増えたがクリック・CTRは低下し、低件数・流入差・遅延があるため局所修復の因果効果やGoogle評価悪化とは断定しない。個別URLのindexing理由/URL検査/通知例URL・Google側再検証状態は現コネクタで未取得。robots意図的除外の一括解除なし。詳細は[Search Console通知PDCA](2026-11-09-codex-indexing-notification-pdca.md)。
