@@ -1,5 +1,5 @@
 ---
-status: IN_PROGRESS
+status: DONE
 owner: Cowork（統括）
 created: 2026-11-22 JST
 to: Claude Code
@@ -27,4 +27,14 @@ approved: 大隆さん「ok」（11/22）
 ### 2026-11-22 20:14 JST 受領（定期巡回）
 - 理解: 大隆さん承認済み（11/22「ok」）。1 つの [PATCH] で ①商品ページのグラフ直下に見張りボタン（記録が新しい商品だけ）②`/line/watch` に from=product|drops、content に入れる ③LINE の手前の小さなページ（表示＝`line_watch_clicked`、LINE へ進んだ＝別イベント）。通知文面・条件・150 通上限は触らない。
 - D1 実測（20:14 時点・全期間）: `line_watch_clicked` 93（11/08〜11/21）、`line_watch_started` 1、`line_watch_notified` 0。
-- 状態: IN_PROGRESS（実装中）
+
+### 2026-11-22 20:30 JST 結果 — DONE（実装・本番反映まで。画面の目視は未確認）
+- **実装**: [PATCH] Issue **#828**（コミット 7b02fba、base 3e74079）。apply-patch.yml の ✅ コメント 11/22 20:25 JST: git am・push・deploy・health すべて success（run 45017095031）。ローカル `npm test` pass 3279 / fail 0（既存 3277 ＋新規 2）。
+  1. 商品ページ: SSR（記録 14 日以上の index ページ）と開いたあとの画面（`/api/product` の `line_watch`）の両方で、価格グラフの直下に「この値段より下がったらLINEで知らせる」→ `/line/watch?key=…&from=product`（開いたあとは `&s=<session>` 付き）。出すのは `latestObservation`（直近 3 日の HOSHILU の記録）がある商品だけ。API 側はこの表示で記録を足す前に判定。古い記録の商品に出ないことをテストで固定。
+  2. 計測: `line_watch_clicked` の `content` に `product`／`drops`（値下がりカードのリンクに `&from=drops` を追加。文言・見た目は変更なし）。session_id は growth-events と同じ形の時だけ入れ、それ以外は空（匿名 1 クリック 1 行）。
+  3. LINE の手前のページ: `/line/watch` は 302 ではなく小さなページ（noindex・no-store）を返し、「LINE が開いたら『送信』を押すと見張りが始まります（友だち追加がまだなら追加も）」を表示＝`line_watch_clicked`。1 秒後に JS（public/line-watch.mjs）で、またはボタンで `/line/watch/open` → **`line_watch_line_opened`** を数えて LINE を「見張る：番号」入力済みで開く。JS を動かさない機械は `line_watch_line_opened` に入らない。クローラー UA はどちらも数えない。
+  - 通知の文面・送る条件・月 150 通の上限・「買い時」「底値」の不使用は変更なし（コード差分なし）。
+- **KPI 画面の注記**: `docs/handoff/2026-11-20-cowork-pdca-cycle-1.md` の「`line_watch_clicked` 74 件が 1 セッションに集中」を訂正（session_id 未記録による見え方で、別々のクリック）。コミット abab957。
+- **本番確認**: deploy・health は apply-patch.yml の結果（20:25 JST）で確認。商品ページのボタン表示・小さなページ・LINE への遷移の**実画面は未確認**（このタスクから hoshilu.app への curl/Playwright は遮断）。D1 で 20:25 JST 以降の `line_watch_*` は 0 件（20:30 時点、まだ押されていない）。→ Codex の本番確認で、記録のある商品ページ 1 件のグラフ下ボタン → 小さなページ → LINE 遷移と、D1 に `content='product'` の `line_watch_clicked`／`line_watch_line_opened` が入ることを見てほしい。
+- **成果（D1 実測）**: 購入先クリック数・Seller 問い合わせ数・有料契約数への効果は**未計測**（公開 5 分。判定は 11/30 Cowork、商品ページ経由クリック数と `line_watch_started`）。全期間の `line_watch_started` は 1（大隆さんのテスト）のまま。
+- 状態: DONE
