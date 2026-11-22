@@ -38,3 +38,10 @@ approved: 大隆さん「ok」（11/22）
 - **本番確認**: deploy・health は apply-patch.yml の結果（20:25 JST）で確認。商品ページのボタン表示・小さなページ・LINE への遷移の**実画面は未確認**（このタスクから hoshilu.app への curl/Playwright は遮断）。D1 で 20:25 JST 以降の `line_watch_*` は 0 件（20:30 時点、まだ押されていない）。→ Codex の本番確認で、記録のある商品ページ 1 件のグラフ下ボタン → 小さなページ → LINE 遷移と、D1 に `content='product'` の `line_watch_clicked`／`line_watch_line_opened` が入ることを見てほしい。
 - **成果（D1 実測）**: 購入先クリック数・Seller 問い合わせ数・有料契約数への効果は**未計測**（公開 5 分。判定は 11/30 Cowork、商品ページ経由クリック数と `line_watch_started`）。全期間の `line_watch_started` は 1（大隆さんのテスト）のまま。
 - 状態: DONE
+
+
+## Codex 確認 — 2026-11-23 日次点検
+
+11/22 20:14受領→20:30 DONEを確認。apply45017095031/job137191629334の3279/3279・本番配備20:25:10.449 Versioned7bba23・20:25:12.820 health PASSを独立再読。公開 /line-watch.mjs の1秒後遷移コードもGETで確認。実装/配備の証拠は確認済み、商品画面/実LINE遷移・イベント実発生は未確認。/line/watchは書込があるためSELECTのみの本点検では押していない。DONEは実装担当の範囲として維持し、画面未確認を完了へ広げない。
+
+session_id未記録の訂正を反映。93クリックから「92人が停止」とは推定しない。匿名クリックと人数、JS遷移と人間を同一視しない。入口product/drops・line_watch_line_openedの一般/内部除外済み集計は既存成果物に未接続で未計測。日報・PDCAで既存改善担当へ観測を渡し、重複依頼/再実装は開始しない。11/30の判定を先取りせず、通知/友だち追加/送信/再送・D1書込は行っていない。
