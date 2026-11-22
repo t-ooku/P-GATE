@@ -464,6 +464,25 @@ test('KPI読取は一過性タイムアウトだけを有限回再試行する',
   assert.equal(calls, 2);
 });
 
+test('価格比較のauto/manualを固定語彙で集計しQAと本文を除外する', async () => {
+  const sqlite = setup();
+  sqlite.exec(`INSERT INTO growth_events(event_type,traffic_class,session_id,content,occurred_at) VALUES
+    ('price_comparison_opened','ATTRIBUTED','auto-session','auto',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('price_comparison_opened','UNATTRIBUTED','manual-session','manual',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('price_comparison_opened','ATTRIBUTED','legacy-session','private product text',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    ('price_comparison_opened','QA','qa-session','auto',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result = await operationalDiagnostics(d1(sqlite), ['internal-1']);
+  const comparison = result.price_comparison_opened_by_mode_7d;
+  assert.equal(comparison.status, 'AVAILABLE');
+  assert.deepEqual(comparison.rows.map(({ mode, events, sessions }) => ({ mode, events, sessions })), [
+    { mode: 'auto', events: 1, sessions: 1 },
+    { mode: 'legacy_or_unknown', events: 1, sessions: 1 },
+    { mode: 'manual', events: 1, sessions: 1 }
+  ]);
+  assert.equal(JSON.stringify(comparison).includes('private product text'), false);
+  assert.match(comparison.limitation, /NO_AUTO_EVENT_CANNOT_DISTINGUISH/u);
+});
+
 test('KPI読取は永続的な4xxを再試行しない', async () => {
   let calls = 0;
   const db = createCloudflareReadOnlyD1({
