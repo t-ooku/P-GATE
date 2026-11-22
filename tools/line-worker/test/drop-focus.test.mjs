@@ -186,3 +186,23 @@ test('楽天の服の価格記録: ジャンル固定・口コミ件数順の公
   assert.equal(second.called, 0, '保存が新しい間は API を呼ばない');
   assert.equal((await recordRakutenFashionPrices({ PRODUCT_DB: db }, fetcher, now + 7 * 3600e3, { wait: async () => {} })).skipped, 'NOT_CONFIGURED');
 });
+
+// 2026-11-22 大隆さん「この商品が最初はだめ。若者が見るわけない」（1 枚目が電熱ベスト）
+test('値下がりの SNS 用: 電熱ベスト・作業着などは選ばず、1 枚目は若い人が見るジャンルにする', async () => {
+  const { isYouthCover } = await import('../src/owned-media.mjs');
+  const drops = withDropFocus([
+    row('v', 'mens_fashion', '電熱ベスト 日本製ヒーター 15箇所発熱', 40),
+    row('wk', 'mens_fashion', '作業服 防寒 ジャンパー', 35),
+    row('m', 'mens_fashion', 'デニムジャケット', 30),
+    row('d', 'kitchen', 'フライパン', 50),
+    row('k', 'korean_fashion', '韓国風 ニット', 12),
+    row('b', 'buzz_korean_beauty', 'クッションファンデ', 20)
+  ], 8, 0, 'winter');
+  const order = drops.filter((item) => item.focus).sort((a, b) => a.focus - b.focus).map((item) => item.record_key);
+  assert.ok(!order.includes('v') && !order.includes('wk'), '電熱・作業着は SNS に出さない');
+  assert.equal(order[0], 'k', '1 枚目は若い人が見るジャンル');
+  assert.deepEqual(drops.map((item) => item.record_key), ['v', 'wk', 'm', 'd', 'k', 'b'], '一覧ページには残す');
+  assert.equal(isYouthCover({ category_id: 'mens_fashion', product_name: 'ジャケット' }), false);
+  assert.equal(isYouthCover({ category_id: 'womens_fashion', product_name: 'ニット' }), true);
+  assert.equal(isYouthCover({ category_id: 'womens_fashion', product_name: '電熱 ベスト' }), false);
+});

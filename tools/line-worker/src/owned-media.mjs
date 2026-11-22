@@ -97,6 +97,15 @@ export function dropSegment(row = {}) {
 
 // rotate: 日替わりの番号。服以外のジャンルの順番と、各ジャンルの中の並び（2 つずつずらす）を日替わりにする。
 // season: その時期の季節（season-calendar.mjs）。商品名が季節の目印に合う物を、各ジャンルの中で先に出す（2026-10-20 大隆さん「季節やトレンドを読む」）。
+// 2026-11-22 大隆さん（Instagram 値下がり投稿の 1 枚目が電熱ベスト）「この商品が最初はだめ。若者が見るわけない」:
+// SNS の値下がり投稿（data-focus）には、若い人が見ない作業・防寒・中高年向けの物を選ばない（一覧ページと防寒の投稿 data-warm には残す）。
+// 1 枚目（表紙）は、若い人が見るジャンル（韓国ファッション・レディース・韓国コスメ・スニーカー・靴・バッグ・スキンケア・コスメ）から選ぶ。
+export const NOT_FOR_YOUNG_PATTERN = /電熱|ヒーター|ヒートベスト|作業着|作業服|空調服|ワークマン|安全靴|腹巻|股引|ももひき|ステテコ|介護|シニア|老眼|紳士|親父|おじさん|中高年|ゴルフ/u;
+const YOUTH_COVER_CATEGORIES = new Set(['korean_fashion', 'womens_fashion', 'buzz_korean_beauty', 'womens_sneakers', 'shoes', 'bags', 'skincare', 'beauty_cosme']);
+export function isYouthCover(row = {}) {
+  return YOUTH_COVER_CATEGORIES.has(String(row.category_id || '')) && !NOT_FOR_YOUNG_PATTERN.test(String(row.product_name || ''));
+}
+
 export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0, season = null) {
   if (!Array.isArray(drops)) return drops;
   const rows = drops.map((row) => ({ ...row, segment: dropSegment(row) }));
@@ -107,7 +116,7 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0, seaso
   const dayOffset = Math.max(0, Math.floor(Number(rotate) || 0)) * 2;
   const turn = (pool) => (pool.length > 1 ? [...pool.slice(dayOffset % pool.length), ...pool.slice(0, dayOffset % pool.length)] : pool);
   const poolOf = (id) => {
-    const pool = rows.filter((row) => row.image_url && row.segment.id === id);
+    const pool = rows.filter((row) => row.image_url && row.segment.id === id && !NOT_FOR_YOUNG_PATTERN.test(String(row.product_name || '')));
     // 季節の物を先に（季節の物どうし・それ以外どうしの中では、従来どおり日替わりでずらす）
     const seasonal = pool.filter((row) => isSeasonalProduct(row.product_name, season));
     return [...turn(seasonal), ...turn(pool.filter((row) => !seasonal.includes(row)))];
@@ -143,6 +152,9 @@ export function withDropFocus(drops, limit = DROP_FOCUS_LIMIT, rotate = 0, seaso
     }
   }
   while (rest.length && picked.length < limit) push(rest);
+  // 表紙（1 枚目）は若い人が見るジャンルから。先頭が違えば、選んだ中で最初に当てはまる物を先頭へ（無ければそのまま）
+  const coverAt = picked.findIndex((row) => isYouthCover(row));
+  if (coverAt > 0) picked.unshift(...picked.splice(coverAt, 1));
   picked.forEach((row, index) => { row.focus = index + 1; });
   // 2026-11-02 防寒の季節投稿（1 本だけの検証）: 防寒・あったかグッズを下がり幅の大きい順に 1 店 1 つまで番号を付ける（data-warm）。
   const warmShops = new Set();
