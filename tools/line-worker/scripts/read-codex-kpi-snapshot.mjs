@@ -504,6 +504,18 @@ export async function operationalDiagnostics(db, internalIds = []) {
       definition: 'INITIAL_SEARCH_RESULTS_DOM_LINK_TYPE_NOT_USER_VIEWPORT_EXPOSURE_OR_SALE',
       caution: 'No historical stages before release; empty rows before fresh searches are not an observed zero offer rate'
     }, inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+    price_comparison_opened_by_mode_7d: {
+      ...await read(`SELECT CASE WHEN content IN ('auto','manual') THEN content ELSE 'legacy_or_unknown' END AS mode,
+        COUNT(*) AS events,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+        MAX(occurred_at) AS last_observed_at
+        FROM growth_events WHERE event_type='price_comparison_opened'
+        AND datetime(occurred_at)>=datetime('now','-7 days')
+        AND traffic_class NOT IN ('QA','INTERNAL')
+        GROUP BY mode ORDER BY mode`),
+      scope: 'ROLLING_7D_QA_INTERNAL_EXCLUDED_AGGREGATE_ONLY',
+      definition: 'AUTO_IS_EMITTED_ONLY_AFTER_VERIFIED_SAME_ITEM_MULTI_MARKETPLACE_COMPARISON_IS_RENDERED',
+      limitation: 'NO_AUTO_EVENT_CANNOT_DISTINGUISH_NO_ELIGIBLE_OFFER_FROM_CLIENT_RENDER_OR_EVENT_DELIVERY_FAILURE'
+    },
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
       exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC',
