@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: IN_PROGRESS
 owner: Cowork（統括）
 created: 2026-11-22 JST
 to: Claude Code
@@ -22,3 +22,9 @@ approved: 大隆さん「ok」（11/22）
 - 通知の文面・送る条件・月の上限（150 通）は変えない。「買い時」「底値」は書かない。
 - 記録が無い・古い商品にはボタンを出さない（AI の推定価格で見張らない）。
 - 判定：公開後 7 日で、商品ページ経由のクリック数と `line_watch_started`（目標：開始 5 人以上、通知から戻ってモールへ 1 人以上）。Cowork が 11/30 に確認。
+
+## Claude 記録
+### 2026-11-22 20:14 JST 受領（定期巡回）
+- 理解: 大隆さん承認済み（11/22「ok」）。1 つの [PATCH] で ①商品ページのグラフ直下に見張りボタン（記録が新しい商品だけ）②`/line/watch` に from=product|drops、content に入れる ③LINE の手前の小さなページ（表示＝`line_watch_clicked`、LINE へ進んだ＝別イベント）。通知文面・条件・150 通上限は触らない。
+- D1 実測（20:14 時点・全期間）: `line_watch_clicked` 93（11/08〜11/21）、`line_watch_started` 1、`line_watch_notified` 0。
+- 状態: IN_PROGRESS（実装中）
