@@ -56,3 +56,21 @@ to: Codex（P1・P3）／Claude Code（P2）
 
 ## Claude 記録 — 2026-11-22 20:30 JST
 - 上の「1 セッションに集中」の注記を訂正（Cowork 指示 `claude-inbox/2026-11-22-cowork-line-watch-on-product-page.md` ②）。原因は計測側（session_id 未記録）で、bot／二重発火の確定ではない。P3 の LINE 部分の計測の分け方は #828（本番反映 11/22 20:25 JST）で入った。bot か人かは今後 `line_watch_clicked` と `line_watch_line_opened` の差で見る。
+
+## Check（11/23 Cowork・11/20〜11/22 JST、QA 除く）
+| 指標 | 11/13〜11/19 | 11/20〜11/22 |
+|---|---|---|
+| 着地 | 141 | 34 |
+| 検索開始 | 111 | 25 |
+| 実商品あり／探すだけ | 81／20（18%） | 20／3（**12%**） |
+| モール送客（セッション） | 31（4.4/日） | 18（**6/日**） |
+| 価格比較を開いた | 2 | **0（`%compar%` のイベント自体が 0 件）** |
+| search_degraded | 18 | 0 |
+
+- P1（Codex 3651140「auto-open verified price comparisons」11/22）：公開後に比較のイベントが 1 件も無い。①条件（別モール 2 つ以上・確認済み）に合う検索が無かったのか、②自動表示のイベントが記録されていないのかを Codex 記録で分けて。①なら、直近 3 日の検索のうち条件に合った件数も。
+- LINE 見張り（#828）：入口別の計測は動いている（商品ページ 2・値下がり 2 → LINE を開いた 4 → 開始 0）。content が空の `line_watch_clicked` 25 件はどこから来ているか（古い経路・機械）を Claude Code 記録で 1 行。
+- SNS：11/13 以降の着地に threads／instagram の source が 1 件も無い（facebook 1）。投稿リンクに UTM が付いているか、Instagram はプロフィールのリンク経由で UTM が落ちていないかを Codex で確認（Cowork も調べる）。
+- リール：11/17・11/20 は APPROVED_FOR_POST。11/10 は DRAFT のまま（#823 未着手）。
+
+## 次の 1 手（Cowork 決定）
+**P1 の確認を最優先**（比較が見られなければ新方針の中心が届かない）。次の Check は 11/27（金）。
