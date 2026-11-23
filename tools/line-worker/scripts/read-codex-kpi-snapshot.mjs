@@ -516,6 +516,20 @@ export async function operationalDiagnostics(db, internalIds = []) {
       definition: 'AUTO_IS_EMITTED_ONLY_AFTER_VERIFIED_SAME_ITEM_MULTI_MARKETPLACE_COMPARISON_IS_RENDERED',
       limitation: 'NO_AUTO_EVENT_CANNOT_DISTINGUISH_NO_ELIGIBLE_OFFER_FROM_CLIENT_RENDER_OR_EVENT_DELIVERY_FAILURE'
     },
+    line_watch_entry_funnel_7d: {
+      ...await read(`SELECT event_type,
+        CASE WHEN content IN ('product','drops') THEN content ELSE 'legacy_or_unknown' END AS entry,
+        COUNT(*) AS events,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+        MAX(occurred_at) AS last_observed_at
+        FROM growth_events
+        WHERE event_type IN ('line_watch_clicked','line_watch_line_opened','line_watch_started')
+        AND datetime(occurred_at)>=datetime('now','-7 days')
+        AND traffic_class NOT IN ('QA','INTERNAL')
+        GROUP BY event_type,entry ORDER BY event_type,entry`),
+      scope: 'ROLLING_7D_QA_INTERNAL_EXCLUDED_AGGREGATE_ONLY',
+      definition: 'CLICKED_IS_INTERSTITIAL_VIEW_OPENED_IS_JS_OR_BUTTON_REDIRECT_STARTED_IS_LINE_MESSAGE_ACCEPTED',
+      limitation: 'ROWS_ARE_NOT_JOINED_USER_FUNNEL_EMPTY_SESSION_IDS_AND_LEGACY_EVENTS_PREVENT_PERSON_LEVEL_CONVERSION'
+    },
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
       exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_OR_INTERNAL_TRAFFIC',
