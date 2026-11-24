@@ -391,15 +391,15 @@ function improvementInsights(current, previous, sources) {
     insights.push({ tone: 'info', title: '判断保留', detail: `検索セッションは${current.search_sessions}件です。まず20件以上を集め、率より実数と不具合を確認します。` });
   } else {
     const stages = [
-      { title: '訪問から検索開始', from: current.landing_sessions, to: current.search_sessions, rate: current.rates.visit_to_search },
-      { title: '検索開始から成功', from: current.search_sessions, to: current.completed_search_sessions, rate: current.rates.search_completion },
-      { title: '検索成功から商品発見', from: current.completed_search_sessions, to: current.value_sessions, rate: current.rates.value_realization },
-      { title: '商品発見からモール送客', from: current.value_sessions, to: current.outbound_sessions,
+      { title: '訪問と検索開始の併有', from: current.landing_sessions, to: current.search_sessions, rate: current.rates.visit_to_search },
+      { title: '検索開始と成功の併有', from: current.search_sessions, to: current.completed_search_sessions, rate: current.rates.search_completion },
+      { title: '検索成功と商品発見の併有', from: current.completed_search_sessions, to: current.value_sessions, rate: current.rates.value_realization },
+      { title: '商品発見とモール送客の併有', from: current.value_sessions, to: current.outbound_sessions,
         rate: percentage(current.outbound_sessions, current.value_sessions) }
     ].filter(stage => stage.from > 0);
     const largest = stages.sort((a, b) => (b.from - b.to) - (a.from - a.to))[0];
     if (largest) insights.push({ tone: 'action', title: `最優先：${largest.title}`,
-      detail: `${largest.from}→${largest.to}、離脱${Math.max(0, largest.from - largest.to)}件（到達率${largest.rate ?? 0}%）です。` });
+      detail: `${largest.from}件中${largest.to}件が次段階と同一セッション、未併有${Math.max(0, largest.from - largest.to)}件（併有率${largest.rate ?? 0}%）。発生順序は未保証です。` });
   }
   const rateDeltas = comparison(current, previous).rates;
   const regressions = [
@@ -469,7 +469,7 @@ async function businessKpiSummary(env, now) {
     const annualVisitors = safeCount(annualTraffic?.visitors);
     return {
       status: 'READY', north_star: '商品発見セッション', registered_members: registeredMembers,
-      definition: '検索成功後に商品・ランキング・価格比較・お気に入り・共有・モール送客へ進んだ重複なしセッション',
+      definition: '検索成功と商品・ランキング・価格比較・お気に入り・共有・モール送客のいずれかが同一セッションにある重複なしセッション（モール送客を含む、発生順序は未保証）',
       annual_traffic_goal: {
         ...ANNUAL_TRAFFIC_TARGET,
         metric: 'QAアクセスを除く匿名ユニーク訪問者',
@@ -544,8 +544,12 @@ function codexPriority(period = {}) {
     ['MARKETPLACE_OUTBOUND', counts.value_sessions, counts.outbound_sessions,
       percentage(counts.outbound_sessions, counts.value_sessions)]
   ].filter(([, from]) => from > 0)
-    .map(([code, from, to, rate]) => ({ code, from, to, lost: Math.max(0, from - to), rate_percent: rate }))
-    .sort((left, right) => right.lost - left.lost);
+    .map(([code, from, to, rate]) => {
+      const unpaired = Math.max(0, from - to);
+      return { code, from, to, lost: unpaired, unpaired, rate_percent: rate,
+        definition: 'same-session co-occurrence; event order not guaranteed' };
+    })
+    .sort((left, right) => right.unpaired - left.unpaired);
   const priority = stages[0];
   return priority
     ? { status: 'ACTION', code: priority.code, evidence: priority }
