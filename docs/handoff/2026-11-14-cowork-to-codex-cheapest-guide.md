@@ -337,3 +337,10 @@ C-8を受領。C-1の楽天JAN照会は `isUniqueJan` を通過したJANのみ�
 
 - 大隆さんの iPhone で、Yahoo! の VC referral（pid 892749632）は**トップ・検索・商品ページのどれも**「preview-approach.yahoo.co.jp（アプリを開く）」→ `shopping.geocities.jp` の 404 に着地。ホシルの URL の形ではなく VC／Yahoo! 側の転送の問題。
 - API の `affiliate_type=vc` も同じ VC の転送を通る見込みのため、**#818 は着手しない**。Yahoo! は直リンクのまま（`VC_GO_REFERRAL_PIDS` に入れない）。Cowork が VC に問い合わせ中。
+
+
+### Codex 記録（2026-11-25 朝）：既存配備の観測・VC判断との整合は要確認
+
+- 最新wranglerはC1_RAKUTEN_JAN_ENABLED=false。C-1の11件再受入/再ON・C-3のVT/Isntreeカード全確認は未完了。点検から再検索/切替/実装なし。
+- 11/21のVC保留後、588ef2f9がVC_GO_REFERRAL_PIDSへYahoo!用の新pidを追加した事実を確認。apply45428729104/job138567806409は3282/3282・補助7/7,6/6成功、11/25 00:44:36.881 JST Version4be11321配備、00:44:47.349重要7health PASS。最新06:09monitor sourceも588ef2f9。**設定変更の本番配備は確認済み**。
+- VC_GO_REFERRAL_ENABLED=false等の条件があるため、pid追加だけで実効Yahoo!経路有効化・転送修復・報酬計測復旧とは断定しない。**旧保留判断との整合、実効経路、正しい3商品着地は要確認**。本点検では購入リンクを押さず、別方式の実装/有効化/ロールバックを重ねていない。観測証拠と未完了は[11/25日報](2026-11-25-codex-selfcheck.md)、実行管理/PDCAへ保存。
