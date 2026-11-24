@@ -289,3 +289,11 @@ docs/handoff/claude-inbox/2026-11-06-seller-form-recovery.md。Sellerフォー�
 - health重要7/SNS将来在庫3/3 PASS、SLIは料金レビュー安全停止。#369頻度恒久復旧は未確認（直近run間7h27m35s）、既知自己参照staleを新障害に加算しない。11/23固定25自動PASS/意味大分類24一致・猫ブラシ用途未判定、旧9件9/9。11/24枠は成果物未収録、強制再実行なし。長期Issue53（+2は#747/#745の時間経過）、inbox24=DONE21/BLOCKED3。フォームは受領/モックDONE・実装0/配備なし、ENTRYのPC44px/11/14評価までと390px実機/因果効果未確認を維持。
 - IG新三要素11/23 20:02:55.950/18239025553324061/https://www.instagram.com/p/DgFOnPuG__5/。Threads FAILED29/最終11/21 20:32:55不変、一部11/19通常3件PUBLISHED/has_ext=1の既存証拠はあるがID実値/URL三要素と最新失敗原因なしで全体復旧未確認。401断定・再ログイン/Secret更新要求・強制再送なし。X停止/#616旧素材保留、Yahoo! VC#818保留/着手なし。
 - 火曜SEO/月初Amazon点検は対象外、月曜11/23監査を再利用。点検はCodex保持、Claude即時起動接続なし/README巡回は将来保証なし。D1書込・既存履歴更新削除・health等重複取得・SNS営業/新記事/料金規約/課金契約/追加スケジュールなし。大隆さんがやること：ない。
+
+
+## 2026-11-24 日次改善・LINE入口集計の本番接続
+
+- 前日11/23 00:00以上〜11/24 00:00未満JST、08:59:54.415取得：LP4回/3セッション、検索開始・完了・購入先クリック・一般希望価格保存0、Seller LP3/3・CTA/入力/送信0、新規外部問い合わせ0。有料新規は初回成立日時未接続で未取得。7日11/17 06:11〜11/24 06:11はLP111→開始91→完了82、送客併有27、独立クリック57回/37セッション。保持399回/128セッション。匿名を人数/注文とせず、窓差を単日値へ変換しない。
+- 最大D（完了82対送客併有27、差55）は維持。前日検索開始0で比較UIの悪化は確定できないため同じ消費者導線を再変更せず、11/22配備済みLINE P3の安全集計未接続を解消した。commit `4c4858728703fc10cd06335201d2cd25ede50b8d`／`e5ff50b9cff503a85201ee1e0deebdcef0ae3c5d`。SELECTのみ、QA/INTERNAL除外、固定語彙と集計値のみで、D1書込・実入力・商品名・LINE userId出力なし。
+- [CI45293144748](https://github.com/t-ooku/P-GATE/actions/runs/45293144748) success。3282/3282・補助7/7,6/6。11/24 08:59:23.511 JST Version `ab15131d-dcbf-4bf9-b658-7e67ad85df17`、08:59:27.817本番monitor PASS、08:59:32.401health HEALTHY。
+- 配備後artifact14875097632で `line_watch_entry_funnel_7d` AVAILABLE。clicked drops2/product2/legacy70、opened drops2/product2、started行なし。session_idはいずれも空のため、個人・同一導線・率へ結合しない。接続実装は本番確認済み、成果改善は未判定。既存11/27 Checkで比較し、追加スケジュールなし。
