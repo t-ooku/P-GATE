@@ -199,3 +199,12 @@ SNS流入0や匿名観測キーの少なさをbot/内部と断定して、設定
 本実行は文書の保存/追記のみ。D1 SELECT証拠と既存Actionsを再利用し、D1書込・既存価格履歴更新削除、health等の二重取得、SNS公開/営業送信、新記事制作、料金/規約、課金/権限/契約、追加スケジュール・通知は変更していない。日報と実行管理/PDCAへ観測を渡し、改善実装と競合させない。
 
 **大隆さんがやること：ない。**
+
+
+## 日次改善実行（2026-11-24 08:57〜09:00 JST）
+
+- 最大差D（完了82対送客併有27、差55）は維持。11/23は検索開始自体0で比較施策の悪化を確定できず、同じ消費者導線へ新しいUI実験を追加しなかった。
+- 未接続だったLINE見張りの入口別安全集計をCodexが実装。commit `4c4858728703fc10cd06335201d2cd25ede50b8d`（SELECT集計）と `e5ff50b9cff503a85201ee1e0deebdcef0ae3c5d`（回帰試験）。`line_watch_clicked`／`line_watch_line_opened`／`line_watch_started`を、入口product/drops/legacy_or_unknown、回数、空でないsession_id数、最終時刻だけで7日集計する。QA/INTERNAL除外、実入力・商品名・LINE userIdは出力せず、D1書込なし。
+- [CI45293144748](https://github.com/t-ooku/P-GATE/actions/runs/45293144748) success。test job138106744149は3282/3282、補助7/7・6/6。deploy job138107437834 success。11/24 08:59:23.511 JST Version `ab15131d-dcbf-4bf9-b658-7e67ad85df17`、08:59:27.817 production monitor PASS（重要7連携）、08:59:32.401 health HEALTHY。
+- 配備後artifact `14875097632 / hoshilu-codex-kpi-45293144748`（snapshot 08:59:27.877、単日08:59:54.415 JST）で新集計AVAILABLEを確認。7日行はclicked: drops2/product2/legacy70、LINE opened: drops2/product2、started該当行なし。全行sessions0で、個人・同一導線・転換率へ結合できない。70件を70人・bot・失敗とせず、started行なしを全期間0としない。
+- 完了判定：実装済み／CI済み／本番配備済み／本番集計接続確認済み。LINE開始率・購入先クリック・Seller問い合わせ・契約への成果効果は未判定。既存11/27 Cowork Checkで同定義を比較し、新スケジュールは作らない。
