@@ -297,3 +297,6 @@ docs/handoff/claude-inbox/2026-11-06-seller-form-recovery.md。Sellerフォー�
 - 最大D（完了82対送客併有27、差55）は維持。前日検索開始0で比較UIの悪化は確定できないため同じ消費者導線を再変更せず、11/22配備済みLINE P3の安全集計未接続を解消した。commit `4c4858728703fc10cd06335201d2cd25ede50b8d`／`e5ff50b9cff503a85201ee1e0deebdcef0ae3c5d`。SELECTのみ、QA/INTERNAL除外、固定語彙と集計値のみで、D1書込・実入力・商品名・LINE userId出力なし。
 - [CI45293144748](https://github.com/t-ooku/P-GATE/actions/runs/45293144748) success。3282/3282・補助7/7,6/6。11/24 08:59:23.511 JST Version `ab15131d-dcbf-4bf9-b658-7e67ad85df17`、08:59:27.817本番monitor PASS、08:59:32.401health HEALTHY。
 - 配備後artifact14875097632で `line_watch_entry_funnel_7d` AVAILABLE。clicked drops2/product2/legacy70、opened drops2/product2、started行なし。session_idはいずれも空のため、個人・同一導線・率へ結合しない。接続実装は本番確認済み、成果改善は未判定。既存11/27 Checkで比較し、追加スケジュールなし。
+
+
+- **11/24 09:13 Seller追跡**：既存Cowork枠の当日店舗別送信記録・受付/送信IDはリポジトリ未着。現在接続されたGmailのSENT読取でも該当を取得できないが、Coworkと同一送信元の証拠がないため送信0とはしない。実行済み件数・公開店舗識別・重複防止は未取得。既存枠との二重送信を避けて手動送信せず、書き戻し証拠待ちの未完了として次回既存点検で追跡。予定/候補/DRY_RUNを送信実績にしない。
