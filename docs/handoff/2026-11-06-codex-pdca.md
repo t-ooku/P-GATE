@@ -1,5 +1,15 @@
 # HOSHILU 日次PDCA — 2026-11-06開始
 
+## 2026-11-25 Act — 販促KPIの測定定義修正
+
+- 根拠: 11/24の管理画面で商品発見60・モール送客58を「前段階から96.7%」と表示していたが、SQLは同一セッションのフラグ併有であり、発生順序付きCVR・離脱人数・注文数ではない。商品発見にはmarketplace_click自体も価値行動として含まれる。
+- 実装: backend `d538d5c3`、画面 `8009c463`、asset cache `1f545480`、回帰test `07ac97fe`。画面を「同一セッション併有率」「未併有」へ変更し、送客を含むこと、順序未保証、購入数ではないことを明記。Codex集計は互換用lostを残しつつunpairedと定義を追加。
+- test/CI: [run 45509814210](https://github.com/t-ooku/P-GATE/actions/runs/45509814210) success。job138854315584で3282/3282、拡張6/6、fail0。deploy job138855037981 success。
+- 本番: 2026-11-25 08:27:13 JST Version `c45ff790-ebd1-4608-938c-884f5f031f7e`。admin-promotion.jsを1 asset upload、08:27:18 JST production monitor PASS（/health、重要7連携）。artifact `14975372148 / hoshilu-codex-kpi-45509814210`。認証済み管理画面の文言を独立ブラウザで再読できず、**本番配備・asset/稼働確認済み／最終画面の目視未確認**を分ける。
+- 効果: 測定表示の正確性修復は実装成功。購入先クリック・問い合わせ・契約の改善効果は未判定で、数値自体は変更していない。
+- Search Console read-only（取得08:26〜08:28 JST、query本文なし）: 11/16〜22は4クリック/252表示、CTR1.59%、表示加重平均順位8.27。11/9〜15は9/191、4.71%、6.54。表示+61、クリック-5、CTR-3.12pt、順位+1.72悪化。低件数・流入差・GSC遅延があるため因果効果/robots通知の再発とは断定しない。表示最多は `/ja/find-product-without-name` 52表示0クリック、`/ja/prepare-for-qoo10-mega-sale` 48表示0クリック。新記事制作/同導線の並行変更は開始せず観測へ入れる。個別indexing理由・URL Inspectionは未取得、意図的robots除外は維持。
+
+
 ## 2026-11-25 スクリーンショット観測：GSC集客と経営KPIの計測定義
 
 **状態：ユーザー共有画像に基づくCodexへの実行管理指示を記録した段階。Codexの受領・実装・CI・配備・本番確認は未確認。** 既存「HOSHILU日次改善・KPI報告」に統合し、別スケジュール・Claude重複依頼は作成しない。
