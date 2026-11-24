@@ -77,12 +77,12 @@ function renderNorthStar(data) {
   const current = data.current;
   const compared = data.comparison;
   northStarGrid.replaceChildren(
-    northStarCard('North Star｜商品発見', formatNumber(current.value_sessions),
-      deltaText(compared.counts.value_sessions), 'primary', '検索成功後に価値ある行動へ進んだセッション'),
-    northStarCard('価値到達率', rate(current.rates.value_realization),
-      deltaText(compared.rates.value_realization, 'pt'), 'success', '商品発見 ÷ 検索成功'),
+    northStarCard('North Star｜商品発見（送客含む）', formatNumber(current.value_sessions),
+      deltaText(compared.counts.value_sessions), 'primary', '検索成功と価値行動が同一セッションにある件数。モール送客を含み、発生順序は未保証'),
+    northStarCard('検索成功との併有率', rate(current.rates.value_realization),
+      deltaText(compared.rates.value_realization, 'pt'), 'success', '商品発見セッション ÷ 検索成功セッション（順序CVRではない）'),
     northStarCard('モール送客', formatNumber(current.outbound_sessions),
-      deltaText(compared.counts.outbound_sessions), 'commerce', '検索成功後にモールへ進んだセッション'),
+      deltaText(compared.counts.outbound_sessions), 'commerce', '検索成功と購入先クリックが同一セッションにある件数。注文数ではない'),
     northStarCard('登録者（累計）', formatNumber(businessKpis.registered_members),
       '本人確認済み通知先で重複除外', 'member', 'LINE・メールの登録者数')
   );
@@ -116,10 +116,13 @@ function renderFunnel(data) {
     const fill = element('div', '', `funnel-fill stage-${index + 1}`);
     fill.style.width = `${Math.max(value ? 4 : 0, value / maximum * 100)}%`;
     track.append(fill);
-    row.append(heading, track, element('small', conversion === null ? '起点' : `前段階から ${rate(conversion)}`));
+    row.append(heading, track, element('small', conversion === null ? '起点' : `前段階との同一セッション併有率 ${rate(conversion)}`));
     return row;
   });
-  valueFunnel.replaceChildren(...rows);
+  valueFunnel.replaceChildren(
+    element('p', '各段階は同一期間・同一セッションの併有です。時系列CVR・離脱人数・購入数ではありません。', 'funnel-note'),
+    ...rows
+  );
 }
 
 // 2026-10-24 大隆さん「日次推移は折れ線グラフも付けて」: 棒の上に折れ線（検索・商品発見・送客）と目盛りを重ねた SVG。
@@ -206,7 +209,7 @@ function renderQuality(data) {
     metric('匿名ID付与率', rate(current.rates.tracking_coverage), coverageTone, '率分析の信頼性'),
     metric('計測イベント', formatNumber(current.events), '', 'QAを除外'),
     metric('流入判別率', rate(current.rates.attributed_sessions), '', 'UTM等で判別できたセッション'),
-    metric('検索失敗率', rate(current.rates.search_failure), current.failed_search_sessions ? 'danger' : '', '失敗 ÷ 検索開始'),
+    metric('検索失敗率', rate(current.rates.search_failure), current.failed_search_sessions ? 'danger' : '', '失敗イベント ÷ 検索開始（検索正答率ではない）'),
     metric('平均検索時間', seconds(current.avg_search_seconds), '', '開始から成功まで'),
     metric('最終計測', dateTime(current.last_event_at), '', '本番イベントの鮮度')
   );
