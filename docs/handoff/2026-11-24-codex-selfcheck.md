@@ -208,3 +208,9 @@ SNS流入0や匿名観測キーの少なさをbot/内部と断定して、設定
 - [CI45293144748](https://github.com/t-ooku/P-GATE/actions/runs/45293144748) success。test job138106744149は3282/3282、補助7/7・6/6。deploy job138107437834 success。11/24 08:59:23.511 JST Version `ab15131d-dcbf-4bf9-b658-7e67ad85df17`、08:59:27.817 production monitor PASS（重要7連携）、08:59:32.401 health HEALTHY。
 - 配備後artifact `14875097632 / hoshilu-codex-kpi-45293144748`（snapshot 08:59:27.877、単日08:59:54.415 JST）で新集計AVAILABLEを確認。7日行はclicked: drops2/product2/legacy70、LINE opened: drops2/product2、started該当行なし。全行sessions0で、個人・同一導線・転換率へ結合できない。70件を70人・bot・失敗とせず、started行なしを全期間0としない。
 - 完了判定：実装済み／CI済み／本番配備済み／本番集計接続確認済み。LINE開始率・購入先クリック・Seller問い合わせ・契約への成果効果は未判定。既存11/27 Cowork Checkで同定義を比較し、新スケジュールは作らない。
+
+
+### Seller既存枠の当日確認（09:13 JST）
+
+- 既存Cowork枠はGitHub Actions送信ではなく、リポジトリには11/24の店舗別送信記録・受付/送信IDの新着なし。現在接続されているGmailのSENT読取でも11/23以降の該当メッセージを取得できなかったが、Coworkと同一送信元である証拠がないため**当日送信0とは判定しない**。
+- 実行済み件数・公開店舗識別・送信ID・同日重複防止は未取得。既存枠と二重になる手動送信や別経路迂回はせず、**未完了（書き戻し証拠待ち）**として次回既存点検で追跡する。予定・DRY_RUN・候補を送信実績に数えない。
