@@ -27,6 +27,20 @@ test('自立トートバッグは構造属性を保った検索語へ展開し�
   assert.deepEqual(results.map((item) => item.asin), ['TOTE']);
 });
 
+test('マットレス本体検索はトッパー単体を除外し、通常本体・同梱品・明示トッパー検索を保つ', () => {
+  const bodyQuery = filterCategoryMismatches('Instagramで見たマットレス', [
+    candidate('TOPPER_ONLY', '高反発 マットレストッパー 厚み4cm'),
+    candidate('BODY', 'ポケットコイル マットレス 厚み20cm'),
+    candidate('BUNDLE', 'ポケットコイル マットレス トッパー付きセット')
+  ]);
+  assert.deepEqual(bodyQuery.map((item) => item.asin), ['BODY', 'BUNDLE']);
+
+  const explicitTopper = filterCategoryMismatches('マットレストッパーを探している', [
+    candidate('TOPPER_ONLY', '高反発 マットレストッパー 厚み4cm')
+  ]);
+  assert.deepEqual(explicitTopper.map((item) => item.asin), ['TOPPER_ONLY']);
+});
+
 test('商品一覧は内部縦スクロールを使わず検索窓だけを固定する', async () => {
   const [layout, sticky, app] = await Promise.all([
     readFile(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8'),
