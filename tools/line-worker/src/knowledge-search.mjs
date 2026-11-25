@@ -2694,6 +2694,19 @@ function passesExplicitSearchEvidenceGate(query, candidate) {
   const instantPhotoPrinterIntent = /(?:写真がすぐ印刷|写真がその場で.{0,12}出てくる|instant\s*photo\s*print)/u.test(queryText);
   if (instantPhotoPrinterIntent && !/(?:プリンター|printer|印刷)/u.test(candidateText)) return false;
 
+  // A body-level mattress query must not be satisfied by a topper-only item.
+  // Marketplace titles often contain the compound "mattress topper", so the
+  // shared word alone is not evidence of a mattress body. Keep an explicit
+  // topper query, a normal mattress, and a mattress bundled with a topper.
+  const topperIntent = /(?:マットレス)?トッパー|mattress\s*topper/iu.test(queryText);
+  const mattressBodyIntent = /(?:マットレス|mattress)/iu.test(queryText) && !topperIntent;
+  if (mattressBodyIntent) {
+    if (!/(?:マットレス|mattress)/iu.test(candidateText)) return false;
+    const topperCandidate = /(?:マットレス)?トッパー|mattress\s*topper/iu.test(candidateText);
+    const bundledWithBody = /(?:マットレス|mattress).{0,20}(?:トッパー|topper).{0,12}(?:付(?:き|属)?|セット|同梱|included|with)|(?:トッパー|topper).{0,12}(?:付(?:き|属)?|セット|同梱|included|with).{0,20}(?:マットレス|mattress)/iu.test(candidateText);
+    if (topperCandidate && !bundledWithBody) return false;
+  }
+
   return true;
 }
 
