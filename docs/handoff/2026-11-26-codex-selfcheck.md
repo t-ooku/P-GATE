@@ -184,3 +184,31 @@ hoshilu-deal-daily-v1/hoshilu-seller-daily-v1の定期制作、検索規則/教�
 本実行は文書保存/追記のみ。D1 SELECTの既存集計を再利用、D1書込/既存履歴更新削除、SNS公開/営業送信、新記事制作、料金/注意書き/規約、新課金/権限/契約、追加スケジュール/通知の変更なし。
 
 **大隆さんがやること：ない。**
+
+## 08:12〜08:15 JST 日次改善の実行追記
+
+### 実行した改善
+
+- 最新固定QAで再現した \`ig_mattress\` の本体/トッパー取り違えを、候補の最終カテゴリ照合で修復した。本体意図の検索にトッパー単体を返さず、通常マットレス本体、トッパー同梱本体、明示的なトッパー検索は残す。
+- 実装 [f9e3c292](https://github.com/t-ooku/P-GATE/commit/f9e3c292c1558c4fad7495ed7a15a1be4f6aa7d6)、直接回帰 [ed396c1b](https://github.com/t-ooku/P-GATE/commit/ed396c1bfd160d13b7f7b8c9f095710b4f6313ff)。Claude受信箱へ新規依頼は作らず、既存OPENのInstagram依頼と並行実装しない。
+
+### テスト・配備・本番証拠
+
+- [Project GATE CI 45719508734](https://github.com/t-ooku/P-GATE/actions/runs/45719508734)
+  - test job 139573979880: **success**
+  - 全回帰 **3,283/3,283 PASS、fail 0**
+  - 拡張回帰 **6/6 PASS、fail 0**
+  - 追加した「トッパー単体陰性／通常本体・同梱本体・明示トッパー検索陽性」もPASS
+- deploy job 139574660847: **success**
+  - 2026-11-26 08:14:18.798 JST配備
+  - Current Version ID \`44b424a6-8d9a-4b0f-8df4-abf437f25559\`
+  - 08:14:26.506 JST production monitor **PASS**
+  - \`/health\`重要7連携・critical assets current
+- D1書込、実検索、購入先クリック、強制カナリア、追加スケジュールは行っていない。実商品の本命修復は次回の既存固定QA通常枠で確認する。
+
+### 効果判定・未完了
+
+- **実装成功と成果改善を分離**：再現修復、全回帰、既存CI配備、本番healthは完了。購入先クリック増・Seller問い合わせ・有料契約への効果は母数不足かつ配備直後で未判定。
+- 11/25 Seller各KPIは0だが、11/25営業日報は未着で、実店舗送信件数・到達・返信は**未取得**。0通としない。現在は既存営業枠の09:00 JST前に開始したため送信せず、別の送信枠を作らない。
+- Claude即時起動接続なし。既存OPEN依頼の保存はClaude受領/実装ではなく、ACKED/IN_PROGRESS/DONE/BLOCKEDを次回既存実行で追跡する。
+
