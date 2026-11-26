@@ -65,3 +65,9 @@ approved: 大隆さん（11/25）「顧客は Instagram を、何か購入した
 **成果（D1 実測、09:25 JST、11/19 00:00 JST 以降・QA 除外）**: 購入先クリック（marketplace_click）117。Seller 問い合わせ（seller_business_inquiries）同期間 0／累計 4。有料契約は今回再集計していない（未計測）。この変更の効果は 11/30 以降の投稿からなので未計測（判定は Cowork の 2 週間比較）。
 
 - 状態: **IN_PROGRESS**（Claude Code の生成コードは本番反映済み。画像の本番生成確認が残り。確認できたら DONE にする）
+
+### 2026-11-26 14:14 JST 定期巡回（確認のみ）
+- **本番画像の確認**: 14:14 JST に feature/ui-search-v2 を clone（head `6da259e`）。`tools/line-worker/public/social/carousel/fun-*` は**まだ無い**（このブランチに未生成）。最後のカルーセル生成コミットは `cdf422f`（11/25 17:18 JST）。次の daily-social-screens の定時呼び出し（cron `7 6 * * *` ＝ 15:07 JST、`7 9 * * *` ＝ 18:07 JST）で生成される見込み。20:13 JST の巡回で再確認する。
+- 新しい実装・Issue・D1 書き込み・予約変更はなし（既存 APPROVED 行の入れ替えは Codex 担当のまま）。
+- **成果（D1 実測 14:15 JST、QA 除外）**: 購入先クリック（marketplace_click）11/19 00:00 JST 以降 152（うち 11/26 当日 38）。Seller 問い合わせ 同期間 0／累計 4。有料契約は未計測（今回集計していない）。今回の変更の効果は 11/30 以降の投稿からで未計測。
+- 状態: **IN_PROGRESS**（残り＝本番画像 fun-* 24 枚の生成確認）
