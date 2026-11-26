@@ -37,11 +37,14 @@ const CAROUSEL_WEEKDAYS = new Set([1, 3, 6]);
 const CAROUSEL_FALLBACK_PREFIX = 'hoshilu-carousel-v3-fallback';
 const FALLBACK_START = '2026-09-18';
 const CAROUSEL_CAMPAIGN_ID = 'hoshilu-carousel-v3';
+const FUN_FIRST_START = '2026-11-30';
 function weekdayOf(date) { return new Date(`${date}T00:00:00.000Z`).getUTCDay(); }
 export function expectedFormatForDate(date) {
   if (!validJstDate(date) || date < POLICY_V3_START) return '';
   const weekday = weekdayOf(date);
   if (RUNWAY_WEEKDAYS.has(weekday)) return 'REEL';
+  // 2026-11-25 大隆さん決定（サービス直結は週 1 回）: 2026-11-30 以降の水曜はカルーセルを要求しない（21:00 の値下がりだけ）
+  if (weekday === 3 && date >= FUN_FIRST_START) return '';
   if (CAROUSEL_WEEKDAYS.has(weekday)) return 'CAROUSEL';
   return '';
 }

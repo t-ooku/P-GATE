@@ -53,12 +53,37 @@ export function sellerSetsRetired(key) {
   return String(key || '') >= SELLER_SETS_RETIRED_FROM;
 }
 
+// 2026-11-25 大隆さん決定「顧客は Instagram を、何か購入したい・どこかと契約したいと思って開いていない。サービスに直結した投稿は
+// 週 1 回でよく、それ以外は間接的なことや楽しいことを投稿して」（docs/handoff/claude-inbox/2026-11-25-cowork-instagram-fun-first.md）。
+// この日以降の枠だけ（承認済みの既存行は消さない・書き換えない。INSERT OR IGNORE なので既にある行はそのまま）:
+//   - 月 20:00 = 楽しい・役に立つセット（carousels-v3.json の fun_order。どっち派？／あるある／買い物の小ワザ）を週ごとに順送り
+//   - 水 20:00 = カルーセルなし（水は 21:00 の値下がり投稿だけ）
+//   - 土 20:00 = サービス直結（使い方のユーザー向けセット）を週 1 本だけ順送り。実画像（値下がり）には差し替えない
+//   - 火・金 20:15 のリールが無い日の代替カルーセルも、楽しい・役に立つセットから選ぶ
+export const FUN_FIRST_PLAN = Object.freeze({
+  start_jst: '2026-11-30',
+  fun_weekday: 1,
+  service_weekday: 6,
+  no_carousel_weekdays: Object.freeze([3])
+});
+export function funFirstActive(key) {
+  return String(key || '') >= FUN_FIRST_PLAN.start_jst;
+}
+function weeksSinceFunStart(parts) {
+  const [sy, sm, sd] = FUN_FIRST_PLAN.start_jst.split('-').map(Number);
+  return Math.floor((Date.UTC(parts.year, parts.month - 1, parts.day) - Date.UTC(sy, sm - 1, sd)) / (7 * DAY_MS));
+}
+
 let cachedSets = null;
 export function loadCarouselSets() {
   if (cachedSets) return cachedSets;
   const doc = carouselDoc;
   const byId = new Map(doc.sets.map((set) => [set.id, set]));
-  cachedSets = Object.freeze({ version: doc.version, order: doc.order.map((id) => byId.get(id)).filter(Boolean) });
+  cachedSets = Object.freeze({
+    version: doc.version,
+    order: doc.order.map((id) => byId.get(id)).filter(Boolean),
+    fun: (doc.fun_order || []).map((id) => byId.get(id)).filter((set) => set && set.audience === 'fun')
+  });
   return cachedSets;
 }
 
@@ -117,6 +142,7 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
     if (slot < 0 || !sets.order.length) continue;
     const key = dateKey(parts);
     const set = regularSetFor(parts, key, plan, sets);
+    if (!set) continue;
     const when = scheduledAt(parts, plan.carousel_publish_jst);
     if (Date.parse(when) <= now.getTime()) continue;
     for (const platform of plan.platforms) {
@@ -144,6 +170,18 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
 function regularSetFor(parts, key, plan, sets) {
   const slot = carouselSlotIndex(parts, plan);
   if (slot < 0 || !sets.order.length) return null;
+  if (funFirstActive(key)) {
+    const week = weeksSinceFunStart(parts);
+    if (FUN_FIRST_PLAN.no_carousel_weekdays.includes(parts.weekday)) return null;
+    if (parts.weekday === FUN_FIRST_PLAN.fun_weekday) {
+      const fun = sets.fun || [];
+      if (fun.length) return fun[week % fun.length];
+    }
+    if (parts.weekday === FUN_FIRST_PLAN.service_weekday) {
+      const users = sets.order.filter((candidate) => candidate.audience === 'user' && !isPausedSet(candidate.id, key));
+      if (users.length) return users[week % users.length];
+    }
+  }
   if (sellerSetsRetired(key)) {
     const users = sets.order.filter((candidate) => candidate.audience !== 'seller');
     if (users.length) return users[slot % users.length];
@@ -173,7 +211,9 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
   if (now.getTime() < gate || Date.parse(when) <= now.getTime()) return [];
   // 2026-11-01: セラー向けセットを止めたので、金曜の代替もユーザー向けから選ぶ
   const audience = sellerSetsRetired(key) ? 'user' : reelFallbackAudience(parts.weekday, plan);
-  const pool = sets.order.filter((set, index, all) => set.audience === audience
+  // 2026-11-25: 11/30 以降の代替は楽しい・役に立つセットから（サービス直結は土曜の週 1 本だけ）
+  const funPool = funFirstActive(key) ? (sets.fun || []) : [];
+  const pool = funPool.length ? funPool : sets.order.filter((set, index, all) => set.audience === audience
     && !isPausedSet(set.id, key) && all.findIndex((other) => other.id === set.id) === index);
   if (!pool.length) return [];
   const dayNumber = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);

@@ -7,6 +7,7 @@
 // - 本文はセットに合わせて差し替える（画像と本文を食い違わせない）。商品の価格・割引率は本文にも書かない。
 import { normalizeSocialPost } from './social-publisher.mjs';
 import { seasonFor } from './season-calendar.mjs';
+import { FUN_FIRST_PLAN, funFirstActive } from './social-weekly-plan-v3.mjs';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -83,6 +84,22 @@ export const SCREEN_POSTS = Object.freeze({
       '#HOSHILU #ホシル #冬支度 #防寒 #あったかグッズ #値下がり #楽天市場 #購入品紹介'
     ].join('\n')
   }),
+  // 2026-11-25 大隆さん決定（Instagram は楽しい・役に立つ中心）: 11/30 以降の水曜 21:00 の値下がりは軽い版。
+  // 下がり幅の説明（記録の事実）は残し、ホシルの案内は最後の 1 行だけ。「買い時」「底値」は書かない。
+  drops_light: Object.freeze({
+    link_path: '/media/price-drops',
+    caption: [
+      'これ、最近安くなってた。',
+      '気になる物はあった？コメントで教えてね。',
+      '',
+      '画像の大きな数字は、楽天市場・Yahoo!ショッピングの価格を毎日記録した中で、14日間の最高値と比べた下がり幅です（撮影した日の時点）。セールの割引率ではありません。',
+      '価格は変わるので、買う前に商品ページで今の価格を確認してね。',
+      '保存しておいて、あとで見返してね。',
+      '',
+      '欲しい物は、ホシルで探せます（プロフィールのリンクから）。',
+      '#値下がり #冬支度 #お買い物好きな人と繋がりたい #購入品紹介 #ホシル'
+    ].join('\n')
+  }),
   buzz: Object.freeze({
     link_path: '/',
     caption: [
@@ -149,6 +166,8 @@ export async function seedDailyDropsPost(env, now = new Date(), { factLines = []
   // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 値下がり投稿は土・日だけ
   // 2026-10-28 大隆さん「水曜に１本足して」: 水曜は 20:00 の使い方カルーセルはそのまま、21:00 に値下がりを 1 本足す
   if (!isDropsDay(dateKey) && !isDropsExtraDay(dateKey)) return { enabled: true, inserted: 0, reason: 'not_drops_day' };
+  // 2026-11-25 大隆さん決定: 11/30 以降の土曜はサービス直結のカルーセル（20:00）だけ。値下がりは足さない
+  if (funFirstActive(dateKey) && weekdayOfKey(dateKey) === FUN_FIRST_PLAN.service_weekday) return { enabled: true, inserted: 0, reason: 'service_day' };
   const scheduledAt = new Date(`${dateKey}T${DROPS_DAILY.publish_utc}:00.000Z`);
   // 予約の 10 分前を過ぎたら、その日は足さない（遅れて急に出さない）
   if (now.getTime() > scheduledAt.getTime() - 10 * 60 * 1000) return { enabled: true, inserted: 0, reason: 'too_late' };
@@ -190,6 +209,16 @@ export async function seedDailyDropsPost(env, now = new Date(), { factLines = []
   return { enabled: true, inserted, synced, post_id: postId, slides: count };
 }
 
+function weekdayOfKey(dateKey = '') {
+  const time = Date.parse(`${String(dateKey).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(time) ? new Date(time).getUTCDay() : -1;
+}
+
+// 11/30 以降の水曜（21:00 を足す日）の普通の値下がり投稿は、軽い本文（drops_light）。画像のセットは drops のまま。
+export function captionSetFor(setId, dateKey = '') {
+  return setId === 'drops' && funFirstActive(dateKey) && isDropsExtraDay(dateKey) ? 'drops_light' : setId;
+}
+
 export function jstDateKey(now = new Date()) {
   return new Date(now.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
 }
@@ -213,8 +242,10 @@ export function withDropFacts(caption, factLines = []) {
   return lines.join('\n');
 }
 
-export function screenCaption(setId, now = new Date(), { factLines = [] } = {}) {
-  const dropsLike = setId === 'drops' || setId === 'warm';
+export function screenCaption(requestedSetId, now = new Date(), { factLines = [] } = {}) {
+  // 2026-11-25: 11/30 以降の水曜の値下がり（drops）は軽い本文（drops_light）
+  const setId = captionSetFor(requestedSetId, jstDateKey(now));
+  const dropsLike = setId === 'drops' || setId === 'warm' || setId === 'drops_light';
   const base = dropsLike ? withDropFacts(SCREEN_POSTS[setId]?.caption || '', factLines) : (SCREEN_POSTS[setId]?.caption || '');
   const season = setId === 'drops' || setId === 'buzz' ? seasonFor(now) : null;
   if (!season) return base;
@@ -248,6 +279,9 @@ export function screenSetsForRow(row = {}, dateKey = '') {
   if (/seller|for-sellers/iu.test(identity)) return ['seller'];
   // 2026-10-20 大隆さん「週1回は割引のフィード広告じゃない投稿して」: 木曜は「いま売れている物」（ホシルバズ）。値下がりは出さない。
   if (isWeeklyTrendDay(dateKey)) return ['buzz', 'notes'];
+  // 2026-11-25 大隆さん決定: 11/30 以降の土曜 20:00 はサービス直結のカルーセル（週 1 本）。値下がりの実画像に差し替えない
+  if (funFirstActive(dateKey) && weekdayOfKey(dateKey) === FUN_FIRST_PLAN.service_weekday
+    && /^carousel-/u.test(String(row.content_id || ''))) return [];
   // 2026-10-17 大隆さん「ユーザー向け販促は今日からこの感じ（値下がり中の実画像）に変えていこう」→
   // 2026-10-22 大隆さん「SNSが割引の投稿ばっかりになってるよ」: 値下がり（drops）は土・日だけ。撮れていない日だけ次の候補。
   if (isDropsDay(dateKey)) return ['drops', 'buzz', 'notes'];

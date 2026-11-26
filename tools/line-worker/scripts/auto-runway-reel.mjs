@@ -23,7 +23,7 @@ import {
   REQUIRED_QA_CHECKS, activePipelineBlockers, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
   evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, pendingReviewJobsForSlot, slotFromApprovedJobId,
-  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan, BGM_PY, bgmMixFilter
+  buildAssVoiceoverActress, buildAssVoiceoverScreen, voiceoverPlan, BGM_PY, bgmMixFilter, cutBSeconds
 } from './auto-runway-reel-lib.mjs';
 import { recordReelScreen } from './auto-reel-screen.mjs';
 
@@ -31,7 +31,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const WORK = path.resolve(process.env.AUTO_REEL_WORKDIR || path.join(ROOT, 'auto-reel-work'));
 const BUCKET = 'hoshilu-social-media';
 const WRANGLER = ['--yes', 'wrangler@4.121.0'];
-const CUT_B_SECONDS = 6;
+const CUT_B_SECONDS_DEFAULT = 6;
 const MAX_ATTEMPTS = 2;
 const POLL_MINUTES = Number(process.env.AUTO_REEL_POLL_MINUTES || 55);
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = /^--([^=]+)=(.*)$/.exec(a); return m ? [m[1], m[2]] : [a.replace(/^--/, ''), 'true']; }));
@@ -246,8 +246,10 @@ function composeVoiceover(raw, screen, dir, plan) {
 function compose(raw, ui, dir, durationA) {
   const assA = path.join(dir, 'cut-a.ass');
   const assB = path.join(dir, 'cut-b.ass');
+  // 2026-11-25: 楽しい型（layout=actress_first）は最後の画面を短く（cutBSeconds）
+  const CUT_B_SECONDS = cutBSeconds(theme, CUT_B_SECONDS_DEFAULT);
   writeFileSync(assA, buildAssCutA(theme, durationA));
-  writeFileSync(assB, buildAssCutB(themes, CUT_B_SECONDS));
+  writeFileSync(assB, buildAssCutB(themes, CUT_B_SECONDS, theme));
   const out = path.join(dir, 'reel.mp4');
   const bs = String.fromCharCode(92);
   const esc = (p) => p.split(':').join(`${bs}:`).split("'").join(`${bs}'`);

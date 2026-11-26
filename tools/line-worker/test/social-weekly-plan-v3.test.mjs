@@ -34,7 +34,8 @@ test('方針 v3: 曜日・時刻・半々の順送り・禁止表現なし・画
   // 台帳に無いセットは「これから画像を作る」新しいセットだけであること、の2つを見る。
   const manifest = JSON.parse(readFileSync(new URL('../public/social/carousel/manifest.json', import.meta.url), 'utf8'));
   // 2026-10-14: 木曜のオウンドメディア枠（MEDIA_PLAN）のセットは順送りに入れないが画像は作る。
-  const ids = new Set([...sets.order, ...mediaSets()].map((set) => set.id));
+  // 2026-11-25: 楽しい・役に立つセット（fun_order）も順送り（order）とは別に画像を作る。
+  const ids = new Set([...sets.order, ...mediaSets(), ...sets.fun].map((set) => set.id));
   for (const id of Object.keys(manifest.sets)) {
     assert.ok(ids.has(id), `${id} は台帳にあるがセットに無い`);
   }

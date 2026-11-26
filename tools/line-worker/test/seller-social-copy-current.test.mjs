@@ -28,7 +28,8 @@ test('11/1 からカルーセルはユーザー向けだけ。旧セラー向け
   const { buildCarouselPosts } = await import('../src/social-weekly-plan-v3.mjs');
   const posts = buildCarouselPosts(new Date('2026-11-01T00:00:00Z'), 60);
   assert.ok(posts.length > 0);
-  assert.ok(posts.every((post) => /carousel-user-/u.test(post.content_id)), 'セラー向けセットが残っている');
+  // 2026-11-25 大隆さん決定: 11/30 以降の月曜は楽しい・役に立つセット（carousel-fun-…）。セラー向けは引き続き出さない
+  assert.ok(posts.every((post) => /carousel-(?:user|fun)-/u.test(post.content_id)), 'セラー向けセットが残っている');
   for (const post of posts) assert.doesNotThrow(() => assertSellerMarketingCurrent(post, {}), post.post_id);
   const old = buildCarouselPosts(new Date('2026-09-27T00:00:00Z'), 30).filter((post) => /carousel-seller-/u.test(post.content_id));
   assert.ok(old.length > 0);

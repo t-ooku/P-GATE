@@ -42,15 +42,28 @@ function jstDateTime(y, m, d, hhmm) {
 
 // 次に投稿する枠（月・水・土 20:15 JST）。生成〜QAに最低 leadMinutes は必要なので、
 // それより近い枠は飛ばす。slotOverride があればその曜日の直近の枠。
+// 2026-11-25 大隆さん「サービスに直結した投稿は週 1 回でよく、それ以外は間接的なことや楽しいこと。リールも楽しく明るく」:
+// themes.slot_schedule（[{ from_jst, slots }]）があれば、投稿日（JST）がその日以降の枠はその slots を使う。
+// それより前の枠（承認済み・生成済みの型）は themes.slots のまま変えない。
+export function slotsFor(themes, publishAt) {
+  const p = jstParts(publishAt);
+  const key = `${p.y}-${String(p.m).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+  let slots = themes.slots || {};
+  for (const entry of (Array.isArray(themes.slot_schedule) ? themes.slot_schedule : [])) {
+    if (entry && entry.slots && String(entry.from_jst || '') <= key) slots = entry.slots;
+  }
+  return slots;
+}
+
 export function nextPublishSlot(now, themes, { leadMinutes = 90, slotOverride = '' } = {}) {
-  const slots = themes.slots || {};
   for (let offset = 0; offset < 14; offset += 1) {
     const candidate = new Date(now.getTime() + offset * 24 * 60 * 60 * 1000);
     const p = jstParts(candidate);
+    const publishAt = jstDateTime(p.y, p.m, p.d, themes.publish_time_jst || '20:15');
+    const slots = slotsFor(themes, publishAt);
     const slot = Object.keys(slots).find((key) => SLOT_DAYS[key] === p.weekday);
     if (!slot) continue;
     if (slotOverride && slot !== slotOverride) continue;
-    const publishAt = jstDateTime(p.y, p.m, p.d, themes.publish_time_jst || '20:15');
     if (publishAt.getTime() - now.getTime() < leadMinutes * 60 * 1000) continue;
     return { slot, theme_key: themeKeyForSlot(slots, slot, publishAt), publish_at: publishAt, date_key: jstDateKey(publishAt) };
   }
@@ -235,11 +248,22 @@ export function buildAssCutA(theme, duration) {
 }
 
 // カットB（実画面 6秒）: 実際の hoshilu.app のスクリーンショットに CTA と URL。
-export function buildAssCutB(themes, duration) {
+// 2026-11-25: 楽しい型（theme.layout === 'actress_first'）は女優が話したあと、最後に短くホシルの画面と URL だけ。
+// 案内は theme.ui_caption の 1 行だけ（希望価格の登録案内は出さない）。
+export const ACTRESS_FIRST_END_SECONDS = 3;
+export function isActressFirst(theme) {
+  return theme?.layout === 'actress_first';
+}
+export function cutBSeconds(theme, fallback = 6) {
+  return isActressFirst(theme) ? ACTRESS_FIRST_END_SECONDS : fallback;
+}
+
+export function buildAssCutB(themes, duration, theme = null) {
+  const cta = isActressFirst(theme) && theme.ui_caption ? assText(theme.ui_caption) : `${assText(themes.ui_caption)}${ASS_NL}${themes.cta}`;
   const lines = [
     `Dialogue: 0,${assTime(0)},${assTime(duration)},Brand,,0,0,0,,HOSHILU  |  hoshilu.app`,
     `Dialogue: 0,${assTime(0)},${assTime(duration)},Disclosure,,0,0,0,,実際の画面（AI生成ではありません）`,
-    `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Cta,,0,0,0,,${assPop(`${assText(themes.ui_caption)}${ASS_NL}${themes.cta}`)}`,
+    `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Cta,,0,0,0,,${assPop(cta)}`,
     `Dialogue: 0,${assTime(0.2)},${assTime(duration)},Url,,0,0,0,,hoshilu.app`
   ];
   return `${ASS_HEADER}${lines.join('\n')}\n`;
@@ -251,6 +275,8 @@ export function buildAssCutB(themes, duration) {
 export const VOICEOVER_INTRO_SECONDS = 1;
 export const VOICEOVER_HOLD_SECONDS = 1.5;
 export function voiceoverPlan(theme, duration, { intro = VOICEOVER_INTRO_SECONDS, hold = VOICEOVER_HOLD_SECONDS } = {}) {
+  // 楽しい型は画面の録画を使わない（女優 → 最後に短い画面と URL）
+  if (isActressFirst(theme)) return null;
   const subs = Array.isArray(theme?.subtitles) ? theme.subtitles : [];
   const last = subs.at(-1);
   const split = Number(last?.start);

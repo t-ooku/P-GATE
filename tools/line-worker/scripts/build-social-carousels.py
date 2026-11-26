@@ -57,6 +57,22 @@ if not REGULAR_FONT.exists():
     REGULAR_FONT = FONT
 
 
+# 2026-11-25 大隆さん「サービスに直結した投稿は週 1 回でよく、それ以外は間接的なことや楽しいこと」:
+# 楽しい・役に立つセット（audience=fun）は、各面の下の登録案内を出さない（ホシルの案内は本文の最後の 1 行だけ）。
+def hint_for(item, user_hint):
+    if item.get('audience') == 'fun':
+        return ''
+    if item.get('audience') == 'seller':
+        return '相談フォーム送信だけでは課金されません'
+    return user_hint
+
+
+def end_cta(item):
+    if item.get('audience') == 'fun':
+        return '保存して見返してね' if item.get('kind') == 'tips' else 'コメントで教えてね'
+    return 'プロフィールのリンクから →'
+
+
 def font(size, weight='bold'):
     path = REGULAR_FONT if weight == 'light' else FONT
     return ImageFont.truetype(str(path), size)
@@ -426,7 +442,7 @@ def cover_card(doc, item, slide, total):
             draw.text((cx + 22, y + 12), label, font=chip_font, fill=MUTED)
             cx += w + 12
     draw.text((x, y1 - pad - 84), doc['footer'], font=font(27), fill=INK)
-    draw.text((x, y1 - pad - 46), '登録は無料' if not seller else '相談フォーム送信だけでは課金されません',
+    draw.text((x, y1 - pad - 46), hint_for(item, '登録は無料'),
               font=font(22, 'light'), fill=FAINT)
     dots(draw, width, y1 - pad - 2, 1, total, PINK if not seller else VIOLET, LINE)
     return img
@@ -600,7 +616,7 @@ def cover_bottom(doc, item, slide, total):
             x += w + 12
 
     draw.text((60, height - 118), doc['footer'], font=font(28), fill=PAPER)
-    hint = '登録は無料' if not seller else '相談フォーム送信だけでは課金されません'
+    hint = hint_for(item, '登録は無料')
     draw.text((60, height - 80), hint, font=font(23, 'light'), fill=(206, 200, 232))
     dots(draw, width, height - 44, 1, total, PAPER, (120, 108, 164))
     return img
@@ -642,7 +658,7 @@ def render_cover(doc, item, slide, total):
         chips(draw, (72, y + 44), slide['chips'], width - 144, PAPER, (255, 255, 255))
 
     draw.text((72, height - 138), doc['footer'], font=font(29), fill=PAPER)
-    hint = '登録は無料' if not seller else '相談フォーム送信だけでは課金されません'
+    hint = hint_for(item, '登録は無料')
     draw.text((72, height - 96), hint, font=font(24, 'light'), fill=(201, 195, 228))
     dots(draw, width, height - 56, 1, total, PAPER, (108, 94, 158))
     return img
@@ -685,7 +701,7 @@ def render_page(doc, item, slide, index, total):
         result_panel(draw, (left, y), panel_width, slide['results'], INK, FAINT,
                      (247, 245, 255), LINE, spot)
         draw.text((72, height - 152), doc['footer'], font=font(29), fill=INK)
-        hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'
+        hint = hint_for(item, '無料・メール6桁かLINEで登録')
         draw.text((72, height - 110), hint, font=font(24, 'light'), fill=FAINT)
         dots(draw, width, height - 56, index, total, spot, LINE)
         return img
@@ -729,10 +745,10 @@ def render_page(doc, item, slide, index, total):
         y = chips(draw, (left, y + 20), slide['chips'], text_width, MUTED, LINE)
 
     draw.text((72, height - 152), doc['footer'], font=font(29), fill=INK)
-    hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'
+    hint = hint_for(item, '無料・メール6桁かLINEで登録')
     draw.text((72, height - 110), hint, font=font(24, 'light'), fill=FAINT)
     if index == total:
-        cta = 'プロフィールのリンクから →'
+        cta = end_cta(item)
         fnt = font(29)
         w = draw.textlength(cta, font=fnt)
         draw.rounded_rectangle((width - 72 - w - 60, height - 162, width - 72, height - 94),
@@ -790,7 +806,7 @@ def render_dark_page(doc, item, slide, index, total):
         y = chips(draw, (left, y + 24), slide['chips'], text_width, PAPER, (128, 114, 186))
 
     draw.text((72, height - 152), doc['footer'], font=font(29), fill=PAPER)
-    hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'
+    hint = hint_for(item, '無料・メール6桁かLINEで登録')
     draw.text((72, height - 110), hint, font=font(24, 'light'), fill=(206, 200, 232))
     dots(draw, width, height - 56, index, total, PAPER, (112, 98, 162))
     return img
