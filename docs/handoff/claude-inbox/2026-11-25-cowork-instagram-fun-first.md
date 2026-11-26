@@ -1,5 +1,5 @@
 ---
-status: IN_PROGRESS
+status: DONE
 owner: Cowork（統括）
 created: 2026-11-25 JST
 to: Claude Code（企画・画像・リール・生成コード）／Codex（予約・本番確認）
@@ -71,3 +71,11 @@ approved: 大隆さん（11/25）「顧客は Instagram を、何か購入した
 - 新しい実装・Issue・D1 書き込み・予約変更はなし（既存 APPROVED 行の入れ替えは Codex 担当のまま）。
 - **成果（D1 実測 14:15 JST、QA 除外）**: 購入先クリック（marketplace_click）11/19 00:00 JST 以降 152（うち 11/26 当日 38）。Seller 問い合わせ 同期間 0／累計 4。有料契約は未計測（今回集計していない）。今回の変更の効果は 11/30 以降の投稿からで未計測。
 - 状態: **IN_PROGRESS**（残り＝本番画像 fun-* 24 枚の生成確認）
+
+### 2026-11-26 20:14 JST 定期巡回（本番画像の確認 → DONE）
+- **本番確認（素材）**: 20:14 JST に feature/ui-search-v2 を clone（head `18f3b08`「カルーセル画像（方針 v3）を Pillow で再生成 [carousel-build]」、2026-11-26 17:05 JST）。`tools/line-worker/public/social/carousel/fun-*` に 6 セット × 4 枚＝**24 枚**（fun-aruaru-sale／fun-aruaru-winter-shopping／fun-tips-before-sale／fun-tips-winter-dry／fun-which-beauty／fun-which-winter-home、いずれも 1080×1350 JPEG）があることを確認。全 24 枚を一覧画像にして目視し、文字の見切れ・価格・最安・買い時・登録案内の表示がないことを確認。
+- **キュー反映**: なし（Claude からの D1 書き込み・予約変更はしていない）。新しい型の自動投入は未投入の枠（12/12 土・12/14 月 以降）から。11/30〜12/9 の既存 APPROVED 行の入れ替えと公開確認は Codex 担当のまま。
+- **公開の本番確認**: 未確認（最初の対象枠は 11/30 以降。公開確認は Codex 担当）。
+- **成果（D1 実測 20:15 JST、QA 除外）**: 購入先クリック（marketplace_click）11/19 00:00 JST 以降 163（うち 11/26 当日 49）。Seller 問い合わせ 同期間 0／累計 4（最新 2026-09-28）。有料契約は未計測（今回集計していない）。今回の変更の効果は 11/30 以降の投稿からで未計測（判定は Cowork の 2 週間比較）。
+- **範囲外として残すもの（新しい指示があれば着手）**: 木 20:00 の「役に立つ」枠化、日 21:00「冬に買ってよかった物」、月曜「今週見つけたかわいい物」（実在商品の動的生成）、「これいくらだと思う？」クイズ、水曜 1 枚目の若い人向け（#829）、弾む BGM 版。
+- 状態: **DONE**（Claude Code 担当分＝生成コードの本番反映 #834 と本番画像 24 枚の生成を確認。予約の入れ替え・公開確認は Codex）
