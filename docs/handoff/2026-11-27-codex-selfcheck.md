@@ -1,6 +1,6 @@
 # P-GATE Codex 日次点検 — 2026-11-27（金）JST
 
-**マットレス修正の配備を確認。11/26単日KPIと修正後の通常QAは、既存Actionsの成果物未更新で未取得。** 点検開始08:01 JST、確認基準08:08 JST。対象feature/ui-search-v2、観測head `b29faa358d455fc0c297ed691d5e386859b3279a`。
+**マットレス修正の配備を確認。11/26単日KPIと修正後の通常QAは、既存Actionsの成果物未更新で未取得。** 点検開始08:01 JST、確認基準08:05 JST。対象feature/ui-search-v2、観測head `b29faa358d455fc0c297ed691d5e386859b3279a`。
 
 ## 出典・計測条件
 
@@ -12,7 +12,7 @@
 
 ## 前日1日：11/26暦日
 
-**対象日2026-11-26。Asia/Tokyo 11/26 00:00以上〜11/27 00:00未満（UTC11/25 15:00以上〜11/26 15:00未満）。集計取得日時：未取得（08:08 JST確認時点）。**
+**対象日2026-11-26。Asia/Tokyo 11/26 00:00以上〜11/27 00:00未満（UTC11/25 15:00以上〜11/26 15:00未満）。集計取得日時：未取得（08:05 JST確認時点）。**
 
 | KPI | 前日実数 | 未取得理由 |
 |---|---:|---|
@@ -53,7 +53,7 @@
 - **外形は本番確認済み（00:22時点）**：11/27 00:22:19.901 JST、重要7連携/資産/API契約PASS、source b29faa35、app211/growth24。[#691](https://github.com/t-ooku/P-GATE/issues/691)。snapshot付随healthも11/26 23:57:59.581時点HEALTHY/ok、missing0/weak0。公開healthはThreads認証を証明しない。08時の新しい外形測定とはしない。
 - SLI failureは `DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:QUERY_STRUCTURER:CANARY_PRICING_REVIEW_REQUIRED` のみ。料金レビューの安全停止を全実利用検索の故障としない。新しい課金/価格変更で解除しない。今回は自己参照heartbeatエラーが列挙されていないが、#369恒久復旧の証明でもない。
 - SNS SLA **00:22:35.691 PASS**、11/28〜12/4の将来在庫 **2/2 ready**。昨日3/3から対象日が変わっただけで不足を意味しない。eligible0/NOT_DUEを公開成功にしない。
-- 最新2runの間隔は23:57:19→00:22:00で24分41秒。その後08:08まで約7時間46分の未更新で、5分/毎時頻度が恒久復旧したとはしない。復旧判定はCodex担当、[#369](https://github.com/t-ooku/P-GATE/issues/369)継続。
+- 最新2runの間隔は23:57:19→00:22:00で24分41秒。その後08:05まで約7時間43分の未更新で、5分/毎時頻度が恒久復旧したとはしない。復旧判定はCodex担当、[#369](https://github.com/t-ooku/P-GATE/issues/369)継続。
 - 今週[11/23 Seller週次](2026-11-23-seller-promo-weekly.md)はQA-shop DONE/IMAGE_SKIPPED_NO_R2、ARTICLE3版QA_FAILED、IMPROVEMENT/SNS合格の既存記録。再実行・販促コード修正なし。
 
 ## 日次9項目
