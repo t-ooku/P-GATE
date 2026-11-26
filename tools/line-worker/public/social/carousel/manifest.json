@@ -420,6 +420,162 @@
           "bytes": 105091
         }
       ]
+    },
+    "fun-which-winter-home": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-which-winter-home/1.jpg",
+          "sha256": "3c0f565b930670e7e8f9d3120febab4e3b8ceb4f2637d12d3f7e9a8416cd431f",
+          "bytes": 79607
+        },
+        {
+          "file": "fun-which-winter-home/2.jpg",
+          "sha256": "534c48ca1a63dcf834d7700f7080401be86c6b77210ab81bf758dd9229106a19",
+          "bytes": 65548
+        },
+        {
+          "file": "fun-which-winter-home/3.jpg",
+          "sha256": "88a25387142b282657874e8ae2bc6ac29d5b9ae7764859a07d6537f1b419dfb8",
+          "bytes": 69749
+        },
+        {
+          "file": "fun-which-winter-home/4.jpg",
+          "sha256": "2d33f96acfe977c935138c077a81734edc36353ff34d11bfd3ce48ba832f4c75",
+          "bytes": 75950
+        }
+      ]
+    },
+    "fun-which-beauty": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-which-beauty/1.jpg",
+          "sha256": "3ed47f1a8dd2a4b5f93d0d4aaef911a69d44639c2304c2567f4557b896816ddc",
+          "bytes": 75859
+        },
+        {
+          "file": "fun-which-beauty/2.jpg",
+          "sha256": "7a95e9eec3058593baf26eb1deafe1be768b18de306f48dc2b7aa89c689379c7",
+          "bytes": 62771
+        },
+        {
+          "file": "fun-which-beauty/3.jpg",
+          "sha256": "831f0e3fdf55fafce527885209c16fe4bcbfd3331bcf43a23e2e998cc964f15e",
+          "bytes": 77987
+        },
+        {
+          "file": "fun-which-beauty/4.jpg",
+          "sha256": "96b1502d433bb1cba31004e888cc0bb81a5e0ea59d09a6c2d8447c0b1f62c87b",
+          "bytes": 86146
+        }
+      ]
+    },
+    "fun-aruaru-winter-shopping": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-aruaru-winter-shopping/1.jpg",
+          "sha256": "618d81bbdffa96cadb674e1c943fdba8c926ec82e94999acfec4dd1e1ec2dd51",
+          "bytes": 73656
+        },
+        {
+          "file": "fun-aruaru-winter-shopping/2.jpg",
+          "sha256": "bf0d54c02b1cab4f0ef608c4da44d23e4126ad01e86a89f11ec25ddb331a9bf6",
+          "bytes": 70367
+        },
+        {
+          "file": "fun-aruaru-winter-shopping/3.jpg",
+          "sha256": "633519d779f18502a13b5e69fdb9d2cb8ab5543f88e26104bacb9148360292ee",
+          "bytes": 84838
+        },
+        {
+          "file": "fun-aruaru-winter-shopping/4.jpg",
+          "sha256": "d83a108db55077d2f97a74e0cfec71964b7672d00ad73c060b6bb7c6a60fb5fc",
+          "bytes": 74198
+        }
+      ]
+    },
+    "fun-aruaru-sale": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-aruaru-sale/1.jpg",
+          "sha256": "1bebcacfb5366bdce971d2ee2de51fdccb1504d80382edbef26000be89c2ef9a",
+          "bytes": 65136
+        },
+        {
+          "file": "fun-aruaru-sale/2.jpg",
+          "sha256": "11fe0a187b548d82c0e9209fc906433e5cb5640fa19daa81fecf5dd019d35311",
+          "bytes": 76688
+        },
+        {
+          "file": "fun-aruaru-sale/3.jpg",
+          "sha256": "aa70cedcafb5ed5555b9bdbbc0d6ee583b2ee17f540e4f412a37df10ccfe0965",
+          "bytes": 64203
+        },
+        {
+          "file": "fun-aruaru-sale/4.jpg",
+          "sha256": "3a3e6747cbaede6d142b9e817873e3b2552264ecc44f37b96989e450a3edb0ab",
+          "bytes": 75007
+        }
+      ]
+    },
+    "fun-tips-before-sale": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-tips-before-sale/1.jpg",
+          "sha256": "27b65f27dc1d063530cbfccc36e65acd8b12ea13e58b144d5d0899e89f8d9716",
+          "bytes": 77765
+        },
+        {
+          "file": "fun-tips-before-sale/2.jpg",
+          "sha256": "385ffc3f723d1f092b4266e3950c8c2d3e4add49a79027ba26651f5978372c7d",
+          "bytes": 67785
+        },
+        {
+          "file": "fun-tips-before-sale/3.jpg",
+          "sha256": "b6d6c8ceec6c810a0be5f0fd4cf6551d6b64d7791126452d1b749905b9f68dd4",
+          "bytes": 71744
+        },
+        {
+          "file": "fun-tips-before-sale/4.jpg",
+          "sha256": "4718c070fd28435aef259d559214758cd9d571fdefe6a33885fb8b3e1445ee13",
+          "bytes": 79720
+        }
+      ]
+    },
+    "fun-tips-winter-dry": {
+      "audience": "fun",
+      "slides": 4,
+      "files": [
+        {
+          "file": "fun-tips-winter-dry/1.jpg",
+          "sha256": "d0d7dd65dec531cb7180c1ab3a3108d62944311ca05afd0cd239f54dca327656",
+          "bytes": 93995
+        },
+        {
+          "file": "fun-tips-winter-dry/2.jpg",
+          "sha256": "a2a28b6cad4a88a311882936c1c4f8321969bb4ed6100d5e88388a9cfe957a39",
+          "bytes": 79073
+        },
+        {
+          "file": "fun-tips-winter-dry/3.jpg",
+          "sha256": "a5e35bcc879de795b4e8ef6ea5f4f232cf3e5b58d6a7bcb33e4dc7d59cd8ca15",
+          "bytes": 64859
+        },
+        {
+          "file": "fun-tips-winter-dry/4.jpg",
+          "sha256": "bf6b8805c59e5dbeb56b24ea9ac3a0859fdacf04de7e0b94c6428119d96de2f5",
+          "bytes": 80935
+        }
+      ]
     }
   }
 }
